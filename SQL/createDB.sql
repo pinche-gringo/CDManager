@@ -6,14 +6,20 @@ CREATE TABLE MGenres
      genre	VARCHAR(64)	NOT NULL,
      PRIMARY KEY (id));
 
-DROP TABLE Directors;
-CREATE TABLE Directors
+DROP TABLE Celibrities;
+CREATE TABLE Celibrities
     (name	VARCHAR (64)	NOT NULL,
      id		BIGINT UNSIGNED	NOT NULL AUTO_INCREMENT,
      born	DATE            NOT NULL DEFAULT 0,
      died	DATE            NOT NULL DEFAULT 0,
      PRIMARY KEY (id));
-CREATE INDEX directorNames ON Directors (name);
+CREATE INDEX names ON Celibrities (name);
+
+DROP TABLE Directors;
+CREATE TABLE Directors
+    (id		BIGINT UNSIGNED	NOT NULL,
+     PRIMARY KEY (id),
+     FOREIGN KEY (celibrity_id) REFERENCES Celibrities(id) ON DELETE CASCADE);
 
 DROP TABLE Movies;
 CREATE TABLE Movies
@@ -21,7 +27,7 @@ CREATE TABLE Movies
      id		BIGINT UNSIGNED	NOT NULL AUTO_INCREMENT,
      year	YEAR            NOT NULL DEFAULT 0,
      director	BIGINT UNSIGNED NOT NULL DEFAULT 0,
-     genre      BIGINT UNSIGNED DEFAULT 0,
+     genre      BIGINT UNSIGNED NOT NULL DEFAULT 0,
      PRIMARY KEY (id),
      FOREIGN KEY (genre_id) REFERENCES MGenres(id) ON DELETE SET NULL,
      FOREIGN KEY (director_id) REFERENCES Directors(id) ON DELETE SET NULL);
@@ -29,12 +35,9 @@ CREATE INDEX movieNames ON Movies (name);
 
 DROP TABLE Actors;
 CREATE TABLE Actors
-    (name	VARCHAR (64)	NOT NULL,
-     id		BIGINT UNSIGNED	NOT NULL AUTO_INCREMENT,
-     born	DATE            NOT NULL DEFAULT 0,
-     died	DATE            NOT NULL DEFAULT 0,
-     PRIMARY KEY (id));
-CREATE INDEX actorNames ON Actors (name);
+    (id		BIGINT UNSIGNED	NOT NULL,
+     PRIMARY KEY (id),
+     FOREIGN KEY (celibrity_id) REFERENCES Celibrities(id) ON DELETE CASCADE);
 
 DROP TABLE ActorsInMovies;
 CREATE TABLE ActorsInMovies
@@ -51,12 +54,9 @@ CREATE TABLE Genres
 
 DROP TABLE Interprets;
 CREATE TABLE Interprets
-    (name	VARCHAR (64)	NOT NULL,
-     id		BIGINT UNSIGNED	NOT NULL AUTO_INCREMENT,
-     born	DATE            NOT NULL DEFAULT 0,
-     died	DATE            NOT NULL DEFAULT 0,
-     PRIMARY KEY (id));
-CREATE INDEX interpretNames ON Interprets (name);
+    (id		BIGINT UNSIGNED	NOT NULL,
+     PRIMARY KEY (id),
+     FOREIGN KEY (celibrity_id) REFERENCES Celibrities(id) ON DELETE CASCADE);
 
 DROP TABLE Records;
 CREATE TABLE Records

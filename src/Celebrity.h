@@ -1,7 +1,7 @@
 #ifndef CELIBRITY_H
 #define CELIBRITY_H
 
-//$Id: Celebrity.h,v 1.2 2004/11/24 21:54:49 markus Exp $
+//$Id: Celebrity.h,v 1.3 2004/11/25 13:23:53 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,24 +27,24 @@
 #include <YGP/Entity.h>
 
 
-class Celibrity;
-defineHndl(Celibrity);
+class Celebrity;
+defineHndl(Celebrity);
 
 
 /**Class to hold an celibrity
  */
-class Celibrity : public YGP::Entity {
+class Celebrity : public YGP::Entity {
    friend class CDManager;
    friend class RecordList;
    friend class MovieList;
 
  public:
-   Celibrity () : id (0) { }
-   Celibrity (const Celibrity& other) : id (other.id), name (other.name),
+   Celebrity () : id (0) { }
+   Celebrity (const Celebrity& other) : id (other.id), name (other.name),
       born (other.born), died (other.died) { }
-   virtual ~Celibrity () { }
+   virtual ~Celebrity () { }
 
-   static bool compByName (const HCelibrity& a, const HCelibrity& b);
+   static bool compByName (const HCelebrity& a, const HCelebrity& b);
 
  private:
    unsigned long int id;
@@ -55,10 +55,9 @@ class Celibrity : public YGP::Entity {
    static Glib::ustring removeIgnored (const Glib::ustring& name);
 
    //Prohibited manager functions
-   const Celibrity& operator= (const Celibrity& other);
+   const Celebrity& operator= (const Celebrity& other);
 
    static std::vector<Glib::ustring> ignore;
 };
-defineHndl(Celibrity);
 
 #endif

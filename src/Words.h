@@ -1,7 +1,7 @@
 #ifndef WORDS_H
 #define WORDS_H
 
-//$Id: Words.h,v 1.1 2004/11/29 18:35:23 markus Rel $
+//$Id: Words.h,v 1.2 2005/01/18 01:03:49 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,18 +23,31 @@
 #include <glibmm/ustring.h>
 
 
+namespace Gtk {
+   class Widget;
+}
+
+
 /**Class to store some words
  */
 class Words {
+   friend class WordDialog;
+
  public:
-   static bool cArticles () { return articles.size (); }
-   static bool cNames () { return names.size (); }
+   static unsigned int cArticles () { return articles.size (); }
+   static unsigned int cNames () { return names.size (); }
    static void addName2Ignore (const Glib::ustring& word) {
       names.push_back (word); }
-   static void init ();
+   static void addArticle (const Glib::ustring& word) {
+      articles.push_back (word); }
+   static void sortNames ();
+   static void sortArticles ();
 
    static Glib::ustring removeArticle (const Glib::ustring& name);
    static Glib::ustring removeNames (const Glib::ustring& name);
+
+   static Gtk::Widget* makeDialog ();
+   static void commitDialogData (Gtk::Widget* dialog);
 
  private:
    //Prohibited manager functions
@@ -43,7 +56,11 @@ class Words {
    Words (const Words&);
    Words& operator= (const Words&);
 
+   static bool containsWord (const std::vector<Glib::ustring>& list,
+			     const Glib::ustring& word);
+
    static Glib::ustring getWord (const Glib::ustring& name);
+   static bool compare (const Glib::ustring& w1, const Glib::ustring& w2);
 
    static std::vector<Glib::ustring> articles;
    static std::vector<Glib::ustring> names;

@@ -1,7 +1,7 @@
 #ifndef MOVIELIST_H
 #define MOVIELIST_H
 
-//$Id: MovieList.h,v 1.9 2004/12/12 03:13:36 markus Rel $
+//$Id: MovieList.h,v 1.10 2005/01/31 05:16:32 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -71,6 +71,8 @@ class MovieList : public OwnerObjectList {
    HMovie getMovieAt (const Gtk::TreeIter iterator) const;
    HDirector getDirectorAt (const Gtk::TreeIter iterator) const {
       return getCelebrityAt (iterator); }
+
+   void update (const std::string& lang);
 
  protected:
    virtual void setName (HEntity& object, const Glib::ustring& value);

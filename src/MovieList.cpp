@@ -1,11 +1,11 @@
-//$Id: MovieList.cpp,v 1.15 2005/01/29 19:54:10 markus Exp $
+//$Id: MovieList.cpp,v 1.16 2005/01/31 05:16:32 markus Exp $
 
 //PROJECT     : CDManager
-//SUBSYSTEM   : src
+//SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.15 $
+//REVISION    : $Revision: 1.16 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -32,6 +32,7 @@
 
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
+#include <YGP/ANumeric.h>
 #include <YGP/Tokenize.h>
 #include <YGP/StatusObj.h>
 
@@ -279,8 +280,8 @@ bool MovieList::on_button_press_event (GdkEventButton* e) {
       // If event is within the language or the subitles column
       if ((e->x > areaLang.get_x ())
 	  && (e->x <= (areaSub.get_x () + areaSub.get_width ()))) {
-	 TRACE9 ("MovieList::on_button_press_event (GdkEventButton*) - Column "
-		 << i << ": " << areaLang.get_x () << '-' << e->x << '-'
+	 TRACE9 ("MovieList::on_button_press_event (GdkEventButton*) - "
+		 << areaLang.get_x () << '-' << e->x << '-'
 		 << (areaSub.get_x () + areaSub.get_width ()));
 	 // Create the popup-window
 	 HMovie movie (getMovieAt (oldSel)); Check3 (movie.isDefined ());
@@ -353,4 +354,21 @@ void MovieList::setTitles (Gtk::TreeModel::Row& row, const std::string& titles) 
 	    countSet = true;
 	 }
       }
+}
+
+//-----------------------------------------------------------------------------
+/// Updates the displayed movies, showing them in the passed language
+/// \param lang: Language, in which the movies should be displayed
+//-----------------------------------------------------------------------------
+void MovieList::update (const std::string& lang) {
+   TRACE9 ("MovieList::update (const std::string&) - " << lang);
+
+   for (Gtk::TreeModel::const_iterator d (mOwnerObjects->children ().begin ());
+	d != mOwnerObjects->children ().end (); ++d) {
+      for (Gtk::TreeIter m (d->children ().begin ()); m != d->children ().end (); ++m) {
+	 HMovie movie (getMovieAt (m)); Check3 (movie.isDefined ());
+	 TRACE9 ("MovieList::update (const std::string&) - Updating " << movie->getName (lang));
+	 (*m)[colOwnerObjects->name] = movie->getName (lang);
+      }
+   }
 }

@@ -1,7 +1,7 @@
 #ifndef RECORD_H
 #define RECORD_H
 
-//$Id: Record.h,v 1.7 2004/11/14 21:23:56 markus Exp $
+//$Id: Record.h,v 1.8 2004/11/15 01:52:43 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ class Record : public YGP::Entity {
    friend class RecordList;
 
  public:
-   Record () : id (0), songsLoaded (false) { }
+   Record () : id (0), genre (0), songsLoaded (false) { }
    Record (const Record& other) : id (other.id), name (other.name),
       year (other.year), genre (other.genre), songsLoaded (other.songsLoaded) { }
    virtual ~Record () { }

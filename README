@@ -4,7 +4,11 @@ Utility to manage CDs (audio and video)
 Copyright (C) 2004 Markus Schwab <g17m0@lycos.com> 
 -----------------------------------------------------------------------
 
-How to build CDManager
+How to build CDManager (see the file INSTALL for more details)
 
 ./configure [--prefix=<path>]     # Default: /usr/local
 make
+
+
+This program nees the libmysql++ library, available from
+http://www.mysql.com/download_mysql++.html.

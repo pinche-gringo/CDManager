@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.18 2004/11/24 21:53:45 markus Exp $
+//$Id: CDManager.h,v 1.19 2004/11/25 23:21:20 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@
 #include <gtkmm/liststore.h>
 #include <gtkmm/treestore.h>
 #include <gtkmm/statusbar.h>
-#include <gtkmm/scrolledwindow.h>
 
 #include "Song.h"
 #include "Movie.h"
@@ -120,9 +119,6 @@ class CDManager : public XGP::XApplication {
    SongList                     songs;
    MovieList                    movies;
    RecordList                   records;
-   Gtk::ScrolledWindow          scrlSongs;
-   Gtk::ScrolledWindow          scrlMovies;
-   Gtk::ScrolledWindow          scrlRecords;
 
    Gtk::Statusbar status;
 

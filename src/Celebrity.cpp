@@ -1,11 +1,11 @@
-//$Id: Celebrity.cpp,v 1.1 2004/11/17 20:37:53 markus Exp $
+//$Id: Celebrity.cpp,v 1.2 2004/11/25 13:23:39 markus Exp $
 
 //PROJECT     : CDManager
-//SUBSYSTEM   : Celibrity
+//SUBSYSTEM   : Celebrity
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -32,10 +32,10 @@
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 
-#include "Celibrity.h"
+#include "Celebrity.h"
 
 
-std::vector<Glib::ustring> Celibrity::ignore;
+std::vector<Glib::ustring> Celebrity::ignore;
 
 
 //-----------------------------------------------------------------------------
@@ -43,21 +43,22 @@ std::vector<Glib::ustring> Celibrity::ignore;
 /// \param name: Name to manipulate
 /// \returns Glib::ustring: Changed name
 //-----------------------------------------------------------------------------
-Glib::ustring Celibrity::removeIgnored (const Glib::ustring& name) {
-   TRACE9 ("Celibrity::removeIgnored (const Glib::ustring&) - " << name);
+Glib::ustring Celebrity::removeIgnored (const Glib::ustring& name) {
+   TRACE9 ("Celebrity::removeIgnored (const Glib::ustring&) - " << name);
 
    unsigned int pos (0);
    for (std::vector<Glib::ustring>::const_iterator i (ignore.begin ());
 	i != ignore.end (); ++i)
-      if ((*i == name.substr (pos, i->size ())) && (name[i->size ()] == ' ')) {
+      if ((*i == name.substr (pos, i->size ()))
+	  && (!isalnum (name[pos + i->size ()]))) {
 	  pos += i->size () + 1;
 
-	  while (isspace (name[pos]))
+	  while (!isalnum (name[pos]))
 	     ++pos;
 	  i = ignore.begin ();
       }
 
-   TRACE8 ("Celibrity::removeIgnored (const Glib::ustring&) - " << name << "->"
+   TRACE8 ("Celebrity::removeIgnored (const Glib::ustring&) - " << name << "->"
 	   << name.substr (pos));
    return name.substr (pos);
 }
@@ -69,7 +70,7 @@ Glib::ustring Celibrity::removeIgnored (const Glib::ustring& name) {
 /// \param b: Second celibrity
 /// \returns bool: True, if a->name < b->name
 //-----------------------------------------------------------------------------
-bool Celibrity::compByName (const HCelibrity& a, const HCelibrity& b) {
+bool Celebrity::compByName (const HCelebrity& a, const HCelebrity& b) {
    Check1 (a.isDefined ()); Check1 (b.isDefined ());
    Glib::ustring aname (removeIgnored (a->name));
    Glib::ustring bname (removeIgnored (b->name));

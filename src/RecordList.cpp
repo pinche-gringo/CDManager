@@ -1,11 +1,11 @@
-//$Id: RecordList.cpp,v 1.5 2004/11/17 17:33:16 markus Exp $
+//$Id: RecordList.cpp,v 1.6 2004/11/17 20:39:19 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
-//TODO        : Check if handles are freed in record listbox
+//TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -30,8 +30,6 @@
 #include <cerrno>
 #include <cstdlib>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/StatusObj.h>
@@ -179,8 +177,7 @@ void RecordList::valueChanged (const Glib::ustring& path,
       } // endif record edited
       else {
 	 if (!column) {
-	    Check3 (row.children ().size ());
-	    HInterpret artist = getInterpretAt (row);
+	    HInterpret artist (getInterpretAt (row));
 	    Check3 (artist.isDefined ());
 
 	    row[colRecords.name] = artist->name= value;

@@ -1,0 +1,208 @@
+<!-- -*-HTML-*- -->
+<!-- $Id: CDManager.html.en,v 1.1 2004/12/21 05:16:39 markus Exp $ -->
+
+<!--
+  Copyright (C) 2004 Markus Schwab (g17m0@lycos.com)
+
+  This is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public
+  License as published by the Free Software Foundation; either
+  version 2 of the License, or (at your option) any later version.
+
+  This is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+-->
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+  <head>
+    <title>CDManager - utility to manage records and movies</title>
+    <meta name="description" content="Documentation of the CD-Manager">
+    <meta name="keywords" content="Documentation, Docu, CD, movie,
+                record, manager, CDManager, CD-Manager">
+
+    <meta name="DC.Creator" content="Markus Schwab">
+    <meta name="DC.Date" content="2004-12-05">
+    <meta name="DC.Rights" content="Copyright (C) 2004, distributed under the GNU Free Documentation License">
+  </head>
+
+  <body>
+    <h1 align="center">General information about the CD-Manager</h1>
+    <table width="100%">
+      <tr><td align="center" width="33%"><a href="#Intro">Introduction</a></td>
+        <td align="center" width="33%"><a href="#Mainwindow">The main window</a></td>
+        <td align="center" width="33%"><a href="#Dialogs">Dialogs</a></p></td></tr>
+    </table>
+    <hr size=2>
+
+    <h2><a name="Intro"></a>Introduction</h2>
+
+    <p>The CD-Manager is an utility to manage records and movies.</p>
+
+    <p>Its features include exporting the managed media to HTML pages
+      and importing records from songs in MP3 format (having an ID3 tag).</p>
+
+    <p>It is distributed under the GNU General Public License, which
+      basically says like this (see the file <tt>COPYING</tt> along with
+      this package or the <a href="http://www.gnu.org/">GNU homepage
+        (http://www.gnu.org)</a> for more details):</p>
+
+    <blockquote><em><p>This is free software; you can redistribute it
+          and/or modify it under the terms of the GNU General Public
+          License as published by the Free Software Foundation; either
+          version 2 of the License, or (at your option) any later
+          version.</p>
+
+        <p>This is distributed in the hope that it will be useful, but
+          WITHOUT ANY WARRANTY; without even the implied warranty of
+          MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+          the GNU General Public License for more
+          details.</p></em></blockquote>
+
+    <h2><a name="Mainwindow"></a>Main window</h2>
+    <p>The main window contains a notebook with two pages; one for the
+      records and the other for the movies.</p>
+
+    <h3>Record page</h3>
+    <p>This page contains two list; the left one holds the stored
+      records and their interprets (sorted by interpret; with their
+      records sorted by name).</p>
+
+    <p>The content of the displayed values can be changed
+      &ldquo;inline&rdquo; (meaning: by clicking in the column of the
+      selected line, one wants to change). Usually this opens an entry
+      field in which data can be entered , or a list from which the
+      values can be selected.</p>
+
+    <p>If a record is selected, the right list shows its songs. Again,
+      this list can be edited &ldquo;inline&rdquo;.</p>
+
+    <p>Both lists can be sorted by its various columns (by clicking in
+      the title).</p>
+
+    <p>New entries can be added by selecting the appropriate entry in
+      the <tt>Edit</tt> menu or by importing the ID3-tag from MP3 files
+      (Menu <tt>Import from MP3-info</tt> in the <tt>CD</tt> menu).</p>
+
+    <h3>Movie page</h3>
+
+    <p>This page contains the movies, sorted by director and (within
+      director by year). As with the records, its contents can be
+      edited &ldquo;inline&rdquo; (see above).</p>
+
+    <p>New entries can be added by selecting the appropriate entry in
+      the <tt>Edit</tt> menu.</p>
+
+    <h2><a name="Dialogs"></a>Dialogs</h2>
+
+    <h3>Login</h3>
+    <p>This dialog is displayed by selecting <tt>Login ...</tt> from
+      the <tt>CDs</tt> menu. It is a small window allowing to enter an
+      user-id an (optionally) a password. This information is used to
+      connect to the database.</p>
+
+    <h3>Import</h3>
+    <p>This dialog is displayed by selecting <tt>Import from MP3-info
+      ...</tt> from the <tt>CDs</tt> menu. It enables to browse
+      through the directory structure and the selection of files. All
+      those files are searched for an ID3 tag for MP3 files, which -
+      if found - is imported into the database.</p>
+
+    <p>Note that this import might produce double entries, if names
+      are differently written or they exceed the the size of the ID3
+      information (which is limited to 30/32 characters).</p>
+
+    <h3>Find</h3>
+    <p>The <i>Find-Dialog</i> is invoked with <tt>Find ...</tt> from
+      the <tt>Edit</tt> menu.</p>
+
+    <p>A <a name="RegExp">regular expression</a> can be entered which
+      is then searched for in displayed list. This expression is
+      stored and displayed the next time the dialug is displayed again.</p>
+
+    <h2><a name="RegExp"></a>Regular expressions</h2>
+    <p>A fully description of regular expressions is beyond the scope
+      of this document; see regex(7) or the GNU regexp manual for a
+      better description.</p>
+
+    <p>Basically a regular expression consists of text, which might be
+      followed by a repeat count.</p>
+
+    <p>The following repeat counts exists:</p>
+
+    <ul>
+      <li><b>*</b> (Asterisk) repeats the (smallest possible)
+        preceding regular expression as many times as
+        possible (including none at all).</li>
+
+      <li><b>+</b> (Plus) is similar to '*', except that it requires
+        that the preceeding regular expression is matched at least
+        once.</li>
+
+      <li><b>?</b> (Question mark) is similar to '*', except that it
+        requires that the preceeding regular expression is matched
+        either once or not at all.</li>
+
+      <li><b>{i}, {i,}, {i,j}</b> the previous regular expression must
+        be repeated either exactly i times; i times or more; i through
+        j (inclusive) times.</li></ul>
+    </ul>
+
+    <p>The text which is repeated in the above way can also contain
+      some special constructs:</p>
+
+    <ul>
+      <li><b>.</b> (Dot) matches any single character.</li>
+
+      <li><b>^</b> (Caret) Matches an empty string in the beginning of
+        the line.</li>
+
+      <li><b>$</b> (Dollar) Similar to the caret (^) this matches the
+        end of the line.</li>
+
+      <li><b>\</b> (Backslash): Quotes the following character
+        (including the backlash (\) itself.</li>
+
+      <li><b>[&lt;match&gt;]</b> matches the characters specified
+        in match, while<li>
+
+      <li>'<b>[^&lt;match&gt;]</b> or <b>[!&lt;match&gt;]</b> matches
+          the characters not specified in match.
+
+	<p>In both cases the match might be a mixture of single
+	  charactes, ranges of characters (separated by the minus (-)
+	  or characters classes (like [:alpha:], [:digit:] or [:upper:]).</p></li>
+
+      <li><b>|</b> seperates two alternatives.</li>
+
+      <li><b>(...)</b> groups regular expressions and marks the
+        matching substring for future reference.</li>
+    </ul>
+
+    <h2>Author</h2>
+    <p>Both the program and the documentation have been written by Markus
+      Schwab.</p>
+
+    <h2>Usage</h2>
+    <p>The program is started without any options, like this:</p>
+
+    <pre>   CDManager</pre>
+
+    <h2>Credits</h2>
+    <p>Thanks to the folks at MySQL for their great database and the
+      mysql++ library.</p>
+
+    <hr noshade="noshade" size="2">
+    <address>
+      <a href="mailto:g17m0@lycos.com">Markus Schwab (g17m0@lycos.com)</a><br>
+    </address>
+  </body>
+</html>

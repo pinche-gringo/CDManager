@@ -1,7 +1,7 @@
 #ifndef CELIBRITY_H
 #define CELIBRITY_H
 
-//$Id: Celebrity.h,v 1.4 2004/11/25 23:20:55 markus Exp $
+//$Id: Celebrity.h,v 1.5 2004/11/26 04:07:57 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -35,8 +35,9 @@ defineHndl(Celebrity);
  */
 class Celebrity : public YGP::Entity {
    friend class CDManager;
-   friend class RecordList;
    friend class MovieList;
+   friend class RecordList;
+   friend class OwnerObjectList;
 
  public:
    Celebrity () : id (0) { }

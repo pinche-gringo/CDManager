@@ -2,7 +2,7 @@
 
 bin_PROGRAMS=CDManager
 
-CDManager_SOURCES=CDManager.cpp CDManager.h
+CDManager_SOURCES=CDManager.cpp CDManager.h DB.cpp DB.h
 
 INCLUDES = @INCLUDES@ -I../Common @DEPS_CFLAGS@
 

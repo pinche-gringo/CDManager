@@ -1,7 +1,7 @@
 #ifndef MOVIE_H
 #define MOVIE_H
 
-//$Id: Movie.h,v 1.5 2005/01/10 02:11:44 markus Rel $
+//$Id: Movie.h,v 1.6 2005/01/31 05:15:27 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 
+#include <map>
 #include <string>
 
 #include <glibmm/ustring.h>
@@ -41,7 +42,10 @@ class Movie : public YGP::Entity {
    virtual ~Movie ();
 
    unsigned long int getId () const { return id; }
-   Glib::ustring     getName () const { return name; }
+   Glib::ustring     getName () const { return getName (currLang); }
+   Glib::ustring     getName (const std::string& lang) const {
+      return ((name.find (lang) != name.end ()) ? name.find (lang)->second
+	      : name.find ("")->second); }
    YGP::AYear        getYear () const { return year; }
    unsigned int      getGenre () const { return genre; }
    int               getType () const { return type; }
@@ -49,7 +53,10 @@ class Movie : public YGP::Entity {
    std::string       getTitles () const { return titles; }
 
    void setId       (unsigned long int value) { id = value; }
-   void setName     (const Glib::ustring& value) { name = value; }
+   void setName     (const Glib::ustring& value) { name[currLang] = value; }
+   void setName     (const Glib::ustring& value, const std::string& lang) {
+      name[lang] = value; }
+   std::map<std::string, Glib::ustring>& getNames () { return name; }
    void setYear     (const YGP::AYear& value) { year = value; }
    void setYear     (const std::string& value) { year = value; }
    void setGenre    (unsigned int value) { genre = value; }
@@ -67,9 +74,11 @@ class Movie : public YGP::Entity {
    static bool compByGenre (const HMovie& a, const HMovie& b);
    static bool compByMedia (const HMovie& a, const HMovie& b);
 
+   static std::string currLang;
+
  private:
    unsigned long int id;       // %attrib%; ; 0
-   Glib::ustring     name;     // %attrib%; Name
+   std::map<std::string, Glib::ustring> name;     // %attrib%; Name
    YGP::AYear        year;     // %attrib%; Made
    unsigned int      genre;    // %attrib%; Genre; 0
    int               type;     // %attrib%; Media; 0

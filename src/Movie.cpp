@@ -1,11 +1,11 @@
-//$Id: Movie.cpp,v 1.7 2005/01/18 03:56:56 markus Rel $
+//$Id: Movie.cpp,v 1.8 2005/01/31 05:15:27 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movie
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 29.11.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -30,13 +30,32 @@
 #include <glibmm/ustring.h>
 
 #include <YGP/Check.h>
-#include <YGP/Trace.h>
 
-#include <XGP/XAttribute.h>  // Needed for specialization of YGP::Attribute for Glib::ustring
+// #include <XGP/XAttribute.h>  // Needed for specialization of YGP::Attribute for Glib::ustring
 
 #include "Words.h"
 #include "Movie.h"
+
+
+// Specialization of YGP::Attribute for the name-map
+template <> inline
+bool YGP::Attribute<std::map<std::string, Glib::ustring> >::assignFromString (const char* value) const {
+   Check3 (value);
+   attr_[Movie::currLang] = value;
+   return true;
+}
+template <> inline
+std::string YGP::Attribute<std::map<std::string, Glib::ustring> >::getValue () const {
+   return (attr_.find (Movie::currLang) == attr_.end ()) ? attr_[""] : attr_[Movie::currLang]; }
+template <> inline
+std::string YGP::Attribute<std::map<std::string, Glib::ustring> >::getFormattedValue () const {
+   return getValue (); }
+
+
 #include "Movie.meta"
+
+
+std::string Movie::currLang;
 
 
 //-----------------------------------------------------------------------------
@@ -67,8 +86,8 @@ Glib::ustring Movie::removeIgnored (const Glib::ustring& name) {
 //-----------------------------------------------------------------------------
 bool Movie::compByName (const HMovie& a, const HMovie& b) {
    Check1 (a.isDefined ()); Check1 (b.isDefined ());
-   Glib::ustring aname (removeIgnored (a->name));
-   Glib::ustring bname (removeIgnored (b->name));
+   Glib::ustring aname (removeIgnored (a->name[currLang]));
+   Glib::ustring bname (removeIgnored (b->name[currLang]));
    return aname < bname;
 }
 

@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.29 2005/01/14 02:45:08 markus Rel $
+//$Id: CDManager.h,v 1.30 2005/01/25 01:41:03 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -60,17 +60,25 @@ class CDManager : public XGP::XApplication {
    ~CDManager ();
 
  private:
-   // IDs for menus
-   enum { LOGIN = XApplication::LAST, SAVE, LOGOUT, MEDIT, NEW_ARTIST,
-	  NEW_RECORD, NEW_SONG, NEW_MOVIE, NEW_DIRECTOR, DELETE, EXPORT,
-	  IMPORT_MP3, PREFERENCES, SAVE_PREF, EXIT };
-
    // Protected manager functions
    CDManager (const CDManager&);
    const CDManager& operator= (const CDManager&);
 
    // Event-handling
-   virtual void command (int menu);
+   void save ();
+   void showLogin ();
+   void logout ();
+   void exportToHTML ();
+   void importFromMP3 ();
+   void newInterpret ();
+   void newRecord ();
+   void newSong ();
+   void newDirector ();
+   void newMovie ();
+   void deleteSelection ();
+   void editPreferences ();
+   void savePreferences ();
+
    virtual void showAboutbox ();
    virtual const char* getHelpfile ();
    void recordSelected ();
@@ -84,6 +92,7 @@ class CDManager : public XGP::XApplication {
    void loadMovies ();
    void enableMenus (bool enable);
    void loadSongs (const HRecord& record);
+   void exportData () throw (Glib::ustring);
 
    Gtk::TreeIter addArtist (const HInterpret& artist);
    Gtk::TreeIter addRecord (Gtk::TreeIter& parent, HRecord& record);
@@ -97,22 +106,20 @@ class CDManager : public XGP::XApplication {
    void movieChanged (const HEntity& movie);
 
    void deleteRecord (const Gtk::TreeIter& record);
+   void deleteMovie (const Gtk::TreeIter& movie);
    void deleteSelectedRecords ();
    void deleteSelectedSongs ();
+   void deleteSelectedMovies ();
 
    void removeDeletedEntries ();
    void writeChangedEntries ();
    static Glib::ustring escapeDBValue (const Glib::ustring& value);
-
-   void exportData () throw (Glib::ustring);
 
    std::string stripString (const std::string& value, unsigned int pos, unsigned int len);
    bool parseMP3Info (std::istream& stream, Glib::ustring& artist,
 		      Glib::ustring& record, Glib::ustring& song,
 		      unsigned int& track);
    void parseMP3Info (const std::string& file);
-
-   static XGP::XApplication::MenuEntry menuItems[];
 
    static const char* xpmProgram[];
    static const char* xpmAuthor[];
@@ -132,9 +139,9 @@ class CDManager : public XGP::XApplication {
 
    Gtk::Notebook  nb;
 
-   SongList                     songs;
-   MovieList                    movies;
-   RecordList                   records;
+   SongList   songs;
+   MovieList  movies;
+   RecordList records;
 
    Gtk::Statusbar status;
 
@@ -142,7 +149,7 @@ class CDManager : public XGP::XApplication {
    std::vector<HRecord>    deletedRecords;
    std::vector<HInterpret> deletedInterprets;
    std::vector<HMovie>     deletedMovies;
-   std::vector<HInterpret> deletedDirectors;
+   std::vector<HDirector>  deletedDirectors;
 
    std::map<HSong,HSong>            changedSongs;
    std::map<HRecord, HRecord>       changedRecords;
@@ -155,6 +162,9 @@ class CDManager : public XGP::XApplication {
    std::vector<HDirector>  directors;
    std::vector<HInterpret> artists;
 
+   enum { LOGIN = 0, SAVE, LOGOUT, EXPORT, IMPORT_MP3, MEDIT, NEW_ARTIST,
+	  NEW_RECORD, NEW_SONG, NEW_DIRECTOR, NEW_MOVIE, DELETE, LAST };
+   Gtk::Widget* apMenus[LAST];
    Options& opt;
 };
 

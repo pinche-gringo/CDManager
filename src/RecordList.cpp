@@ -1,11 +1,11 @@
-//$Id: RecordList.cpp,v 1.10 2004/11/29 19:03:24 markus Rel $
+//$Id: RecordList.cpp,v 1.11 2004/12/04 04:06:01 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.10 $
+//REVISION    : $Revision: 1.11 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -75,8 +75,7 @@ Gtk::TreeModel::Row RecordList::append (HRecord& record,
    HEntity obj (HEntity::cast (record));
    Gtk::TreeModel::Row newRecord (OwnerObjectList::append (obj, artist));
    newRecord[colOwnerObjects.name] = record->getName ();
-   if (record->getYear ())
-      newRecord[colOwnerObjects.year] = record->getYear ().toString ();
+   newRecord[colOwnerObjects.year] = record->getYear ().toString ();
    changeGenre (newRecord, record->getGenre ());
 
    return newRecord;

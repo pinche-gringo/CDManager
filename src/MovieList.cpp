@@ -1,11 +1,11 @@
-//$Id: MovieList.cpp,v 1.7 2004/11/29 19:03:24 markus Rel $
+//$Id: MovieList.cpp,v 1.8 2004/12/04 04:06:01 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -75,8 +75,7 @@ Gtk::TreeModel::Row MovieList::append (HMovie& movie,
    HEntity obj (HEntity::cast (movie));
    Gtk::TreeModel::Row newMovie (OwnerObjectList::append (obj, director));
    newMovie[colOwnerObjects.name] = movie->getName ();
-   if (movie->getYear ())
-      newMovie[colOwnerObjects.year] = movie->getYear ().toString ();
+   newMovie[colOwnerObjects.year] = movie->getYear ().toString ();
    changeGenre (newMovie, movie->getGenre ());
 
    return newMovie;

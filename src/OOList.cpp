@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.4 2004/11/29 19:02:40 markus Rel $
+//$Id: OOList.cpp,v 1.5 2004/12/03 03:57:27 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (A) 2004
@@ -156,6 +156,15 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 	 signalObjectChanged.emit (object);
 	 switch (column) {
 	 case 0:
+	    for (Gtk::TreeModel::const_iterator i (row.parent ()->children ().begin ());
+		 i != row.parent ()->children ().end (); ++i) {
+	       Gtk::TreeModel::Row actRow (*i);
+	       if (actRow[colOwnerObjects.name] == value) {
+		  Glib::ustring e (_("Entry `%1' already exists!"));
+		  e.replace (e.find ("%1"), 2, value);
+		  throw (std::runtime_error (e));
+	       }
+	    }
 	    setName (object, value);
 	    row[colOwnerObjects.name] = value;
 	    break;
@@ -183,6 +192,15 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 
 	 switch (column) {
 	 case 0:
+	    for (Gtk::TreeModel::const_iterator i (mOwnerObjects->children ().begin ());
+		 i != mOwnerObjects->children ().end (); ++i) {
+	       Gtk::TreeModel::Row actRow (*i);
+	       if (actRow[colOwnerObjects.name] == value) {
+		  Glib::ustring e (_("Entry `%1' already exists!"));
+		  e.replace (e.find ("%1"), 2, value);
+		  throw (std::runtime_error (e));
+	       }
+	    }
 	    celeb->setName (value);
 	    row[colOwnerObjects.name] = celeb->getName ();
 	    break;
@@ -257,7 +275,7 @@ HCelebrity OwnerObjectList::getCelebrityAt (const Gtk::TreeIter iter) const {
    HEntity hObj ((*iter)[colOwnerObjects.entry]); Check3 (hObj.isDefined ());
    HCelebrity owner (HCelebrity::cast (hObj));
    TRACE7 ("CDManager::getCelebrityAt (const Gtk::TreeIter&) - Selected: " <<
-	   owner->id << '/' << owner->name);
+	   owner->getId () << '/' << owner->getName ());
    return owner;
 }
 
@@ -269,7 +287,7 @@ HCelebrity OwnerObjectList::getCelebrityAt (const Gtk::TreeIter iter) const {
 //-----------------------------------------------------------------------------
 Glib::ustring OwnerObjectList::getLiveSpan (const HCelebrity& owner) {
    TRACE9 ("OwnerObjectList::getLiveSpan (const HCelebrity&) - "
-	   << (owner.isDefined () ? owner->name.c_str () : "None"));
+	   << (owner.isDefined () ? owner->getName ().c_str () : "None"));
    Check1 (owner.isDefined ());
 
    Glib::ustring tmp (owner->getBorn ().toString ());

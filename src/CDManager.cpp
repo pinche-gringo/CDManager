@@ -1,10 +1,12 @@
-//$Id: CDManager.cpp,v 1.30 2004/12/05 17:07:40 markus Exp $
+//$Id: CDManager.cpp,v 1.31 2004/12/07 03:36:53 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
+//TODO        : - Export movies in every language
+//              - Show languages of movies
 //BUGS        :
-//REVISION    : $Revision: 1.30 $
+//REVISION    : $Revision: 1.31 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -51,6 +53,7 @@
 #include "Words.h"
 #include "Record.h"
 #include "Writer.h"
+#include "CDManager.h"
 #include "Director.h"
 #include "Interpret.h"
 
@@ -298,6 +301,8 @@ CDManager::CDManager ()
      records (genres), loadedPages (-1U) {
    Language::init ();
 
+   setIconProgram (xpmProgram);
+   set_default_size (WIDTH, HEIGHT);
 
    // Create controls
    Glib::ustring ui ("<ui><menubar name='Menu'>"
@@ -789,8 +794,8 @@ void CDManager::loadMovies () {
       }
       std::sort (directors.begin (), directors.end (), &Director::compByName);
 
-      Database::store ("SELECT id, name, director, year, genre FROM Movies "
-		       "ORDER BY director, year");
+      Database::store ("SELECT id, name, director, year, genre, type "
+		       "FROM Movies ORDER BY director, year");
       TRACE8 ("CDManager::loadMovies () - Found " << Database::resultSize ()
 	      << " movies");
 
@@ -811,6 +816,8 @@ void CDManager::loadMovies () {
 	    if (Database::getResultColumnAsUInt (3))
 	       movie->setYear (Database::getResultColumnAsUInt (3));
 	    movie->setGenre (Database::getResultColumnAsUInt (4));
+	    movie->setType (Database::getResultColumnAsUInt (5));
+
 	    aMovies[Database::getResultColumnAsUInt (2)].push_back (movie);
 	    Database::getNextResultRow ();
 	 } // end-while has movies
@@ -866,7 +873,7 @@ void CDManager::recordSelected () {
 	 HRecord hRecord (records.getRecordAt (i)); Check3 (hRecord.isDefined ());
 	 if (!hRecord->areSongsLoaded () && hRecord->getId ())
 	    loadSongs (hRecord);
-	 if (!hRecord->areSongsLoaded ())
+
 	 // Add related songs to the listbox
 	 if (relSongs.isRelated (hRecord))
 	    for (std::vector<HSong>::iterator i (relSongs.getObjects (hRecord).begin ());
@@ -1176,7 +1183,7 @@ void CDManager::writeChangedEntries () {
 	    std::stringstream query;
 	    query << (movie->getId () ? "UPDATE Movies" : "INSERT into Movies")
 		  << " SET name=\"" << movie->getName () << "\", genre="
-		  << movie->getGenre ();
+		  << movie->getGenre () << ", type=" << movie->getType ();
 	    if (movie->getYear ().isDefined ())
 	       query << ", year=" << movie->getYear ();
 	    if (relMovies.isRelated (movie)) {

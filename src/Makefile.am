@@ -1,28 +1,29 @@
 ## Process this file with automake to produce Makefile.in
 
+lib_LTLIBRARIES=libCDMgr.la
+
 bin_PROGRAMS=CDManager CDWriter
 
-CDManager_SOURCES=Settings.cpp Settings.h CDAppl.cpp CDAppl.h		\
-		  LangDlg.cpp LangDlg.h CDType.cpp CDType.h		\
-		  Language.cpp Language.h Words.cpp Words.h OOList.cpp	\
-		  OOList.h MovieList.cpp MovieList.h RecordList.cpp	\
-		  RecordList.h RendererList.cpp RendererList.h		\
-		  SongList.cpp SongList.h DB.cpp DB.h Song.h		\
-		  Celebrity.cpp Celebrity.h Interpret.h Record.cpp	\
-		  Record.h Movie.cpp Movie.h CDManager.cpp CDManager.h	\
-		  Options.h
+libCDMgr_la_SOURCES=Options.h Movie.cpp Movie.h Celebrity.cpp		\
+		    Celebrity.h CDType.cpp CDType.h Language.cpp	\
+		    Language.h Words.cpp Words.h Record.cpp Record.h	\
+		    DB.cpp DB.h Interpret.h
+
+CDManager_SOURCES=Settings.cpp Settings.h CDAppl.cpp CDAppl.h	\
+		  LangDlg.cpp LangDlg.h OOList.cpp OOList.h	\
+		  MovieList.cpp MovieList.h RecordList.cpp	\
+		  RecordList.h RendererList.cpp RendererList.h	\
+		  SongList.cpp SongList.h Song.h CDManager.cpp	\
+		  CDManager.h
 
 INCLUDES = @INCLUDES@ -I../Common @DEPS_CFLAGS@
 
-CDManager_LDFLAGS=@DEPS_LIBS@ @LTLIBINTL@
+CDManager_LDFLAGS=@DEPS_LIBS@ @LTLIBINTL@ -lCDMgr
 DEFS = @DEFS@ -Wall
 
-CDWriter_SOURCES=CDWriter.cpp CDWriter.h Options.h Writer.cpp Writer.h	 \
-		 Movie.cpp Movie.h Celebrity.cpp Celebrity.h Interpret.h \
-		 CDType.cpp CDType.h Language.cpp Language.h Words.cpp	 \
-		 Words.h Record.cpp Record.h DB.cpp DB.h
+CDWriter_SOURCES=CDWriter.cpp CDWriter.h Writer.cpp Writer.h
 
-CDWriter_LDFLAGS=@DEPS_LIBS@ @LTLIBINTL@
+CDWriter_LDFLAGS=@DEPS_LIBS@ @LTLIBINTL@ -lCDMgr
 
 Options.meta: Options.h
 	mgeni.pl Options.h > Options.meta

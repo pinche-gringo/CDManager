@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.16 2004/11/17 17:37:42 markus Exp $
+//$Id: CDManager.h,v 1.17 2004/11/17 20:39:56 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,9 +31,12 @@
 #include <gtkmm/scrolledwindow.h>
 
 #include "Song.h"
+#include "Movie.h"
 #include "Record.h"
 #include "SongList.h"
+#include "Director.h"
 #include "Interpret.h"
+#include "MovieList.h"
 #include "RecordList.h"
 
 #include <YGP/Relation.h>
@@ -58,7 +61,7 @@ class CDManager : public XGP::XApplication {
  private:
    // IDs for menus
    enum { LOGIN = XApplication::LAST, SAVE, LOGOUT, MEDIT, NEW_ARTIST,
-	  NEW_RECORD, NEW_SONG, DELETE, EXIT };
+	  NEW_RECORD, NEW_SONG, NEW_MOVIE, NEW_DIRECTOR, DELETE, EXIT };
 
    // Protected manager functions
    CDManager (const CDManager&);
@@ -81,7 +84,6 @@ class CDManager : public XGP::XApplication {
    void recordChanged (const HRecord& record);
    void recordGenreChanged (const HRecord& record);
    void songChanged (const HSong& song);
-   HInterpret getInterpret (unsigned int nr) const;
 
    void deleteRecord (const Gtk::TreeIter& record);
    void deleteSelectedRecords ();
@@ -100,19 +102,22 @@ class CDManager : public XGP::XApplication {
 
    static const char* const DBNAME;
 
-   std::vector<HInterpret>               artists;
    std::map<unsigned int, Glib::ustring> genres;
+   std::map<unsigned int, Glib::ustring> mgenres;
+
+   YGP::Relation1_N<HDirector, HMovie> relMovies;
 
    YGP::Relation1_N<HInterpret, HRecord> relRecords;
    YGP::Relation1_N<HRecord, HSong>      relSongs;
 
    Gtk::Notebook  nb;
    Gtk::HPaned    cds;
-   Gtk::Table     movies;
 
-   RecordList                   records;
    SongList                     songs;
+   MovieList                    movies;
+   RecordList                   records;
    Gtk::ScrolledWindow          scrlSongs;
+   Gtk::ScrolledWindow          scrlMovies;
    Gtk::ScrolledWindow          scrlRecords;
 
    Gtk::Statusbar status;

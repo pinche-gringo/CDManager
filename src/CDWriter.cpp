@@ -1,11 +1,11 @@
-//$Id: CDWriter.cpp,v 1.11 2005/01/29 21:28:52 markus Exp $
+//$Id: CDWriter.cpp,v 1.12 2005/01/29 22:29:10 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDWriter
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.11 $
+//REVISION    : $Revision: 1.12 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -613,6 +613,7 @@ bool CDWriter::readHeaderFile (const char* file, const char* lang,
       if (!input)
 	 return false;
    }
+   target.clear ();
 
    unsigned int i (512);
    char buffer[i];

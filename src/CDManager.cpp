@@ -1,11 +1,10 @@
-//$Id: CDManager.cpp,v 1.15 2004/11/11 04:24:35 markus Rel $
+//$Id: CDManager.cpp,v 1.16 2004/11/12 03:57:39 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
-//TODO        : Free handles in record listbox
 //BUGS        :
-//REVISION    : $Revision: 1.15 $
+//REVISION    : $Revision: 1.16 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -234,7 +233,7 @@ XGP::XApplication::MenuEntry CDManager::menuItems[] = {
     { _("_Edit"),           _("<alt>E"),       MEDIT,      BRANCH },
     { _("_New Interpret"),  _("<ctl>N"),       NEW_ARTIST, ITEM },
     { _("_New Song"),       _("<ctl><shft>N"), NEW_SONG,   ITEM },
-    { _("_Delete"),         _("<del>"),        DELETE,     ITEM }
+    { _("_Delete"),         _("<delete>"),     DELETE,     ITEM }
 };
 
 /// Defaultconstructor; all widget are created
@@ -283,8 +282,6 @@ CDManager::CDManager ()
    movies.signalObjectChanged.connect (mem_fun (*this, &CDManager::movieChanged));
    Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
    recordSel->set_mode (Gtk::SELECTION_EXTENDED);
-   recordSel->set_select_function
-      (mem_fun (*this, &CDManager::canSelect));
    recordSel->signal_changed ().connect
       (mem_fun (*this, &CDManager::recordSelected));
    cds->add1 (*manage (scrlRecords));
@@ -322,79 +319,8 @@ void CDManager::command (int menu) {
    TRACE2 ("CDManager::command (int) - " << menu);
    switch (menu) {
    case SAVE:
-      while (changedInterprets.size ()) {
-	 HInterpret artist (changedInterprets.begin ()->first);
-	 Check3 (artist.isDefined ());
-	 try {
-	    std::stringstream query;
-	    query << (artist->id ? "UPDATE Interprets" : "INSERT into Interprets")
-		  << " SET name=\"" << artist->name << '"';
-	    if (artist->id)
-	       query << " WHERE id=" << artist->id;
-	    Database::store (query.str ().c_str ());
-	 }
-	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't write interpret %1!\n\nReason: %2"));
-	    msg.replace (msg.find ("%1"), 2, artist->name);
-	    msg.replace (msg.find ("%2"), 2, err.what ());
-	    Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-	    dlg.run ();
-	 }
-
-	 changedInterprets.erase (changedInterprets.begin ());
-      } // endwhile
-
-      while (changedRecords.size ()) {
-	 HRecord record (changedRecords.begin ()->first); Check3 (record.isDefined ());
-	 try {
-	    std::stringstream query;
-	    query << (record->id ? "UPDATE Records" : "INSERT into Records")
-		  << " SET name=\"" << record->name << "\", year=" << record->year
-		  << ", genre=" << record->genre;
-	    if (relRecords.isRelated (record)) {
-	       HInterpret artist (relRecords.getParent (record)); Check3 (artist.isDefined ());
-	       query << ", interpret=" << artist->id;
-	    }
-	    if (record->id)
-	       query << " WHERE id=" << record->id;
-	    Database::store (query.str ().c_str ());
-	 }
-	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't write record %1!\n\nReason: %2"));
-	    msg.replace (msg.find ("%1"), 2, record->name);
-	    msg.replace (msg.find ("%2"), 2, err.what ());
-	    Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-	    dlg.run ();
-	 }
-
-	 changedRecords.erase (changedRecords.begin ());
-      } // endwhile
-
-      while (changedSongs.size ()) {
-	 HSong song (changedSongs.begin ()->first); Check3 (song.isDefined ());
-	 try {
-	    std::stringstream query;
-	    query << (song->id ? "UPDATE Songs" : "INSERT into Songs")
-		  << " SET name=\"" << song->name << "\", track=" << song->track
-		  << ", duration=\"" << song->duration << "\", genre=" << song->genre;
-	    if (relSongs.isRelated (song)) {
-	       HRecord record (relSongs.getParent (song)); Check3 (record.isDefined ());
-	       query << ", idRecord=" << record->id;
-	    }
-	    if (song->id)
-	       query << " WHERE id=" << song->id;
-	    Database::store (query.str ().c_str ());
-	 }
-	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't write song %1!\n\nReason: %2"));
-	    msg.replace (msg.find ("%1"), 2, song->name);
-	    msg.replace (msg.find ("%2"), 2, err.what ());
-	    Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-	    dlg.run ();
-	 }
-
-	 changedSongs.erase (changedSongs.begin ());
-      } // endwhile
+      removeDeletedEntries ();
+      writeChangedEntries ();
       apMenus[SAVE]->set_sensitive (false);
       break;
 
@@ -416,62 +342,12 @@ void CDManager::command (int menu) {
    case NEW_SONG:
       break;
 
-   case DELETE: {
-      Glib::RefPtr<Gtk::TreeSelection> selection (records.get_selection ());
-      while (selection->get_selected_rows ().size ()) {
-	 Gtk::TreeSelection::ListHandle_Path list (selection->get_selected_rows ());
-	 Check3 (list.size ());
-	 Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
-
-	 Gtk::TreeIter iter (records.get_model ()->get_iter (*i)); Check3 (iter);
-	 HRecord hRec (records.getRecordAt (iter));
-	 TRACE9 ("CDManager::command (int) -Deleting " << hRec->name);
-
-	 Check3 (relRecords.isRelated (hRec));
-	 HInterpret hArtist (relRecords.getParent (hRec));
-	 Check3 (hArtist.isDefined ());
-
-	 try {
-	    std::stringstream id;
-	    id << hRec->id;
-	    std::string query ("DELETE FROM Records WHERE id=");
-	    query += id.str ();
-	    Database::store (query.c_str ());
-
-	    query = "DELETE FROM Songs WHERE idRecord=";
-	    query += id.str ();
-	    Database::store (query.c_str ());
-
-	    // Remove related songs
-	    TRACE3 ("CDManager::command () - DELETE: Remove Songs");
-	    while (relSongs.isRelated (hRec)) {
-	       std::vector<HSong>::iterator s
-		  (relSongs.getObjects (hRec).begin ());
-	       TRACE9 ("CDManager::command () - DELETE: Remove Song "
-		       << (*s)->id << '/' << (*s)->name);
-	       relSongs.unrelate (hRec, *s);
-	    }
-	    relRecords.unrelate (hArtist, hRec);
-
-	    // Delete artist from listbox if it doesn't have any records
-	    if (!relRecords.isRelated (hArtist)) {
-	       Gtk::TreeIter parent ((*iter)->parent ()); Check3 (parent);
-	       records.getModel ()->erase (iter);
-	       records.getModel ()->erase (parent);
-	    }
-	    else
-	       records.getModel ()->erase (iter);
-	 }
-	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't delete record %1!\n\nReason: %2"));
-	    msg.replace (msg.find ("%1"), 2, hRec->name);
-	    msg.replace (msg.find ("%2"), 2, err.what ());
-	    Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-	    dlg.run ();
-	 }
-	 i = list.begin ();
-      } // end-while has selected entries
-      break; }
+   case DELETE:
+      if (records.has_focus ())
+	 deleteSelectedRecords ();
+      else if (songs.has_focus ())
+	 deleteSelectedSongs ();
+      break;
 
    case EXIT:
       hide ();
@@ -702,18 +578,6 @@ void CDManager::loadDatabase () {
 }
 
 //-----------------------------------------------------------------------------
-/// Checks if a row in the record treeview can be selected
-/// \param model: Model of record treeview
-/// \param path: Enty which is about to be selected
-/// \returns bool: True if enty can be selected
-//-----------------------------------------------------------------------------
-bool CDManager::canSelect (const Glib::RefPtr<Gtk::TreeModel>& model,
-			   const Gtk::TreeModel::Path& path, bool) {
-  const Gtk::TreeModel::iterator iter (model->get_iter (path));
-  return iter->children ().empty (); // only allow leaf nodes to be selected
-}
-
-//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CDManager::recordSelected () {
    TRACE9 ("CDManager::recordSelected ()");
@@ -730,15 +594,17 @@ void CDManager::recordSelected () {
 
       if ((*i)->parent ()) {
 	 HRecord hRecord (records.getRecordAt (i)); Check3 (hRecord.isDefined ());
-      HRecord hRecord (records.getRecordAt (i));
-      if (!relSongs.isRelated (hRecord))
-	 loadSongs (hRecord);
+      if (i->children ().empty ()) {
+	 HRecord hRecord (records.getRecordAt (i));
+	 if (!relSongs.isRelated (hRecord))
+	 // Add related songs to the listbox
+	 if (relSongs.isRelated (hRecord))
+	    for (std::vector<HSong>::iterator i (relSongs.getObjects (hRecord).begin ());
+		 i != relSongs.getObjects (hRecord).end (); ++i)
+	       songs.append (*i);
 
-      // Add related songs to the listbox
-      if (relSongs.isRelated (hRecord))
-	 for (std::vector<HSong>::iterator i (relSongs.getObjects (hRecord).begin ());
-	      i != relSongs.getObjects (hRecord).end (); ++i)
-	    songs.append (*i);
+	 enableEdit (OBJECT_SELECTED);
+	 enableEdit (OWNER_SELECTED);
       enableEdit (NONE_SELECTED);
   enableEdit (list.size ());
 //-----------------------------------------------------------------------------
@@ -846,6 +712,231 @@ void CDManager::recordChanged (const HRecord& record) {
    }
 }
 /// Callback (additional to recordChanged) when the genre of a record is being
+/// changed
+/// Removes deleed entries from the database
+//-----------------------------------------------------------------------------
+void CDManager::removeDeletedEntries () {
+   try {
+      while (deletedInterprets.size ()) {
+	 HInterpret artist (*deletedInterprets.begin ()); Check3 (artist.isDefined ());
+	 try {
+	    std::stringstream query;
+	    query << "DELETE FROM Interprets WHERE id=" << artist->id;
+	    Database::store (query.str ().c_str ());
+	 }
+	 catch (const std::exception& err) {
+	    Glib::ustring msg (_("Can't delete interpret %1!\n\nReason: %2"));
+	    msg.replace (msg.find ("%1"), 2, artist->name);
+	    msg.replace (msg.find ("%2"), 2, err.what ());
+	    throw (msg);
+	 }
+	 deletedInterprets.erase (deletedInterprets.begin ());
+      } // endwhile
+
+      while (deletedRecords.size ()) {
+	 HRecord record (*deletedRecords.begin ()); Check3 (record.isDefined ());
+	 try {
+	    std::stringstream query;
+	    query << "DELETE FROM Records WHERE id=" << record->id;
+	    Database::store (query.str ().c_str ());
+	 }
+	 catch (const std::exception& err) {
+	    Glib::ustring msg (_("Can't delete record %1!\n\nReason: %2"));
+	    msg.replace (msg.find ("%1"), 2, record->name);
+	    msg.replace (msg.find ("%2"), 2, err.what ());
+	    throw (msg);
+	 }
+	 deletedRecords.erase (deletedRecords.begin ());
+      } // endwhile
+
+      while (deletedSongs.size ()) {
+	 HSong song (*deletedSongs.begin ()); Check3 (song.isDefined ());
+	 try {
+	    std::stringstream query;
+	    query << "DELETE FROM Songs WHERE id=" << song->id;
+	    Database::store (query.str ().c_str ());
+	 }
+	 catch (const std::exception& err) {
+	    Glib::ustring msg (_("Can't delete song %1!\n\nReason: %2"));
+	    msg.replace (msg.find ("%1"), 2, song->name);
+	    msg.replace (msg.find ("%2"), 2, err.what ());
+	    throw (msg);
+	 }
+	 deletedSongs.erase (deletedSongs.begin ());
+      } // end-while
+   }
+   catch (const Glib::ustring& msg) {
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Aktualizes changed entries in the database
+//-----------------------------------------------------------------------------
+void CDManager::writeChangedEntries () {
+   try {
+      while (changedInterprets.size ()) {
+	 HInterpret artist (changedInterprets.begin ()->first);
+	 Check3 (artist.isDefined ());
+	 try {
+	    std::stringstream query;
+	    query << (artist->id ? "UPDATE Interprets" : "INSERT into Interprets")
+		  << " SET name=\"" << artist->name << '"';
+	    if (artist->id)
+	       query << " WHERE id=" << artist->id;
+	    Database::store (query.str ().c_str ());
+
+	    if (!artist->id)
+	       artist->id = Database::getIDOfInsert ();
+	 }
+	 catch (const std::exception& err) {
+	    Glib::ustring msg (_("Can't write interpret %1!\n\nReason: %2"));
+	    msg.replace (msg.find ("%1"), 2, artist->name);
+	    msg.replace (msg.find ("%2"), 2, err.what ());
+	    throw (msg);
+	 }
+
+	 changedInterprets.erase (changedInterprets.begin ());
+      } // endwhile
+
+      while (changedRecords.size ()) {
+	 HRecord record (changedRecords.begin ()->first); Check3 (record.isDefined ());
+	 try {
+	    std::stringstream query;
+	    query << (record->id ? "UPDATE Records" : "INSERT into Records")
+		  << " SET name=\"" << record->name << "\", year=" << record->year
+		  << ", genre=" << record->genre;
+	    if (relRecords.isRelated (record)) {
+	       HInterpret artist (relRecords.getParent (record)); Check3 (artist.isDefined ());
+	       query << ", interpret=" << artist->id;
+	    }
+	    if (record->id)
+	       query << " WHERE id=" << record->id;
+	    Database::store (query.str ().c_str ());
+
+	    if (!record->id)
+	       record->id = Database::getIDOfInsert ();
+	 }
+	 catch (const std::exception& err) {
+	    Glib::ustring msg (_("Can't write record %1!\n\nReason: %2"));
+	    msg.replace (msg.find ("%1"), 2, record->name);
+	    msg.replace (msg.find ("%2"), 2, err.what ());
+	 }
+
+	 changedRecords.erase (changedRecords.begin ());
+      } // endwhile
+
+      while (changedSongs.size ()) {
+	 HSong song (changedSongs.begin ()->first); Check3 (song.isDefined ());
+	 try {
+	    std::stringstream query;
+	    query << (song->id ? "UPDATE Songs" : "INSERT into Songs")
+		  << " SET name=\"" << song->name << "\", track=" << song->track
+		  << ", duration=\"" << song->duration << "\", genre=" << song->genre;
+	    if (relSongs.isRelated (song)) {
+	       HRecord record (relSongs.getParent (song)); Check3 (record.isDefined ());
+	       query << ", idRecord=" << record->id;
+	    }
+	    if (song->id)
+	       query << " WHERE id=" << song->id;
+	    Database::store (query.str ().c_str ());
+
+	    if (!song->id)
+	       song->id = Database::getIDOfInsert ();
+	 }
+	 catch (const std::exception& err) {
+	    Glib::ustring msg (_("Can't write song %1!\n\nReason: %2"));
+	    msg.replace (msg.find ("%1"), 2, song->name);
+	    msg.replace (msg.find ("%2"), 2, err.what ());
+	 }
+
+	 changedSongs.erase (changedSongs.begin ());
+      } // endwhile
+   }
+   catch (const Glib::ustring& msg) {
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Removes the selected records or artists from the listbox. Depending objects
+// (records or songs) are deleted too.
+//-----------------------------------------------------------------------------
+void CDManager::deleteSelectedRecords () {
+   TRACE9 ("CDManager::deleteSelectedRecords ()");
+
+   Glib::RefPtr<Gtk::TreeSelection> selection (records.get_selection ());
+   while (selection->get_selected_rows ().size ()) {
+      Gtk::TreeSelection::ListHandle_Path list (selection->get_selected_rows ());
+      Check3 (list.size ());
+      Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
+
+      Gtk::TreeIter iter (records.get_model ()->get_iter (*i)); Check3 (iter);
+      if (iter->children ().size ()) {      // An artist is going to be deleted
+	 while (iter->children ().size ()) {
+	    Gtk::TreeIter child (iter->children ().begin ());
+	    deleteRecord (iter);
+	 }
+	 // Though artist is automatically removed from the listbox, it still
+	 // has to be removed from the database
+	 HInterpret artist (records.getInterpretAt (iter)); Check3 (artist.isDefined ());
+	 deletedInterprets.push_back (artist);
+      }
+      else                                  // A record is going to be deleted
+	 deleteRecord (iter);
+      }
+
+   apMenus[SAVE]->set_sensitive (true);
+}
+
+//-----------------------------------------------------------------------------
+/// Deletes the passed record
+/// \param record: Iterator to record to delete
+//-----------------------------------------------------------------------------
+void CDManager::deleteRecord (const Gtk::TreeIter& record) {
+   Check2 (record->children ().empty ());
+
+   HRecord hRec (records.getRecordAt (record));
+   TRACE9 ("CDManager::deleteRecord (const Gtk::TreeIter&) - Deleting record "
+	   << hRec->name);
+   Check3 (relRecords.isRelated (hRec));
+   HInterpret hArtist (relRecords.getParent (hRec)); Check3 (hArtist.isDefined ());
+
+   // Remove related songs
+   TRACE3 ("CDManager::deleteRecord (const Gtk::TreeIter&) - Remove Songs");
+   while (relSongs.isRelated (hRec)) {
+      std::vector<HSong>::iterator s
+	 (relSongs.getObjects (hRec).begin ());
+      relSongs.unrelate (hRec, *s);
+      deletedSongs.push_back (*s);
+   }
+   relRecords.unrelate (hArtist, hRec);
+   deletedRecords.push_back (hRec);
+
+   // Delete artist from listbox if it doesn't have any records
+   if (!relRecords.isRelated (hArtist)) {
+      TRACE9 ("CDManager::deleteRecord (const Gtk::TreeIter&) - Deleting artist "
+	      << hArtist->name);
+
+      Gtk::TreeIter parent ((*record)->parent ()); Check3 (parent);
+      records.getModel ()->erase (record);
+      records.getModel ()->erase (parent);
+   }
+   else
+      records.getModel ()->erase (record);
+}
+
+//-----------------------------------------------------------------------------
+/// Removes the selected songs from the listbox.
+//-----------------------------------------------------------------------------
+void CDManager::deleteSelectedSongs () {
+   TRACE9 ("CDManager::deleteSelectedSongs ()");
+
+   apMenus[SAVE]->set_sensitive (true);
+}
+
 /// Exports the stored information to HTML documents
 //-----------------------------------------------------------------------------
 /// \param argv: Array with pointer to parameter

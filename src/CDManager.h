@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.14 2004/11/11 04:24:35 markus Rel $
+//$Id: CDManager.h,v 1.15 2004/11/12 03:57:39 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -80,8 +80,13 @@ class CDManager : public XGP::XApplication {
    void recordChanged (const HRecord& record);
    void songChanged (const HSong& song);
    HInterpret getInterpret (unsigned int nr) const;
-   bool canSelect (const Glib::RefPtr<Gtk::TreeModel>& model,
-		   const Gtk::TreeModel::Path& path, bool);
+
+   void deleteRecord (const Gtk::TreeIter& record);
+   void deleteSelectedRecords ();
+   void deleteSelectedSongs ();
+
+   void removeDeletedEntries ();
+   void writeChangedEntries ();
 
    static XGP::XApplication::MenuEntry menuItems[];
 
@@ -109,6 +114,10 @@ class CDManager : public XGP::XApplication {
    Gtk::ScrolledWindow          scrlRecords;
 
    Gtk::Statusbar status;
+
+   std::vector<HSong>      deletedSongs;
+   std::vector<HRecord>    deletedRecords;
+   std::vector<HInterpret> deletedInterprets;
 
    std::map<HSong,HSong>            changedSongs;
    std::map<HRecord, HRecord>       changedRecords;

@@ -1,7 +1,7 @@
 #ifndef RECORDLIST_H
 #define RECORDLIST_H
 
-//$Id: RecordList.h,v 1.5 2004/11/17 17:33:16 markus Exp $
+//$Id: RecordList.h,v 1.6 2004/11/26 04:06:29 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,57 +24,37 @@
 #include "Record.h"
 #include "Interpret.h"
 
+#include "OOList.h"
+
 
 class CellRendererList;
 
 
-/**Class describing the columns in the record-model
- */
-class RecordColumns : public Gtk::TreeModel::ColumnRecord {
- public:
-   RecordColumns () {
-      add (entry); add (name); add (year); add (genre); }
-
-   Gtk::TreeModelColumn<YGP::Handle<YGP::Entity> > entry;
-   Gtk::TreeModelColumn<Glib::ustring>             name;
-   Gtk::TreeModelColumn<YGP::AYear>                year;
-   Gtk::TreeModelColumn<Glib::ustring>             genre;
-};
-
-
 /**Class to hold a list of records
  */
-class RecordList : public Gtk::TreeView {
+class RecordList : public OwnerObjectList {
  public:
    RecordList (const std::map<unsigned int, Glib::ustring>& genres);
    virtual ~RecordList ();
 
-   Gtk::TreeModel::Row append (const HInterpret& artist);
+   Gtk::TreeModel::Row append (const HInterpret& artist) {
+      return OwnerObjectList::append (artist); }
    Gtk::TreeModel::Row append (HRecord& record, const Gtk::TreeModel::Row& artist);
-   void clear () { mRecords->clear (); }
 
-   void updateGenres ();
-
-   sigc::signal<void, const HInterpret&> signalArtistChanged;
-   sigc::signal<void, const HRecord&> signalRecordChanged;
-   sigc::signal<void, const HRecord&> signalRecordGenreChanged;
-
-   Glib::RefPtr<Gtk::TreeStore> getModel () const { return mRecords; }
    HRecord getRecordAt (const Gtk::TreeIter iterator) const;
-   HInterpret getInterpretAt (const Gtk::TreeIter iterator) const;
+   HInterpret getInterpretAt (const Gtk::TreeIter iterator) const {
+      return getCelebrityAt (iterator); }
 
  protected:
-   void valueChanged (const Glib::ustring& path, const Glib::ustring& value,
-		      unsigned int column);
+   virtual void setName (HEntity& object, const Glib::ustring& value);
+   virtual void setYear (HEntity& object, const Glib::ustring& value);
+   virtual void setGenre (HEntity& object, unsigned int value);
+
+   virtual Glib::ustring getColumnName () const;
 
  private:
    RecordList (const RecordList& other);
    const RecordList& operator= (const RecordList& other);
-
-   const std::map<unsigned int, Glib::ustring>& genres;
-
-   RecordColumns colRecords;
-   Glib::RefPtr<Gtk::TreeStore> mRecords;
 };
 
 

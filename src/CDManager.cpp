@@ -1,10 +1,10 @@
-//$Id: CDManager.cpp,v 1.22 2004/11/25 23:17:57 markus Exp $
+//$Id: CDManager.cpp,v 1.23 2004/11/26 04:07:23 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //BUGS        :
-//REVISION    : $Revision: 1.22 $
+//REVISION    : $Revision: 1.23 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -54,17 +54,33 @@
 // Macro to define a callback to handle changing an entity (record, movie, ...)
 #define storeObject(store, type, obj) \
    if (store.find (obj) == store.end ()) {\
+      store[obj] = new type (*obj);\
+      apMenus[SAVE]->set_sensitive (true);\
+   }
+
+// Macro to define a callback to handle changing an entity (record, movie, ...)
+#define defineChangeEntity(type, entity, store) \
+void CDManager::entity##Changed (const HEntity& entity) {\
    H##type obj (H##type::cast (entity));\
+   TRACE9 ("CDManager::" #entity "Changed (const HEntity&) - "\
+	   << (obj.isDefined () ? obj->getId () : -1UL) << '/'\
+	   << (obj.isDefined () ? obj->getName ().c_str () : "Undefined"));\
+	   << (obj.isDefined () ? obj->id : -1UL) << '/'\
+	   << (obj.isDefined () ? obj->name.c_str () : "Undefined"));\
+   storeObject (store, type, obj);\
+}
+
+// Macro to define a callback to handle changing an entity (record, movie, ...)
+#define defineChangeObject(type, entity, store) \
+void CDManager::entity##Changed (const H##type& entity) {\
+   TRACE9 ("CDManager::" #entity "Changed (const H" #type "&) - "\
 	   << (entity.isDefined () ? entity->getId () : -1UL) << '/'\
 	   << (entity.isDefined () ? entity->getName ().c_str () : "Undefined"));\
 	   << (entity.isDefined () ? entity->id : -1UL) << '/'\
 	   << (entity.isDefined () ? entity->name.c_str () : "Undefined"));\
    storeObject (store, type, entity);\
 }
-   if (store.find (entity) == store.end ()) {\
-      store[entity] = new type (*entity);\
-      apMenus[SAVE]->set_sensitive (true);\
-   }\
+
 const unsigned int CDManager::WIDTH (800);
 const unsigned int CDManager::HEIGHT (600);
 
@@ -304,14 +320,13 @@ CDManager::CDManager ()
    songs.signalChanged.connect (mem_fun (*this, &CDManager::songChanged));
    records.signalOwnerChanged.connect (mem_fun (*this, &CDManager::artistChanged));
    records.signalObjectChanged.connect (mem_fun (*this, &CDManager::recordChanged));
-   records.signalArtistChanged.connect (mem_fun (*this, &CDManager::artistChanged));
-   records.signalRecordChanged.connect (mem_fun (*this, &CDManager::recordChanged));
-   records.signalRecordGenreChanged.connect
+   records.signalObjectGenreChanged.connect
+      (mem_fun (*this, &CDManager::recordGenreChanged));
+
    movies.signalOwnerChanged.connect (mem_fun (*this, &CDManager::directorChanged));
    movies.signalObjectChanged.connect (mem_fun (*this, &CDManager::movieChanged));
-   movies.signalDirectorChanged.connect (mem_fun (*this, &CDManager::directorChanged));
-   movies.signalMovieChanged.connect (mem_fun (*this, &CDManager::movieChanged));
-   movies.signalMovieGenreChanged.connect (mem_fun (*this, &CDManager::movieGenreChanged));
+
+   Glib::RefPtr<Gtk::TreeSelection> sel (records.get_selection ());
    sel->set_mode (Gtk::SELECTION_EXTENDED);
    Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
    recordSel->set_mode (Gtk::SELECTION_EXTENDED);
@@ -396,7 +411,7 @@ void CDManager::command (int menu) {
       records.expand_row (model->get_path (p), false);
       recordSel->select (i);
       records.scroll_to_row (records.getModel ()->get_path (i), 0.99);
-      recordChanged (record);
+      recordChanged (HEntity::cast (record));
 
       HInterpret artist;
       artist = records.getInterpretAt (p);
@@ -446,7 +461,6 @@ void CDManager::command (int menu) {
       movies.expand_row (model->get_path (p), false);
       movieSel->select (i);
       movies.scroll_to_row (movies.getModel ()->get_path (i), 0.99);
-      // recordChanged (movie);
 
       HDirector director;
       director = movies.getDirectorAt (p);
@@ -872,14 +886,14 @@ void CDManager::loadSongs (const HRecord& record) {
 //-----------------------------------------------------------------------------
 defineChangeObject(Song, song, changedSongs)
 
-defineChangeEntity(Song, song, changedSongs)
+//-----------------------------------------------------------------------------
 // void CDManager::artistChanged (const HInterpret& artist)
 /// Callback when changing an artist
 /// \param entity: Handle to changed artist
 //-----------------------------------------------------------------------------
 defineChangeObject(Interpret, artist, changedInterprets)
 
-defineChangeEntity(Interpret, artist, changedInterprets)
+//-----------------------------------------------------------------------------
 // void CDManager::recordChanged (const HRecord& record)
 /// Callback when changing a record
 /// \param entity: Handle to changed record
@@ -893,7 +907,7 @@ defineChangeEntity(Record, record, changedRecords)
 //-----------------------------------------------------------------------------
 defineChangeObject(Director, director, changedDirectors)
 
-defineChangeEntity(Director, director, changedDirectors)
+//-----------------------------------------------------------------------------
 // void CDManager::movieChanged (const HMovie& movie)
 /// Callback when changing a movie
 /// \param movie: Handle to changed movie
@@ -907,17 +921,18 @@ defineChangeEntity(Movie, movie, changedMovies)
 //-----------------------------------------------------------------------------
 void CDManager::recordGenreChanged (const HEntity& record) {
    Check1 (record.isDefined ());
-void CDManager::recordGenreChanged (const HRecord& record) {
+   HRecord rec (HRecord::cast (record));
+   TRACE9 ("CDManager::recordGenreChanged (const HInterpret& record) - "
+	   << (rec.isDefined () ? rec->getId () : -1UL) << '/'
 	   << (rec.isDefined () ? rec->getName ().c_str () : "Undefined"));
-	   << (record.isDefined () ? record->id : -1UL) << '/'
-	   << (record.isDefined () ? record->name.c_str () : "Undefined"));
-   Check1 (record.isDefined ());
+	   << (rec.isDefined () ? rec->id : -1UL) << '/'
+	   << (rec.isDefined () ? rec->name.c_str () : "Undefined"));
       for (std::vector<HSong>::iterator i (relSongs.getObjects (rec).begin ());
-   if (relSongs.isRelated (record)) {
-      for (std::vector<HSong>::iterator i (relSongs.getObjects (record).begin ());
-	   i != relSongs.getObjects (record).end (); ++i)
+	   i != relSongs.getObjects (rec).end (); ++i)
+	 if (!(*i)->getGenre ()) {
+	    (*i)->setGenre (rec->getGenre ());
 	 if (!(*i)->genre) {
-	    (*i)->genre = record->genre;
+	    (*i)->genre = rec->genre;
 
       recordSelected ();
    }
@@ -926,19 +941,6 @@ void CDManager::recordGenreChanged (const HRecord& record) {
 //-----------------------------------------------------------------------------
 /// Escapes the quotes in values for the database
 /// \param value: Value to escape
-/// Callback (additional to movieChanged) when the genre of a movie is being
-/// changed
-/// \param movie: Handle to changed movie
-//-----------------------------------------------------------------------------
-void CDManager::movieGenreChanged (const HMovie& movie) {
-   TRACE9 ("CDManager::movieGenreChanged (const HMovie& movie) - "
-	   << (movie.isDefined () ? movie->id : -1UL) << '/'
-	   << (movie.isDefined () ? movie->name.c_str () : "Undefined"));
-   Check1 (movie.isDefined ());
-}
-
-
-//-----------------------------------------------------------------------------
 /// Removes deleed entries from the database
 //-----------------------------------------------------------------------------
 void CDManager::removeDeletedEntries () {

@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.19 2004/11/25 23:21:20 markus Exp $
+//$Id: CDManager.h,v 1.20 2004/11/26 04:07:23 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -81,12 +81,11 @@ class CDManager : public XGP::XApplication {
    void loadSongs (const HRecord& record);
 
    void artistChanged (const HInterpret& artist);
-   void recordChanged (const HRecord& record);
-   void recordGenreChanged (const HRecord& record);
+   void recordChanged (const HEntity& record);
+   void recordGenreChanged (const HEntity& record);
    void songChanged (const HSong& song);
    void directorChanged (const HDirector& director);
-   void movieChanged (const HMovie& movie);
-   void movieGenreChanged (const HMovie& movie);
+   void movieChanged (const HEntity& movie);
 
    void deleteRecord (const Gtk::TreeIter& record);
    void deleteSelectedRecords ();

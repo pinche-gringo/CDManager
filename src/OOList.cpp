@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.9 2004/12/18 20:15:46 markus Exp $
+//$Id: OOList.cpp,v 1.10 2004/12/22 16:59:20 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.9 $
+//REVISION    : $Revision: 1.10 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (A) 2004
@@ -495,52 +495,4 @@ void OwnerObjectList::selectRow (const Gtk::TreeModel::const_iterator& i) {
    sel->unselect_all ();
    sel->select (i);
    scroll_to_row (mOwnerObjects->get_path (i), 0.5);
-}
-
-//-----------------------------------------------------------------------------
-/// Selects the row with having a name with the passed text
-/// \param text: Text the row must contain
-//-----------------------------------------------------------------------------
-void OwnerObjectList::selectRow (const Glib::ustring& text) {
-   Glib::RefPtr<Gtk::TreeSelection> sel (get_selection ());
-   Gtk::TreeSelection::ListHandle_Path list (sel->get_selected_rows ());
-   Gtk::TreeIter p;
-   YGP::RegularExpression re (text.c_str ());
-
-   if (list.size ()) {
-      p = mOwnerObjects->get_iter (*list.begin ());
-      if (p->parent ())
-	 ++p;
-      else
-	 p = p->children ().begin ();
-      while (p) {
-	 if (re.matches (((Glib::ustring)(*p)[colOwnerObjects->name]).c_str ())) {
-	    selectRow (p);
-	    return;
-	 }
-	 ++p;
-      } // endwhile
-      p = p->parent ();
-      ++p;
-   }
-   else
-      p = mOwnerObjects->children ().begin ();
-   while (p) {
-      TRACE8 ("OwnerObjectList::selectRow (const Glib::ustring&) - " << text
-	      << "==" << ((Glib::ustring)(*p)[colOwnerObjects->name]));
-      if (re.matches (((Glib::ustring)(*p)[colOwnerObjects->name]).c_str ())) {
-	 selectRow (p);
-	 return;
-      }
-      for (Gtk::TreeModel::const_iterator i (p->children ().begin ());
-	   i != p->children ().end (); ++i) {
-	 TRACE8 ("OwnerObjectList::selectRow (const Glib::ustring&) - " << text
-		 << "==" << ((Glib::ustring)(*i)[colOwnerObjects->name]));
-	 if (re.matches (((Glib::ustring)(*i)[colOwnerObjects->name]).c_str ())) {
-	    selectRow (i);
-	 return;
-      }
-      }
-      ++p;
-   } // endwhile
 }

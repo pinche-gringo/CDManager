@@ -1,7 +1,7 @@
 #ifndef OOLIST_H
 #define OOLIST_H
 
-//$Id: OOList.h,v 1.7 2004/12/18 20:15:46 markus Exp $
+//$Id: OOList.h,v 1.8 2004/12/22 16:59:21 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -68,7 +68,6 @@ class OwnerObjectList : public Gtk::TreeView {
    Gtk::TreeModel::iterator getObject (const Gtk::TreeIter& parent,
 				       const Glib::ustring& name);
 
-   void selectRow (const Glib::ustring& text);
    void selectRow (const Gtk::TreeModel::const_iterator& i);
 
  protected:

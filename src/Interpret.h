@@ -1,7 +1,7 @@
 #ifndef INTERPRET_H
 #define INTERPRET_H
 
-//$Id: Interpret.h,v 1.6 2004/11/24 21:54:32 markus Exp $
+//$Id: Interpret.h,v 1.7 2004/11/25 13:24:12 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 #include "Celebrity.h"
 
 
-typedef Celibrity Interpret;
+typedef Celebrity Interpret;
 defineHndl(Interpret);
 
 #endif

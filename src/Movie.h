@@ -1,7 +1,7 @@
 #ifndef MOVIE_H
 #define MOVIE_H
 
-//$Id: Movie.h,v 1.1 2004/12/09 03:20:15 markus Exp $
+//$Id: Movie.h,v 1.2 2004/12/11 22:54:13 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -52,9 +52,7 @@ class Movie : public YGP::Entity {
    void setYear     (const YGP::AYear& value) { year = value; }
    void setYear     (const std::string& value) { year = value; }
    void setGenre    (unsigned int value) { genre = value; }
-   void setLanguage (const std::string& value) throw (std::out_of_range) {
-      Language::findNational (value);
-      lang = value; }
+   void setLanguage (const std::string& value) { lang = value; }
    void setType     (int value) throw (std::out_of_range) {
       CDType::getInstance ()[value];
       type = value; }

@@ -1,11 +1,11 @@
-//$Id: CDWriter.cpp,v 1.10 2005/01/20 04:44:18 markus Rel $
+//$Id: CDWriter.cpp,v 1.11 2005/01/29 21:28:52 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDWriter
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.10 $
+//REVISION    : $Revision: 1.11 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -210,7 +210,7 @@ int CDWriter::perform (int argc, const char** argv) {
    }
 
    Genres movieGenres, recGenres;
-   Genres::loadFromFile (DATADIR "Genres.dat", recGenres, movieGenres);
+   Genres::loadFromFile (DATADIR "Genres.dat", recGenres, movieGenres, argv[0]);
 
    Glib::ustring transTitleMovie (_("Movies (by %1)"));
    Glib::ustring transTitleRecord (_("Records (by %1)"));

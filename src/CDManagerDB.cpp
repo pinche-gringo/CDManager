@@ -1,11 +1,11 @@
-//$Id: CDManagerDB.cpp,v 1.1 2005/01/25 01:39:36 markus Exp $
+//$Id: CDManagerDB.cpp,v 1.2 2005/01/29 21:28:52 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.1.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -25,6 +25,9 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 #include <cdmgr-cfg.h>
+
+#include <cstdlib>
+#include <clocale>
 
 #include <fstream>
 #include <sstream>
@@ -76,7 +79,15 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
       if (recGenres.empty ()) {
 	 const char* pLang (getenv ("LANGUAGE"));
 	 if (!pLang) {
-	 Genres::loadFromFile (DATADIR "Genres.dat", recGenres, movieGenres);
+#ifdef HAVE_LC_MESSAGES
+	    pLang = setlocale (LC_MESSAGES, NULL);
+#else
+	    pLang = getenv ("LANG");
+#endif
+	 }
+	 Genres::loadFromFile (DATADIR "Genres.dat", recGenres, movieGenres, pLang);
+
+	 records.updateGenres ();
 	 songs.updateGenres ();
 	 movies.updateGenres ();
       }

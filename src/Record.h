@@ -1,7 +1,7 @@
 #ifndef RECORD_H
 #define RECORD_H
 
-//$Id: Record.h,v 1.4 2004/10/30 17:50:54 markus Exp $
+//$Id: Record.h,v 1.5 2004/11/07 02:35:31 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
  */
 class Record : public YGP::Entity {
    friend class CDManager;
-   friend class RecordEdit;
+   friend class RecordList;
 
  public:
    Record () : id (0) { }

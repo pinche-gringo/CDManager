@@ -1,7 +1,7 @@
 #ifndef INTERPRET_H
 #define INTERPRET_H
 
-//$Id: Interpret.h,v 1.2 2004/10/30 17:50:36 markus Exp $
+//$Id: Interpret.h,v 1.3 2004/11/07 02:34:23 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ defineHndl(Interpret);
  */
 class Interpret : public YGP::Entity {
    friend class CDManager;
-   friend class RecordEdit;
+   friend class RecordList;
 
  public:
    Interpret () : id (0) { }

@@ -1,11 +1,11 @@
-//$Id: Words.cpp,v 1.5 2005/01/18 01:03:49 markus Exp $
+//$Id: Words.cpp,v 1.6 2005/01/18 03:54:54 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Words
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -313,6 +313,8 @@ void WordDialog::commit () {
    Glib::ustring value;
    for (unsigned int i (0); i < (sizeof (models) / sizeof (*models)); ++i) {
       // Search for lines existing in the original, but not in the list and
+      // delete them
+      Gtk::TreeNodeChildren lines (models[i]->children ());
       for (unsigned int j (0); j < vectors[i]->size ();) {
 	 value = vectors[i]->at (j);
 	 unsigned int first (0);
@@ -333,25 +335,25 @@ void WordDialog::commit () {
 	 if ((first >= lines.size ())
 	     || ((line = (*lines[first])[colWords.word]), (line != value))) {
 	    TRACE3 ("WordDialog::commit () - Erasing " << vectors[i]->at (j));
-	    TRACE3 ("WordDialog::commit () - Erasing " << value);
+	    vectors[i]->erase (vectors[i]->begin () + j);
 	 }
 	 else
 	    ++j;
       }
 
       // Search for lines existing in the list, but not in the original and
-      bool changed (false);
+      // add them
+      for (Gtk::TreeModel::const_iterator l (models[i]->children ().begin ());
 	   l != models[i]->children ().end (); ++l) {
 	 value = (*l)[colWords.word];
 	 std::vector<Glib::ustring>::iterator p
-	 if (!Words::containsWord (*vectors[i], value)) {
-	    vectors[i]->push_back (value);
-	    changed = true;
+	    (upper_bound (vectors[i]->begin (), vectors[i]->end (), value));
+	 if ((p == vectors[i]->begin ()) || (value != p[-1])) {
+	    TRACE3 ("WordDialog::commit () - Adding " << value);
+	    vectors[i]->insert (p, value);
+	 }
       }
    }
-
-      if (changed)
-	 i ? Words::sortArticles () : Words::sortNames ();
 }
 
 

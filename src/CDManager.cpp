@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.41 2005/01/18 03:56:00 markus Exp $
+//$Id: CDManager.cpp,v 1.42 2005/01/20 04:44:51 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.41 $
+//REVISION    : $Revision: 1.42 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -37,8 +37,6 @@
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/scrolledwindow.h>
 
-#define CHECK 9
-#define TRACELEVEL 1
 #include <YGP/Trace.h>
 #include <YGP/Process.h>
 #include <YGP/Tokenize.h>
@@ -564,7 +562,7 @@ void CDManager::command (int menu) {
 void CDManager::showAboutbox () {
    std::string ver (_("Copyright (C) 2004, 2005 Markus Schwab"
                       "\ne-mail: <g17m0@lycos.com>\n\nCompiled on %1 at %2"));
-   std::string ver (_("Copyright (C) 2004 Markus Schwab"
+   ver.replace (ver.find ("%1"), 2, __DATE__);
    ver.replace (ver.find ("%2"), 2, __TIME__);
 
    XGP::XAbout* about (XGP::XAbout::create (ver, PACKAGE " V" VERSION));

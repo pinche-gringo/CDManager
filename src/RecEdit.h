@@ -1,7 +1,7 @@
 #ifndef RECEDIT_H
 #define RECEDIT_H
 
-//$Id: RecEdit.h,v 1.2 2004/10/18 15:09:30 markus Exp $
+//$Id: RecEdit.h,v 1.3 2004/10/25 06:29:11 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -39,6 +39,12 @@ class RecordEdit : public XGP::XDialog {
  public:
    RecordEdit (HRecord record);
    virtual ~RecordEdit ();
+
+   static RecordEdit* create (HRecord record) {
+      RecordEdit* dlg (new RecordEdit (record));
+      dlg->signal_response ().connect (mem_fun (*dlg, &RecordEdit::free));
+      return dlg;
+   }
 
  private:
    //Prohibited manager functions

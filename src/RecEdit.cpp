@@ -1,11 +1,11 @@
-//$Id: RecEdit.cpp,v 1.3 2004/10/25 06:29:44 markus Exp $
+//$Id: RecEdit.cpp,v 1.4 2004/10/27 03:45:14 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : RecordEdit
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 17.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -53,23 +53,28 @@
 /// (Default-)Constructor
 //-----------------------------------------------------------------------------
 RecordEdit::RecordEdit (HRecord record)
-   : XGP::XDialog (OKCANCEL), pClient (manage (new Gtk::Table (4, 3, false))),
+   : XGP::XDialog (OKCANCEL), pClient (manage (new Gtk::Table (5, 3, false))),
      txtRecord (manage (new class Gtk::Entry ())),
      optArtist (manage (new Gtk::ComboBox ())),
-     optGenre (manage (new Gtk::TreeView ())), hRecord (record),
+     optGenre (manage (new Gtk::ComboBox ())),
+     lstSongs (manage (new Gtk::TreeView ())),
+     hRecord (record),
      mArtists (Gtk::ListStore::create (colArtists)),
-     mGenres (Gtk::ListStore::create (colGenres)) {
+     mGenres (Gtk::ListStore::create (colGenres)),
+     mSongs (Gtk::ListStore::create (colSongs)) {
    set_title (_("Edit Record"));
 
    Gtk::Label* lblRecord (manage (new Gtk::Label (_("_Record name:"), true)));
    Gtk::Label* lblArtist (manage (new Gtk::Label (_("_Artist:"), true)));
-   Gtk::Label* lblYear (manage (new Gtk::Label (_("_Year"), true)));
+   Gtk::Label* lblYear (manage (new Gtk::Label (_("_Year:"), true)));
+   Gtk::Label* lblGenre (manage (new Gtk::Label (_("_Genre:"), true)));
    Gtk::Adjustment* spinYear_adj (manage (new Gtk::Adjustment (2000.0, 1900.0, 3000.0, 1.0, 10.0, 4.0)));
    spinYear = manage (new Gtk::SpinButton (*spinYear_adj, 1, 4));
 			 
    lblRecord->set_justify (Gtk::JUSTIFY_LEFT);
    lblArtist->set_justify (Gtk::JUSTIFY_LEFT);
    lblYear->set_justify (Gtk::JUSTIFY_LEFT);
+   lblGenre->set_justify (Gtk::JUSTIFY_LEFT);
    spinYear->set_flags (Gtk::CAN_FOCUS);
    spinYear->set_update_policy (Gtk::UPDATE_ALWAYS);
    spinYear->set_numeric (true);
@@ -81,15 +86,20 @@ RecordEdit::RecordEdit (HRecord record)
 
    optArtist->set_flags (Gtk::CAN_FOCUS);
    optGenre->set_flags (Gtk::CAN_FOCUS);
-   optArtist->set_model (mArtists);
-   optGenre->set_model (mGenres);
+   optArtist->set_model (mArtists); Check3 (mArtists);
+   optGenre->set_model (mGenres); Check3 (mGenres);
+   lstSongs->set_model (mSongs); Check3 (mSongs);
 
-   optGenre->append_column (_("Genre"), colGenres.colName);
+   optGenre->pack_start (colGenres.colName);
    optArtist->pack_start (colArtists.colName);
+   lstSongs->append_column (_("Song"), colSongs.colName);
+   lstSongs->append_column (_("Duration"), colSongs.colDuration);
+   lstSongs->append_column (_("Genre"), colSongs.colGenre);
 
    lblRecord->set_mnemonic_widget (*txtRecord);
    lblArtist->set_mnemonic_widget (*optArtist);
    lblYear->set_mnemonic_widget (*spinYear);
+   lblGenre->set_mnemonic_widget (*optGenre);
 
    pClient->attach (*lblRecord, 0, 1, 0, 1, Gtk::FILL, Gtk::SHRINK, 5, 5);
    pClient->attach (*lblArtist, 0, 1, 1, 2, Gtk::FILL, Gtk::SHRINK, 5, 5);
@@ -97,7 +107,9 @@ RecordEdit::RecordEdit (HRecord record)
    pClient->attach (*spinYear, 1, 2, 2, 3, Gtk::FILL, Gtk::SHRINK, 5, 5); 
    pClient->attach (*txtRecord, 1, 3, 0, 1, Gtk::EXPAND | Gtk::FILL, Gtk::SHRINK, 5, 5);
    pClient->attach (*optArtist, 1, 3, 1, 2, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND, 5, 5);
-   pClient->attach (*optGenre, 0, 3, 3, 4, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND, 5, 5);
+   pClient->attach (*lblGenre, 0, 1, 3, 4, Gtk::FILL, Gtk::SHRINK, 5, 5);
+   pClient->attach (*optGenre, 1, 3, 3, 4, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND, 5, 5);
+   pClient->attach (*lstSongs, 0, 3, 4, 5, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND, 5, 5);
 
    fillGenres ();
    fillInterprets ();
@@ -105,6 +117,26 @@ RecordEdit::RecordEdit (HRecord record)
    if (hRecord.isDefined ()) {
       txtRecord->set_text (hRecord->name);
       spinYear->set_value (hRecord->year);
+
+      Check3 (YGP::RelationManager::getRelation ("songs"));
+      Check3 (typeid (*YGP::RelationManager::getRelation ("songs"))
+	      == typeid (YGP::Relation1_N<HRecord, HSong>));
+
+      YGP::Relation1_N<HRecord, HSong>* relSongs
+	 (dynamic_cast<YGP::Relation1_N<HRecord, HSong>*>
+	  (YGP::RelationManager::getRelation ("songs")));
+      Check3 (relSongs);
+      Check3 (relSongs->isRelated (hRecord));
+      Check3 (relSongs->getObjects (hRecord).size ());
+
+      for (std::vector<HSong>::iterator i (relSongs->getObjects (hRecord).begin ());
+	   i != relSongs->getObjects (hRecord).end (); ++i) {
+	 Gtk::TreeModel::Row newSong (*mSongs->append ());
+	 newSong[colSongs.entry] = *i;
+	 newSong[colSongs.colName] = (*i)->name;
+	 newSong[colSongs.colDuration] = (*i)->duration.toString ();
+	 newSong[colSongs.colGenre] = genres[(*i)->genre];
+      }
    }
 
    get_vbox ()->pack_start (*pClient, false, false, 5);
@@ -147,8 +179,9 @@ void RecordEdit::fillGenres () {
 	 row[colGenres.colName] = genre;
 
 	 if (hRecord.isDefined () && (hRecord->genre == genre))
-	    optGenre->get_selection ()->select (row);
+	    optGenre->set_active (row);
 
+	 genres[id] = genre;
 	 Database::getNextResultRow ();
       } // end-while
    }
@@ -167,6 +200,10 @@ void RecordEdit::fillInterprets () {
    YGP::Relation1_N<HInterpret, HRecord>* rel;
    HInterpret hArtist;
    if (hRecord.isDefined ()) {
+      Check3 (YGP::RelationManager::getRelation ("records"));
+      Check3 (typeid (*YGP::RelationManager::getRelation ("records"))
+	      == typeid (YGP::Relation1_N<HInterpret, HRecord>));
+
       rel = (dynamic_cast<YGP::Relation1_N<HInterpret, HRecord>*>
 	     (YGP::RelationManager::getRelation ("records")));
       Check3 (rel);

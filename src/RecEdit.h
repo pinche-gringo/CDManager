@@ -1,7 +1,7 @@
 #ifndef RECEDIT_H
 #define RECEDIT_H
 
-//$Id: RecEdit.h,v 1.3 2004/10/25 06:29:11 markus Exp $
+//$Id: RecEdit.h,v 1.4 2004/10/27 03:45:14 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,8 +18,11 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 
+#include <map>
+
 #include <gtkmm/liststore.h>
 
+#include "Song.h"
 #include "Record.h"
 
 #include <XGP/XDialog.h>
@@ -31,8 +34,6 @@ namespace Gtk {
    class TreeView;
    class SpinButton;
 }
-
-
 
 
 class RecordEdit : public XGP::XDialog {
@@ -61,7 +62,8 @@ class RecordEdit : public XGP::XDialog {
    Gtk::Entry*      txtRecord;
    Gtk::SpinButton* spinYear;
    Gtk::ComboBox*   optArtist;
-   Gtk::TreeView*   optGenre;
+   Gtk::ComboBox*   optGenre;
+   Gtk::TreeView*   lstSongs;
 
    HRecord hRecord;
 
@@ -69,8 +71,8 @@ class RecordEdit : public XGP::XDialog {
     public:
       ArtistColumns () {
 	 add (colID); add (colName); }
-                                                                                
-      Gtk::TreeModelColumn<int> colID;
+
+      Gtk::TreeModelColumn<int>           colID;
       Gtk::TreeModelColumn<Glib::ustring> colName;
    };
    ArtistColumns colArtists;
@@ -80,12 +82,27 @@ class RecordEdit : public XGP::XDialog {
     public:
       GenreColumns () {
 	 add (colID); add (colName); }
-                                                                                
-      Gtk::TreeModelColumn<int> colID;
+
+      Gtk::TreeModelColumn<int>           colID;
       Gtk::TreeModelColumn<Glib::ustring> colName;
    };
    GenreColumns colGenres;
    Glib::RefPtr<Gtk::ListStore> mGenres;
+
+   class SongColumns : public Gtk::TreeModel::ColumnRecord {
+    public:
+      SongColumns () {
+	 add (entry); add (colName); add (colDuration); add (colGenre); }
+
+      Gtk::TreeModelColumn<HSong>         entry;
+      Gtk::TreeModelColumn<Glib::ustring> colName;
+      Gtk::TreeModelColumn<Glib::ustring> colDuration;
+      Gtk::TreeModelColumn<Glib::ustring> colGenre;
+   };
+   SongColumns colSongs;
+   Glib::RefPtr<Gtk::ListStore> mSongs;
+
+   std::map<unsigned int, Glib::ustring> genres;
 };
 
 #endif

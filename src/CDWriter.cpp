@@ -1,11 +1,11 @@
-//$Id: CDWriter.cpp,v 1.8 2005/01/18 20:07:45 markus Exp $
+//$Id: CDWriter.cpp,v 1.9 2005/01/19 20:52:25 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDWriter
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.8 $
+//REVISION    : $Revision: 1.9 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -38,9 +38,6 @@
 #include <glibmm/ustring.h>
 #include <glibmm/convert.h>
 
-#include <gtkmm/messagedialog.h>
-
-#define CHECK 9
 #include <YGP/File.h>
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
@@ -82,7 +79,7 @@ CDWriter::~CDWriter () {
 /// Displays the help
 //-----------------------------------------------------------------------------
 void CDWriter::showHelp () const {
-   std::cout << _("Utitily to write HTML documents from data received\n\nUsage: ") << PACKAGE_NAME
+   std::cout << _("Utitily to write HTML documents from data received\n\nUsage: ") << name ()
              << _(" [OPTIONS] [LANGUAGE-ID]\n\n")
 	     << "  -d, --outputDir ..... " << _("Directory to export data to\n")
 	     << "  -r, --recHeader ..... " << _("File to use as header for records\n")
@@ -108,7 +105,7 @@ bool CDWriter::handleOption (const char option) {
       if (pDir)
          opt.setDirOutput (pDir);
       else
-         std::cerr << PACKAGE << _("-warning: No directory specified! Ignoring option `d'\n");
+         std::cerr << name () << _("-warning: No directory specified! Ignoring option `d'\n");
       break; }
 
    case 'm':
@@ -124,7 +121,7 @@ bool CDWriter::handleOption (const char option) {
       else {
 	 Glib::ustring e (_("-warning: No file specified! Ignoring option `%1'\n"));
 	 e.replace (e.find ("%1"), 2, 1, option);
-         std::cerr << PACKAGE << e;
+         std::cerr << name () << e;
       }
       break; }
 
@@ -208,7 +205,7 @@ void CDWriter::writeHeader (const char* lang, const char* format,
 int CDWriter::perform (int argc, const char** argv) {
    TRACE9 ("CDWriter::perform (int, const char**) - " << argc);
    if (argc != 1) {
-      std::cerr << PACKAGE << _("-error: Need language id as parameter");
+      std::cerr << name () << _("-error: Need language id as parameter");
       return - 1;
    }
 
@@ -235,13 +232,12 @@ int CDWriter::perform (int argc, const char** argv) {
 	  && (htmlData[i].target[0] != YGP::File::DIRSEPARATOR))
 	 htmlData[i].target = DATADIR + htmlData[i].target;
 
-      if (!readHeaderFile (htmlData[i].name.c_str (), htmlData[i].target,
+      if (!readHeaderFile (htmlData[i].name.c_str (), argv[0], htmlData[i].target,
 			   (i < 2) ? transTitleMovie : transTitleRecord)) {
-	 Glib::ustring error (Glib::locale_to_utf8 (_("Error reading header file `%1'!\n\nReason: %2")));
+	 std::string error ( (_("Error reading header file `%1'!\n\nReason: %2")));
 	 error.replace (error.find ("%1"), 2, htmlData[i].name);
 	 error.replace (error.find ("%2"), 2, strerror (errno));
-	 Gtk::MessageDialog dlg (error, Gtk::MESSAGE_WARNING);
-	 dlg.run ();
+	 throw error;
       }
    }
 
@@ -534,7 +530,7 @@ int CDWriter::perform (int argc, const char** argv) {
       fileMovie << "<tr><td>";
       writeHeader (argv[0], "[=]![n]![d]![y]![g]![m]", fileMovie, false);
       fileMovie << "</td></tr>";
-      
+
       for (std::vector<HMovie>::const_iterator m (movies.begin ());
 	   m != movies.end (); ++m)
 	 if (((*m)->getLanguage ().find (l->first) != std::string::npos)
@@ -556,7 +552,7 @@ int CDWriter::perform (int argc, const char** argv) {
 //-----------------------------------------------------------------------------
 const char* CDWriter::description () const {
    static std::string version =
-      (PACKAGE_NAME " V" VERSION " - "
+      (name () + std::string ( " V" VERSION " - ")
        + std::string (_("Compiled on"))
        + std::string (" " __DATE__ " - " __TIME__ "\n\n")
        + std::string (_("Author: Markus Schwab; e-mail: g17m0@lycos.com"
@@ -569,9 +565,9 @@ const char* CDWriter::description () const {
 /// Creates a file and throws an exception, if it can't be created
 /// \param name: Name of file to create
 /// \param file: Created stream
-/// \throws Glib::ustring: A describing text in case of an error
+/// \throws std::string: A describing text in case of an error
 //-----------------------------------------------------------------------------
-void CDWriter::createFile (const char* name, std::ofstream& file) throw (Glib::ustring) {
+void CDWriter::createFile (const char* name, std::ofstream& file) throw (std::string) {
    TRACE9 ("CDWriter::createFile (const char*, std::ofstream&) - " << name);
    Check1 (name);
 
@@ -594,17 +590,29 @@ void CDWriter::createFile (const char* name, std::ofstream& file) throw (Glib::u
 ///   - @DATE@ with current date
 ///   - @YEAR@ with the current year
 /// \param file: File to read from
+/// \param lang: ID of language
 /// \param target: Variable receiving the input
 /// \param title: Value to substitute @TITLE@ with
 /// \returns bool: True, if successful
+/// \remarks The argument target is overwritten anyway
 //-----------------------------------------------------------------------------
-bool CDWriter::readHeaderFile (const char* file, std::string& target,
-			       const Glib::ustring& title) {
-   TRACE9 ("CDWriter::readHeaderFile (const char*) - " << file << " - "
-	   << title);
-   std::ifstream input (file);
-   if (!input)
-      return false;
+bool CDWriter::readHeaderFile (const char* file, const char* lang,
+			       std::string& target, const Glib::ustring& title) {
+   TRACE9 ("CDWriter::readHeaderFile (const char*) - " << file << " (" << lang
+	   << "): " << title);
+   Check2 (file);
+   Check2 (lang);
+
+   target = file;
+   target += '.';
+   target += lang;
+   std::ifstream input (target.c_str ());
+   if (!input) {
+      input.clear ();
+      input.open (file);
+      if (!input)
+	 return false;
+   }
 
    unsigned int i (512);
    char buffer[i];
@@ -639,5 +647,11 @@ int main (int argc, const char* argv[]) {
 
    Language::init (false);
 
-   return appl.run ();
+   try {
+      return appl.run ();
+   }
+   catch (std::string& e) {
+      std::cerr << e;
+      return -1;
+   }
 }

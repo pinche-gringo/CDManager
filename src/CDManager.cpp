@@ -1,10 +1,10 @@
-//$Id: CDManager.cpp,v 1.18 2004/11/15 01:53:46 markus Exp $
+//$Id: CDManager.cpp,v 1.19 2004/11/15 19:34:25 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //BUGS        :
-//REVISION    : $Revision: 1.18 $
+//REVISION    : $Revision: 1.19 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -348,6 +348,7 @@ void CDManager::command (int menu) {
       Gtk::TreeModel::iterator i (records.append (artist));
       recordSel->select (i);
       records.scroll_to_row (records.getModel ()->get_path (i), 0.5);
+      artistChanged (artist);
       break; }
 
    case NEW_RECORD: {
@@ -366,14 +367,28 @@ void CDManager::command (int menu) {
       records.expand_row (model->get_path (p), false);
       recordSel->select (i);
       records.scroll_to_row (records.getModel ()->get_path (i), 0.99);
+      recordChanged (record);
 
       HInterpret artist;
       artist = records.getInterpretAt (p);
       relRecords.relate (artist, record);
       break; }
 
-   case NEW_SONG:
-      break;
+   case NEW_SONG: {
+      Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
+      Gtk::TreeSelection::ListHandle_Path list (recordSel->get_selected_rows ());
+      Check3 (list.size ());
+      Gtk::TreeIter p (records.getModel ()->get_iter (*list.begin ())); Check3 (p);
+
+      HRecord record (records.getRecordAt (p)); Check3 (record.isDefined ());
+      HSong song;
+      song.define ();
+      relSongs.relate (record, song);
+      p = songs.append (song);
+      songs.scroll_to_row (songs.getModel ()->get_path (p), 0.99);
+      songs.get_selection ()->select (p);
+      songChanged (song);
+      break; }
 
    case DELETE:
       if (records.has_focus ())
@@ -726,7 +741,7 @@ void CDManager::songChanged (const HSong& song) {
 }
 // void CDManager::recordChanged (const HRecord& record)
 /// Callback when changing a record
-/// Callback when a song is being changed
+/// Callback when an interpret is being changed
 /// \param song: Handle to changed interpret
 
 void CDManager::artistChanged (const HInterpret& artist) {
@@ -792,7 +807,7 @@ void CDManager::removeDeletedEntries () {
 	    Database::store (query.str ().c_str ());
 	 }
 	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't delete interpret %1!\n\nReason: %2"));
+	    Glib::ustring msg (_("Can't delete interpret `%1'!\n\nReason: %2"));
 	    msg.replace (msg.find ("%1"), 2, artist->name);
 	    msg.replace (msg.find ("%2"), 2, err.what ());
 	    throw (msg);
@@ -808,7 +823,7 @@ void CDManager::removeDeletedEntries () {
 	    Database::store (query.str ().c_str ());
 	 }
 	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't delete record %1!\n\nReason: %2"));
+	    Glib::ustring msg (_("Can't delete record `%1'!\n\nReason: %2"));
 	    msg.replace (msg.find ("%1"), 2, record->name);
 	    msg.replace (msg.find ("%2"), 2, err.what ());
 	    throw (msg);
@@ -824,7 +839,7 @@ void CDManager::removeDeletedEntries () {
 	    Database::store (query.str ().c_str ());
 	 }
 	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't delete song %1!\n\nReason: %2"));
+	    Glib::ustring msg (_("Can't delete song `%1'!\n\nReason: %2"));
 	    msg.replace (msg.find ("%1"), 2, song->name);
 	    msg.replace (msg.find ("%2"), 2, err.what ());
 	    throw (msg);
@@ -858,7 +873,7 @@ void CDManager::writeChangedEntries () {
 	       artist->id = Database::getIDOfInsert ();
 	 }
 	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't write interpret %1!\n\nReason: %2"));
+	    Glib::ustring msg (_("Can't write interpret `%1'!\n\nReason: %2"));
 	    msg.replace (msg.find ("%1"), 2, artist->name);
 	    msg.replace (msg.find ("%2"), 2, err.what ());
 	    throw (msg);
@@ -887,7 +902,7 @@ void CDManager::writeChangedEntries () {
 	       record->id = Database::getIDOfInsert ();
 	 }
 	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't write record %1!\n\nReason: %2"));
+	    Glib::ustring msg (_("Can't write record `%1'!\n\nReason: %2"));
 	    msg.replace (msg.find ("%1"), 2, record->name);
 	    msg.replace (msg.find ("%2"), 2, err.what ());
 	    throw (msg);
@@ -901,8 +916,10 @@ void CDManager::writeChangedEntries () {
 	 try {
 	    std::stringstream query;
 	    query << (song->id ? "UPDATE Songs" : "INSERT into Songs")
-		  << " SET name=\"" << song->name << "\", track=" << song->track
-		  << ", duration=\"" << song->duration << "\", genre=" << song->genre;
+		  << " SET name=\"" << song->name << "\", duration=\""
+		  << song->duration << "\", genre=" << song->genre;
+	    if (song->track.isDefined ())
+	       query << ", track=" << song->track;
 	    if (relSongs.isRelated (song)) {
 	       HRecord record (relSongs.getParent (song)); Check3 (record.isDefined ());
 	       query << ", idRecord=" << record->id;
@@ -915,7 +932,7 @@ void CDManager::writeChangedEntries () {
 	       song->id = Database::getIDOfInsert ();
 	 }
 	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't write song %1!\n\nReason: %2"));
+	    Glib::ustring msg (_("Can't write song `%1'!\n\nReason: %2"));
 	    msg.replace (msg.find ("%1"), 2, song->name);
 	    msg.replace (msg.find ("%2"), 2, err.what ());
 	    throw (msg);

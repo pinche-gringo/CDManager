@@ -1,14 +1,14 @@
-//$Id: Words.cpp,v 1.3 2004/12/05 17:06:47 markus Exp $
+//$Id: Words.cpp,v 1.4 2004/12/07 03:37:06 markus Rel $
 
 //PROJECT     : CDManager
-//SUBSYSTEM   : Celebrity
+//SUBSYSTEM   : Words
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
-//COPYRIGHT   : Anticopyright (A) 2004
+//COPYRIGHT   : Copyright (A) 2004
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

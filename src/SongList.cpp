@@ -1,11 +1,11 @@
-//$Id: SongList.cpp,v 1.2 2004/11/02 20:36:58 markus Exp $
+//$Id: SongList.cpp,v 1.3 2004/11/06 17:24:22 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -34,6 +34,9 @@
 #define TRACELEVEL 9
 #include <YGP/StatusObj.h>
 
+#include <XGP/XValue.h>
+#include <XGP/MessageDlg.h>
+#include "Words.h"
 
 #include <XGP/XValue.h>
 
@@ -57,7 +60,9 @@ SongList::SongList (const std::map<unsigned int, Glib::ustring>& genres)
    for (unsigned int i (0); i < 3; ++i) {
       Gtk::TreeViewColumn* column (get_column (i));
    for (unsigned int i (0); i < 4; ++i) {
-      get_column (i)->set_sort_column_id (i + 1);
+      column->set_resizable ();
+      column->set_sort_column_id (i + 1);
+      Check3 (get_column_cell_renderer (i));
       Gtk::CellRenderer* r (get_column_cell_renderer (i)); Check3 (r);
       Check3 (typeid (*r) == typeid (Gtk::CellRendererText));
       Gtk::CellRendererText* rText (dynamic_cast<Gtk::CellRendererText*> (r));
@@ -67,6 +72,9 @@ SongList::SongList (const std::map<unsigned int, Glib::ustring>& genres)
    }
 
    Gtk::TreeViewColumn* const column (new Gtk::TreeViewColumn (_("Genre")));
+   Gtk::CellRendererCombo* const renderer (new Gtk::CellRendererCombo);
+   mSongs->set_sort_func (colSongs.colName,
+			  sigc::mem_fun (*this, &SongList::sortByName));
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------
@@ -79,7 +87,7 @@ SongList::~SongList () {
 /// Appends a song to the list
 /// \param song: Song to add
 /// \returns Gtk::TreeModel::iterator: Inserted row
-/// \param song: Song to add 
+//-----------------------------------------------------------------------------
    TRACE3 ("SongList::append (HSong&) - " << (song.isDefined () ? song->getName ().c_str () : "None"));
 void SongList::append (HSong& song) {
    TRACE3 ("SongList::append (HSong&) - " << (song.isDefined () ? song->name.c_str () : "None"));
@@ -89,7 +97,7 @@ void SongList::append (HSong& song) {
    newSong[colSongs.colName] = song->getName ();
    newSong[colSongs.colTrack] = song->track;
    newSong[colSongs.colName] = song->name;
-   newSong[colSongs.colDuration] = song->duration.toString ();
+   newSong[colSongs.colDuration] = song->duration;
       (genres.find (song->getGenre ()));
    if (g == genres.end ())
       (genres.find (song->genre));
@@ -110,24 +118,48 @@ void SongList::valueChanged (const Glib::ustring& path,
    Gtk::TreeModel::Row row (*mSongs->get_iter (Gtk::TreeModel::Path (path)));
 
    HSong song (row[colSongs.entry]); Check3 (song.isDefined ());
-   row[colSongs.changed] = true;
    signalChanged.emit (song);
    try {
+      switch (column) {
       case 0: {
 	 YGP::ANumeric track (value);
       case 0:
 	 row[colSongs.colTrack] = song->track = value;
 	 break;
-
       case 1:
-	 row[colSongs.colName] = song->name = value;
+	 row[colSongs.colName] = song->name= value;
 	 break;
-
 	 row[colSongs.colDuration] = song->getDuration ();
 	 row[colSongs.colDuration] = song->duration = value;
 	 for (std::map<unsigned int, Glib::ustring>::const_iterator g (genres.begin ());
+      case 3:
+	 break;
    catch (std::exception& e) {
       YGP::StatusObject obj (YGP::StatusObject::ERROR, e.what ());
       obj.generalize (_("Invalid value!"));
-      TRACE1 ("Error: " << e.what ());
 
+      XGP::MessageDlg* dlg (XGP::MessageDlg::create (obj));
+      dlg->set_title (PACKAGE);
+      dlg->get_window ()->set_transient_for (this->get_window ());
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Sorts the entries in the song listbox
+/// \param a: First entry to compare
+/// \param a: Second entry to compare
+/// \returns int: Value as strcmp
+//-----------------------------------------------------------------------------
+/// \param entry: Flag which attribute of the song to use for the comparison
+int SongList::sortByTrack (const Gtk::TreeModel::iterator& a,
+			   const Gtk::TreeModel::iterator& b) {
+   Gtk::TreeModel::Row rowa (*a);
+   Gtk::TreeModel::Row rowb (*b);
+   TRACE9 ("SongList::sortByTrack (2x const Gtk::TreeModel::iterator&)");
+
+   HSong ha (rowa[colSongs.entry]); Check3 (ha.isDefined ());
+   HSong hb (rowb[colSongs.entry]); Check3 (hb.isDefined ());
+   HSong ha (rowa[colSongs.entry]);
+   HSong hb (rowb[colSongs.entry]);
+}
+   return ha->track - hb->track;

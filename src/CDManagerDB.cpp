@@ -1,0 +1,728 @@
+//$Id: CDManagerDB.cpp,v 1.1 2005/01/25 01:39:36 markus Exp $
+
+//PROJECT     : CDManager
+//SUBSYSTEM   : CDManager
+//REFERENCES  :
+//TODO        :
+//BUGS        :
+//REVISION    : $Revision: 1.1 $
+//AUTHOR      : Markus Schwab
+//CREATED     : 24.1.2005
+//COPYRIGHT   : Copyright (C) 2005
+
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+#include <cdmgr-cfg.h>
+
+#include <fstream>
+#include <sstream>
+
+#include <gtkmm/messagedialog.h>
+
+#include <YGP/Check.h>
+#include <YGP/Trace.h>
+#include <YGP/INIFile.h>
+#include <YGP/StatusObj.h>
+
+#include <XGP/MessageDlg.h>
+
+#include "DB.h"
+#include "Words.h"
+
+#include "CDManager.h"
+
+
+//-----------------------------------------------------------------------------
+/// Login to the database with the passed user/password pair
+/// \param user: User to connect to the DB with
+/// \param pwd: Password for user
+/// \returns bool: True, if login could be performed
+//-----------------------------------------------------------------------------
+bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
+   TRACE9 ("CDManager::login (const Glib::ustring&, const Glib::ustring&) - "
+	   << user << '/' << pwd);
+
+   try {
+      Database::connect (DBNAME, user.c_str (), pwd.c_str ());
+   }
+   catch (std::exception& err) {
+      Glib::ustring msg (_("Can't connect to database!\n\nReason: %1"));
+      msg.replace (msg.find ("%1"), 2, err.what ());
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.set_title (_("Login error"));
+      dlg.run ();
+      return false;
+   }
+
+   enableMenus (true);
+
+   loadedPages = 0;
+   Glib::signal_idle ().connect
+      (bind_return (mem_fun (*this, &CDManager::loadDatabase), false));
+
+   try {
+      if (recGenres.empty ()) {
+	 const char* pLang (getenv ("LANGUAGE"));
+	 if (!pLang) {
+	 Genres::loadFromFile (DATADIR "Genres.dat", recGenres, movieGenres);
+	 songs.updateGenres ();
+	 movies.updateGenres ();
+      }
+
+      if (!Words::cArticles ()) {
+	 Database::store ("SELECT word FROM Words");
+
+	 while (Database::hasData ()) {
+	    // Fill and store artist entry from DB-values
+	    Words::addName2Ignore
+	       (Glib::locale_to_utf8 (Database::getResultColumnAsString (0)));
+	    Database::getNextResultRow ();
+	 }
+
+	 Database::store ("SELECT article FROM Articles");
+
+	 while (Database::hasData ()) {
+	    // Fill and store artist entry from DB-values
+	    Words::addArticle
+	       (Glib::locale_to_utf8 (Database::getResultColumnAsString (0)));
+	    Database::getNextResultRow ();
+	 }
+      }
+   }
+   catch (std::exception& err) {
+      Glib::ustring msg (_("Can't query needed information!\n\nReason: %1"));
+      msg.replace (msg.find ("%1"), 2, err.what ());
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
+   return true;
+}
+
+//-----------------------------------------------------------------------------
+/// Logout from the DB
+//-----------------------------------------------------------------------------
+void CDManager::logout () {
+   Database::close ();
+   enableMenus (false);
+   status.pop ();
+   status.push (_("Disconnected!"));
+}
+
+//-----------------------------------------------------------------------------
+/// Loads the records from the database
+///
+/// According to the available information the pages of the notebook
+/// are created.
+//-----------------------------------------------------------------------------
+void CDManager::loadRecords () {
+   TRACE9 ("CDManager::loadRecords ()");
+   try {
+      records.clear ();
+      artists.clear ();
+
+      unsigned long int cRecords (0);
+      Database::store ("SELECT i.id, c.name, c.born, c.died FROM Interprets i,"
+		       " Celebrities c WHERE c.id = i.id");
+
+      HInterpret hArtist;
+      while (Database::hasData ()) {
+	 TRACE5 ("CDManager::loadRecords () - Adding Artist "
+		 << Database::getResultColumnAsUInt (0) << '/'
+		 << Database::getResultColumnAsString (1));
+
+	 // Fill and store artist entry from DB-values
+	 hArtist.define ();
+	 hArtist->setId (Database::getResultColumnAsUInt (0));
+	 hArtist->setName (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
+	 std::string tmp (Database::getResultColumnAsString (2));
+	 if (tmp != "0000")
+	    hArtist->setBorn (tmp);
+	 tmp = Database::getResultColumnAsString (3);
+	 if (tmp != "0000")
+	    hArtist->setDied (tmp);
+	 artists.push_back (hArtist);
+
+	 Database::getNextResultRow ();
+      }
+      std::sort (artists.begin (), artists.end (), &Interpret::compByName);
+
+      Database::store ("SELECT id, name, interpret, year, genre FROM "
+		       "Records ORDER BY interpret, year");
+      TRACE8 ("CDManager::loadRecords () - Records: " << Database::resultSize ());
+
+      if (cRecords = Database::resultSize ()) {
+	 std::map<unsigned int, std::vector<HRecord> > aRecords;
+
+	 HRecord newRec;
+	 while (Database::hasData ()) {
+	    // Fill and store record entry from DB-values
+	    TRACE8 ("CDManager::loadRecords () - Adding record "
+		 << Database::getResultColumnAsUInt (0) << '/'
+		 << Database::getResultColumnAsString (1));
+
+	    newRec.define ();
+	    newRec->setId (Database::getResultColumnAsUInt (0));
+	    newRec->setName
+	       (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
+	    if (Database::getResultColumnAsUInt (3))
+	       newRec->setYear (Database::getResultColumnAsUInt (3));
+	    newRec->setGenre (Database::getResultColumnAsUInt (4));
+	    aRecords[Database::getResultColumnAsUInt (2)].push_back (newRec);
+	    Database::getNextResultRow ();
+	 } // end-while has records
+
+	 for (std::vector<HInterpret>::const_iterator i (artists.begin ());
+	      i != artists.end (); ++i) {
+	    Gtk::TreeModel::Row artist (records.append (*i));
+
+	    std::map<unsigned int, std::vector<HRecord> >::iterator iRec
+	       (aRecords.find ((*i)->getId ()));
+	    if (iRec != aRecords.end ()) {
+	       for (std::vector<HRecord>::iterator r (iRec->second.begin ());
+		    r != iRec->second.end (); ++r) {
+		  records.append (*r, artist);
+		  relRecords.relate (*i, *r);
+	       } // end-for all records for an artist
+	       aRecords.erase (iRec);
+	    } // end-if artist has record
+	 } // end-for all artists
+	 records.expand_all ();
+      } // end-if database contains records
+
+      loadedPages |= 1;
+
+      Glib::ustring msg (Glib::locale_to_utf8 (ngettext ("Loaded %1 record", "Loaded %1 records", cRecords)));
+      msg.replace (msg.find ("%1"), 2, YGP::ANumeric::toString (cRecords));
+
+      Glib::ustring tmp (ngettext (" from %1 artist", " from %1 artists", artists.size ()));
+      tmp.replace (tmp.find ("%1"), 2, YGP::ANumeric::toString (artists.size ()));
+      msg += tmp;
+      status.pop ();
+      status.push (msg);
+   }
+   catch (std::exception& err) {
+      Glib::ustring msg (_("Can't query available records!\n\nReason: %1"));
+      msg.replace (msg.find ("%1"), 2, err.what ());
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Loads the movies from the database
+///
+/// According to the available information the pages of the notebook
+/// are created.
+//-----------------------------------------------------------------------------
+void CDManager::loadMovies () {
+   TRACE9 ("CDManager::loadMovies ()");
+   try {
+      movies.clear ();
+      directors.clear ();
+      unsigned int cMovies (0);
+
+      // Load data from movies table
+      Database::store ("SELECT d.id, c.name, c.born, c.died FROM Directors d, "
+		       "Celebrities c WHERE c.id = d.id");
+
+      YGP::StatusObject stat;
+      HDirector hDirector;
+      while (Database::hasData ()) {
+	 TRACE5 ("CDManager::laodMovies () - Adding Director "
+		 << Database::getResultColumnAsUInt (0) << '/'
+		 << Database::getResultColumnAsString (1));
+
+	 // Fill and store artist entry from DB-values
+	 try {
+	    hDirector.define ();
+	    hDirector->setName (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
+	    hDirector->setId (Database::getResultColumnAsUInt (0));
+
+	    std::string tmp (Database::getResultColumnAsString (2));
+	    if (tmp != "0000")
+	       hDirector->setBorn (tmp);
+	    tmp = Database::getResultColumnAsString (3);
+	    if (tmp != "0000")
+	       hDirector->setDied (tmp);
+	 }
+	 catch (std::exception& e) {
+	    Glib::ustring msg (_("Warning loading director `%1': %2"));
+	    msg.replace (msg.find ("%1"), 2, hDirector->getName ());
+	    msg.replace (msg.find ("%2"), 2, e.what ());
+	    stat.setMessage (YGP::StatusObject::WARNING, msg);
+	 }
+
+	 directors.push_back (hDirector);
+
+	 Database::getNextResultRow ();
+      }
+      std::sort (directors.begin (), directors.end (), &Director::compByName);
+
+      Database::store ("SELECT id, name, director, year, genre, type, languages"
+		       ", subtitles FROM Movies ORDER BY director, year");
+      TRACE8 ("CDManager::loadMovies () - Found " << Database::resultSize ()
+	      << " movies");
+
+      if (cMovies = Database::resultSize ()) {
+	 std::map<unsigned int, std::vector<HMovie> > aMovies;
+
+	 HMovie movie;
+	 while (Database::hasData ()) {
+	    // Fill and store record entry from DB-values
+	    TRACE8 ("CDManager::loadMovies () - Adding movie "
+		 << Database::getResultColumnAsUInt (0) << '/'
+		 << Database::getResultColumnAsString (1));
+
+	    try {
+	       movie.define ();
+	       movie->setName
+		  (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
+	       movie->setId (Database::getResultColumnAsUInt (0));
+	       if (Database::getResultColumnAsUInt (3))
+		  movie->setYear (Database::getResultColumnAsUInt (3));
+	       movie->setGenre (Database::getResultColumnAsUInt (4));
+	       movie->setType (Database::getResultColumnAsUInt (5));
+	       movie->setLanguage (Database::getResultColumnAsString (6));
+	       movie->setTitles (Database::getResultColumnAsString (7));
+	    }
+	    catch (std::exception& e) {
+	       Glib::ustring msg (_("Warning loading movie `%1': %2"));
+	       msg.replace (msg.find ("%1"), 2, movie->getName ());
+	       msg.replace (msg.find ("%2"), 2, e.what ());
+	       stat.setMessage (YGP::StatusObject::WARNING, msg);
+	    }
+
+	    aMovies[Database::getResultColumnAsUInt (2)].push_back (movie);
+	    Database::getNextResultRow ();
+	 } // end-while has movies
+
+	 for (std::vector<HDirector>::const_iterator i (directors.begin ());
+	      i != directors.end (); ++i) {
+	    Gtk::TreeModel::Row director (movies.append (*i));
+
+	    std::map<unsigned int, std::vector<HMovie> >::iterator iMovie
+	       (aMovies.find ((*i)->getId ()));
+	    if (iMovie != aMovies.end ()) {
+	       for (std::vector<HMovie>::iterator m (iMovie->second.begin ());
+		    m != iMovie->second.end (); ++m) {
+		  movies.append (*m, director);
+		  relMovies.relate (*i, *m);
+	       } // end-for all records for an artist
+	       aMovies.erase (iMovie);
+	    } // end-if director has movies
+	 } // end-for all directors
+	 records.expand_all ();
+      } // end-if database contains records
+
+      movies.expand_all ();
+
+      Glib::ustring msg (Glib::locale_to_utf8 (ngettext ("Loaded %1 movie", "Loaded %1 movies", cMovies)));
+      msg.replace (msg.find ("%1"), 2, YGP::ANumeric::toString (cMovies));
+      status.pop ();
+      status.push (msg);
+
+      loadedPages |= 2;
+
+      if (stat.getType () > YGP::StatusObject::UNDEFINED) {
+	 stat.generalize (_("Warnings loading movies"));
+	 XGP::MessageDlg::create (stat);
+      }
+   }
+   catch (std::exception& err) {
+      Glib::ustring msg (_("Can't query available movies!\n\nReason: %1"));
+      msg.replace (msg.find ("%1"), 2, err.what ());
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Loads the songs for the passed record
+/// \param record: Handle to the record for which to load songs
+//-----------------------------------------------------------------------------
+void CDManager::loadSongs (const HRecord& record) {
+   TRACE9 ("CDManager::loadSongs (const HRecord& record) - "
+	   << (record.isDefined () ? record->getName ().c_str () : "Undefined"));
+   Check1 (record.isDefined ());
+
+   try {
+      std::stringstream query;
+      query << "SELECT id, name, duration, genre, track FROM Songs WHERE"
+	 " idRecord=" << record->getId ();
+      Database::store (query.str ().c_str ());
+
+      HSong song;
+      while (Database::hasData ()) {
+	 song.define ();
+	 song->setId (Database::getResultColumnAsUInt (0));
+	 song->setName (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
+	 std::string time (Database::getResultColumnAsString (2));
+	 if (time != "00:00:00")
+	    song->setDuration (time);
+	 song->setGenre (Database::getResultColumnAsUInt (3));
+	 unsigned int track (Database::getResultColumnAsUInt (4));
+	 if (track)
+	    song->setTrack (track);
+
+	 relSongs.relate (record, song);
+	 Database::getNextResultRow ();
+      } // end-while
+
+      record->setSongsLoaded ();
+   }
+   catch (std::exception& err) {
+      Glib::ustring msg (_("Can't query the songs for record %1!\n\nReason: %2"));
+      msg.replace (msg.find ("%1"), 2, record->getName ());
+      msg.replace (msg.find ("%2"), 2, err.what ());
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Aktualizes changed entries in the database
+//-----------------------------------------------------------------------------
+void CDManager::writeChangedEntries () {
+   try {
+      while (changedInterprets.size ()) {
+	 HInterpret artist (changedInterprets.begin ()->first);
+	 Check3 (artist.isDefined ());
+	 try {
+	    std::stringstream query;
+	    std::string tmp (escapeDBValue (artist->getName ()));
+	    query << (artist->getId () ? "UPDATE Celebrities" : "INSERT into Celebrities")
+		  << " SET name=\"" << tmp
+		  << "\", born="
+		  << (artist->getBorn ().isDefined () ? artist->getBorn () : YGP::AYear (0))
+		  << ", died="
+		  << (artist->getDied ().isDefined () ? artist->getDied () : YGP::AYear (0));
+
+	    if (artist->getId ())
+	       query << " WHERE id=" << artist->getId ();
+	    Database::store (query.str ().c_str ());
+
+	    if (!artist->getId ()) {
+	       artist->setId (Database::getIDOfInsert ());
+	       Database::store ("INSERT into Interprets set id=LAST_INSERT_ID()");
+	    }
+	 }
+	 catch (std::exception& err) {
+	    Glib::ustring msg (_("Can't write interpret `%1'!\n\nReason: %2"));
+	    msg.replace (msg.find ("%1"), 2, artist->getName ());
+	    msg.replace (msg.find ("%2"), 2, err.what ());
+	    throw (msg);
+	 }
+
+	 changedInterprets.erase (changedInterprets.begin ());
+      } // endwhile
+
+      while (changedRecords.size ()) {
+	 HRecord record (changedRecords.begin ()->first); Check3 (record.isDefined ());
+	 try {
+	    std::stringstream query;
+	    query << (record->getId () ? "UPDATE Records" : "INSERT into Records")
+		  << " SET name=\"" << escapeDBValue (record->getName ())
+		  << "\", genre=" << record->getGenre ();
+	    if (record->getYear ().isDefined ())
+	       query << ", year=" << record->getYear ();
+	    if (relRecords.isRelated (record)) {
+	       HInterpret artist (relRecords.getParent (record)); Check3 (artist.isDefined ());
+	       query << ", interpret=" << artist->getId ();
+	    }
+	    if (record->getId ())
+	       query << " WHERE id=" << record->getId ();
+	    Database::store (query.str ().c_str ());
+
+	    if (!record->getId ())
+	       record->setId (Database::getIDOfInsert ());
+	 }
+	 catch (std::exception& err) {
+	    Glib::ustring msg (_("Can't write record `%1'!\n\nReason: %2"));
+	    msg.replace (msg.find ("%1"), 2, record->getName ());
+	    msg.replace (msg.find ("%2"), 2, err.what ());
+	    throw (msg);
+	 }
+
+	 changedRecords.erase (changedRecords.begin ());
+      } // endwhile
+
+      while (changedSongs.size ()) {
+	 HSong song (changedSongs.begin ()->first); Check3 (song.isDefined ());
+	 try {
+	    std::stringstream query;
+	    query << (song->getId () ? "UPDATE Songs" : "INSERT into Songs")
+		  << " SET name=\"" << escapeDBValue (song->getName ())
+		  << "\", duration=\"" << song->getDuration () << "\", genre="
+		  << song->getGenre ();
+	    if (song->getTrack ().isDefined ())
+	       query << ", track=" << song->getTrack ();
+	    if (relSongs.isRelated (song)) {
+	       HRecord record (relSongs.getParent (song)); Check3 (record.isDefined ());
+	       query << ", idRecord=" << record->getId ();
+	    }
+	    if (song->getId ())
+	       query << " WHERE id=" << song->getId ();
+	    Database::store (query.str ().c_str ());
+
+	    if (!song->getId ())
+	       song->setId (Database::getIDOfInsert ());
+	 }
+	 catch (std::exception& err) {
+	    Glib::ustring msg (_("Can't write song `%1'!\n\nReason: %2"));
+	    msg.replace (msg.find ("%1"), 2, song->getName ());
+	    msg.replace (msg.find ("%2"), 2, err.what ());
+	    throw (msg);
+	 }
+
+	 changedSongs.erase (changedSongs.begin ());
+      } // endwhile
+
+      while (changedDirectors.size ()) {
+	 HDirector director (changedDirectors.begin ()->first);
+	 Check3 (director.isDefined ());
+	 try {
+	    std::stringstream query;
+	    query << (director->getId () ? "UPDATE Celebrities" : "INSERT into Celebrities")
+		  << " SET name=\"" << escapeDBValue (director->getName ())
+		  << "\", born="
+		  << (director->getBorn ().isDefined () ? director->getBorn () : YGP::AYear (0))
+		  << ", died="
+		  << (director->getDied ().isDefined () ? director->getDied () : YGP::AYear (0));
+
+	    if (director->getId ())
+	       query << " WHERE id=" << director->getId ();
+	    Database::store (query.str ().c_str ());
+
+	    if (!director->getId ()) {
+	       director->setId (Database::getIDOfInsert ());
+	       Database::store ("INSERT into Directors set id=LAST_INSERT_ID()");
+	    }
+	 }
+	 catch (std::exception& err) {
+	    Glib::ustring msg (_("Can't write director `%1'!\n\nReason: %2"));
+	    msg.replace (msg.find ("%1"), 2, director->getName ());
+	    msg.replace (msg.find ("%2"), 2, err.what ());
+	    throw (msg);
+	 }
+
+	 changedDirectors.erase (changedDirectors.begin ());
+      } // endwhile
+
+      while (changedMovies.size ()) {
+	 HMovie movie (changedMovies.begin ()->first); Check3 (movie.isDefined ());
+	 try {
+	    std::stringstream query;
+	    query << (movie->getId () ? "UPDATE Movies" : "INSERT into Movies")
+		  << " SET name=\"" << escapeDBValue (movie->getName ())
+		  << "\", genre=" << movie->getGenre () << ", languages=\""
+		  << movie->getLanguage () << "\", subtitles=\""
+		  << movie->getTitles () << "\", type=" << movie->getType ();
+	    if (movie->getYear ().isDefined ())
+	       query << ", year=" << movie->getYear ();
+	    if (relMovies.isRelated (movie)) {
+	       HDirector director (relMovies.getParent (movie)); Check3 (director.isDefined ());
+	       query << ", director=" << director->getId ();
+	    }
+	    if (movie->getId ())
+	       query << " WHERE id=" << movie->getId ();
+	    Database::store (query.str ().c_str ());
+
+	    if (!movie->getId ())
+	       movie->setId (Database::getIDOfInsert ());
+	 }
+	 catch (std::exception& err) {
+	    Glib::ustring msg (_("Can't write movie `%1'!\n\nReason: %2"));
+	    msg.replace (msg.find ("%1"), 2, movie->getName ());
+	    msg.replace (msg.find ("%2"), 2, err.what ());
+	    throw (msg);
+	 }
+
+	 changedMovies.erase (changedMovies.begin ());
+      }
+   }
+   catch (Glib::ustring& msg) {
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Edits dthe preferences
+//-----------------------------------------------------------------------------
+void CDManager::savePreferences () {
+   std::ofstream inifile (opt.pINIFile);
+   if (inifile) {
+      YGP::INIFile::write (inifile, "Export", opt);
+   }
+   else {
+      Glib::ustring msg (_("Can't create file `%1'!\n\nReason: %2."));
+      msg.replace (msg.find ("%1"), 2, opt.pINIFile);
+      msg.replace (msg.find ("%2"), 2, strerror (errno));
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
+
+   // Storing the special/first names and the articles
+   try {
+      Database::store ("START TRANSACTION");
+      Database::store ("DELETE FROM Words");
+      for (std::vector<Glib::ustring>::const_iterator w (Words::namesBegin ());
+	   w != Words::namesEnd (); ++w) {
+	 std::string ins ("INSERT INTO Words VALUES ('%1')");
+	 ins.replace (ins.find ("%1"), 2, Glib::locale_from_utf8 (*w));
+
+	 Database::store (ins.c_str ());
+      }
+      Database::store ("COMMIT");
+
+      Database::store ("START TRANSACTION");
+      Database::store ("DELETE FROM Articles");
+      for (std::vector<Glib::ustring>::const_iterator a (Words::articlesBegin ());
+	   a != Words::articlesEnd (); ++a) {
+	 std::string ins ("INSERT INTO Articles VALUES ('%1')");
+	 ins.replace (ins.find ("%1"), 2, Glib::locale_from_utf8 (*a));
+
+	 Database::store (ins.c_str ());
+      }
+      Database::store ("COMMIT");
+   }
+   catch (std::exception& e) {
+      Glib::ustring msg (_("Can't store special names!\n\nReason: %1."));
+      msg.replace (msg.find ("%1"), 2, e.what ());
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Removes deleed entries from the database
+//-----------------------------------------------------------------------------
+void CDManager::removeDeletedEntries () {
+   try {
+      while (deletedInterprets.size ()) {
+	 HInterpret artist (*deletedInterprets.begin ()); Check3 (artist.isDefined ());
+	 if (artist->getId ()) {
+	    try {
+	       std::stringstream query;
+	       query << "DELETE FROM Interprets WHERE id=" << artist->getId ();
+	       Database::store (query.str ().c_str ());
+	    }
+	    catch (std::exception& err) {
+	       Glib::ustring msg (_("Can't delete interpret `%1'!\n\nReason: %2"));
+	       msg.replace (msg.find ("%1"), 2, artist->getName ());
+	       msg.replace (msg.find ("%2"), 2, err.what ());
+	       throw (msg);
+	    }
+	 }
+	 else {
+	    Check3 (changedInterprets.find (artist) != changedInterprets.end ());
+	    changedInterprets.erase (changedInterprets.find (artist));
+	 }
+	 deletedInterprets.erase (deletedInterprets.begin ());
+      } // endwhile
+
+      while (deletedRecords.size ()) {
+	 HRecord record (*deletedRecords.begin ()); Check3 (record.isDefined ());
+	 if (record->getId ()) {
+	    try {
+	       std::stringstream query;
+	       query << "DELETE FROM Records WHERE id=" << record->getId ();
+	       Database::store (query.str ().c_str ());
+	    }
+	    catch (std::exception& err) {
+	       Glib::ustring msg (_("Can't delete record `%1'!\n\nReason: %2"));
+	       msg.replace (msg.find ("%1"), 2, record->getName ());
+	       msg.replace (msg.find ("%2"), 2, err.what ());
+	       throw (msg);
+	    }
+	 }
+	 else {
+	    Check3 (changedRecords.find (record) != changedRecords.end ());
+	    changedRecords.erase (changedRecords.find (record));
+	 }
+	 deletedRecords.erase (deletedRecords.begin ());
+      } // endwhile
+
+      while (deletedSongs.size ()) {
+	 HSong song (*deletedSongs.begin ()); Check3 (song.isDefined ());
+	 if (song->getId ()) {
+	    try {
+	       std::stringstream query;
+	       query << "DELETE FROM Songs WHERE id=" << song->getId ();
+	       Database::store (query.str ().c_str ());
+	    }
+	    catch (std::exception& err) {
+	       Glib::ustring msg (_("Can't delete song `%1'!\n\nReason: %2"));
+	       msg.replace (msg.find ("%1"), 2, song->getName ());
+	       msg.replace (msg.find ("%2"), 2, err.what ());
+	       throw (msg);
+	    }
+	 }
+	 else {
+	    Check3 (changedSongs.find (song) != changedSongs.end ());
+	    changedSongs.erase (changedSongs.find (song));
+	 }
+	 deletedSongs.erase (deletedSongs.begin ());
+      } // end-while
+
+      while (deletedDirectors.size ()) {
+	 HDirector director (*deletedDirectors.begin ()); Check3 (director.isDefined ());
+	 if (director->getId ()) {
+	    try {
+	       std::stringstream query;
+	       query << "DELETE FROM Directors WHERE id=" << director->getId ();
+	       Database::store (query.str ().c_str ());
+	    }
+	    catch (std::exception& err) {
+	       Glib::ustring msg (_("Can't delete director `%1'!\n\nReason: %2"));
+	       msg.replace (msg.find ("%1"), 2, director->getName ());
+	       msg.replace (msg.find ("%2"), 2, err.what ());
+	       throw (msg);
+	    }
+	 }
+	 else {
+	    Check3 (changedDirectors.find (director) != changedDirectors.end ());
+	    changedDirectors.erase (changedDirectors.find (director));
+	 }
+	 deletedDirectors.erase (deletedDirectors.begin ());
+      } // endwhile
+
+      while (deletedMovies.size ()) {
+	 HMovie movie (*deletedMovies.begin ()); Check3 (movie.isDefined ());
+	 if (movie->getId ()) {
+	    try {
+	       std::stringstream query;
+	       query << "DELETE FROM Movies WHERE id=" << movie->getId ();
+	       Database::store (query.str ().c_str ());
+	    }
+	    catch (std::exception& err) {
+	       Glib::ustring msg (_("Can't delete movie `%1'!\n\nReason: %2"));
+	       msg.replace (msg.find ("%1"), 2, movie->getName ());
+	       msg.replace (msg.find ("%2"), 2, err.what ());
+	       throw (msg);
+	    }
+	 }
+	 else {
+	    Check3 (changedMovies.find (movie) != changedMovies.end ());
+	    changedMovies.erase (changedMovies.find (movie));
+	 }
+	 deletedMovies.erase (deletedMovies.begin ());
+      } // endwhile
+   }
+   catch (Glib::ustring& msg) {
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
+}

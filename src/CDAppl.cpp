@@ -1,11 +1,11 @@
-//$Id: CDAppl.cpp,v 1.6 2005/01/25 01:40:07 markus Exp $
+//$Id: CDAppl.cpp,v 1.7 2005/01/31 05:11:08 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Application
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.12.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -60,12 +60,14 @@ void CDAppl::showHelp () const {
              << "  -V, --version ...... " << _("Output version information and exit\n")
              << "  -h, -?, --help ..... " << _("Displays this help and exit\n\n")
              << _("The INI file can have the following entries:\n\n")
-             <<  "  [Export]\n"
-                 "  MovieHead=Movies.head\n"
-                 "  MovieFoot=Movies.foot\n"
-                 "  RecordHead=Records.head\n"
-                 "  RecordFoot=Records.foot\n"
-                 "  OutputDir=/var/www/cds/\n";
+             <<  ("  [Export]\n"
+		  "  MovieHead=Movies.head\n"
+		  "  MovieFoot=Movies.foot\n"
+		  "  RecordHead=Records.head\n"
+		  "  RecordFoot=Records.foot\n"
+		  "  OutputDir=/var/www/cds/\n\n"
+		  "  [Movies]\n"
+		  "  Language=de\n");
 }
 
 //-----------------------------------------------------------------------------
@@ -107,6 +109,9 @@ void CDAppl::readINIFile (const char* pFile) {
    try {
       INIFILE (pFile);
       INIOBJ (options, Export);
+
+      INISECTION (Movies);
+      INIATTR2 (Movies, std::string, Movie::currLang, Language);
 
       INIFILE_READ ();
       options.pINIFile = pFile;

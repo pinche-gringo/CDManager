@@ -1,0 +1,10 @@
+                       CDManager
+
+Utility to manage CDs (audio and video)
+Copyright (C) 2004 Markus Schwab <g17m0@lycos.com> 
+-----------------------------------------------------------------------
+
+How to build CDManager
+
+./configure [--prefix=<path>]     # Default: /usr/local
+make

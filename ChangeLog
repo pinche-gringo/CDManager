@@ -1,0 +1,6 @@
+2004-10-10  gettextize  <bug-gnu-gettext@gnu.org>
+
+	* configure.ac (AC_OUTPUT): Add intl/Makefile,
+
+2004-10-09 Markus Schwab <g17m0@lycos.com>
+	* Project created

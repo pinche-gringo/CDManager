@@ -1,0 +1,49 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Markus Schwab
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CDManager 0.1\n"
+"Report-Msgid-Bugs-To: g17m0@lycos.com\n"
+"POT-Creation-Date: 2004-10-10 21:14-0400\n"
+"PO-Revision-Date: 2004-10-10 21:17-0400\n"
+"Last-Translator: Markus Schwab <g17m0@lycos.com>\n"
+"Language-Team: German <g17m0@lycos.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ISO-8859-1\n"
+"Content-Transfer-Encoding: 8-bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+
+#: src/CDManager.cpp:99
+msgid "_CD"
+msgstr ""
+
+#: src/CDManager.cpp:99
+msgid "<alt>C"
+msgstr ""
+
+#: src/CDManager.cpp:100
+msgid "_New"
+msgstr ""
+
+#: src/CDManager.cpp:100
+msgid "<ctl>N"
+msgstr ""
+
+#: src/CDManager.cpp:101
+msgid "E_xit"
+msgstr ""
+
+#: src/CDManager.cpp:101
+msgid "<ctl>Q"
+msgstr ""
+
+#: src/CDManager.cpp:152
+msgid ""
+"Copyright (C) 2004 Markus Schwab\n"
+"e-mail: <g17m0@lycos.com>\n"
+"\n"
+"Compiled on %1 at %2"
+msgstr ""

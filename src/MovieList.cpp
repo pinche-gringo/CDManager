@@ -1,11 +1,11 @@
-//$Id: MovieList.cpp,v 1.3 2004/11/26 03:32:05 markus Exp $
+//$Id: MovieList.cpp,v 1.4 2004/11/26 04:06:55 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -90,8 +90,8 @@ Gtk::TreeModel::Row MovieList::append (HMovie& movie,
 //-----------------------------------------------------------------------------
 HMovie MovieList::getMovieAt (const Gtk::TreeIter iter) const {
    Check2 ((*iter)->parent ());
-   HEntity hRec (getObjectAt (iter)); Check3 (hRec.isDefined ());
-   HMovie movie (HMovie::cast (hRec));
+   HEntity hMovie (getObjectAt (iter)); Check3 (hMovie.isDefined ());
+   HMovie movie (HMovie::cast (hMovie));
    TRACE7 ("CDManager::getMovieAt (const Gtk::TreeIter&) - Selected movie: " <<
 	   movie->id << '/' << movie->name);
    return movie;
@@ -128,4 +128,12 @@ void MovieList::setYear (HEntity& object, const Glib::ustring& value) {
 void MovieList::setGenre (HEntity& object, unsigned int value) {
    HMovie m (HMovie::cast (object));
    m->genre = value;
+}
+
+//-----------------------------------------------------------------------------
+/// Returns the name of the first column
+/// \returns Glib::ustring: The name of the first colum
+//-----------------------------------------------------------------------------
+Glib::ustring MovieList::getColumnName () const {
+   return _("Director/Movie");
 }

@@ -1,7 +1,7 @@
 #ifndef MOVIELIST_H
 #define MOVIELIST_H
 
-//$Id: MovieList.h,v 1.3 2004/11/26 03:32:06 markus Exp $
+//$Id: MovieList.h,v 1.4 2004/11/26 04:06:55 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -49,6 +49,8 @@ class MovieList : public OwnerObjectList {
    virtual void setName (HEntity& object, const Glib::ustring& value);
    virtual void setYear (HEntity& object, const Glib::ustring& value);
    virtual void setGenre (HEntity& object, unsigned int value);
+
+   virtual Glib::ustring getColumnName () const;
 
  private:
    MovieList (const MovieList& other);

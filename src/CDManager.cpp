@@ -1,14 +1,14 @@
-//$Id: CDManager.cpp,v 1.36 2004/12/24 04:09:34 markus Exp $
+//$Id: CDManager.cpp,v 1.37 2005/01/12 22:47:37 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
-//TODO        : - Export movies in every language
+//TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.36 $
+//REVISION    : $Revision: 1.37 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
-//COPYRIGHT   : Copyright (C) 2004
+//COPYRIGHT   : Copyright (C) 2004, 2005
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 #include <cdmgr-cfg.h>
 
 #include <cerrno>
+#include <cstdlib>
 
 #include <fstream>
 #include <sstream>
@@ -36,10 +37,13 @@
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/scrolledwindow.h>
 
+#define TRACELEVEL 9
 #include <YGP/Trace.h>
 #include <YGP/Process.h>
 #include <YGP/Tokenize.h>
+#include <YGP/ANumeric.h>
 #include <YGP/INIFile.h>
+
 #include <XGP/XAbout.h>
 #include <YGP/StatusObj.h>
 #include <XGP/XFileDlg.h>
@@ -53,7 +57,6 @@
 #include "Movie.h"
 #include "Words.h"
 #include "Record.h"
-#include "Writer.h"
 #include "Language.h"
 
 #include "CDManager.h"
@@ -279,7 +282,7 @@ XGP::XApplication::MenuEntry CDManager::menuItems[] = {
     { _("_Logout"),         _("<ctl>O"),       LOGOUT,       ITEM },
     { "",                   "",                0  ,          SEPARATOR },
     { _("_Export to HTML"), _("<ctl>E"),       EXPORT,       ITEM },
-    { _("_Import from MP3-info ..."), _("<ctl>I"), IMPORT_MP3,   ITEM },
+    { _("_Import from MP3-info ..."), _("<ctl>I"), IMPORT_MP3,ITEM },
     { "",                   "",                0  ,          SEPARATOR },
     { _("E_xit"),           _("<ctl>Q"),       EXIT,         ITEM },
     { _("_Edit"),           _("<alt>E"),       MEDIT,        BRANCH },
@@ -291,8 +294,8 @@ XGP::XApplication::MenuEntry CDManager::menuItems[] = {
     { "",                   "",                0  ,          SEPARATOR },
     { _("_Delete"),         _("<ctl>Delete"),  DELETE,       ITEM },
     { _("_Options"),        _("<alt>O"),       0,            BRANCH },
-    { _("_Preferences"),    _("F9"),           PREFERENCES,  ITEM },
-    { _("_Save preferences"), _("<ctl>F9"),    SAVE_PREF,    ITEM }
+    { _("_Preferences ..."),_("F9"),           PREFERENCES,  ITEM },
+    { _("_Save preferences"),_("<ctl>F9"),     SAVE_PREF,    ITEM }
 };
 
 /// Defaultconstructor; all widget are created
@@ -760,14 +763,12 @@ void CDManager::loadRecords () {
 
       loadedPages |= 1;
 
-      Glib::ustring msg (_("%1 %2"));
-      Glib::ustring tmp (_("Loaded %1 records"));
-      tmp.replace (tmp.find ("%1"), 2, YGP::ANumeric::toString (cRecords));
-      msg.replace (msg.find ("%1"), 2, tmp);
+      Glib::ustring msg (Glib::locale_to_utf8 (ngettext ("Loaded %1 record", "Loaded %1 records", cRecords)));
+      msg.replace (msg.find ("%1"), 2, YGP::ANumeric::toString (cRecords));
 
-      tmp = _("(from %1 artist(s))");
+      Glib::ustring tmp (ngettext (" from %1 artist", " from %1 artists", artists.size ()));
       tmp.replace (tmp.find ("%1"), 2, YGP::ANumeric::toString (artists.size ()));
-      msg.replace (msg.find ("%2"), 2, tmp);
+      msg += tmp;
       status.pop ();
       status.push (msg);
    }
@@ -887,7 +888,7 @@ void CDManager::loadMovies () {
 
       movies.expand_all ();
 
-      Glib::ustring msg (_("Loaded %1 movies"));
+      Glib::ustring msg (Glib::locale_to_utf8 (ngettext ("Loaded %1 movie", "Loaded %1 movies", cMovies)));
       msg.replace (msg.find ("%1"), 2, YGP::ANumeric::toString (cMovies));
       status.pop ();
       status.push (msg);
@@ -1420,7 +1421,45 @@ void CDManager::exportMovies () throw (Glib::ustring) {
 
    std::sort (directors.begin (), directors.end (), &Director::compByName);
    std::sort (artists.begin (), artists.end (), &Interpret::compByName);
-   MovieWriter::exportMovies (opt, mgenres, directors);
+
+   std::string lang;
+   while ((lang = langs.getNextNode (' ')).size ()) {
+      TRACE1 ("CDManager::exportData (const Options&, std::map&, std::vector&) - Lang: "
+	      << lang);
+      TRACE1 ("CDManager::exportMovies (const Options&, std::map&, std::vector&) - Lang: "
+      int pipes[2];
+      const char* args[] = { "CDWriter", "--outputDir", opt.getDirOutput ().c_str (),
+			     "--recHeader", opt.getRHeader ().c_str (),
+      const char* args[] = { "CDWriter", "-dtmp/", lang.c_str (), NULL };
+	 YGP::Process::execIOConnected ("CDWriter", args, pipes);
+      }
+      catch (std::string& e) {
+	 Gtk::MessageDialog dlg (Glib::locale_to_utf8 (e), Gtk::MESSAGE_ERROR);
+	 dlg.set_title (_("Export Error!"));
+	 dlg.run ();
+      }
+
+      // Write movie-information
+      for (std::vector<HDirector>::const_iterator i (directors.begin ());
+	 if (relMovies.isRelated (*i)) {
+	    std::stringstream output;
+	    output << 'D' << **i;
+
+	    std::vector<HMovie>& dirMovies (relMovies.getObjects (*i));
+	    Check3 (dirMovies.size ());
+	    for (std::vector<HMovie>::const_iterator m (dirMovies.begin ());
+		 m != dirMovies.end (); ++m)
+	       output << "M" << **m;
+
+	    TRACE9 ("CDManager::export () - Writing: " << output.str ());
+	    ::write (pipes[1], output.str ().data (), output.str ().size ());
+	 }
+	    write (pipes[1], output.str ().data (), output.str ().size ());
+      // Write record-information
+   }
+      close (pipes[1]);
+}
+
 //-----------------------------------------------------------------------------
 /// Reads the ID3 information from a MP3 file
 /// \param file: Name of file to analzye
@@ -1430,8 +1469,6 @@ void CDManager::exportRecords () throw (Glib::ustring) {
    TRACE9 ("CDManager::exportRecords ()");
    if (!(loadedPages & 2))
       loadRecords ();
-
-   RecordWriter::exportRecords (opt, genres, artists);
 }
 
 //-----------------------------------------------------------------------------

@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.47 2005/02/11 01:45:58 markus Exp $
+//$Id: CDManager.cpp,v 1.48 2005/02/18 22:21:41 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : - Display icon to change movie-language in statusbar
 //BUGS        :
-//REVISION    : $Revision: 1.47 $
+//REVISION    : $Revision: 1.48 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -32,9 +32,12 @@
 #include <fstream>
 #include <sstream>
 
+#include <gdkmm/pixbuf.h>
+
 #include <gtkmm/box.h>
 #include <gtkmm/stock.h>
 #include <gtkmm/label.h>
+#include <gtkmm/button.h>
 #include <gtkmm/radioaction.h>
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/scrolledwindow.h>
@@ -378,6 +381,7 @@ CDManager::CDManager (Options& options)
 
    movies.signalOwnerChanged.connect (mem_fun (*this, &CDManager::directorChanged));
    movies.signalObjectChanged.connect (mem_fun (*this, &CDManager::movieChanged));
+   movies.signalNameChanged.connect (mem_fun (*this, &CDManager::movieNameChanged));
 
    Glib::RefPtr<Gtk::TreeSelection> sel (records.get_selection ());
    sel->set_mode (Gtk::SELECTION_EXTENDED);
@@ -487,7 +491,7 @@ void CDManager::newDirector () {
 
    Gtk::TreeModel::iterator i (movies.append (director));
    movies.selectRow (i);
-   recordChanged (HEntity::cast (director));
+   directorChanged (director);
 }
 
 //-----------------------------------------------------------------------------
@@ -511,6 +515,8 @@ void CDManager::newMovie () {
    HDirector director;
    director = movies.getDirectorAt (p);
    relMovies.relate (director, movie);
+
+   movieChanged (HEntity::cast (movie));
 }
 
 //-----------------------------------------------------------------------------
@@ -703,6 +709,20 @@ void CDManager::recordGenreChanged (const HEntity& record) {
 }
 
 //-----------------------------------------------------------------------------
+/// Callback (additional to movieChanged) when the name of a movie is being
+/// changed
+/// \param movie: Handle to changed movie
+//-----------------------------------------------------------------------------
+void CDManager::movieNameChanged (const HMovie& movie) {
+   Check3 (movie.isDefined ());
+   TRACE9 ("CDManager::movieNameChanged (const HMovie&) - " << movie->getId ()
+	   << '/' << movie->getName ());
+
+   changedMovieNames[movie] += std::string (1, ',');
+   changedMovieNames[movie] += Movie::currLang;
+}
+
+//-----------------------------------------------------------------------------
 /// Escapes the quotes in values for the database
 /// \param value: Value to escape
 /// \returns Glib::ustring: Escaped text
@@ -738,6 +758,13 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
    if (iPage) {
       if (!(loadedPages & (1 << iPage)))
 	 loadDatabase ();
+
+      static Glib::RefPtr<Gdk::Pixbuf> pic (Gdk::Pixbuf::create_from_file (DATADIR "in.png"));
+      Gtk::Image* img (new Gtk::Image (pic));
+      Gtk::Button* but (new Gtk::Button);
+      but->add (*img);
+      but->show (); img->show ();
+      status.pack_end (*but, Gtk::PACK_SHRINK, 5);
 
       ui += ("<menuitem action='NDirector'/><menuitem action='NMovie'/>"
 	     "</placeholder></menu><placeholder name='Lang'><menu action='Lang'><menuitem action='Orig'/>");

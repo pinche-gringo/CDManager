@@ -1,7 +1,7 @@
 #ifndef RECORDLIST_H
 #define RECORDLIST_H
 
-//$Id: RecordList.h,v 1.6 2004/11/26 04:06:29 markus Exp $
+//$Id: RecordList.h,v 1.7 2004/11/29 19:03:24 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -51,6 +51,7 @@ class RecordList : public OwnerObjectList {
    virtual void setGenre (HEntity& object, unsigned int value);
 
    virtual Glib::ustring getColumnName () const;
+   virtual int sortEntity (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
 
  private:
    RecordList (const RecordList& other);

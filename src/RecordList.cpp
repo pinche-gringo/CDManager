@@ -1,11 +1,11 @@
-//$Id: RecordList.cpp,v 1.9 2004/11/28 01:05:38 markus Exp $
+//$Id: RecordList.cpp,v 1.10 2004/11/29 19:03:24 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.9 $
+//REVISION    : $Revision: 1.10 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -135,4 +135,21 @@ void RecordList::setGenre (HEntity& object, unsigned int value) {
 //-----------------------------------------------------------------------------
 Glib::ustring RecordList::getColumnName () const {
    return _("Interpret/Record");
+}
+
+//-----------------------------------------------------------------------------
+/// Sorts the entries in the listbox according to the name (ignoring articles)
+/// \param a: First entry to compare
+/// \param a: Second entry to compare
+/// \returns int: Value as strcmp
+//-----------------------------------------------------------------------------
+int RecordList::sortEntity (const Gtk::TreeModel::iterator& a,
+			    const Gtk::TreeModel::iterator& b) {
+   HRecord ha (getRecordAt (a));
+   HRecord hb (getRecordAt (b));
+   Glib::ustring aname (Record::removeIgnored (ha->getName ()));
+   Glib::ustring bname (Record::removeIgnored (hb->getName ()));
+
+   return ((aname < bname) ? -1 : (bname < aname) ? 1
+	   : ha->getName ().compare (hb->getName ()));
 }

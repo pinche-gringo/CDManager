@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.4 2004/10/25 06:30:35 markus Exp $
+//$Id: CDManager.cpp,v 1.5 2004/10/26 22:17:40 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : 
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -535,6 +535,8 @@ void CDManager::loadDatabase () {
 
    Check3 ((nb.get_current_page () >= 0) || (nb.get_current_page () < 2));
    enableEdit (nb.get_current_page () ? cMovies : cRecords);
+
+   status.pop ();
 }
 
 //-----------------------------------------------------------------------------
@@ -555,6 +557,7 @@ void CDManager::recordSelected () {
    TRACE9 ("CDManager::recordSelected ()");
    songs.clear ();
    Check3 (records.get_selection ());
+   mSongs->clear ();
 
    TRACE9 ("CDManager::recordSelected () - Size: " << list.size ());
    if (list.size ()) {
@@ -564,17 +567,20 @@ void CDManager::recordSelected () {
       YGP::IHandle* phRec ((**i)[colRecords.entry]);
       Check1 (typeid (*phRec) == typeid (HRecord));
       HRecord hRecord (*(HRecord*)phRec);
-      TRACE9 ("CDManager::recordSelected () - Selected record: " <<
+      TRACE7 ("CDManager::recordSelected () - Selected record: " <<
 	      hRecord->id << '/' << hRecord->name);
 	 HRecord hRecord (records.getRecordAt (i)); Check3 (hRecord.isDefined ());
-      // mSongs.clear ();
-
       if (relSongs.isRelated (hRecord)) {
+	 TRACE9 ("CDManager::recordSelected () - Record already loaded; " <<
+		 relSongs.getObjects (hRecord).size () << " songs");
+
 	 for (std::vector<HSong>::iterator i (relSongs.getObjects (hRecord).begin ());
 	      i != relSongs.getObjects (hRecord).end (); ++i)
-	    addSong (**i);
+	    addSong (*i);
       }
       else {
+	 TRACE9 ("CDManager::recordSelected () - Record not loaded");
+
 	 try {
 	    std::stringstream query;
 	    query << "SELECT id, name, duration, genre FROM Songs "
@@ -610,6 +616,11 @@ void CDManager::recordSelected () {
 /// \param song: Song to add
 //-----------------------------------------------------------------------------
 void CDManager::addSong (const HSong& song) {
+   TRACE7 ("CDManager::addSong (const HSong&)");
+   TRACE7 ("CDManager::addSong (const HSong&) - "
+	   << (song.isDefined () ? song->name.c_str () : "Undefined"));
+   Check3 (song.isDefined ());
+
    Gtk::TreeModel::Row newSong (*mSongs->append ());
    newSong[colSongs.entry] = song;
    newSong[colSongs.name] = song->name;

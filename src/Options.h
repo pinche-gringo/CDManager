@@ -1,7 +1,7 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
-//$Id: Options.h,v 1.2 2004/12/24 04:10:22 markus Exp $
+//$Id: Options.h,v 1.3 2005/01/13 19:19:32 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,11 +33,11 @@ class Options : public YGP::Entity {
    Options::Options ();
    virtual ~Options ();
 
-   std::string Options::getMHeader () const { return mHeader; }
-   std::string getMFooter () const { return mFooter; }
-   std::string getRHeader () const { return rHeader; }
-   std::string getRFooter () const { return rFooter; }
-   std::string getDirOutput () const { return dirOutput; }
+   const std::string& Options::getMHeader () const { return mHeader; }
+   const std::string& getMFooter () const { return mFooter; }
+   const std::string& getRHeader () const { return rHeader; }
+   const std::string& getRFooter () const { return rFooter; }
+   const std::string& getDirOutput () const { return dirOutput; }
 
    void setMHeader (const std::string& value) { mHeader = value; }
    void setMFooter (const std::string& value) { mFooter = value; }

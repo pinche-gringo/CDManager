@@ -1,10 +1,10 @@
-//$Id: CDManager.cpp,v 1.17 2004/11/14 21:25:01 markus Exp $
+//$Id: CDManager.cpp,v 1.18 2004/11/15 01:53:46 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //BUGS        :
-//REVISION    : $Revision: 1.17 $
+//REVISION    : $Revision: 1.18 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -322,8 +322,8 @@ void CDManager::command (int menu) {
    TRACE2 ("CDManager::command (int) - " << menu);
    switch (menu) {
    case SAVE:
-      removeDeletedEntries ();
       writeChangedEntries ();
+      removeDeletedEntries ();
       apMenus[SAVE]->set_sensitive (false);
       break;
 
@@ -339,11 +339,38 @@ void CDManager::command (int menu) {
       status.push (_("Disconnected!"));
       break;
 /// Saves the DB
-   case NEW_ARTIST:
-      break;
+   case NEW_ARTIST: {
+      Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
+      HInterpret artist;
+      artist.define ();
+      artists.push_back (artist);
+      recordSel->unselect_all ();
+      Gtk::TreeModel::iterator i (records.append (artist));
+      recordSel->select (i);
+      records.scroll_to_row (records.getModel ()->get_path (i), 0.5);
+      break; }
 
-   case NEW_RECORD:
-      break;
+   case NEW_RECORD: {
+      Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
+      Gtk::TreeSelection::ListHandle_Path list (recordSel->get_selected_rows ());
+      Check3 (list.size ());
+      Glib::RefPtr<Gtk::TreeStore> model (records.getModel ());
+      Gtk::TreeIter p (model->get_iter (*list.begin ())); Check3 (p);
+      if ((*p)->parent ())
+	 p = ((*p)->parent ());
+
+      HRecord record;
+      record.define ();
+      recordSel->unselect_all ();
+      Gtk::TreeIter i (records.append (record, *p));
+      records.expand_row (model->get_path (p), false);
+      recordSel->select (i);
+      records.scroll_to_row (records.getModel ()->get_path (i), 0.99);
+
+      HInterpret artist;
+      artist = records.getInterpretAt (p);
+      relRecords.relate (artist, record);
+      break; }
 
    case NEW_SONG:
       break;
@@ -468,8 +495,13 @@ void CDManager::enableMenus (bool enable) {
 //-----------------------------------------------------------------------------
 void CDManager::enableEdit (SELECTED selected) {
    TRACE9 ("CDManager::enableEdit (SELECTED) - " << selected);
-void CDManager::enableEdit (bool enable) {
-   apMenus[DELETE]->set_sensitive (enable);
+   Check2 (apMenus[NEW1]); Check2 (apMenus[NEW2]);
+
+   apMenus[NEW1]->set_sensitive (true);
+   apMenus[NEW2]->set_sensitive (selected > NONE_SELECTED);
+   apMenus[NEW_ARTIST]->set_sensitive (true);
+   apMenus[NEW_RECORD]->set_sensitive (selected > NONE_SELECTED);
+   apMenus[NEW_SONG]->set_sensitive (selected == RECORD_SELECTED);
 //-----------------------------------------------------------------------------
 /// Loads the database and shows its contents.
 ///
@@ -505,7 +537,6 @@ void CDManager::loadDatabase () {
 	 Database::getNextResultRow ();
       }
       std::sort (artists.begin (), artists.end (), &Interpret::compByName);
-
 
       Database::store ("SELECT id, name, interpret, year, genre FROM "
 		       "Records ORDER BY interpret, year");
@@ -579,7 +610,7 @@ void CDManager::loadDatabase () {
    Check3 ((nb.get_current_page () >= 0) || (nb.get_current_page () < 2));
    if (nb.get_current_page () == 0)
       records.grab_focus ();
-   enableEdit (false);
+   enableEdit (NONE_SELECTED);
    status.pop ();
 }
 
@@ -597,7 +628,7 @@ void CDManager::recordSelected () {
 
       if ((*i)->parent ()) {
 	 HRecord hRecord (records.getRecordAt (i)); Check3 (hRecord.isDefined ());
-      if (i->children ().empty ()) {
+	 if (!hRecord->areSongsLoaded () && hRecord->getId ())
 	 HRecord hRecord (records.getRecordAt (i));
 	 if (!hRecord->songsLoaded)
 	 // Add related songs to the listbox
@@ -607,9 +638,14 @@ void CDManager::recordSelected () {
 	       songs.append (*i);
 
 	 enableEdit (OBJECT_SELECTED);
+      }
+	 enableEdit (RECORD_SELECTED);
 	 enableEdit (OWNER_SELECTED);
+   }
+	 enableEdit (ARTIST_SELECTED);
       enableEdit (NONE_SELECTED);
-  enableEdit (list.size ());
+}
+
 //-----------------------------------------------------------------------------
 /// Callback after selecting a movie
 /// \param row: Selected row
@@ -755,7 +791,7 @@ void CDManager::removeDeletedEntries () {
 	    query << "DELETE FROM Interprets WHERE id=" << artist->id;
 	    Database::store (query.str ().c_str ());
 	 }
-	 catch (const std::exception& err) {
+	 catch (std::exception& err) {
 	    Glib::ustring msg (_("Can't delete interpret %1!\n\nReason: %2"));
 	    msg.replace (msg.find ("%1"), 2, artist->name);
 	    msg.replace (msg.find ("%2"), 2, err.what ());
@@ -771,7 +807,7 @@ void CDManager::removeDeletedEntries () {
 	    query << "DELETE FROM Records WHERE id=" << record->id;
 	    Database::store (query.str ().c_str ());
 	 }
-	 catch (const std::exception& err) {
+	 catch (std::exception& err) {
 	    Glib::ustring msg (_("Can't delete record %1!\n\nReason: %2"));
 	    msg.replace (msg.find ("%1"), 2, record->name);
 	    msg.replace (msg.find ("%2"), 2, err.what ());
@@ -787,7 +823,7 @@ void CDManager::removeDeletedEntries () {
 	    query << "DELETE FROM Songs WHERE id=" << song->id;
 	    Database::store (query.str ().c_str ());
 	 }
-	 catch (const std::exception& err) {
+	 catch (std::exception& err) {
 	    Glib::ustring msg (_("Can't delete song %1!\n\nReason: %2"));
 	    msg.replace (msg.find ("%1"), 2, song->name);
 	    msg.replace (msg.find ("%2"), 2, err.what ());
@@ -796,7 +832,7 @@ void CDManager::removeDeletedEntries () {
 	 deletedSongs.erase (deletedSongs.begin ());
       } // end-while
    }
-   catch (const Glib::ustring& msg) {
+   catch (Glib::ustring& msg) {
       Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
       dlg.run ();
    }
@@ -821,7 +857,7 @@ void CDManager::writeChangedEntries () {
 	    if (!artist->id)
 	       artist->id = Database::getIDOfInsert ();
 	 }
-	 catch (const std::exception& err) {
+	 catch (std::exception& err) {
 	    Glib::ustring msg (_("Can't write interpret %1!\n\nReason: %2"));
 	    msg.replace (msg.find ("%1"), 2, artist->name);
 	    msg.replace (msg.find ("%2"), 2, err.what ());
@@ -836,8 +872,9 @@ void CDManager::writeChangedEntries () {
 	 try {
 	    std::stringstream query;
 	    query << (record->id ? "UPDATE Records" : "INSERT into Records")
-		  << " SET name=\"" << record->name << "\", year=" << record->year
-		  << ", genre=" << record->genre;
+		  << " SET name=\"" << record->name << "\", genre=" << record->genre;
+	    if (record->year.isDefined ())
+	       query << ", year=" << record->year;
 	    if (relRecords.isRelated (record)) {
 	       HInterpret artist (relRecords.getParent (record)); Check3 (artist.isDefined ());
 	       query << ", interpret=" << artist->id;
@@ -849,10 +886,11 @@ void CDManager::writeChangedEntries () {
 	    if (!record->id)
 	       record->id = Database::getIDOfInsert ();
 	 }
-	 catch (const std::exception& err) {
+	 catch (std::exception& err) {
 	    Glib::ustring msg (_("Can't write record %1!\n\nReason: %2"));
 	    msg.replace (msg.find ("%1"), 2, record->name);
 	    msg.replace (msg.find ("%2"), 2, err.what ());
+	    throw (msg);
 	 }
 
 	 changedRecords.erase (changedRecords.begin ());
@@ -876,16 +914,17 @@ void CDManager::writeChangedEntries () {
 	    if (!song->id)
 	       song->id = Database::getIDOfInsert ();
 	 }
-	 catch (const std::exception& err) {
+	 catch (std::exception& err) {
 	    Glib::ustring msg (_("Can't write song %1!\n\nReason: %2"));
 	    msg.replace (msg.find ("%1"), 2, song->name);
 	    msg.replace (msg.find ("%2"), 2, err.what ());
+	    throw (msg);
 	 }
 
 	 changedSongs.erase (changedSongs.begin ());
       } // endwhile
    }
-   catch (const Glib::ustring& msg) {
+   catch (Glib::ustring& msg) {
       Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
       dlg.run ();
    }
@@ -905,18 +944,20 @@ void CDManager::deleteSelectedRecords () {
       Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
 
       Gtk::TreeIter iter (records.get_model ()->get_iter (*i)); Check3 (iter);
-      if (iter->children ().size ()) {      // An artist is going to be deleted
+      if ((*iter)->parent ())                // A record is going to be deleted
+	 deleteRecord (iter);
+      else {                                // An artist is going to be deleted
+	 TRACE9 ("CDManager::deleteSelectedRecords () - Deleting " <<
+		 iter->children ().size () << " children");
+	 HInterpret artist (records.getInterpretAt (iter)); Check3 (artist.isDefined ());
 	 while (iter->children ().size ()) {
 	    Gtk::TreeIter child (iter->children ().begin ());
-	    deleteRecord (iter);
+	    deleteRecord (child);
 	 }
 	 // Though artist is automatically removed from the listbox, it still
 	 // has to be removed from the database
-	 HInterpret artist (records.getInterpretAt (iter)); Check3 (artist.isDefined ());
 	 deletedInterprets.push_back (artist);
       }
-      else                                  // A record is going to be deleted
-	 deleteRecord (iter);
    }
    apMenus[SAVE]->set_sensitive (true);
 }
@@ -951,8 +992,9 @@ void CDManager::deleteRecord (const Gtk::TreeIter& record) {
 	      << hArtist->name);
 
       Gtk::TreeIter parent ((*record)->parent ()); Check3 (parent);
-      records.getModel ()->erase (record);
-      records.getModel ()->erase (parent);
+      Glib::RefPtr<Gtk::TreeStore> model (records.getModel ());
+      model->erase (record);
+      model->erase (parent);
    }
    else
       records.getModel ()->erase (record);

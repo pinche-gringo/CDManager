@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.11 2005/01/18 03:56:57 markus Rel $
+//$Id: OOList.cpp,v 1.12 2005/02/18 22:24:40 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.11 $
+//REVISION    : $Revision: 1.12 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -163,7 +163,7 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
    try {
       if (row.parent ()) {
 	 HEntity object (getObjectAt (row));
-	 signalObjectChanged.emit (object);
+
 	 switch (column) {
 	 case 0: {
 	    Gtk::TreeModel::const_iterator i (getObject (row.parent (), value));
@@ -193,11 +193,11 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 	    throw (std::invalid_argument (_("Unknown genre!")));
 	    break; }
 	 } // endswitch
+
+	 signalObjectChanged.emit (object);
       } // endif object edited
       else {
-	 HCelebrity celeb (getCelebrityAt (row));
-	 Check3 (celeb.isDefined ());
-	 signalOwnerChanged.emit (celeb);
+	 HCelebrity celeb (getCelebrityAt (row)); Check3 (celeb.isDefined ());
 
 	 switch (column) {
 	 case 0: {
@@ -233,6 +233,8 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 	    row[colOwnerObjects->year] = getLiveSpan (celeb);
 	    break;
 	 } // end-switch
+
+	 signalOwnerChanged.emit (celeb);
       } // end-else director edited
    } // end-try
    catch (std::exception& e) {

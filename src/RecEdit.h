@@ -1,7 +1,7 @@
 #ifndef RECEDIT_H
 #define RECEDIT_H
 
-//$Id: RecEdit.h,v 1.7 2004/10/30 17:51:43 markus Exp $
+//$Id: RecEdit.h,v 1.8 2004/11/01 23:59:05 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -35,8 +35,8 @@ namespace Gtk {
    class Table;
    class Entry;
    class ComboBox;
-   class TreeView;
 }
+class SongList;
 
 
 class RecordEdit : public XGP::XDialog {
@@ -71,7 +71,7 @@ class RecordEdit : public XGP::XDialog {
    XGP::XAttributeEntry<unsigned int, Gtk::SpinButton>* spinYear;
    Gtk::ComboBox*   optArtist;
    Gtk::ComboBox*   optGenre;
-   Gtk::TreeView*   lstSongs;
+   SongList*        lstSongs;
 
    class ArtistColumns : public Gtk::TreeModel::ColumnRecord {
     public:
@@ -94,19 +94,6 @@ class RecordEdit : public XGP::XDialog {
    };
    GenreColumns colGenres;
    Glib::RefPtr<Gtk::ListStore> mGenres;
-
-   class SongColumns : public Gtk::TreeModel::ColumnRecord {
-    public:
-      SongColumns () {
-	 add (entry); add (colName); add (colDuration); add (colGenre); }
-
-      Gtk::TreeModelColumn<HSong>         entry;
-      Gtk::TreeModelColumn<Glib::ustring> colName;
-      Gtk::TreeModelColumn<Glib::ustring> colDuration;
-      Gtk::TreeModelColumn<Glib::ustring> colGenre;
-   };
-   SongColumns colSongs;
-   Glib::RefPtr<Gtk::ListStore> mSongs;
 
    std::vector<HInterpret>&                     artists;
    const std::map<unsigned int, Glib::ustring>& genres;

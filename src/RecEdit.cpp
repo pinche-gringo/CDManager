@@ -1,11 +1,11 @@
-//$Id: RecEdit.cpp,v 1.7 2004/10/30 17:51:43 markus Exp $
+//$Id: RecEdit.cpp,v 1.8 2004/11/01 23:59:05 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : RecordEdit
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 17.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -34,7 +34,6 @@
 #include <gtkmm/table.h>
 #include <gtkmm/entry.h>
 #include <gtkmm/combobox.h>
-#include <gtkmm/treeview.h>
 #include <gtkmm/adjustment.h>
 #include <gtkmm/messagedialog.h>
 
@@ -47,6 +46,8 @@
 
 #include "DB.h"
 #include "Interpret.h"
+
+#include "SongList.h"
 
 #include "RecEdit.h"
 
@@ -62,10 +63,9 @@ RecordEdit::RecordEdit (HRecord record, std::vector<HInterpret>& artists,
      txtRecord (NULL),
      optArtist (manage (new Gtk::ComboBox ())),
      optGenre (manage (new Gtk::ComboBox ())),
-     lstSongs (manage (new Gtk::TreeView ())),
+     lstSongs (manage (new SongList (genres))),
      mArtists (Gtk::ListStore::create (colArtists)),
      mGenres (Gtk::ListStore::create (colGenres)),
-     mSongs (Gtk::ListStore::create (colSongs)),
      artists (artists),
      genres (genres) {
    set_title (_("Edit Record"));
@@ -103,13 +103,9 @@ RecordEdit::RecordEdit (HRecord record, std::vector<HInterpret>& artists,
    optGenre->set_flags (Gtk::CAN_FOCUS);
    optArtist->set_model (mArtists); Check3 (mArtists);
    optGenre->set_model (mGenres); Check3 (mGenres);
-   lstSongs->set_model (mSongs); Check3 (mSongs);
 
    optGenre->pack_start (colGenres.colName);
    optArtist->pack_start (colArtists.colName);
-   lstSongs->append_column (_("Song"), colSongs.colName);
-   lstSongs->append_column (_("Duration"), colSongs.colDuration);
-   lstSongs->append_column (_("Genre"), colSongs.colGenre);
 
    lblRecord->set_mnemonic_widget (*txtRecord);
    lblArtist->set_mnemonic_widget (*optArtist);
@@ -144,18 +140,8 @@ RecordEdit::RecordEdit (HRecord record, std::vector<HInterpret>& artists,
       Check3 (relSongs->getObjects (hRecord).size ());
 
       for (std::vector<HSong>::iterator i (relSongs->getObjects (hRecord).begin ());
-	   i != relSongs->getObjects (hRecord).end (); ++i) {
-	 Gtk::TreeModel::Row newSong (*mSongs->append ());
-	 newSong[colSongs.entry] = *i;
-	 newSong[colSongs.colName] = (*i)->name;
-	 newSong[colSongs.colDuration] = (*i)->duration.toString ();
-
-	 std::map<unsigned int, Glib::ustring>::const_iterator g
-	    (genres.find ((*i)->genre));
-	 if (g == genres.end ())
-	    g = genres.begin ();
-	 newSong[colSongs.colGenre] = g->second;
-      } // end-for all songs
+	   i != relSongs->getObjects (hRecord).end (); ++i)
+	 lstSongs->append (*i);
    } // end-if
 
    get_vbox ()->pack_start (*pClient, false, false, 5);
@@ -194,9 +180,10 @@ void RecordEdit::okEvent () {
    Check3 (*optGenre->get_active ());
    unsigned int genre ((*optGenre->get_active ())[colGenres.colID]);
    if (hRecord->genre != genre) {
+      hRecord->genre = (*optGenre->get_active ())[colGenres.colID];
       if (update.str ().size ())
 	 update << ", ";
-      update << "genre=\"" << (*optGenre->get_active ())[colGenres.colID] << '"';
+      update << "genre=\"" << hRecord->genre << '"';
    }
 
    YGP::Relation1_N<HInterpret, HRecord>* rel;

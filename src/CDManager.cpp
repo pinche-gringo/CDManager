@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.11 2004/11/01 03:03:15 markus Exp $
+//$Id: CDManager.cpp,v 1.12 2004/11/01 23:59:05 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : Free handles in record listbox
 //BUGS        :
-//REVISION    : $Revision: 1.11 $
+//REVISION    : $Revision: 1.12 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -244,7 +244,7 @@ XGP::XApplication::MenuEntry CDManager::menuItems[] = {
    : XApplication (PACKAGE " V" PRG_RELEASE), relMovies ("movies"),
 CDManager::CDManager ()
    : XApplication (PACKAGE " V" PRG_RELEASE), relRecords ("records"),
-     relSongs ("songs"), cds (2, 1), movies (4, 4) {
+     relSongs ("songs"), cds (2, 1), movies (4, 4), songs (genres)  {
    Language::init ();
 
 
@@ -265,6 +265,8 @@ CDManager::CDManager ()
    nb.append_page (movies, _("_Movies"), true);
    movies.show ();
    songs.signalChanged.connect (mem_fun (*this, &CDManager::songChanged));
+   scrlSongs.set_shadow_type (Gtk::SHADOW_ETCHED_IN);
+   scrlRecords.set_shadow_type (Gtk::SHADOW_ETCHED_IN);
    scrlSongs.add (songs);
    scrlRecords.add (records);
    scrlSongs.set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
@@ -272,17 +274,12 @@ CDManager::CDManager ()
    scrlSongs.show ();
    scrlRecords.show ();
 
-   mSongs = Gtk::ListStore::create (colSongs);
    mRecords = Gtk::TreeStore::create (colRecords);
 
    records.set_model (mRecords);
-   songs.set_model (mSongs);
    records.show ();
    songs.show ();
 
-   songs.append_column (_("Song"), colSongs.name);
-   songs.append_column (_("Duration"), colSongs.duration);
-   songs.get_column (0)->set_min_width (400);
    records.signalOwnerChanged.connect (mem_fun (*this, &CDManager::artistChanged));
    movies.signalObjectChanged.connect (mem_fun (*this, &CDManager::movieChanged));
    records.append_column (_("Interpret/Record"), colRecords.name);
@@ -673,7 +670,7 @@ void CDManager::recordSelected () {
    TRACE9 ("CDManager::recordSelected ()");
    songs.clear ();
    Check3 (records.get_selection ());
-   mSongs->clear ();
+   Gtk::TreeSelection::ListHandle_Path list
 
    TRACE9 ("CDManager::recordSelected () - Size: " << list.size ());
    if (list.size ()) {
@@ -690,27 +687,12 @@ void CDManager::recordSelected () {
       Check3 (relSongs.isRelated (hRecord));
       for (std::vector<HSong>::iterator i (relSongs.getObjects (hRecord).begin ());
 	   i != relSongs.getObjects (hRecord).end (); ++i)
-	 addSong (*i);
+	 songs.append (*i);
       enableEdit (NONE_SELECTED);
   enableEdit (list.size ());
 //-----------------------------------------------------------------------------
 /// Callback after selecting a movie
 /// \param row: Selected row
-/// Adds a song to the song listbox
-/// \param song: Song to add
-//-----------------------------------------------------------------------------
-void CDManager::addSong (const HSong& song) {
-   TRACE7 ("CDManager::addSong (const HSong&) - "
-	   << (song.isDefined () ? song->name.c_str () : "Undefined"));
-   Check3 (song.isDefined ());
-
-   Gtk::TreeModel::Row newSong (*mSongs->append ());
-   newSong[colSongs.entry] = song;
-   newSong[colSongs.name] = song->name;
-   newSong[colSongs.duration] = song->duration.toString ();
-}
-
-//-----------------------------------------------------------------------------
 /// Calls the edit-dialog with the record stored in the passed path
 /// \param path: Path to activated item
 //-----------------------------------------------------------------------------
@@ -739,8 +721,8 @@ void CDManager::loadSongs (const HRecord& record) {
 
    try {
       std::stringstream query;
-      query << "SELECT id, name, duration, genre FROM Songs WHERE idRecord="
-	    << record->id;
+      query << "SELECT id, name, duration, genre, track FROM Songs WHERE"
+	 " idRecord=" << record->id;
       Database::store (query.str ().c_str ());
 
       HSong song;
@@ -750,6 +732,7 @@ void CDManager::loadSongs (const HRecord& record) {
 	 song->name = Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
 	 // song->duration = Database::getResultColumnAsString (2);
 	 song->genre = Database::getResultColumnAsUInt (3);
+	 song->track = Database::getResultColumnAsUInt (4);
 
 	 relSongs.relate (record, song);
 	 Database::getNextResultRow ();

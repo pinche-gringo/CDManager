@@ -1,11 +1,11 @@
-//$Id: MovieList.cpp,v 1.16 2005/01/31 05:16:32 markus Exp $
+//$Id: MovieList.cpp,v 1.17 2005/02/18 22:24:13 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.16 $
+//REVISION    : $Revision: 1.17 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -151,6 +151,7 @@ HMovie MovieList::getMovieAt (const Gtk::TreeIter iter) const {
 void MovieList::setName (HEntity& object, const Glib::ustring& value) {
    HMovie m (HMovie::cast (object));
    m->setName (value);
+   signalNameChanged.emit (m);
 }
 
 //-----------------------------------------------------------------------------

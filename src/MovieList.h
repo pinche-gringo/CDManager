@@ -1,7 +1,7 @@
 #ifndef MOVIELIST_H
 #define MOVIELIST_H
 
-//$Id: MovieList.h,v 1.10 2005/01/31 05:16:32 markus Exp $
+//$Id: MovieList.h,v 1.11 2005/02/18 22:24:13 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -73,6 +73,8 @@ class MovieList : public OwnerObjectList {
       return getCelebrityAt (iterator); }
 
    void update (const std::string& lang);
+
+   sigc::signal<void, const HMovie&> signalNameChanged;
 
  protected:
    virtual void setName (HEntity& object, const Glib::ustring& value);

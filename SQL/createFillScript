@@ -43,3 +43,8 @@ while [ -n "$1" ]; do
 
     shift
 done
+
+echo "UPDATE Records SET year=0 WHERE year IS NULL;">>populateSongs
+echo "UPDATE Records SET genre=0 WHERE genre IS NULL;">>populateSongs
+echo "UPDATE Songs SET genre=0 WHERE genre IS NULL;">>populateSongs
+

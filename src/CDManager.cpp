@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.40 2005/01/14 02:45:08 markus Exp $
+//$Id: CDManager.cpp,v 1.41 2005/01/18 03:56:00 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.40 $
+//REVISION    : $Revision: 1.41 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -522,6 +522,37 @@ void CDManager::command (int menu) {
 	 Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
 	 dlg.run ();
       }
+   record.define ();
+      // Storing the special/first names and the articles
+      try {
+	 Database::store ("START TRANSACTION");
+	 Database::store ("DELETE FROM Words");
+	 for (std::vector<Glib::ustring>::const_iterator w (Words::namesBegin ());
+	      w != Words::namesEnd (); ++w) {
+	    std::string ins ("INSERT INTO Words VALUES ('%1')");
+	    ins.replace (ins.find ("%1"), 2, Glib::locale_from_utf8 (*w));
+/// Adds a new song to the first selected record
+	    Database::store (ins.c_str ());
+	 }
+	 Database::store ("COMMIT");
+/// Adds a new direcotor to the list
+	 Database::store ("START TRANSACTION");
+	 Database::store ("DELETE FROM Articles");
+	 for (std::vector<Glib::ustring>::const_iterator a (Words::articlesBegin ());
+	      a != Words::articlesEnd (); ++a) {
+	    std::string ins ("INSERT INTO Articles VALUES ('%1')");
+	    ins.replace (ins.find ("%1"), 2, Glib::locale_from_utf8 (*a));
+   movies.selectRow (i);
+	    Database::store (ins.c_str ());
+	 }
+	 Database::store ("COMMIT");
+      }
+      catch (std::exception& e) {
+	 Glib::ustring msg (_("Can't store special names!\n\nReason: %1."));
+	 msg.replace (msg.find ("%1"), 2, e.what ());
+	 Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+	 dlg.run ();
+      }
       break; }
 /// Adds a new movie to the first selected director
    default:
@@ -590,12 +621,20 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
       }
 
       if (!Words::cArticles ()) {
-	 Words::init ();
 	 Database::store ("SELECT word FROM Words");
 
 	 while (Database::hasData ()) {
 	    // Fill and store artist entry from DB-values
 	    Words::addName2Ignore
+	       (Glib::locale_to_utf8 (Database::getResultColumnAsString (0)));
+	    Database::getNextResultRow ();
+	 }
+
+	 Database::store ("SELECT article FROM Articles");
+
+	 while (Database::hasData ()) {
+	    // Fill and store artist entry from DB-values
+	    Words::addArticle
 	       (Glib::locale_to_utf8 (Database::getResultColumnAsString (0)));
 	    Database::getNextResultRow ();
 	 }
@@ -1643,17 +1682,4 @@ Gtk::TreeIter CDManager::addSong (HSong& song) {
    songs.get_selection ()->select (p);
    songChanged (song);
    return p;
-}
-
-
-//-----------------------------------------------------------------------------
-/// Entrypoint of application
-/// \param argc: Number of parameters
-/// \param argv: Array with pointer to parameter
-/// \returns \c int: Status
-//-----------------------------------------------------------------------------
-int main (int argc, char* argv[]) {
-   Gtk::Main gtk (argc, argv);
-   CDAppl appl (argc, const_cast<const char**> (argv));
-   return appl.run ();
 }

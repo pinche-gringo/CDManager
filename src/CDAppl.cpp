@@ -1,11 +1,11 @@
-//$Id: CDAppl.cpp,v 1.4 2005/01/18 03:55:15 markus Exp $
+//$Id: CDAppl.cpp,v 1.5 2005/01/20 04:44:18 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Application
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.12.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -139,7 +139,7 @@ const char* CDAppl::description () const {
       (PACKAGE " V" VERSION " - "
        + std::string (_("Compiled on"))
        + std::string (" " __DATE__ " - " __TIME__ "\n\n")
-       + std::string (_("Author: Markus Schwab; e-mail: g17m0@lycos.com"
+       + std::string (_("Copyright (C) 2004, 2005 Markus Schwab; e-mail: g17m0@lycos.com"
 			"\nDistributed under the terms of the GNU General "
 			"Public License")));
    return version.c_str ();

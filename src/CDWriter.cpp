@@ -1,11 +1,11 @@
-//$Id: CDWriter.cpp,v 1.9 2005/01/19 20:52:25 markus Exp $
+//$Id: CDWriter.cpp,v 1.10 2005/01/20 04:44:18 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDWriter
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.9 $
+//REVISION    : $Revision: 1.10 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -555,7 +555,7 @@ const char* CDWriter::description () const {
       (name () + std::string ( " V" VERSION " - ")
        + std::string (_("Compiled on"))
        + std::string (" " __DATE__ " - " __TIME__ "\n\n")
-       + std::string (_("Author: Markus Schwab; e-mail: g17m0@lycos.com"
+       + std::string (_("Copyright (C) 2005 Markus Schwab; e-mail: g17m0@lycos.com"
 			"\nDistributed under the terms of the GNU General "
 			"Public License")));
    return version.c_str ();

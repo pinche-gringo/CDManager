@@ -1,11 +1,11 @@
-//$Id: LangDlg.cpp,v 1.2 2004/12/11 22:10:21 markus Exp $
+//$Id: LangDlg.cpp,v 1.3 2004/12/12 03:08:28 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Language
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 11.12.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -130,10 +130,12 @@ void LanguageModel::insertLanguage (const std::string& id, const Language& lang,
 /// Constructor
 /// \param languages: The preselected languages; updated with the user input
 /// \param maxLangs: Maximal number of languages which can be selected
+/// \param showMainLang: Flag, if there is one main language
 //-----------------------------------------------------------------------------
-LanguageDialog::LanguageDialog (std::string& languages, unsigned int maxLangs)
+LanguageDialog::LanguageDialog (std::string& languages, unsigned int maxLangs,
+				bool showMainLang)
    : XGP::XDialog (OKCANCEL), pClient (new Gtk::VBox), languages (languages),
-      maxLangs ( maxLangs),
+      maxLangs (maxLangs),
      mainLang (new Gtk::ComboBox),
      listLang (new Gtk::TreeView),
      modelMain (LanguageModel::create (colLang, true)),
@@ -143,15 +145,20 @@ LanguageDialog::LanguageDialog (std::string& languages, unsigned int maxLangs)
 
    set_title (_("Select languages"));
 
-   // Label of the main language
-   Gtk::Label*  lblLang (new Gtk::Label (_("_Language: "), true));
+   if (showMainLang) {
+      // Label of the main language
+      Gtk::Label*  lblLang (new Gtk::Label (_("_Language: "), true));
 
-   // Combobox to select the main language
-   mainLang->pack_start (colLang.flag, false);
-   mainLang->pack_start (colLang.name);
-   mainLang->set_model (modelMain);
+      // Combobox to select the main language
+      mainLang->pack_start (colLang.flag, false);
+      mainLang->pack_start (colLang.name);
+      mainLang->set_model (modelMain);
 
-   mainLang->signal_changed ().connect (mem_fun (*this, &LanguageDialog::selectLanguage));
+      mainLang->signal_changed ().connect (mem_fun (*this, &LanguageDialog::selectLanguage));
+
+      pClient->pack_start (*manage (lblLang), Gtk::PACK_EXPAND_PADDING, 5);
+      pClient->pack_start (*manage (mainLang), Gtk::PACK_EXPAND_PADDING, 5);
+   }
 
    // Listbox to select further languages
    listLang->get_selection ()->set_mode (Gtk::SELECTION_EXTENDED);
@@ -164,9 +171,11 @@ LanguageDialog::LanguageDialog (std::string& languages, unsigned int maxLangs)
    std::string tmp;
    if (languages.size ()) {
       YGP::Tokenize langs (languages);
-      tmp = langs.getNextNode (',');
-      TRACE9 ("LanguageDialog::LanguageDialog (std::string&, unsigned int) - Main: "
-	      << main);
+      if (showMainLang) {
+	 tmp = langs.getNextNode (',');
+	 TRACE9 ("LanguageDialog::LanguageDialog (std::string&, unsigned int) - Main: "
+		 << main);
+      }
 
       std::string translation;
       Glib::RefPtr<Gtk::TreeSelection> sel (listLang->get_selection ());
@@ -174,12 +183,13 @@ LanguageDialog::LanguageDialog (std::string& languages, unsigned int maxLangs)
 	 sel->select (modelList->getLine (translation));
    }
    else
-      listLang->set_sensitive (false);
-   mainLang->set_active (modelMain->getLine (tmp));
-   main = tmp;
+      if (showMainLang)
+	 listLang->set_sensitive (false);
+   if (showMainLang) {
+      mainLang->set_active (modelMain->getLine (tmp));
+      main = tmp;
+   }
 
-   pClient->pack_start (*manage (lblLang), Gtk::PACK_EXPAND_PADDING, 5);
-   pClient->pack_start (*manage (mainLang), Gtk::PACK_EXPAND_PADDING, 5);
    pClient->pack_start (*manage (listLang), Gtk::PACK_EXPAND_WIDGET, 5);
    pClient->show ();
 
@@ -211,8 +221,8 @@ void LanguageDialog::okEvent () {
 	 translations += (*modelList->get_iter (*i))[colLang.id];
       }
 
-      Check3 (main.size ());
-      main.append (1, ',');
+      if (main.size ())
+	 main.append (1, ',');
       main += translations;
    }
 

@@ -1,7 +1,7 @@
 #ifndef LANGDLG_H
 #define LANGDLG_H
 
-//$Id: LangDlg.h,v 1.2 2004/12/11 22:10:22 markus Exp $
+//$Id: LangDlg.h,v 1.3 2004/12/12 03:08:28 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ class LanguageColumns : public Gtk::TreeModel::ColumnRecord {
  */
 class LanguageDialog : public XGP::XDialog {
  public:
-   LanguageDialog (std::string& languages, unsigned int maxLangs);
+   LanguageDialog (std::string& languages, unsigned int maxLangs, bool mainLang = true);
    virtual ~LanguageDialog ();
 
    /// Method to display the dialog; cares about freeing it afterwards.
@@ -60,8 +60,9 @@ class LanguageDialog : public XGP::XDialog {
    /// don't just call new LanguageDialog (...);
    /// \param languages: The preselected languages; updated with the user input
    /// \param maxLangs: Maximal number of languages which can be selected
-   static LanguageDialog* create (std::string& languages, unsigned int maxLangs) {
-      LanguageDialog* dlg (new LanguageDialog (languages, maxLangs));
+   static LanguageDialog* create (std::string& languages, unsigned int maxLangs,
+				  bool mainLang = true) {
+      LanguageDialog* dlg (new LanguageDialog (languages, maxLangs, mainLang));
       dlg->signal_response ().connect (mem_fun (*dlg, &LanguageDialog::free));
       return dlg;
    }

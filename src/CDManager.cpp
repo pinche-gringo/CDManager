@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.42 2005/01/20 04:44:51 markus Rel $
+//$Id: CDManager.cpp,v 1.43 2005/01/25 01:41:22 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.42 $
+//REVISION    : $Revision: 1.43 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -37,30 +37,22 @@
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/scrolledwindow.h>
 
+#include <YGP/File.h>
+#include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/Process.h>
 #include <YGP/Tokenize.h>
 #include <YGP/ANumeric.h>
-#include <YGP/INIFile.h>
 
 #include <XGP/XAbout.h>
-#include <YGP/StatusObj.h>
 #include <XGP/XFileDlg.h>
 #include <XGP/LoginDlg.h>
 
 #include "CDAppl.h"
-#include <XGP/MessageDlg.h>
 #include "Settings.h"
-#include "DB.h"
-#include "Song.h"
-#include "Movie.h"
-#include "Words.h"
-#include "Record.h"
 #include "Language.h"
 
 #include "CDManager.h"
-#include "Director.h"
-#include "Interpret.h"
 
 
 // Defines
@@ -272,31 +264,6 @@ const char* CDManager::xpmAuthor[] = {
 
 
 //-----------------------------------------------------------------------------
-// With a very ugly trick initialize I18n before the first use of gettext)
-XGP::XApplication::MenuEntry CDManager::menuItems[] = {
-    { (initI18n (PACKAGE, LOCALEDIR),
-      _("_CD")),            _("<alt>C"),       0,            BRANCH },
-    { _("_Login ..."),      _("<ctl>L"),       LOGIN,        ITEM },
-    { _("_Save DB"),        _("<ctl>S"),       SAVE,         ITEM },
-    { _("_Logout"),         _("<ctl>O"),       LOGOUT,       ITEM },
-    { "",                   "",                0  ,          SEPARATOR },
-    { _("_Export to HTML"), _("<ctl>E"),       EXPORT,       ITEM },
-    { _("_Import from MP3-info ..."), _("<ctl>I"), IMPORT_MP3,ITEM },
-    { "",                   "",                0  ,          SEPARATOR },
-    { _("E_xit"),           _("<ctl>Q"),       EXIT,         ITEM },
-    { _("_Edit"),           _("<alt>E"),       MEDIT,        BRANCH },
-    { _("New _Interpret"),  _("<ctl>N"),       NEW_ARTIST,   ITEM },
-    { _("_New Record"),     _("<ctl><alt>N"),  NEW_RECORD,   ITEM },
-    { _("New _Song"),       _("<ctl><shft>N"), NEW_SONG,     ITEM },
-    { _("New _Director") ,  _("<ctl>N"),       NEW_DIRECTOR, ITEM },
-    { _("_New Movie") ,     _("<ctl><alt>N"),  NEW_MOVIE,    ITEM },
-    { "",                   "",                0  ,          SEPARATOR },
-    { _("_Delete"),         _("<ctl>Delete"),  DELETE,       ITEM },
-    { _("_Options"),        _("<alt>O"),       0,            BRANCH },
-    { _("_Preferences ..."),_("F9"),           PREFERENCES,  ITEM },
-    { _("_Save preferences"),_("<ctl>F9"),     SAVE_PREF,    ITEM }
-};
-
 /// Defaultconstructor; all widget are created
 /// \param options: Options for the program
 //-----------------------------------------------------------------------------
@@ -315,11 +282,101 @@ CDManager::CDManager (Options& options)
    // Create controls
    Glib::ustring ui ("<ui><menubar name='Menu'>"
 		     "  <menu action='CD'>"
-   addMenus (menuItems, sizeof (menuItems) / sizeof (*menuItems));
-   showHelpMenu ();
+		     "    <menuitem action='Login'/>"
+		     "    <menuitem action='SaveDB'/>"
+		     "    <menuitem action='Logout'/>"
+		     "    <separator/>"
+		     "    <menuitem action='Export'/>"
+		     "    <menuitem action='Import'/>"
+		     "    <separator/>"
+		     "    <menuitem action='FQuit'/>"
+		     "  </menu>"
+		     "  <menu action='Edit'>"
+		     "    <placeholder name='List'/>"
+		     "    <separator/>"
+		     "    <menuitem action='NInterpret'/>"
+		     "    <menuitem action='NRecord'/>"
+		     "    <menuitem action='NSong'/>"
+		     "    <menuitem action='NDirector'/>"
+		     "    <menuitem action='NMovie'/>"
+		     "  </menu>"
+		     "  <menu action='Options'>"
+		     "    <menuitem action='Prefs'/>"
+		     "    <menuitem action='SavePrefs'/>"
+		     "  </menu>");
+
+   grpAction->add (Gtk::Action::create ("CD", _("_CD")));
+   grpAction->add (Gtk::Action::create ("Login", _("_Login")),
+		   Gtk::AccelKey ("<ctl>L"),
+		   mem_fun (*this, &CDManager::showLogin));
+   grpAction->add (Gtk::Action::create ("SaveDB", Gtk::Stock::SAVE),
+		   mem_fun (*this, &CDManager::save));
+   grpAction->add (Gtk::Action::create ("Logout", _("Log_out")),
+		   Gtk::AccelKey ("<ctl>O"),
+		   mem_fun (*this, &CDManager::logout));
+   grpAction->add (Gtk::Action::create ("Export", _("_Export to HTML")),
+		   Gtk::AccelKey ("<ctl>E"),
+		   mem_fun (*this, &CDManager::exportData));
+   grpAction->add (Gtk::Action::create ("Import", _("_Import from MP3-info ...")),
+		   Gtk::AccelKey ("<ctl>I"),
+		   mem_fun (*this, &CDManager::importFromMP3));
+   grpAction->add (Gtk::Action::create ("FQuit", Gtk::Stock::QUIT),
+		   mem_fun (*this, &CDManager::hide));
+   grpAction->add (Gtk::Action::create ("Edit", _("_Edit")));
+   grpAction->add (Gtk::Action::create ("Delete", Gtk::Stock::DELETE,_("_Delete")),
+		   Gtk::AccelKey (_("<ctl>Delete")),
+   grpAction->add (Gtk::Action::create ("NInterpret", _("New _Interpret")),
+		   Gtk::AccelKey (_("<ctl>N")),
+		   mem_fun (*this, &CDManager::newInterpret));
+   grpAction->add (Gtk::Action::create ("NRecord", _("_New Record")),
+		   Gtk::AccelKey (_("<ctl><alt>N")),
+		   mem_fun (*this, &CDManager::newRecord));
+   grpAction->add (Gtk::Action::create ("NSong", _("New _Song")),
+		   Gtk::AccelKey (_("<ctl><shft>N")),
+		   mem_fun (*this, &CDManager::newSong));
+   grpAction->add (Gtk::Action::create ("NDirector", _("New _Director")),
+		   Gtk::AccelKey (_("<ctl>N")),
+		   mem_fun (*this, &CDManager::newDirector));
+   grpAction->add (Gtk::Action::create ("NMovie", _("_New Movie")),
+		   Gtk::AccelKey (_("<ctl><alt>N")),
+		   mem_fun (*this, &CDManager::newMovie));
+   grpAction->add (Gtk::Action::create ("Delete", _("_Delete")),
+   grpAction->add (Gtk::Action::create ("Options", _("_Options")));
+   grpAction->add (Gtk::Action::create ("Prefs", Gtk::Stock::PREFERENCES),
+		   Gtk::AccelKey (_("F9")),
+		   mem_fun (*this, &CDManager::editPreferences));
+   grpAction->add (Gtk::Action::create ("SavePrefs", _("_Save preferences")),
+		   Gtk::AccelKey (_("<ctl>F9")),
+		   mem_fun (*this, &CDManager::savePreferences));
+
+   addHelpMenu (ui);
+   ui += "</menubar></ui>";
+   mgrUI->insert_action_group (grpAction);
+   add_accel_group (mgrUI->get_accel_group ());
+   mgrUI->add_ui_from_string (ui);
+
+   apMenus[LOGIN]  = mgrUI->get_widget("/Menu/CD/Login"); Check3 (apMenus[LOGIN]);
+   apMenus[SAVE]   = mgrUI->get_widget("/Menu/CD/SaveDB"); Check3 (apMenus[SAVE]);
+   apMenus[LOGOUT] = mgrUI->get_widget("/Menu/CD/Logout"); Check3 (apMenus[LOGOUT]);
+
+   apMenus[EXPORT]     = mgrUI->get_widget("/Menu/CD/Export"); Check3 (apMenus[EXPORT]);
+   apMenus[IMPORT_MP3] = mgrUI->get_widget("/Menu/CD/Import"); Check3 (apMenus[IMPORT_MP3]);
+
+   apMenus[MEDIT]        = mgrUI->get_widget("/Menu/Edit"); Check3 (apMenus[MEDIT]);
+   apMenus[DELETE]       = mgrUI->get_widget("/Menu/Edit/Delete"); Check3 (apMenus[DELETE]);
+
+   apMenus[NEW_ARTIST]   = mgrUI->get_widget("/Menu/Edit/NInterpret"); Check3 (apMenus[NEW_ARTIST]);
+   apMenus[NEW_RECORD]   = mgrUI->get_widget("/Menu/Edit/NRecord"); Check3 (apMenus[NEW_RECORD]);
+   apMenus[NEW_SONG]     = mgrUI->get_widget("/Menu/Edit/NSong"); Check3 (apMenus[NEW_SONG]);
+   apMenus[NEW_DIRECTOR] = mgrUI->get_widget("/Menu/Edit/NDirector"); Check3 (apMenus[NEW_DIRECTOR]);
+   apMenus[NEW_MOVIE]    = mgrUI->get_widget("/Menu/Edit/NMovie"); Check3 (apMenus[NEW_MOVIE]);
+   ((Gtk::MenuItem*)(mgrUI->get_widget("/Menu/Help")))->set_right_justified ();
+
+   enableMenus (false);
 
    getClient ()->pack_start (*mgrUI->get_widget("/Menu"), Gtk::PACK_SHRINK);
    getClient ()->pack_start (nb, Gtk::PACK_EXPAND_WIDGET);
+   getClient ()->pack_end (status, Gtk::PACK_SHRINK);
 
    Gtk::ScrolledWindow* scrlSongs (new Gtk::ScrolledWindow);
    Gtk::ScrolledWindow* scrlMovies (new Gtk::ScrolledWindow);
@@ -388,174 +445,102 @@ CDManager::~CDManager () {
 //-----------------------------------------------------------------------------
 /// Saves the DB
 //-----------------------------------------------------------------------------
-/// Command-handler
-/// \param menu: ID of command (menu)
+void CDManager::save () {
    writeChangedEntries ();
-void CDManager::command (int menu) {
-   TRACE2 ("CDManager::command (int) - " << menu);
-   switch (menu) {
-   case SAVE:
-      writeChangedEntries ();
-      removeDeletedEntries ();
-      apMenus[SAVE]->set_sensitive (false);
-      break;
+   removeDeletedEntries ();
+   apMenus[SAVE]->set_sensitive (false);
+}
 
-   case LOGIN:
-      XGP::TLoginDialog<CDManager>::create (_("Database login"), *this,
-					    &CDManager::login)->setCurrentUser ();
-      break;
-
-   case LOGOUT:
-      Database::close ();
-      enableMenus (false);
-      status.pop ();
-      status.push (_("Disconnected!"));
-      break;
+//-----------------------------------------------------------------------------
 /// Saves the DB
-   case EXPORT:
-      try {
-	 std::string dir (opt.getDirOutput ());
-	 if (dir.size () && (dir[dir.size () - 1] != YGP::File::DIRSEPARATOR)) {
-	    dir += YGP::File::DIRSEPARATOR;
-	    opt.setDirOutput (dir);
-	 }
+//-----------------------------------------------------------------------------
+void CDManager::importFromMP3 () {
+   XGP::TFileDialog<CDManager>::create (_("Select file(s) to import"), *this,
+					&CDManager::parseMP3Info,
+					Gtk::FILE_CHOOSER_ACTION_OPEN,
+					XGP::IFileDialog::MUST_EXIST
+					| XGP::IFileDialog::MULTIPLE);
+}
+
+//-----------------------------------------------------------------------------
+/// Edits dthe preferences
+//-----------------------------------------------------------------------------
+void CDManager::editPreferences () {
+   Settings::create (get_window (), opt);
+}
+
+//-----------------------------------------------------------------------------
 /// Adds a new interpret to the list
-	 exportData ();
-      }
-      catch (Glib::ustring& e) {
-	 Gtk::MessageDialog dlg (e, Gtk::MESSAGE_ERROR);
-	 dlg.run ();
-      }
-      break;
+//-----------------------------------------------------------------------------
+void CDManager::newInterpret () {
+   HInterpret artist;
+   artist.define ();
+   addArtist (artist);
+}
+
+//-----------------------------------------------------------------------------
 /// Adds a new record to the first selected interpret
-   case IMPORT_MP3:
-      XGP::TFileDialog<CDManager>::create (_("Select file(s) to import"), *this,
-					   &CDManager::parseMP3Info,
-					   Gtk::FILE_CHOOSER_ACTION_OPEN,
-					   XGP::IFileDialog::MUST_EXIST
-					   | XGP::IFileDialog::MULTIPLE);
-      break;
+//-----------------------------------------------------------------------------
+void CDManager::newRecord () {
+   Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
+   Gtk::TreeSelection::ListHandle_Path list (recordSel->get_selected_rows ());
+   Check3 (list.size ());
+   Glib::RefPtr<Gtk::TreeStore> model (records.getModel ());
+   Gtk::TreeIter p (model->get_iter (*list.begin ())); Check3 (p);
+   if ((*p)->parent ())
+      p = ((*p)->parent ());
 
-   case NEW_ARTIST: {
-      HInterpret artist;
-      artist.define ();
-      addArtist (artist);
-      break; }
-
-   case NEW_RECORD: {
-      Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
-      Gtk::TreeSelection::ListHandle_Path list (recordSel->get_selected_rows ());
-      Check3 (list.size ());
-      Glib::RefPtr<Gtk::TreeStore> model (records.getModel ());
-      Gtk::TreeIter p (model->get_iter (*list.begin ())); Check3 (p);
-      if ((*p)->parent ())
-	 p = ((*p)->parent ());
-
-      HRecord record;
-      record.define ();
-      addRecord (p, record);
-      break; }
-
-   case NEW_SONG: {
-      HSong song;
-      song.define ();
-      addSong (song);
-      break; }
-
-   case NEW_DIRECTOR: {
-      Glib::RefPtr<Gtk::TreeSelection> movieSel (movies.get_selection ());
-      HDirector director;
-      director.define ();
-      directors.push_back (director);
-
-      Gtk::TreeModel::iterator i (movies.append (director));
-      movies.selectRow (i);
-      recordChanged (HEntity::cast (director));
-      break; }
-
-   case NEW_MOVIE: {
-      Glib::RefPtr<Gtk::TreeSelection> movieSel (movies.get_selection ());
-      Gtk::TreeSelection::ListHandle_Path list (movieSel->get_selected_rows ());
-      Check3 (list.size ());
-      Glib::RefPtr<Gtk::TreeStore> model (movies.getModel ());
-      Gtk::TreeIter p (model->get_iter (*list.begin ())); Check3 (p);
-      if ((*p)->parent ())
-	 p = ((*p)->parent ());
-
-      HMovie movie;
-      movie.define ();
-      Gtk::TreeIter i (movies.append (movie, *p));
-      movies.expand_row (model->get_path (p), false);
-      movies.selectRow (i);
-
-      HDirector director;
-      director = movies.getDirectorAt (p);
-      relMovies.relate (director, movie);
-      break; }
-
-   case DELETE:
-      if (records.has_focus ())
-	 deleteSelectedRecords ();
-      else if (songs.has_focus ())
-	 deleteSelectedSongs ();
-      break;
-
-   case EXIT:
-      hide ();
-      break;
-
-   case PREFERENCES:
-      Settings::create (get_window (), opt);
-      break;
-
-   case SAVE_PREF: {
-      std::ofstream inifile (opt.pINIFile);
-      if (inifile) {
-         YGP::INIFile::write (inifile, "Export", opt);
-      }
-      else {
-	 Glib::ustring msg (_("Can't create file `%1'!\n\nReason: %2."));
-	 msg.replace (msg.find ("%1"), 2, opt.pINIFile);
-	 msg.replace (msg.find ("%2"), 2, strerror (errno));
-	 Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-	 dlg.run ();
-      }
+   HRecord record;
    record.define ();
-      // Storing the special/first names and the articles
-      try {
-	 Database::store ("START TRANSACTION");
-	 Database::store ("DELETE FROM Words");
-	 for (std::vector<Glib::ustring>::const_iterator w (Words::namesBegin ());
-	      w != Words::namesEnd (); ++w) {
-	    std::string ins ("INSERT INTO Words VALUES ('%1')");
-	    ins.replace (ins.find ("%1"), 2, Glib::locale_from_utf8 (*w));
+   addRecord (p, record);
+}
+
+//-----------------------------------------------------------------------------
 /// Adds a new song to the first selected record
-	    Database::store (ins.c_str ());
-	 }
-	 Database::store ("COMMIT");
+//-----------------------------------------------------------------------------
+void CDManager::newSong () {
+   HSong song;
+   song.define ();
+   addSong (song);
+}
+
+//-----------------------------------------------------------------------------
 /// Adds a new direcotor to the list
-	 Database::store ("START TRANSACTION");
-	 Database::store ("DELETE FROM Articles");
-	 for (std::vector<Glib::ustring>::const_iterator a (Words::articlesBegin ());
-	      a != Words::articlesEnd (); ++a) {
-	    std::string ins ("INSERT INTO Articles VALUES ('%1')");
-	    ins.replace (ins.find ("%1"), 2, Glib::locale_from_utf8 (*a));
+//-----------------------------------------------------------------------------
+void CDManager::newDirector () {
+   Glib::RefPtr<Gtk::TreeSelection> movieSel (movies.get_selection ());
+   HDirector director;
+   director.define ();
+   directors.push_back (director);
+
+   Gtk::TreeModel::iterator i (movies.append (director));
    movies.selectRow (i);
-	    Database::store (ins.c_str ());
-	 }
-	 Database::store ("COMMIT");
-      }
-      catch (std::exception& e) {
-	 Glib::ustring msg (_("Can't store special names!\n\nReason: %1."));
-	 msg.replace (msg.find ("%1"), 2, e.what ());
-	 Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-	 dlg.run ();
-      }
-      break; }
+   recordChanged (HEntity::cast (director));
+}
+
+//-----------------------------------------------------------------------------
 /// Adds a new movie to the first selected director
-   default:
-      XApplication::command (menu);
-   } // end-switch
+//-----------------------------------------------------------------------------
+void CDManager::newMovie () {
+   Glib::RefPtr<Gtk::TreeSelection> movieSel (movies.get_selection ());
+   Gtk::TreeSelection::ListHandle_Path list (movieSel->get_selected_rows ());
+   Check3 (list.size ());
+   Glib::RefPtr<Gtk::TreeStore> model (movies.getModel ());
+   Gtk::TreeIter p (model->get_iter (*list.begin ())); Check3 (p);
+   if ((*p)->parent ())
+      p = ((*p)->parent ());
+
+   HMovie movie;
+   movie.define ();
+   Gtk::TreeIter i (movies.append (movie, *p));
+   movies.expand_row (model->get_path (p), false);
+   movies.selectRow (i);
+
+   HDirector director;
+   director = movies.getDirectorAt (p);
+   relMovies.relate (director, movie);
+}
+
 //-----------------------------------------------------------------------------
 /// Shows the about box for the program
 //-----------------------------------------------------------------------------
@@ -582,69 +567,11 @@ const char* CDManager::getHelpfile () {
 //-----------------------------------------------------------------------------
 /// Displays a dialog to Login to the database
 //-----------------------------------------------------------------------------
-/// Login to the database with the passed user/password pair
-/// \param user: User to connect to the DB with
-/// \param pwd: Password for user
-/// \returns bool: True, if login could be performed
-//-----------------------------------------------------------------------------
-bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
-   TRACE9 ("CDManager::login (const Glib::ustring&, const Glib::ustring&) - "
-	   << user << '/' << pwd);
+void CDManager::showLogin () {
+   XGP::TLoginDialog<CDManager>::create (_("Database login"), *this,
+					 &CDManager::login)->setCurrentUser ();
+}
 
-   try {
-      Database::connect (DBNAME, user.c_str (), pwd.c_str ());
-   }
-   catch (std::exception& err) {
-      Glib::ustring msg (_("Can't connect to database!\n\nReason: %1"));
-      msg.replace (msg.find ("%1"), 2, err.what ());
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.set_title (_("Login error"));
-      dlg.run ();
-      return false;
-   }
-
-   enableMenus (true);
-
-   loadedPages = 0;
-   Glib::signal_idle ().connect
-      (bind_return (mem_fun (*this, &CDManager::loadDatabase), false));
-
-   try {
-      if (recGenres.empty ()) {
-	 Genres::loadFromFile (DATADIR "Genres.dat", recGenres, movieGenres);
-
-	 records.updateGenres ();
-	 songs.updateGenres ();
-	 movies.updateGenres ();
-      }
-
-      if (!Words::cArticles ()) {
-	 Database::store ("SELECT word FROM Words");
-
-	 while (Database::hasData ()) {
-	    // Fill and store artist entry from DB-values
-	    Words::addName2Ignore
-	       (Glib::locale_to_utf8 (Database::getResultColumnAsString (0)));
-	    Database::getNextResultRow ();
-	 }
-
-	 Database::store ("SELECT article FROM Articles");
-
-	 while (Database::hasData ()) {
-	    // Fill and store artist entry from DB-values
-	    Words::addArticle
-	       (Glib::locale_to_utf8 (Database::getResultColumnAsString (0)));
-	    Database::getNextResultRow ();
-	 }
-      }
-   }
-   catch (std::exception& err) {
-      Glib::ustring msg (_("Can't query needed information!\n\nReason: %1"));
-      msg.replace (msg.find ("%1"), 2, err.what ());
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.run ();
-   }
-   return true;
 //-----------------------------------------------------------------------------
 /// Enables or disables the menus according to the status of the program
 /// \param enable: Flag, if menus should be enabled
@@ -700,234 +627,6 @@ void CDManager::loadDatabase () {
 //-----------------------------------------------------------------------------
 /// Callback after selecting a record
 /// \param row: Selected row
-/// Loads the records from the database
-///
-/// According to the available information the pages of the notebook
-/// are created.
-//-----------------------------------------------------------------------------
-void CDManager::loadRecords () {
-   TRACE9 ("CDManager::loadRecords ()");
-   try {
-      records.clear ();
-      artists.clear ();
-
-      unsigned long int cRecords (0);
-      Database::store ("SELECT i.id, c.name, c.born, c.died FROM Interprets i,"
-		       " Celebrities c WHERE c.id = i.id");
-
-      HInterpret hArtist;
-      while (Database::hasData ()) {
-	 TRACE5 ("CDManager::loadRecords () - Adding Artist "
-		 << Database::getResultColumnAsUInt (0) << '/'
-		 << Database::getResultColumnAsString (1));
-
-	 // Fill and store artist entry from DB-values
-	 hArtist.define ();
-	 hArtist->setId (Database::getResultColumnAsUInt (0));
-	 hArtist->setName (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
-	 std::string tmp (Database::getResultColumnAsString (2));
-	 if (tmp != "0000")
-	    hArtist->setBorn (tmp);
-	 tmp = Database::getResultColumnAsString (3);
-	 if (tmp != "0000")
-	    hArtist->setDied (tmp);
-	 artists.push_back (hArtist);
-
-	 Database::getNextResultRow ();
-      }
-      std::sort (artists.begin (), artists.end (), &Interpret::compByName);
-
-      Database::store ("SELECT id, name, interpret, year, genre FROM "
-		       "Records ORDER BY interpret, year");
-      TRACE8 ("CDManager::loadRecords () - Records: " << Database::resultSize ());
-
-      if (cRecords = Database::resultSize ()) {
-	 std::map<unsigned int, std::vector<HRecord> > aRecords;
-
-	 HRecord newRec;
-	 while (Database::hasData ()) {
-	    // Fill and store record entry from DB-values
-	    TRACE8 ("CDManager::loadRecords () - Adding record "
-		 << Database::getResultColumnAsUInt (0) << '/'
-		 << Database::getResultColumnAsString (1));
-
-	    newRec.define ();
-	    newRec->setId (Database::getResultColumnAsUInt (0));
-	    newRec->setName
-	       (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
-	    if (Database::getResultColumnAsUInt (3))
-	       newRec->setYear (Database::getResultColumnAsUInt (3));
-	    newRec->setGenre (Database::getResultColumnAsUInt (4));
-	    aRecords[Database::getResultColumnAsUInt (2)].push_back (newRec);
-	    Database::getNextResultRow ();
-	 } // end-while has records
-
-	 for (std::vector<HInterpret>::const_iterator i (artists.begin ());
-	      i != artists.end (); ++i) {
-	    Gtk::TreeModel::Row artist (records.append (*i));
-
-	    std::map<unsigned int, std::vector<HRecord> >::iterator iRec
-	       (aRecords.find ((*i)->getId ()));
-	    if (iRec != aRecords.end ()) {
-	       for (std::vector<HRecord>::iterator r (iRec->second.begin ());
-		    r != iRec->second.end (); ++r) {
-		  records.append (*r, artist);
-		  relRecords.relate (*i, *r);
-	       } // end-for all records for an artist
-	       aRecords.erase (iRec);
-	    } // end-if artist has record
-	 } // end-for all artists
-	 records.expand_all ();
-      } // end-if database contains records
-
-      loadedPages |= 1;
-
-      Glib::ustring msg (Glib::locale_to_utf8 (ngettext ("Loaded %1 record", "Loaded %1 records", cRecords)));
-      msg.replace (msg.find ("%1"), 2, YGP::ANumeric::toString (cRecords));
-
-      Glib::ustring tmp (ngettext (" from %1 artist", " from %1 artists", artists.size ()));
-      tmp.replace (tmp.find ("%1"), 2, YGP::ANumeric::toString (artists.size ()));
-      msg += tmp;
-      status.pop ();
-      status.push (msg);
-   }
-   catch (std::exception& err) {
-      Glib::ustring msg (_("Can't query available records!\n\nReason: %1"));
-      msg.replace (msg.find ("%1"), 2, err.what ());
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.run ();
-   }
-}
-
-//-----------------------------------------------------------------------------
-/// Loads the movies from the database
-///
-/// According to the available information the pages of the notebook
-/// are created.
-//-----------------------------------------------------------------------------
-void CDManager::loadMovies () {
-   TRACE9 ("CDManager::loadMovies ()");
-   try {
-      movies.clear ();
-      directors.clear ();
-      unsigned int cMovies (0);
-
-      // Load data from movies table
-      Database::store ("SELECT d.id, c.name, c.born, c.died FROM Directors d, "
-		       "Celebrities c WHERE c.id = d.id");
-
-      YGP::StatusObject stat;
-      HDirector hDirector;
-      while (Database::hasData ()) {
-	 TRACE5 ("CDManager::laodMovies () - Adding Director "
-		 << Database::getResultColumnAsUInt (0) << '/'
-		 << Database::getResultColumnAsString (1));
-
-	 // Fill and store artist entry from DB-values
-	 try {
-	    hDirector.define ();
-	    hDirector->setName (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
-	    hDirector->setId (Database::getResultColumnAsUInt (0));
-
-	    std::string tmp (Database::getResultColumnAsString (2));
-	    if (tmp != "0000")
-	       hDirector->setBorn (tmp);
-	    tmp = Database::getResultColumnAsString (3);
-	    if (tmp != "0000")
-	       hDirector->setDied (tmp);
-	 }
-	 catch (std::exception& e) {
-	    Glib::ustring msg (_("Warning loading director `%1': %2"));
-	    msg.replace (msg.find ("%1"), 2, hDirector->getName ());
-	    msg.replace (msg.find ("%2"), 2, e.what ());
-	    stat.setMessage (YGP::StatusObject::WARNING, msg);
-	 }
-
-	 directors.push_back (hDirector);
-
-	 Database::getNextResultRow ();
-      }
-      std::sort (directors.begin (), directors.end (), &Director::compByName);
-
-      Database::store ("SELECT id, name, director, year, genre, type, languages"
-		       ", subtitles FROM Movies ORDER BY director, year");
-      TRACE8 ("CDManager::loadMovies () - Found " << Database::resultSize ()
-	      << " movies");
-
-      if (cMovies = Database::resultSize ()) {
-	 std::map<unsigned int, std::vector<HMovie> > aMovies;
-
-	 HMovie movie;
-	 while (Database::hasData ()) {
-	    // Fill and store record entry from DB-values
-	    TRACE8 ("CDManager::loadMovies () - Adding movie "
-		 << Database::getResultColumnAsUInt (0) << '/'
-		 << Database::getResultColumnAsString (1));
-
-	    try {
-	       movie.define ();
-	       movie->setName
-		  (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
-	       movie->setId (Database::getResultColumnAsUInt (0));
-	       if (Database::getResultColumnAsUInt (3))
-		  movie->setYear (Database::getResultColumnAsUInt (3));
-	       movie->setGenre (Database::getResultColumnAsUInt (4));
-	       movie->setType (Database::getResultColumnAsUInt (5));
-	       movie->setLanguage (Database::getResultColumnAsString (6));
-	       movie->setTitles (Database::getResultColumnAsString (7));
-	    }
-	    catch (std::exception& e) {
-	       Glib::ustring msg (_("Warning loading movie `%1': %2"));
-	       msg.replace (msg.find ("%1"), 2, movie->getName ());
-	       msg.replace (msg.find ("%2"), 2, e.what ());
-	       stat.setMessage (YGP::StatusObject::WARNING, msg);
-	    }
-
-	    aMovies[Database::getResultColumnAsUInt (2)].push_back (movie);
-	    Database::getNextResultRow ();
-	 } // end-while has movies
-
-	 for (std::vector<HDirector>::const_iterator i (directors.begin ());
-	      i != directors.end (); ++i) {
-	    Gtk::TreeModel::Row director (movies.append (*i));
-
-	    std::map<unsigned int, std::vector<HMovie> >::iterator iMovie
-	       (aMovies.find ((*i)->getId ()));
-	    if (iMovie != aMovies.end ()) {
-	       for (std::vector<HMovie>::iterator m (iMovie->second.begin ());
-		    m != iMovie->second.end (); ++m) {
-		  movies.append (*m, director);
-		  relMovies.relate (*i, *m);
-	       } // end-for all records for an artist
-	       aMovies.erase (iMovie);
-	    } // end-if director has movies
-	 } // end-for all directors
-	 records.expand_all ();
-      } // end-if database contains records
-
-      movies.expand_all ();
-
-      Glib::ustring msg (Glib::locale_to_utf8 (ngettext ("Loaded %1 movie", "Loaded %1 movies", cMovies)));
-      msg.replace (msg.find ("%1"), 2, YGP::ANumeric::toString (cMovies));
-      status.pop ();
-      status.push (msg);
-
-      loadedPages |= 2;
-
-      if (stat.getType () > YGP::StatusObject::UNDEFINED) {
-	 stat.generalize (_("Warnings loading movies"));
-	 XGP::MessageDlg::create (stat);
-      }
-   }
-   catch (std::exception& err) {
-      Glib::ustring msg (_("Can't query available movies!\n\nReason: %1"));
-      msg.replace (msg.find ("%1"), 2, err.what ());
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.run ();
-   }
-}
-
-//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CDManager::recordSelected () {
    TRACE9 ("CDManager::recordSelected ()");
@@ -962,49 +661,6 @@ void CDManager::recordSelected () {
 //-----------------------------------------------------------------------------
 /// Callback after selecting a movie
 /// \param row: Selected row
-/// Loads the songs for the passed record
-/// \param record: Handle to the record for which to load songs
-//-----------------------------------------------------------------------------
-void CDManager::loadSongs (const HRecord& record) {
-   TRACE9 ("CDManager::loadSongs (const HRecord& record) - "
-	   << (record.isDefined () ? record->getName ().c_str () : "Undefined"));
-   Check1 (record.isDefined ());
-
-   try {
-      std::stringstream query;
-      query << "SELECT id, name, duration, genre, track FROM Songs WHERE"
-	 " idRecord=" << record->getId ();
-      Database::store (query.str ().c_str ());
-
-      HSong song;
-      while (Database::hasData ()) {
-	 song.define ();
-	 song->setId (Database::getResultColumnAsUInt (0));
-	 song->setName (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
-	 std::string time (Database::getResultColumnAsString (2));
-	 if (time != "00:00:00")
-	    song->setDuration (time);
-	 song->setGenre (Database::getResultColumnAsUInt (3));
-	 unsigned int track (Database::getResultColumnAsUInt (4));
-	 if (track)
-	    song->setTrack (track);
-
-	 relSongs.relate (record, song);
-	 Database::getNextResultRow ();
-      } // end-while
-
-      record->setSongsLoaded ();
-   }
-   catch (std::exception& err) {
-      Glib::ustring msg (_("Can't query the songs for record %1!\n\nReason: %2"));
-      msg.replace (msg.find ("%1"), 2, record->getName ());
-      msg.replace (msg.find ("%2"), 2, err.what ());
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.run ();
-   }
-}
-
-//-----------------------------------------------------------------------------
 /// \param song: Handle to changed song
 //-----------------------------------------------------------------------------
 defineChangeObject(Song, song, changedSongs)
@@ -1064,65 +720,6 @@ void CDManager::recordGenreChanged (const HEntity& record) {
 //-----------------------------------------------------------------------------
 /// Escapes the quotes in values for the database
 /// \param value: Value to escape
-/// Removes deleed entries from the database
-//-----------------------------------------------------------------------------
-void CDManager::removeDeletedEntries () {
-   try {
-      while (deletedInterprets.size ()) {
-	 HInterpret artist (*deletedInterprets.begin ()); Check3 (artist.isDefined ());
-	 try {
-	    std::stringstream query;
-	    query << "DELETE FROM Interprets WHERE id=" << artist->getId ();
-	    Database::store (query.str ().c_str ());
-	 }
-	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't delete interpret `%1'!\n\nReason: %2"));
-	    msg.replace (msg.find ("%1"), 2, artist->getName ());
-	    msg.replace (msg.find ("%2"), 2, err.what ());
-	    throw (msg);
-	 }
-	 deletedInterprets.erase (deletedInterprets.begin ());
-      } // endwhile
-
-      while (deletedRecords.size ()) {
-	 HRecord record (*deletedRecords.begin ()); Check3 (record.isDefined ());
-	 try {
-	    std::stringstream query;
-	    query << "DELETE FROM Records WHERE id=" << record->getId ();
-	    Database::store (query.str ().c_str ());
-	 }
-	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't delete record `%1'!\n\nReason: %2"));
-	    msg.replace (msg.find ("%1"), 2, record->getName ());
-	    msg.replace (msg.find ("%2"), 2, err.what ());
-	    throw (msg);
-	 }
-	 deletedRecords.erase (deletedRecords.begin ());
-      } // endwhile
-
-      while (deletedSongs.size ()) {
-	 HSong song (*deletedSongs.begin ()); Check3 (song.isDefined ());
-	 try {
-	    std::stringstream query;
-	    query << "DELETE FROM Songs WHERE id=" << song->getId ();
-	    Database::store (query.str ().c_str ());
-	 }
-	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't delete song `%1'!\n\nReason: %2"));
-	    msg.replace (msg.find ("%1"), 2, song->getName ());
-	    msg.replace (msg.find ("%2"), 2, err.what ());
-	    throw (msg);
-	 }
-	 deletedSongs.erase (deletedSongs.begin ());
-      } // end-while
-   }
-   catch (Glib::ustring& msg) {
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.run ();
-   }
-}
-
-//-----------------------------------------------------------------------------
 /// \returns Glib::ustring: Escaped text
 //-----------------------------------------------------------------------------
 Glib::ustring CDManager::escapeDBValue (const Glib::ustring& value) {
@@ -1139,271 +736,6 @@ Glib::ustring CDManager::escapeDBValue (const Glib::ustring& value) {
 //-----------------------------------------------------------------------------
 /// Callback when switching the notebook pages
 /// \param iPage: Index of the newly selected page
-/// Aktualizes changed entries in the database
-//-----------------------------------------------------------------------------
-void CDManager::writeChangedEntries () {
-   try {
-      while (changedInterprets.size ()) {
-	 HInterpret artist (changedInterprets.begin ()->first);
-	 Check3 (artist.isDefined ());
-	 try {
-	    std::stringstream query;
-	    std::string tmp (escapeDBValue (artist->getName ()));
-	    query << (artist->getId () ? "UPDATE Celebrities" : "INSERT into Celebrities")
-		  << " SET name=\"" << tmp
-		  << "\", born="
-		  << (artist->getBorn ().isDefined () ? artist->getBorn () : YGP::AYear (0))
-		  << ", died="
-		  << (artist->getDied ().isDefined () ? artist->getDied () : YGP::AYear (0));
-
-	    if (artist->getId ())
-	       query << " WHERE id=" << artist->getId ();
-	    Database::store (query.str ().c_str ());
-
-	    if (!artist->getId ()) {
-	       artist->setId (Database::getIDOfInsert ());
-	       Database::store ("INSERT into Interprets set id=LAST_INSERT_ID()");
-	    }
-	 }
-	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't write interpret `%1'!\n\nReason: %2"));
-	    msg.replace (msg.find ("%1"), 2, artist->getName ());
-	    msg.replace (msg.find ("%2"), 2, err.what ());
-	    throw (msg);
-	 }
-
-	 changedInterprets.erase (changedInterprets.begin ());
-      } // endwhile
-
-      while (changedRecords.size ()) {
-	 HRecord record (changedRecords.begin ()->first); Check3 (record.isDefined ());
-	 try {
-	    std::stringstream query;
-	    query << (record->getId () ? "UPDATE Records" : "INSERT into Records")
-		  << " SET name=\"" << escapeDBValue (record->getName ())
-		  << "\", genre=" << record->getGenre ();
-	    if (record->getYear ().isDefined ())
-	       query << ", year=" << record->getYear ();
-	    if (relRecords.isRelated (record)) {
-	       HInterpret artist (relRecords.getParent (record)); Check3 (artist.isDefined ());
-	       query << ", interpret=" << artist->getId ();
-	    }
-	    if (record->getId ())
-	       query << " WHERE id=" << record->getId ();
-	    Database::store (query.str ().c_str ());
-
-	    if (!record->getId ())
-	       record->setId (Database::getIDOfInsert ());
-	 }
-	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't write record `%1'!\n\nReason: %2"));
-	    msg.replace (msg.find ("%1"), 2, record->getName ());
-	    msg.replace (msg.find ("%2"), 2, err.what ());
-	    throw (msg);
-	 }
-
-	 changedRecords.erase (changedRecords.begin ());
-      } // endwhile
-
-      while (changedSongs.size ()) {
-	 HSong song (changedSongs.begin ()->first); Check3 (song.isDefined ());
-	 try {
-	    std::stringstream query;
-	    query << (song->getId () ? "UPDATE Songs" : "INSERT into Songs")
-		  << " SET name=\"" << escapeDBValue (song->getName ())
-		  << "\", duration=\"" << song->getDuration () << "\", genre="
-		  << song->getGenre ();
-	    if (song->getTrack ().isDefined ())
-	       query << ", track=" << song->getTrack ();
-	    if (relSongs.isRelated (song)) {
-	       HRecord record (relSongs.getParent (song)); Check3 (record.isDefined ());
-	       query << ", idRecord=" << record->getId ();
-	    }
-	    if (song->getId ())
-	       query << " WHERE id=" << song->getId ();
-	    Database::store (query.str ().c_str ());
-
-	    if (!song->getId ())
-	       song->setId (Database::getIDOfInsert ());
-	 }
-	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't write song `%1'!\n\nReason: %2"));
-	    msg.replace (msg.find ("%1"), 2, song->getName ());
-	    msg.replace (msg.find ("%2"), 2, err.what ());
-	    throw (msg);
-	 }
-
-	 changedSongs.erase (changedSongs.begin ());
-      } // endwhile
-
-      while (changedDirectors.size ()) {
-	 HDirector director (changedDirectors.begin ()->first);
-	 Check3 (director.isDefined ());
-	 try {
-	    std::stringstream query;
-	    query << (director->getId () ? "UPDATE Celebrities" : "INSERT into Celebrities")
-		  << " SET name=\"" << escapeDBValue (director->getName ())
-		  << "\", born="
-		  << (director->getBorn ().isDefined () ? director->getBorn () : YGP::AYear (0))
-		  << ", died="
-		  << (director->getDied ().isDefined () ? director->getDied () : YGP::AYear (0));
-
-	    if (director->getId ())
-	       query << " WHERE id=" << director->getId ();
-	    Database::store (query.str ().c_str ());
-
-	    if (!director->getId ()) {
-	       director->setId (Database::getIDOfInsert ());
-	       Database::store ("INSERT into Directors set id=LAST_INSERT_ID()");
-	    }
-	 }
-	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't write director `%1'!\n\nReason: %2"));
-	    msg.replace (msg.find ("%1"), 2, director->getName ());
-	    msg.replace (msg.find ("%2"), 2, err.what ());
-	    throw (msg);
-	 }
-
-	 changedDirectors.erase (changedDirectors.begin ());
-      } // endwhile
-
-      while (changedMovies.size ()) {
-	 HMovie movie (changedMovies.begin ()->first); Check3 (movie.isDefined ());
-	 try {
-	    std::stringstream query;
-	    query << (movie->getId () ? "UPDATE Movies" : "INSERT into Movies")
-		  << " SET name=\"" << escapeDBValue (movie->getName ())
-		  << "\", genre=" << movie->getGenre () << ", languages=\""
-		  << movie->getLanguage () << "\", subtitles=\""
-		  << movie->getTitles () << "\", type=" << movie->getType ();
-	    if (movie->getYear ().isDefined ())
-	       query << ", year=" << movie->getYear ();
-	    if (relMovies.isRelated (movie)) {
-	       HDirector director (relMovies.getParent (movie)); Check3 (director.isDefined ());
-	       query << ", director=" << director->getId ();
-	    }
-	    if (movie->getId ())
-	       query << " WHERE id=" << movie->getId ();
-	    Database::store (query.str ().c_str ());
-
-	    if (!movie->getId ())
-	       movie->setId (Database::getIDOfInsert ());
-	 }
-	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't write movie `%1'!\n\nReason: %2"));
-	    msg.replace (msg.find ("%1"), 2, movie->getName ());
-	    msg.replace (msg.find ("%2"), 2, err.what ());
-	    throw (msg);
-	 }
-
-	 changedMovies.erase (changedMovies.begin ());
-      }
-   }
-   catch (Glib::ustring& msg) {
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.run ();
-   }
-}
-
-//-----------------------------------------------------------------------------
-/// Removes the selected records or artists from the listbox. Depending objects
-// (records or songs) are deleted too.
-//-----------------------------------------------------------------------------
-void CDManager::deleteSelectedRecords () {
-   TRACE9 ("CDManager::deleteSelectedRecords ()");
-
-   Glib::RefPtr<Gtk::TreeSelection> selection (records.get_selection ());
-   while (selection->get_selected_rows ().size ()) {
-      Gtk::TreeSelection::ListHandle_Path list (selection->get_selected_rows ());
-      Check3 (list.size ());
-      Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
-
-      Gtk::TreeIter iter (records.get_model ()->get_iter (*i)); Check3 (iter);
-      if ((*iter)->parent ())                // A record is going to be deleted
-	 deleteRecord (iter);
-      else {                                // An artist is going to be deleted
-	 TRACE9 ("CDManager::deleteSelectedRecords () - Deleting " <<
-		 iter->children ().size () << " children");
-	 HInterpret artist (records.getInterpretAt (iter)); Check3 (artist.isDefined ());
-	 if (iter->children ().size ())
-	    while (iter->children ().size ()) {
-	       Gtk::TreeIter child (iter->children ().begin ());
-	       deleteRecord (child);
-	    }
-	 else
-	    records.getModel ()->erase (iter);
-	 // Though artist is allready removed from the listbox, it still
-	 // has to be removed from the database
-	 deletedInterprets.push_back (artist);
-      }
-   }
-   apMenus[SAVE]->set_sensitive (true);
-}
-
-//-----------------------------------------------------------------------------
-/// Deletes the passed record
-/// \param record: Iterator to record to delete
-//-----------------------------------------------------------------------------
-void CDManager::deleteRecord (const Gtk::TreeIter& record) {
-   Check2 (record->children ().empty ());
-
-   HRecord hRec (records.getRecordAt (record));
-   TRACE9 ("CDManager::deleteRecord (const Gtk::TreeIter&) - Deleting record "
-	   << hRec->getName ());
-   Check3 (relRecords.isRelated (hRec));
-   HInterpret hArtist (relRecords.getParent (hRec)); Check3 (hArtist.isDefined ());
-
-   // Remove related songs
-   TRACE3 ("CDManager::deleteRecord (const Gtk::TreeIter&) - Remove Songs");
-   while (relSongs.isRelated (hRec)) {
-      std::vector<HSong>::iterator s
-	 (relSongs.getObjects (hRec).begin ());
-      relSongs.unrelate (hRec, *s);
-      deletedSongs.push_back (*s);
-   }
-   relRecords.unrelate (hArtist, hRec);
-   deletedRecords.push_back (hRec);
-
-   // Delete artist from listbox if it doesn't have any records
-   Glib::RefPtr<Gtk::TreeStore> model (records.getModel ());
-   if (!relRecords.isRelated (hArtist)) {
-      TRACE9 ("CDManager::deleteRecord (const Gtk::TreeIter&) - Deleting artist "
-	      << hArtist->getName ());
-
-      Gtk::TreeIter parent ((*record)->parent ()); Check3 (parent);
-      model->erase (record);
-      model->erase (parent);
-   }
-   else
-      model->erase (record);
-}
-
-//-----------------------------------------------------------------------------
-/// Removes the selected songs from the listbox.
-//-----------------------------------------------------------------------------
-void CDManager::deleteSelectedSongs () {
-   TRACE9 ("CDManager::deleteSelectedSongs ()");
-
-   Glib::RefPtr<Gtk::TreeSelection> selection (songs.get_selection ());
-   while (selection->get_selected_rows ().size ()) {
-      Gtk::TreeSelection::ListHandle_Path list (selection->get_selected_rows ());
-      Check3 (list.size ());
-      Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
-
-      Gtk::TreeIter iter (songs.get_model ()->get_iter (*i)); Check3 (iter);
-      HSong song (songs.getEntryAt (iter)); Check3 (song.isDefined ());
-      Check3 (relSongs.isRelated (song));
-      HRecord record (relSongs.getParent (song));
-
-      relSongs.unrelate (record, song);
-      deletedSongs.push_back (song);
-      songs.getModel ()->erase (iter);
-   }
-
-   apMenus[SAVE]->set_sensitive (true);
-}
-
-//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
    TRACE9 ("CDManager::pageSwitched (GtkNotebookPage*, guint) - " << iPage);
@@ -1435,6 +767,25 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 //-----------------------------------------------------------------------------
 void CDManager::exportToHTML () {
    std::string dir (opt.getDirOutput ());
+   if (dir.size () && (dir[dir.size () - 1] != YGP::File::DIRSEPARATOR)) {
+      dir += YGP::File::DIRSEPARATOR;
+      opt.setDirOutput (dir);
+   }
+
+   try {
+      exportData ();
+   }
+   catch (Glib::ustring& e) {
+      Gtk::MessageDialog dlg (e, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Loads the data and exports the stored information to HTML documents
+//-----------------------------------------------------------------------------
+void CDManager::exportData () throw (Glib::ustring) {
+   TRACE9 ("CDManager::exportData ()");
    if (!(loadedPages & 1))
       loadRecords ();
 

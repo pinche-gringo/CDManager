@@ -1,7 +1,7 @@
 #ifndef MOVIE_H
 #define MOVIE_H
 
-//$Id: Movie.h,v 1.4 2004/12/13 02:33:00 markus Rel $
+//$Id: Movie.h,v 1.5 2005/01/10 02:11:44 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ class Movie : public YGP::Entity {
  public:
    Movie ();
    Movie (const Movie& other);
-   virtual ~Movie () { }
+   virtual ~Movie ();
 
    unsigned long int getId () const { return id; }
    Glib::ustring     getName () const { return name; }
@@ -68,13 +68,13 @@ class Movie : public YGP::Entity {
    static bool compByMedia (const HMovie& a, const HMovie& b);
 
  private:
-   unsigned long int id;       // %attrib%; format
-   Glib::ustring     name;     // %attrib%;
-   YGP::AYear        year;     // %attrib%;
-   unsigned int      genre;    // %attrib%;
-   int               type;
-   std::string       lang;
-   std::string       titles;
+   unsigned long int id;       // %attrib%; ; 0
+   Glib::ustring     name;     // %attrib%; Name
+   YGP::AYear        year;     // %attrib%; Made
+   unsigned int      genre;    // %attrib%; Genre; 0
+   int               type;     // %attrib%; Media; 0
+   std::string       lang;     // %attrib%; Lang
+   std::string       titles;   // %attrib%; Subtitles
 
    //Prohibited manager functions
    const Movie& operator= (const Movie& other);

@@ -1,14 +1,14 @@
-//$Id: Record.cpp,v 1.1 2004/11/29 19:03:43 markus Rel $
+//$Id: Record.cpp,v 1.2 2005/01/10 02:11:44 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Record
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 29.11.2004
-//COPYRIGHT   : Anticopyright (A) 2004
+//COPYRIGHT   : Anticopyright (A) 2004, 2005
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -32,8 +32,11 @@
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 
+#include <XGP/XAttribute.h>  // Needed for specialization of YGP::Attribute for Glib::ustring
+
 #include "Words.h"
 #include "Record.h"
+#include "Record.meta"
 
 
 //-----------------------------------------------------------------------------

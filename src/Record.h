@@ -1,7 +1,7 @@
 #ifndef RECORD_H
 #define RECORD_H
 
-//$Id: Record.h,v 1.10 2004/11/29 19:03:57 markus Rel $
+//$Id: Record.h,v 1.11 2005/01/10 02:11:44 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,10 +33,10 @@ defineHndl(Record);
  */
 class Record : public YGP::Entity {
  public:
-   Record () : id (0), genre (0), songsLoaded (false) { }
+   Record ();
    Record (const Record& other) : id (other.id), name (other.name),
       year (other.year), genre (other.genre), songsLoaded (other.songsLoaded) { }
-   virtual ~Record () { }
+   virtual ~Record ();
 
    unsigned long int getId () const {return id; }
    Glib::ustring     getName () const {return name; }
@@ -58,11 +58,11 @@ class Record : public YGP::Entity {
    static bool compByGenre (const HRecord& a, const HRecord& b);
 
  private:
-   unsigned long int id;
-   Glib::ustring     name;
-   YGP::AYear        year;
-   unsigned int      genre;
-   bool              songsLoaded;
+   unsigned long int id;             // %attrib%; ; 0
+   Glib::ustring     name;           // %attrib%; Name
+   YGP::AYear        year;           // %attrib%; Made
+   unsigned int      genre;          // %attrib%; Genre; 0
+   bool              songsLoaded;    // %attrib%; ; false
 
    //Prohibited manager functions
    const Record& operator= (const Record& other);

@@ -1,14 +1,14 @@
-//$Id: Movie.cpp,v 1.5 2004/12/13 02:33:00 markus Rel $
+//$Id: Movie.cpp,v 1.6 2005/01/10 02:11:44 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movie
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 29.11.2004
-//COPYRIGHT   : Copyright (A) 2004
+//COPYRIGHT   : Copyright (A) 2004, 2005
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -32,15 +32,12 @@
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 
+#include <XGP/XAttribute.h>  // Needed for specialization of YGP::Attribute for Glib::ustring
+
 #include "Words.h"
 #include "Movie.h"
+#include "Movie.meta"
 
-
-//-----------------------------------------------------------------------------
-/// Defaultconstructor
-//-----------------------------------------------------------------------------
-Movie::Movie () : id (0), genre (0), type (0) {
-}
 
 //-----------------------------------------------------------------------------
 /// Copyonstructor

@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.1 2004/10/11 01:53:02 markus Exp $
+//$Id: CDManager.cpp,v 1.2 2004/10/17 03:10:13 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : 
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -26,16 +26,28 @@
 
 #include <cdmgr-cfg.h>
 
+#include <gtkmm/box.h>
+#include <gtkmm/label.h>
+#include <gtkmm/messagedialog.h>
+
+#define CHECK 9
+#define TRACELEVEL 9
 #include <YGP/Process.h>
 #include <YGP/Tokenize.h>
 #include <XGP/XFileDlg.h>
 #include <XGP/LoginDlg.h>
+#include "CDAppl.h"
+#include "Settings.h"
+#include "DB.h"
 
 
 // Defines
 const unsigned int CDManager::WIDTH (760);
 const unsigned int CDManager::HEIGHT (750);
 
+
+// Pixmap for program
+const char* CDManager::xpmProgram[] = {
    "48 48 65 1",
    " 	c None",
    ".	c #020300",
@@ -209,9 +221,14 @@ const char* CDManager::xpmAuthor[] = {
 XGP::XApplication::MenuEntry CDManager::menuItems[] = {
     { (initI18n (PACKAGE, LOCALEDIR),
       _("_CD")),            _("<alt>C"), 0,        BRANCH },
+    { _("_Login"),          _("<ctl>L"), LOGIN,    ITEM },
+    { _("_Logout"),         _("<ctl>O"), LOGOUT,   ITEM },
+    { "",                   "",          0,        SEPARATOR },
+    { _("E_xit"),           _("<ctl>Q"), EXIT,     ITEM },
+    { _("_Edit"),          _("<alt>E"),  MEDIT,    BRANCH },
     { _("_New"),            _("<ctl>N"), NEW,      ITEM },
-    { "",                     "",        0,        SEPARATOR },
-    { _("E_xit"),           _("<ctl>Q"), EXIT,     ITEM }
+    { _("_Edit"),           _("<ctl>E"), EDIT,     ITEM },
+    { _("_Delete"),         _("<ctl>D"), DELETE,   ITEM }
 };
 
 /// Defaultconstructor; all widget are created
@@ -219,7 +236,8 @@ XGP::XApplication::MenuEntry CDManager::menuItems[] = {
 //-----------------------------------------------------------------------------
    : XApplication (PACKAGE " V" PRG_RELEASE), relMovies ("movies"),
 CDManager::CDManager ()
-   : XApplication (PACKAGE " V" PRG_RELEASE) {
+   : XApplication (PACKAGE " V" PRG_RELEASE), cds (4, 1), records (), songs (),
+     movies (4, 4) {
    Language::init ();
 
 
@@ -229,7 +247,62 @@ CDManager::CDManager ()
    addMenus (menuItems, sizeof (menuItems) / sizeof (*menuItems));
    showHelpMenu ();
 
+   getClient ()->pack_start (*mgrUI->get_widget("/Menu"), Gtk::PACK_SHRINK);
+   getClient ()->pack_start (nb, Gtk::PACK_EXPAND_WIDGET);
+
+   Gtk::ScrolledWindow* scrlSongs (new Gtk::ScrolledWindow);
+   Gtk::ScrolledWindow* scrlMovies (new Gtk::ScrolledWindow);
+
+   nb.append_page (cds, _("C_Ds"), true);
+   cds.show ();
+   nb.append_page (movies, _("_Movies"), true);
+   movies.show ();
+   songs.signalChanged.connect (mem_fun (*this, &CDManager::songChanged));
+   scrlSongs.add (songs);
+   scrlRecords.add (records);
+   scrlSongs.set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+   scrlRecords.set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+   scrlSongs.show ();
+   scrlRecords.show ();
+
+   mSongs = Gtk::ListStore::create (colSongs);
+   mRecords = Gtk::ListStore::create (colRecords);
+
+   records.set_model (mRecords);
+   songs.set_model (mSongs);
+   records.show ();
+   songs.show ();
+
+   songs.append_column ("Song", colSongs.name);
+   songs.append_column ("Genre", colSongs.duration);
+   songs.get_column (0)->set_min_width (400);
+   records.signalOwnerChanged.connect (mem_fun (*this, &CDManager::artistChanged));
+   movies.signalObjectChanged.connect (mem_fun (*this, &CDManager::movieChanged));
+   records.append_column ("Record", colRecords.name);
+   records.append_column ("Interpret", colRecords.band);
+   records.append_column ("Year", colRecords.year);
+   records.append_column ("Genre", colRecords.genre);
+   records.get_column (0)->set_min_width (200);
+   records.get_column (1)->set_min_width (200);
+   records.get_selection ()->set_mode (Gtk::SELECTION_EXTENDED);
+   cds->add1 (*manage (scrlRecords));
+   cds.attach (*manage (new Gtk::Label (_("Records"))), 0, 1, 0, 1,
+	       Gtk::SHRINK, Gtk::SHRINK, 5, 5);
+   cds.attach (*manage (new Gtk::Label (_("Songs"))), 0, 1, 2, 3,
+	       Gtk::SHRINK, Gtk::SHRINK, 5, 5);
+   cds.attach (scrlRecords, 0, 1, 1, 2, Gtk::FILL | Gtk::EXPAND,
+	       Gtk::FILL | Gtk::EXPAND, 5, 5);
+   cds.attach (scrlSongs, 0, 1, 3, 4, Gtk::FILL | Gtk::EXPAND,
+	       Gtk::FILL | Gtk::EXPAND, 5, 5);
+
+   apMenus[SAVE]->set_sensitive (false);
+
+   show ();
+
 #define TEST
+#ifdef TEST
+#endif
+}
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------
@@ -246,7 +319,25 @@ CDManager::~CDManager () {
 void CDManager::command (int menu) {
    TRACE2 ("CDManager::command (int) - " << menu);
    switch (menu) {
+   case LOGIN:
+      XGP::TLoginDialog<CDManager>::create (_("Database login"), *this,
+					    &CDManager::login)->setCurrentUser ();
+      break;
+
+   case LOGOUT:
+      Database::close ();
+      enableMenus (false);
+      status.pop ();
+      status.push (_("Disconnected!"));
+      break;
+/// Saves the DB
    case NEW:
+      break;
+
+   case EDIT:
+      break;
+
+   case DELETE:
       break;
 
    case EXIT:
@@ -283,6 +374,99 @@ const char* CDManager::getHelpfile () {
 /// Displays a dialog to Login to the database
 
 //-----------------------------------------------------------------------------
+/// Login to the database with the passed user/password pair
+/// \param user: User to connect to the DB with
+/// \param pwd: Password for user
+/// \returns bool: True, if login could be performed
+//-----------------------------------------------------------------------------
+bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
+   TRACE9 ("CDManager::login (const Glib::ustring&, const Glib::ustring&) - "
+	   << user << '/' << pwd);
+
+   try {
+      Database::connect (DBNAME, user.c_str (), pwd.c_str ());
+   }
+   catch (std::exception& err) {
+      Glib::ustring msg (_("Can't connect to database!\n\nReason: %1"));
+      msg.replace (msg.find ("%1"), 2, err.what ());
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.set_title (_("Login error"));
+      dlg.run ();
+      return false;
+   }
+
+   enableMenus (true);
+
+   Glib::signal_idle ().connect
+      (bind_return (mem_fun (*this, &CDManager::loadDatabase), false));
+   return true;
+//-----------------------------------------------------------------------------
+/// Enables or disables the menus according to the status of the program
+/// \param enable: Flag, if menus should be enabled
+//-----------------------------------------------------------------------------
+void CDManager::enableMenus (bool enable) {
+   apMenus[LOGOUT]->set_sensitive (enable);
+   apMenus[MEDIT]->set_sensitive (enable);
+   apMenus[LOGIN]->set_sensitive (!enable);
+   apMenus[EXPORT]->set_sensitive (enable);
+   apMenus[IMPORT_MP3]->set_sensitive (enable);
+
+   cds.set_sensitive (enable);
+   movies.set_sensitive (enable);
+//-----------------------------------------------------------------------------
+/// Enables or disables the edit-menus entries according to the selection
+/// \param enable: Flag, if menus should be enabled
+//-----------------------------------------------------------------------------
+void CDManager::enableEdit (SELECTED selected) {
+   TRACE9 ("CDManager::enableEdit (SELECTED) - " << selected);
+void CDManager::enableEdit (bool enable) {
+   apMenus[EDIT]->set_sensitive (enable);
+   apMenus[DELETE]->set_sensitive (enable);
+//-----------------------------------------------------------------------------
+/// Loads the database and shows its contents.
+///
+/// According to the available information the pages of the notebook
+/// are created.
+//-----------------------------------------------------------------------------
+void CDManager::loadDatabase () {
+   TRACE9 ("CDManager::loadDatabase ()");
+   status.pop ();
+   status.push (_("Reading database ..."));
+
+   if (nb.get_current_page ()) {
+      loadMovies ();
+   unsigned long int cRecords (0), cMovies (0);
+
+   try {
+      // Load data from record table
+      Database::store ("SELECT r.name, i.name, year, g.genre "
+		       "FROM Records r, Interprets i, Genres g "
+		       "WHERE r.interpret = i.id AND r.genre = g.id");
+      TRACE8 ("CDManager::loadDatabase () - Found " << Database::resultSize ()
+	      << " records");
+
+      if (cRecords = Database::resultSize ()) {
+	 while (Database::hasData ()) {
+	    Gtk::TreeModel::Row row = *(mRecords->append ());
+	    row[colRecords.name] = Database::getResultColumnAsString (0);
+	    Database::getNextResultRow ();
+	 } // end-while
+	 Gtk::TreeModel::iterator i (mRecords->children ().begin()); Check3 (i);
+	 records.get_selection ()->select (i);
+      }
+      else
+	 enableEdit (false);
+   }
+   catch (std::exception& err) {
+      Glib::ustring msg (_("Can't query available records!\n\nReason: %1"));
+      msg.replace (msg.find ("%1"), 2, err.what ());
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
+}
+
+/// Exports the stored information to HTML documents
+//-----------------------------------------------------------------------------
 /// \param argv: Array with pointer to parameter
 /// \returns \c int: Status
 //-----------------------------------------------------------------------------
@@ -292,3 +476,4 @@ int main (int argc, char* argv[]) {
    appl.run (win);
    return 0;
 }
+

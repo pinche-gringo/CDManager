@@ -1,3 +1,11 @@
+Overview of changes in version 0.5.00:
+
+  - Export to HTML improved
+  - Checking for double entries while changing names
+  - Importing records from files (reading ID3 info)
+  - Movies handle type of media and languages
+  - Names can now contain quotes
+
 Overview of changes in version 0.4.00:
 
   - Added handling of movies

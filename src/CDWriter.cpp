@@ -1,11 +1,11 @@
-//$Id: CDWriter.cpp,v 1.4 2005/01/13 14:30:20 markus Exp $
+//$Id: CDWriter.cpp,v 1.5 2005/01/13 18:40:18 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDWriter
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -25,6 +25,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 
+#define DONT_CONVERT
 #include <cdmgr-cfg.h>
 
 #include <cstring>
@@ -82,9 +83,9 @@ void CDWriter::showHelp () const {
              << _(" [OPTIONS] [LANGUAGE-ID]\n\n")
 	     << "  -d, --outputDir ..... " << _("Directory to export data to\n")
 	     << "  -r, --recHeader ..... " << _("File to use as header for records\n")
-	     << "  -r, --recFooter ..... " << _("File to use as footer for records\n")
-	     << "  -r, --movieHeader ... " << _("File to use as header for movies")
-	     << "  -r, --movieFooter ... " << _("File to use as footer for movies\n")
+	     << "  -R, --recFooter ..... " << _("File to use as footer for records\n")
+	     << "  -m, --movieHeader ... " << _("File to use as header for movies\n")
+	     << "  -M, --movieFooter ... " << _("File to use as footer for movies\n")
              << "  -V, --version ....... " << _("Output version information and exit\n")
              << "  -h, -?, --help ...... " << _("Displays this help and exit\n\n");
 }
@@ -160,12 +161,13 @@ void CDWriter::writeHeader (const char* lang, const char* format,
 	   << lang << "; " << format);
    Check3 (lang); Check3 (format);
 
-   char formats[] = "dnygml-![]=";
-   char* docs[] = { "", "-Name", "-Year", "-Genre", "-Media", "-Lang", NULL,
-		    NULL, NULL, NULL, NULL };
-   Glib::ustring titles[] = { _("Director"), _("Name"), _("Year"), _("Genre"),
-			      _("Media"), _("Language(s)"), " | ", "</td><td>",
-			      "<div class=\"header\">", "</div>", "&nbsp;" };
+   static char formats[] = "dnygml-![]=";
+   static char* docs[] = { "", "-Name", "-Year", "-Genre", "-Media", "-Lang",
+			   NULL, NULL, NULL, NULL, NULL };
+   static std::string titles[] =
+      { _("Director"), _("Name"), _("Year"),_("Genre"), _("Media"),
+	_("Language(s)"), " | ", "</td><td>", "<div class=\"header\">",
+	"</div>", "&nbsp;" };
    Check3 ((sizeof (docs) / sizeof (*docs)) == strlen (formats));
    Check3 ((sizeof (titles) / sizeof (*titles)) == strlen (formats));
 
@@ -199,8 +201,7 @@ void CDWriter::writeHeader (const char* lang, const char* format,
 /// \returns \c int: Status
 //-----------------------------------------------------------------------------
 int CDWriter::perform (int argc, const char** argv) {
-   opt.setDirOutput ("tmp/");
-
+   TRACE9 ("CDWriter::perform (int, const char**) - " << argc);
    if (argc != 1) {
       std::cerr << PACKAGE << _("-error: Need language id as parameter");
       return - 1;
@@ -247,7 +248,7 @@ int CDWriter::perform (int argc, const char** argv) {
 
       if (!readHeaderFile (htmlData[i].name.c_str (), htmlData[i].target,
 			   transTitle)) {
-	 Glib::ustring error (_("Error reading header file `%1'!\n\nReason: %2"));
+	 Glib::ustring error (Glib::locale_to_utf8 (_("Error reading header file `%1'!\n\nReason: %2")));
 	 error.replace (error.find ("%1"), 2, htmlData[i].name);
 	 error.replace (error.find ("%2"), 2, strerror (errno));
 	 Gtk::MessageDialog dlg (error, Gtk::MESSAGE_WARNING);

@@ -1,7 +1,12 @@
-Overview of changes in version 0.2.00
+Overview of changes in version 0.3.00:
+
+  - Changing genre of a record sets undefined genres of the songs
+  - New records can be added
+
+Overview of changes in version 0.2.00:
 
   - The lists can be sorted and edited (hence RecordEdit removed)
 
-Overview of changes in version 0.1.00
+Overview of changes in version 0.1.00:
 
   - First version

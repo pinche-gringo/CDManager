@@ -1,11 +1,11 @@
-//$Id: SongList.cpp,v 1.6 2004/11/13 23:58:20 markus Exp $
+//$Id: SongList.cpp,v 1.7 2004/11/14 21:23:18 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -174,14 +174,14 @@ int SongList::sortByTrack (const Gtk::TreeModel::iterator& a,
 			   const Gtk::TreeModel::iterator& b) {
    Gtk::TreeModel::Row rowa (*a);
    Gtk::TreeModel::Row rowb (*b);
-   TRACE9 ("SongList::sortByTrack (2x const Gtk::TreeModel::iterator&)");
-
    HSong ha (rowa[colSongs.entry]); Check3 (ha.isDefined ());
    HSong hb (rowb[colSongs.entry]); Check3 (hb.isDefined ());
-   HSong ha (rowa[colSongs.entry]);
-   HSong hb (rowb[colSongs.entry]);
+   TRACE9 ("SongList::sortByTrack (2x const Gtk::TreeModel::iterator&) - "
+	   << ha->getTrack () << '/' << hb->getTrack () << '='
+	   << ha->getTrack ().compare (hb->getTrack ()));
+	   << ha->track << '/' << hb->track << '=' << ha->track.compare (hb->track));
 }
-   return ha->track - hb->track;
+   return ha->track.compare (hb->track);
 //-----------------------------------------------------------------------------
 /// Sorts the entries in the song listbox
 /// \param a: First entry to compare

@@ -1,14 +1,14 @@
-//$Id: CDAppl.cpp,v 1.5 2005/01/20 04:44:18 markus Rel $
+//$Id: CDAppl.cpp,v 1.6 2005/01/25 01:40:07 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Application
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.12.2004
-//COPYRIGHT   : Copyright (C) 2004
+//COPYRIGHT   : Copyright (C) 2004, 2005
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -153,6 +153,8 @@ const char* CDAppl::description () const {
 /// \returns \c int: Status
 //-----------------------------------------------------------------------------
 int main (int argc, char* argv[]) {
+   YGP::IVIOApplication::initI18n (PACKAGE, LOCALEDIR);
+
    Gtk::Main gtk (argc, argv);
    CDAppl appl (argc, const_cast<const char**> (argv));
    return appl.run ();

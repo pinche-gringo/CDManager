@@ -1,7 +1,7 @@
 #ifndef WRITER_H
 #define WRITER_H
 
-//$Id: Writer.h,v 1.5 2004/12/22 16:58:55 markus Exp $
+//$Id: Writer.h,v 1.6 2004/12/24 04:11:03 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ class MovieWriter : public YGP::HTMLWriter {
    void writeMovie    (const HMovie& movie, const HDirector& director, std::ostream& out);
    void writeDirector (const HDirector& director, std::ostream& out);
 
-   static void exportMovies (const std::string& dirOut,
+   static void exportMovies (const Options& opt,
 			     std::map<unsigned int, Glib::ustring> genres,
 			     std::vector<HDirector>& directors);
    static void createFile (const char* name, std::ofstream& file) throw (Glib::ustring);
@@ -79,7 +79,7 @@ class RecordWriter : public YGP::HTMLWriter {
    void writeRecord    (const HRecord& record, const HInterpret& interpret, std::ostream& out);
    void writeInterpret (const HInterpret& interpret, std::ostream& out);
 
-   static void exportRecords (const std::string& dirOut,
+   static void exportRecords (const Options& opt,
 			      std::map<unsigned int, Glib::ustring> genres,
 			      std::vector<HDirector>& directors);
    static void createFile (const char* name, std::ofstream& file) throw (Glib::ustring) {

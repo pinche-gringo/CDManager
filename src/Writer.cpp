@@ -1,11 +1,11 @@
-//$Id: Writer.cpp,v 1.6 2004/12/22 16:58:55 markus Exp $
+//$Id: Writer.cpp,v 1.7 2004/12/24 04:11:03 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Writer
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 27.11.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -33,6 +33,7 @@
 
 #include <gtkmm/messagedialog.h>
 
+#include <YGP/File.h>
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ADate.h>
@@ -219,22 +220,29 @@ bool MovieWriter::readHeaderFile (const char* file, std::string& target,
 
 //-----------------------------------------------------------------------------
 /// Exports the movies from the passed directors
-/// \param dirOut: Directory, where to write the files to
+/// \param opt: Options; contains output files and -directories
 /// \param genres: Genres
 /// \param directors: Vectors holding the directors
 //-----------------------------------------------------------------------------
-void MovieWriter::exportMovies (const std::string& dirOut,
+void MovieWriter::exportMovies (const Options& opt,
 				std::map<unsigned int, Glib::ustring> genres,
 				std::vector<HDirector>& directors) {
    struct {
-      const char* name;
+      std::string name;
       std::string target;
    } htmlData[] =
-      { { DATADIR "Movies.header" },
-	 { DATADIR "Movies.footer" } };
+      { { opt.getMHeader () },
+	 { opt.getMFooter () } };
 
-   for (unsigned int i (0); i < (sizeof (htmlData) / sizeof (*htmlData)); ++i)
-      if (!readHeaderFile (htmlData[i].name, htmlData[i].target,
+   for (unsigned int i (0); i < (sizeof (htmlData) / sizeof (*htmlData)); ++i) {
+      if (htmlData[i].name.size ()
+	  && (htmlData[i].name[0] != YGP::File::DIRSEPARATOR))
+	 htmlData[i].name = DATADIR + htmlData[i].name;
+      if (htmlData[i].target.size ()
+	  && (htmlData[i].target[0] != YGP::File::DIRSEPARATOR))
+	 htmlData[i].target = DATADIR + htmlData[i].target;
+
+      if (!readHeaderFile (htmlData[i].name.c_str (), htmlData[i].target,
 			   _("Movies (by %1)"))) {
 	 Glib::ustring error (_("Error reading header file `%1'!\n\nReason: %2"));
 	 error.replace (error.find ("%1"), 2, htmlData[i].name);
@@ -242,11 +250,12 @@ void MovieWriter::exportMovies (const std::string& dirOut,
 	 Gtk::MessageDialog dlg (error, Gtk::MESSAGE_WARNING);
 	 dlg.run ();
       }
+   }
 
    std::sort (directors.begin (), directors.end (), &Director::compByName);
 
    std::ofstream file;
-   createFile ((dirOut + "Movies.html").c_str (), file);
+   createFile ((opt.getDirOutput () + "Movies.html").c_str (), file);
 
    std::string title (htmlData[0].target);
    unsigned int pos;
@@ -286,7 +295,7 @@ void MovieWriter::exportMovies (const std::string& dirOut,
 
    // Sort reverse
    file.close ();
-   createFile ((dirOut + "Movies-Down.html").c_str (), file);
+   createFile ((opt.getDirOutput () + "Movies-Down.html").c_str (), file);
    file << title;
 
    file << ("<div class=\"header\"><a href=\"Movies.html\">Director</a> | "
@@ -355,7 +364,7 @@ void MovieWriter::exportMovies (const std::string& dirOut,
 
    for (unsigned int i (0); i < (sizeof (aOutputs) / sizeof (*aOutputs)); ++i) {
       file.close ();
-      createFile ((dirOut + aOutputs[i].file).c_str (), file);
+      createFile ((opt.getDirOutput () + aOutputs[i].file).c_str (), file);
       title = htmlData[0].target;
       while ((pos = title.find ("%1")) != std::string::npos)
 	 title.replace (pos, 2, _(aOutputs[i].sorted));
@@ -379,7 +388,7 @@ void MovieWriter::exportMovies (const std::string& dirOut,
       file << htmlData[1].target;
 
       file.close ();
-      createFile ((dirOut + aOutputs[i].filedown).c_str (), file);
+      createFile ((opt.getDirOutput () + aOutputs[i].filedown).c_str (), file);
       file << title;
 
       header = aOutputs[i].title;
@@ -399,7 +408,7 @@ void MovieWriter::exportMovies (const std::string& dirOut,
 
    // Export by language
    file.close ();
-   createFile ((dirOut + "Movies-Lang.html").c_str (), file);
+   createFile ((opt.getDirOutput () + "Movies-Lang.html").c_str (), file);
    title = htmlData[0].target;
    while ((pos = title.find ("%1")) != std::string::npos)
       title.replace (pos, 2, _("Language"));
@@ -536,22 +545,22 @@ void RecordWriter::writeInterpret (const HInterpret& interpret, std::ostream& ou
 
 //-----------------------------------------------------------------------------
 /// Exports the movies from the passed directors
-/// \param dirOut: Directory, where to write the files to
+/// \param opt: Options; contains output files and -directories
 /// \param genres: Genres
 /// \param artists: Vectors holding the interprets
 //-----------------------------------------------------------------------------
-void RecordWriter::exportRecords (const std::string& dirOut,
+void RecordWriter::exportRecords (const Options& opt,
 				  std::map<unsigned int, Glib::ustring> genres,
 				  std::vector<HInterpret>& artists) {
    struct {
-      const char* name;
-      std::string target;
+      const std::string name;
+      std::string       target;
    } htmlData[] =
-      { { DATADIR "Records.header" },
-	 { DATADIR "Records.footer" } };
+      { { DATADIR + opt.getRHeader () },
+	 { DATADIR + opt.getRFooter () } };
 
    for (unsigned int i (0); i < (sizeof (htmlData) / sizeof (*htmlData)); ++i)
-      if (!readHeaderFile (htmlData[i].name, htmlData[i].target,
+      if (!readHeaderFile (htmlData[i].name.c_str (), htmlData[i].target,
 			   _("Records (by %1)"))) {
 	 Glib::ustring error (_("Error reading header file `%1'!\n\nReason: %2"));
 	 error.replace (error.find ("%1"), 2, htmlData[i].name);
@@ -563,7 +572,7 @@ void RecordWriter::exportRecords (const std::string& dirOut,
    std::sort (artists.begin (), artists.end (), &Interpret::compByName);
 
    std::ofstream file;
-   createFile ((dirOut + "Records.html").c_str (), file);
+   createFile ((opt.getDirOutput () + "Records.html").c_str (), file);
    std::string title (htmlData[0].target);
    unsigned int pos;
    while ((pos = title.find ("%1")) != std::string::npos)
@@ -600,7 +609,7 @@ void RecordWriter::exportRecords (const std::string& dirOut,
 
    // Sort reverse
    file.close ();
-   createFile ((dirOut + "Records-Down.html").c_str (), file);
+   createFile ((opt.getDirOutput () + "Records-Down.html").c_str (), file);
    file << title;
 
    file << ("<div class=\"header\"><a href=\"Records.html\">Interpret</a> | "
@@ -653,7 +662,7 @@ void RecordWriter::exportRecords (const std::string& dirOut,
 
    for (unsigned int i (0); i < (sizeof (aOutputs) / sizeof (*aOutputs)); ++i) {
       file.close ();
-      createFile ((dirOut + aOutputs[i].file).c_str (), file);
+      createFile ((opt.getDirOutput () + aOutputs[i].file).c_str (), file);
       title = htmlData[0].target;
       while ((pos = title.find ("%1")) != std::string::npos)
 	 title.replace (pos, 2, _(aOutputs[i].sorted));
@@ -677,7 +686,7 @@ void RecordWriter::exportRecords (const std::string& dirOut,
       file << htmlData[1].target;
 
       file.close ();
-      createFile ((dirOut + aOutputs[i].filedown).c_str (), file);
+      createFile ((opt.getDirOutput () + aOutputs[i].filedown).c_str (), file);
       file << title;
 
       header = aOutputs[i].title;

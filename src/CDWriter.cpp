@@ -1,11 +1,11 @@
-//$Id: CDWriter.cpp,v 1.2 2005/01/12 22:48:27 markus Exp $
+//$Id: CDWriter.cpp,v 1.3 2005/01/13 05:50:32 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDWriter
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -26,6 +26,8 @@
 
 
 #include <cdmgr-cfg.h>
+
+#include <cstring>
 
 #include <fstream>
 #include <sstream>
@@ -53,8 +55,6 @@
 #include "CDWriter.h"
 #include "Options.meta"
 
-
-static std::ofstream e ("err.dat");
 
 const YGP::IVIOApplication::longOptions CDWriter::lo[] = {
    { IVIOAPPL_HELP_OPTION },
@@ -138,6 +138,60 @@ bool CDWriter::handleOption (const char option) {
 }
 
 //-----------------------------------------------------------------------------
+/// Writes the header for the table
+/// \param lang: Language code; Used for links to documents
+/// \param format: Format of header; A sequence of the following characters
+///     - d: Director
+///     - n: Name of movie
+///     - y: Year the movie was made
+///     - g: Genre of movie
+///     - m: Media containing the movie
+///     - l: Language(s)
+///     - <: Start of <div>-tag
+///     - >: End of <div>-tag
+/// \param upSorted: Flag, if first column is sorted upwards
+/// \param stream: Stream to write to
+/// \remarks Other fomrat-characters are just copied
+//-----------------------------------------------------------------------------
+void CDWriter::writeHeader (const char* lang, const char* format,
+			    std::ostream& stream, bool upSorted) {
+   TRACE9 ("CDWriter::writeHeader (2x const char*, std::ostream&, bool) - "
+	   << lang << "; " << format);
+   Check3 (lang); Check3 (format);
+
+   char formats[] = "dnygml-<>";
+   char* docs[] = { "", "-Name", "-Year", "-Genre", "-Media", "-Lang", NULL,
+		    NULL, NULL };
+   Glib::ustring titles[] = { _("Director"), _("Name"), _("Year"), _("Genre"),
+			      _("Media"), _("Language(s)"), " | ",
+			      "<div class=\"header\">", "</div>" };
+   Check3 ((sizeof (docs) / sizeof (*docs)) == strlen (formats));
+   Check3 ((sizeof (titles) / sizeof (*titles)) == strlen (formats));
+
+   while (*format) {
+      char* posFormat (strchr (formats, *format));
+      if (posFormat) {
+	 unsigned int pos (strchr (formats, *format++) - formats);
+	 Check3 (titles[pos].size ());
+
+	 if (docs[pos]) {
+	    stream << "<a href=\"Movies" << docs[pos];
+	    if (upSorted) {
+	       stream << "down";
+	       upSorted = false;
+	    }
+	    stream << ".html." << lang << "\">" << titles[pos] << "</a>";
+	 }
+	 else
+	    stream << titles[pos];
+      }
+      else
+	 stream << *format++;
+   }
+   stream << '\n';
+}
+
+//-----------------------------------------------------------------------------
 /// Performs the job of the application
 /// \param int: Number of parameters (without options)
 /// \param const char*: Array with pointer to arguments
@@ -174,12 +228,6 @@ int CDWriter::perform (int argc, const char** argv) {
 #endif
 
    Glib::ustring transTitle (_("Movies (by %1)"));
-   Glib::ustring transDirector (_("Director"));
-   Glib::ustring transName (_("Name"));
-   Glib::ustring transYear (_("Year"));
-   Glib::ustring transGenre (_("Genre"));
-   Glib::ustring transMedia (_("Media"));
-   Glib::ustring transLang (_("Language(s)"));
 
    struct {
       std::string name;
@@ -215,13 +263,7 @@ int CDWriter::perform (int argc, const char** argv) {
       title.replace (pos, 2, _("Director"));
    file << title;
 
-   file << "<div class=\"header\"><a href=\"Movies-Down.html\">"
-	<< transDirector << "</a> | <a href=\"Movies-Name.html\">"
-	<< transName << "</a> | |<a href=\"Movies-Year.html\">"
-	<< transYear << "</a> | <a href=\"Movies-Genre.html\">"
-	<< transGenre << "</a> | <a href=\"Movies-Media.html\">"
-	<< transMedia << "</a> | <a href=\"Movies-Lang.html\">"
-	<< transLang << "</a></div>\n";
+   writeHeader (argv[0], "<d-n-y-g-m-l>", file);
 
    MovieWriter writer ("%n|%y|%g|%t|%l", genres);
    writer.printStart (file, "");
@@ -236,13 +278,13 @@ int CDWriter::perform (int argc, const char** argv) {
    char type;
    std::cin >> type;
    while (!std::cin.eof ()) {
-      e << "Found type: " << type << '\n'; e.flush ();
       try {
+	 TRACE4 ("CDWriter::perform (int, char**) - Type: " << type);
 	 switch (type) {
 	 case 'D':
 	    director.define ();
 	    std::cin >> *director;
-	    e << "CDWriter::perform (int, const char**) - Director: " << director->getName () << '\n'; e.flush ();
+	    TRACE9 ("CDWriter::perform (int, char**) - Director: " << director->getName ());
 	    directors.push_back (director);
 	    break;
 
@@ -250,43 +292,35 @@ int CDWriter::perform (int argc, const char** argv) {
 	    Check3 (director.isDefined ());
 	    movie.define ();
 	    std::cin >> *movie;
-	    e << "CDWriter::perform (int, const char**) - Movie: " << movie->getName () << '\n'; e.flush ();
-	    e << "CDWriter::perform (int, const char**) - Related: " << (relMovies.isRelated (director) ? "Yes": "No") << '\n'; e.flush ();
+	    TRACE9 ("CDWriter::perform (int, char**) - Movie: " << movie->getName ());
 	    if (!relMovies.isRelated (director)) {
-	       e << "CDWriter::perform (int, const char**) - Writing director\n"; e.flush ();
 	       writer.writeDirector (director, file);
 	       file.flush ();
 	    }
 
-	    e << "CDWriter::perform (int, const char**) - Relating\n"; e.flush ();
 	    relMovies.relate (director, movie);
-	    e << "CDWriter::perform (int, const char**) - Writing movie\n"; e.flush ();
 	    writer.writeMovie (movie, director, file);
-	    e << "CDWriter::perform (int, const char**) - Storing movie\n"; e.flush ();
 	    movies.push_back (movie);
-	    e << "CDWriter::perform (int, const char**) - Flushing file"; e.flush ();
-	    e << "CDWriter::perform (int, const char**) - Finished"; e.flush ();
 	    break;
 
 	 default:
 	    Check3 (0);
 	    return -1;
 	 }
-
-	 std::cin >> type;
       }
       catch (std::string& error) {
-	 e << "Error: " << error << '\n';
+	 std::cerr << "Error: " << error << '\n';
 	 break;
       }
       catch (std::exception& error) {
-	 e << "Error: " << error.what () << '\n';
+	 std::cerr << "Error: " << error.what () << '\n';
 	 break;
       }
       catch (...) {
-	 e << "Unspecified error!\n";
-	 break;
+	 std::cerr << "Unspecified error!\n";
       }
+
+      std::cin >> type;
    } // end-while not eof
 
    writer.printEnd (file);
@@ -294,15 +328,10 @@ int CDWriter::perform (int argc, const char** argv) {
 
    // Sort reverse
    file.close ();
-   createFile ((opt.getDirOutput () + "Movies-Down.html." + argv[0]).c_str (), file);
+   createFile ((opt.getDirOutput () + "Moviesdown.html." + argv[0]).c_str (), file);
    file << title;
 
-   file << ("<div class=\"header\"><a href=\"Movies.html\">Director</a> | "
-	    "<a href=\"Movies-Name.html\">Name</a> | "
-	    "|<a href=\"Movies-Year.html\">Year</a> | "
-	    "<a href=\"Movies-Genre.html\">Genre</a> | "
-	    "<a href=\"Movies-Media.html\">Media</a> | "
-	    "<a href=\"Movies-Lang.html\">Languages</a></div>\n");
+   writeHeader (argv[0], "<d-n-y-g-m-l>", file, false);
 
    writer.printStart (file, "");
    for (std::vector<HDirector>::reverse_iterator i (directors.rbegin ());
@@ -328,53 +357,33 @@ int CDWriter::perform (int argc, const char** argv) {
       const char* sorted;
       PFNCOMPARE  fnCompare;
    } aOutputs[] =
-      { { "<div class=\"header\"><a href=\"%1\">Name</a></div>"
-	  "|<div class=\"header\"><a href=\"Movies.html\">Director</a></div>|"
-	  "|<div class=\"header\"><a href=\"Movies-Year.html\">Year</a></div>|"
-	  "<div class=\"header\"><a href=\"Movies-Genre.html\">Genre</a></div>|"
-	  "<div class=\"header\"><a href=\"Movies-Media.html\">Media</a></div>|"
-	  "<div class=\"header\"><a href=\"Movies-Lang.html\">Language(s)</a></div>",
-	  "Movies-Name.html", "Movies-Namedown.html",
+      { { "<n>|<d>|<y>|<g>|<m>|<l>", "Movies-Name.html", "Movies-Namedown.html",
 	  "%n|%d|%y|%g|%t|%l", N_("Name"), &Movie::compByName },
-	{ "|<div class=\"header\"><a href=\"%1\">Year</a></div>|"
-	  "<div class=\"header\"><a href=\"Movies-Name.html\">Name</a></div></p>"
-	  "|<div class=\"header\"><a href=\"Movies.html\">Director</a></div>|"
-	  "<div class=\"header\"><a href=\"Movies-Genre.html\">Genre</a></div>|"
-	  "<div class=\"header\"><a href=\"Movies-Media.html\">Media</a></div>|"
-	  "<div class=\"header\"><a href=\"Movies-Lang.html\">Language(s)</a></div>",
-	  "Movies-Year.html", "Movies-Yeardown.html",
+	{ "<y>|<n>|<d>|<g>|<m>|<l>", "Movies-Year.html", "Movies-Yeardown.html",
 	  "%y|%n|%d|%g|%t|%l", N_("Year"), &Movie::compByYear },
-	{ "<div class=\"header\"><a href=\"%1\">Genre</a></div>|"
-	  "<div class=\"header\"><a href=\"Movies-Name.html\">Name</a></div>"
-	  "|<div class=\"header\"><a href=\"Movies.html\">Director</a></div>|"
-	  "|<div class=\"header\"><a href=\"Movies-Year.html\">Year</a></div>|"
-	  "<div class=\"header\"><a href=\"Movies-Media.html\">Media</a></div>|"
-	  "<div class=\"header\"><a href=\"Movies-Lang.html\">Language(s)</a></div>",
-	  "Movies-Genre.html", "Movies-Genredown.html",
+	{ "<g>|<n>|<d>|<y>|<m>|<l>", "Movies-Genre.html", "Movies-Genredown.html",
 	  "%g|%n|%d|%y|%t|%l", N_("Genre"), &Movie::compByGenre },
-	{ "<div class=\"header\"><a href=\"%1\">Media</a></div>|"
-	  "<div class=\"header\"><a href=\"Movies-Name.html\">Name</a></div>"
-	  "|<div class=\"header\"><a href=\"Movies.html\">Director</a></div>|"
-	  "|<div class=\"header\"><a href=\"Movies-Year.html\">Year</a></div>|"
-	  "<div class=\"header\"><a href=\"Movies-Genre.html\">Genre</a></div>|"
-	  "<div class=\"header\"><a href=\"Movies-Lang.html\">Language(s)</a></div>",
-	  "Movies-Media.html", "Movies-Mediadown.html",
+	{ "<m>|<n>|<d>|<y>|<g>|<l>", "Movies-Media.html", "Movies-Mediadown.html",
 	  "%t|%n|%d|%y|%g|%l", N_("Media"), &Movie::compByMedia } };
 
    for (unsigned int i (0); i < (sizeof (aOutputs) / sizeof (*aOutputs)); ++i) {
       file.close ();
       createFile ((opt.getDirOutput () + aOutputs[i].file + "." + argv[0]).c_str (), file);
       title = htmlData[0].target;
-      while ((pos = title.find ("%1")) != std::string::npos)
+      pos = 0;
+      while ((pos = title.find ("%1", pos)) != std::string::npos)
 	 title.replace (pos, 2, _(aOutputs[i].sorted));
+
       file << title;
 
       std::sort (movies.begin (), movies.end (), aOutputs[i].fnCompare);
 
-      std::string header (aOutputs[i].title);
-      header.replace (header.find ("%1"), 2, aOutputs[i].filedown);
       MovieWriter writer (aOutputs[i].format, genres);
-      writer.printStart (file, header);
+
+      { std::stringstream header;
+      writeHeader (argv[0], aOutputs[i].title, header);
+
+      writer.printStart (file, header.str ()); }
 
       for (std::vector<HMovie>::const_iterator m (movies.begin ());
 	   m != movies.end (); ++m) {
@@ -387,12 +396,13 @@ int CDWriter::perform (int argc, const char** argv) {
       file << htmlData[1].target;
 
       file.close ();
-      createFile ((opt.getDirOutput () + aOutputs[i].filedown).c_str (), file);
+      createFile ((opt.getDirOutput () + aOutputs[i].filedown + "." + argv[0]).c_str (), file);
       file << title;
 
-      header = aOutputs[i].title;
-      header.replace (header.find ("%1"), 2, aOutputs[i].file);
-      writer.printStart (file, header);
+      { std::stringstream header;
+      writeHeader (argv[0], aOutputs[i].title, header, false);
+
+      writer.printStart (file, header.str ()); }
 
       for (std::vector<HMovie>::reverse_iterator m (movies.rbegin ());
 	   m != movies.rend (); ++m) {
@@ -407,17 +417,14 @@ int CDWriter::perform (int argc, const char** argv) {
 
    // Export by language
    file.close ();
-   createFile ((opt.getDirOutput () + "Movies-Lang.html").c_str (), file);
+   createFile ((opt.getDirOutput () + "Movies-Lang.html." + argv[0]).c_str (), file);
    title = htmlData[0].target;
-   while ((pos = title.find ("%1")) != std::string::npos)
+   pos = 0;
+   while ((pos = title.find ("%1", pos)) != std::string::npos)
       title.replace (pos, 2, _("Language"));
    file << title;
 
-   file << ("<div class=\"header\"><a href=\"Movies-Name.html\">Name</a> | "
-	    "<a href=\"Movies.html\">Director</a> | "
-	    "<a href=\"Movies-Year.html\">Year</a> | "
-	    "<a href=\"Movies-Genre.html\">Genre</a> | "
-	    "<a href=\"Movies-Media.html\">Media</a></div>\n");
+   writeHeader (argv[0], "<n-d-y-g-m>", file);
 
    file << "<div class=\"header\">|";
    for (std::map<std::string, Language>::const_iterator l (Language::begin ());
@@ -438,12 +445,12 @@ int CDWriter::perform (int argc, const char** argv) {
 	   << l->second.getNational () << '/' << l->second.getInternational ()
 	   << "</div></h2></td></tr>";
 
-      file << ("<tr><td><div class=\"header\">&nbsp;</div></td>"
-	       "<td><div class=\"header\"><a href=\"Movies-Name.html\">Name</a></div></td>"
-	       "<td><div class=\"header\"><a href=\"Movies.html\">Director</a></div></td>"
-	       "<td><div class=\"header\"><a href=\"Movies-Year.html\">Year</a></div></td>"
-	       "<td><div class=\"header\"><a href=\"Movies-Genre.html\">Genre</a></div></td>"
-	       "<td><div class=\"header\"><a href=\"Movies-Media.html\">Media(s)</a></div></td></tr>");
+      file << "<tr><td><div class=\"header\">&nbsp;</div></td><td><div class=\"header\"><a href=\"Movies-Name.html." << argv[0]
+	   << "\">Name</a></div></td><td><div class=\"header\"><a href=\"Movies.html." << argv[0]
+	   << "\">Director</a></div></td><td><div class=\"header\"><a href=\"Movies-Year.html." << argv[0]
+	   << "\">Year</a></div></td><td><div class=\"header\"><a href=\"Movies-Genre.html." << argv[0]
+	   << "\">Genre</a></div></td><td><div class=\"header\"><a href=\"Movies-Media.html."
+	   << argv[0] << "\">Media(s)</a></div></td></tr>";
 
       for (std::vector<HMovie>::const_iterator m (movies.begin ());
 	   m != movies.end (); ++m)
@@ -546,5 +553,8 @@ bool CDWriter::readHeaderFile (const char* file, std::string& target,
 int main (int argc, const char* argv[]) {
    CDWriter::initI18n (PACKAGE, LOCALEDIR);
    CDWriter appl (argc, argv);
+
+   Language::init ();
+
    return appl.run ();
 }

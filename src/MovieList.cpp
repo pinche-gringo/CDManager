@@ -1,11 +1,11 @@
-//$Id: MovieList.cpp,v 1.5 2004/11/27 04:49:56 markus Exp $
+//$Id: MovieList.cpp,v 1.6 2004/11/28 01:05:38 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -69,15 +69,15 @@ MovieList::~MovieList () {
 Gtk::TreeModel::Row MovieList::append (HMovie& movie,
 				       const Gtk::TreeModel::Row& director) {
    TRACE3 ("MovieList::append (HMovie&, Gtk::TreeModel::Row) - "
-	   << (movie.isDefined () ? movie->name.c_str () : "None"));
+	   << (movie.isDefined () ? movie->getName ().c_str () : "None"));
    Check1 (movie.isDefined ());
 
    HEntity obj (HEntity::cast (movie));
    Gtk::TreeModel::Row newMovie (OwnerObjectList::append (obj, director));
-   newMovie[colOwnerObjects.name] = movie->name;
-   if (movie->year)
-      newMovie[colOwnerObjects.year] = movie->year.toString ();
-   changeGenre (newMovie, movie->genre);
+   newMovie[colOwnerObjects.name] = movie->getName ();
+   if (movie->getYear ())
+      newMovie[colOwnerObjects.year] = movie->getYear ().toString ();
+   changeGenre (newMovie, movie->getGenre ());
 
    return newMovie;
 }
@@ -92,7 +92,7 @@ HMovie MovieList::getMovieAt (const Gtk::TreeIter iter) const {
    HEntity hMovie (getObjectAt (iter)); Check3 (hMovie.isDefined ());
    HMovie movie (HMovie::cast (hMovie));
    TRACE7 ("CDManager::getMovieAt (const Gtk::TreeIter&) - Selected movie: " <<
-	   movie->id << '/' << movie->name);
+	   movie->getId () << '/' << movie->getName ());
    return movie;
 }
 
@@ -100,33 +100,30 @@ HMovie MovieList::getMovieAt (const Gtk::TreeIter iter) const {
 /// Sets the name of the object
 /// \param object: Object to change
 /// \param value: Value to set
-/// \remarks To be implemented
 //-----------------------------------------------------------------------------
 void MovieList::setName (HEntity& object, const Glib::ustring& value) {
    HMovie m (HMovie::cast (object));
-   m->name = value;
+   m->setName (value);
 }
 
 //-----------------------------------------------------------------------------
 /// Sets the year of the object
 /// \param object: Object to change
 /// \param value: Value to set
-/// \remarks To be implemented
 //-----------------------------------------------------------------------------
 void MovieList::setYear (HEntity& object, const Glib::ustring& value) {
    HMovie m (HMovie::cast (object));
-   m->year = value;
+   m->setYear (value);
 }
 
 //-----------------------------------------------------------------------------
 /// Sets the genre of the object
 /// \param object: Object to change
 /// \param value: Value to set
-/// \remarks To be implemented
 //-----------------------------------------------------------------------------
 void MovieList::setGenre (HEntity& object, unsigned int value) {
    HMovie m (HMovie::cast (object));
-   m->genre = value;
+   m->setGenre (value);
 }
 
 //-----------------------------------------------------------------------------

@@ -1,11 +1,11 @@
-//$Id: SongList.cpp,v 1.8 2004/11/17 17:34:14 markus Exp $
+//$Id: SongList.cpp,v 1.9 2004/11/28 01:05:38 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.8 $
+//REVISION    : $Revision: 1.9 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -105,12 +105,12 @@ Gtk::TreeModel::iterator SongList::append (HSong& song) {
    newSong[colSongs.entry] = song;
    newSong[colSongs.colTrack] = song->getTrack ();
    newSong[colSongs.colName] = song->getName ();
-   newSong[colSongs.colTrack] = song->track;
-   newSong[colSongs.colName] = song->name;
-   newSong[colSongs.colDuration] = song->duration;
+   newSong[colSongs.colDuration] = song->getDuration ();
+
+   std::map<unsigned int, Glib::ustring>::const_iterator g
       (genres.find (song->getGenre ()));
    if (g == genres.end ())
-      (genres.find (song->genre));
+      g = genres.begin ();
    newSong[colSongs.colGenre] = g->second;
    return newSong;
 }
@@ -135,19 +135,22 @@ void SongList::valueChanged (const Glib::ustring& path,
       case 0: {
 	 YGP::ANumeric track (value);
       case 0:
-	 row[colSongs.colTrack] = song->track = value;
+	 song->setTrack (YGP::ANumeric (value));
+      case 1: {
 	 break;
       case 1:
-	 row[colSongs.colName] = song->name= value;
+	 break; }
+      case 2:
 	 break;
 	 row[colSongs.colDuration] = song->getDuration ();
-	 row[colSongs.colDuration] = song->duration = value;
+	 break;
+      case 3: {
 	 for (std::map<unsigned int, Glib::ustring>::const_iterator g (genres.begin ());
 	      g != genres.end (); ++g)
 	    if (g->second == value) {
 	       song->setGenre (g->first);
 	       row[colSongs.colGenre] = value;
-	       song->genre = g->first;
+	       return;
 	    }
 	 throw (std::invalid_argument (_("Unknown genre!")));
 	 break; }
@@ -171,7 +174,6 @@ void SongList::valueChanged (const Glib::ustring& path,
 /// \param a: Second entry to compare
 /// \returns int: Value as strcmp
 //-----------------------------------------------------------------------------
-/// \param entry: Flag which attribute of the song to use for the comparison
 int SongList::sortByTrack (const Gtk::TreeModel::iterator& a,
 			   const Gtk::TreeModel::iterator& b) {
    Gtk::TreeModel::Row rowa (*a);
@@ -181,9 +183,10 @@ int SongList::sortByTrack (const Gtk::TreeModel::iterator& a,
    TRACE9 ("SongList::sortByTrack (2x const Gtk::TreeModel::iterator&) - "
 	   << ha->getTrack () << '/' << hb->getTrack () << '='
 	   << ha->getTrack ().compare (hb->getTrack ()));
-	   << ha->track << '/' << hb->track << '=' << ha->track.compare (hb->track));
+
+   return ha->getTrack ().compare (hb->getTrack ());
 }
-   return ha->track.compare (hb->track);
+
 //-----------------------------------------------------------------------------
 /// Sorts the entries in the song listbox
 /// \param a: First entry to compare

@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.2 2004/11/27 04:49:05 markus Exp $
+//$Id: OOList.cpp,v 1.3 2004/11/28 01:05:38 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (A) 2004
@@ -125,12 +125,12 @@ Gtk::TreeModel::Row OwnerObjectList::append (HEntity& object,
 //-----------------------------------------------------------------------------
 Gtk::TreeModel::Row OwnerObjectList::append (const HCelebrity& owner) {
    TRACE3 ("OwnerObjectList::append (const HCelebrity&) - "
-	   << (owner.isDefined () ? owner->name.c_str () : "None"));
+	   << (owner.isDefined () ? owner->getName ().c_str () : "None"));
    Check1 (owner.isDefined ());
 
    Gtk::TreeModel::Row newOwner (*mOwnerObjects->append ());
    newOwner[colOwnerObjects.entry] = YGP::Handle<YGP::Entity>::cast (owner);
-   newOwner[colOwnerObjects.name] = owner->name;
+   newOwner[colOwnerObjects.name] = owner->getName ();
    newOwner[colOwnerObjects.year] = getLiveSpan (owner);
 
    return newOwner;
@@ -183,25 +183,26 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 
 	 switch (column) {
 	 case 0:
-	    row[colOwnerObjects.name] = celeb->name = value;
+	    celeb->setName (value);
+	    row[colOwnerObjects.name] = celeb->getName ();
 	    break;
 	 case 1:
 	    if (value.size ()) {
 	       unsigned int pos (value.find ("- "));
 	       if (pos != std::string::npos)
-		  celeb->died = value.substr (pos + 2);
+		  celeb->setDied (value.substr (pos + 2));
 	       else
-		  celeb->died.undefine ();
+		  celeb->undefineDied ();
 
 	       if ((pos == std::string::npos)
 		   || ((pos > 0) && (value[pos - 1] == ' ')))
-		  celeb->born = value.substr (0, pos - 1);
+		  celeb->setBorn (value.substr (0, pos - 1));
 	       else
-		  celeb->born.undefine ();
+		  celeb->undefineBorn ();
 	    }
 	    else {
-	       celeb->born.undefine ();
-	       celeb->died.undefine ();
+	       celeb->undefineDied ();
+	       celeb->undefineBorn ();
 	    }
 
 	    row[colOwnerObjects.year] = getLiveSpan (celeb);
@@ -271,12 +272,13 @@ Glib::ustring OwnerObjectList::getLiveSpan (const HCelebrity& owner) {
 	   << (owner.isDefined () ? owner->name.c_str () : "None"));
    Check1 (owner.isDefined ());
 
-   Glib::ustring tmp (owner->born.toString ());
-   if (owner->born.isDefined ())
+   Glib::ustring tmp (owner->getBorn ().toString ());
+   if (owner->getBorn ().isDefined ())
       tmp.append (1, ' ');
-   if (owner->died.isDefined ())
+   if (owner->getDied ().isDefined ()) {
       tmp.append ("- ");
-   tmp.append (owner->died.toString ());
+      tmp.append (owner->getDied ().toString ());
+   }
    return tmp;
 }
 
@@ -345,11 +347,13 @@ int OwnerObjectList::sortByName (const Gtk::TreeModel::iterator& a,
       HCelebrity ha (getCelebrityAt (a)); Check3 (ha.isDefined ());
       HCelebrity hb (getCelebrityAt (b)); Check3 (hb.isDefined ());
 
-      Glib::ustring aname (Celebrity::removeIgnored (ha->name));
-      Glib::ustring bname (Celebrity::removeIgnored (hb->name));
+      Glib::ustring aname (Celebrity::removeIgnored (ha->getName ()));
+      Glib::ustring bname (Celebrity::removeIgnored (hb->getName ()));
 
       TRACE9 ("OwnerObjectList::sortByName (2x const Gtk::TreeModel::iterator&) - "
 	      << aname << '/' << bname << '='
-	      << ((aname < bname) ? -1 : (bname < aname) ? 1 : ha->name.compare (hb->name)));
-      return ((aname < bname) ? -1 : (bname < aname) ? 1 : ha->name.compare (hb->name));
+	      << ((aname < bname) ? -1 : (bname < aname) ? 1
+		  : ha->getName ().compare (hb->getName ())));
+      return ((aname < bname) ? -1 : (bname < aname) ? 1
+	      : ha->getName ().compare (hb->getName ()));
 }}

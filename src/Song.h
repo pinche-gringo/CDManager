@@ -1,7 +1,7 @@
 #ifndef SONG_H
 #define SONG_H
 
-//$Id: Song.h,v 1.6 2004/11/17 17:33:45 markus Exp $
+//$Id: Song.h,v 1.7 2004/11/28 01:05:38 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -30,14 +30,25 @@
 /**Class to hold an interpret
  */
 class Song : public YGP::Entity {
-   friend class CDManager;
-   friend class SongList;
-
  public:
    Song () : id (0){ duration.setMode (YGP::ATime::MODE_MMSS); }
    Song (const Song& other) : id (other.id), name (other.name),
       track (other.track), duration (other.duration), genre (other.genre) { }
    virtual ~Song () { }
+
+   unsigned long int getId () const {return id; }
+   Glib::ustring     getName () const {return name; }
+   YGP::ANumeric     getTrack () const { return track; }
+   YGP::ATime        getDuration () const { return duration; }
+   unsigned int      getGenre () const { return genre; }
+
+   void setId       (const unsigned long int value) { id = value; }
+   void setName     (const Glib::ustring& value) { name = value; }
+   void setTrack    (const YGP::ANumeric& value) { track = value; }
+   void setTrack    (const std::string& value) { track = value; }
+   void setDuration (const YGP::ATime& value) { duration = value; }
+   void setDuration (const std::string& value) { duration = value; }
+   void setGenre    (const unsigned int value) { genre = value; }
 
  private:
    unsigned long int id;

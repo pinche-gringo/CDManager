@@ -1,7 +1,7 @@
 #ifndef CELIBRITY_H
 #define CELIBRITY_H
 
-//$Id: Celebrity.h,v 1.6 2004/11/27 04:49:25 markus Exp $
+//$Id: Celebrity.h,v 1.7 2004/11/28 01:05:37 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -34,11 +34,6 @@ defineHndl(Celebrity);
 /**Class to hold an celibrity
  */
 class Celebrity : public YGP::Entity {
-   friend class CDManager;
-   friend class MovieList;
-   friend class RecordList;
-   friend class OwnerObjectList;
-
  public:
    Celebrity () : id (0) { }
    Celebrity (const Celebrity& other) : id (other.id), name (other.name),
@@ -48,11 +43,30 @@ class Celebrity : public YGP::Entity {
    static bool compByName (const HCelebrity& a, const HCelebrity& b);
    static Glib::ustring removeIgnored (const Glib::ustring& name);
 
+   unsigned long int getId () const {return id; }
+   Glib::ustring     getName () const {return name; }
+   YGP::AYear        getBorn () const { return born; }
+   YGP::AYear        getDied () const { return died; }
+
+   void undefineBorn () { born.undefine (); }
+   void undefineDied () { died.undefine (); }
+
+   void setId   (const unsigned long int value) { id = value; }
+   void setName (const Glib::ustring& value) { name = value; }
+   void setBorn (const YGP::AYear& value) { born = value; }
+   void setBorn (const std::string& value) { born = value; }
+   void setDied (const YGP::AYear& value) { died = value; }
+   void setDied (const std::string& value) { died = value; }
+
+   static bool cIgnoreWords () { return ignore.size (); }
+   static void addWord2Ignore (const Glib::ustring& word) {
+      ignore.push_back (word); }
+
  private:
-   unsigned long int id;
-   Glib::ustring     name;
-   YGP::AYear        born;
-   YGP::AYear        died;
+   unsigned long int id;   // %attrib%
+   Glib::ustring     name; // %attrib%
+   YGP::AYear        born; // %attrib%
+   YGP::AYear        died; // %attrib%
 
    //Prohibited manager functions
    const Celebrity& operator= (const Celebrity& other);

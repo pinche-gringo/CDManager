@@ -1,7 +1,7 @@
 #ifndef RECORD_H
 #define RECORD_H
 
-//$Id: Record.h,v 1.8 2004/11/15 01:52:43 markus Exp $
+//$Id: Record.h,v 1.9 2004/11/28 01:05:38 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -28,14 +28,25 @@
 /**Class to hold a record
  */
 class Record : public YGP::Entity {
-   friend class CDManager;
-   friend class RecordList;
-
  public:
    Record () : id (0), genre (0), songsLoaded (false) { }
    Record (const Record& other) : id (other.id), name (other.name),
       year (other.year), genre (other.genre), songsLoaded (other.songsLoaded) { }
    virtual ~Record () { }
+
+   unsigned long int getId () const {return id; }
+   Glib::ustring     getName () const {return name; }
+   YGP::AYear        getYear () const { return year; }
+   unsigned int      getGenre () const { return genre; }
+
+   void setId       (const unsigned long int value) { id = value; }
+   void setName     (const Glib::ustring& value) { name = value; }
+   void setYear     (const YGP::AYear& value) { year = value; }
+   void setYear     (const std::string& value) { year = value; }
+   void setGenre    (const unsigned int value) { genre = value; }
+
+   bool areSongsLoaded () const { return songsLoaded; }
+   void setSongsLoaded () { songsLoaded = true; }
 
  private:
    unsigned long int id;

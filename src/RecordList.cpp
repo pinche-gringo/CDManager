@@ -1,11 +1,11 @@
-//$Id: RecordList.cpp,v 1.8 2004/11/27 04:49:56 markus Exp $
+//$Id: RecordList.cpp,v 1.9 2004/11/28 01:05:38 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.8 $
+//REVISION    : $Revision: 1.9 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -69,15 +69,15 @@ RecordList::~RecordList () {
 Gtk::TreeModel::Row RecordList::append (HRecord& record,
 					const Gtk::TreeModel::Row& artist) {
    TRACE3 ("RecordList::append (HRecord&, Gtk::TreeModel::Row) - "
-	   << (record.isDefined () ? record->name.c_str () : "None"));
+	   << (record.isDefined () ? record->getName ().c_str () : "None"));
    Check1 (record.isDefined ());
 
    HEntity obj (HEntity::cast (record));
    Gtk::TreeModel::Row newRecord (OwnerObjectList::append (obj, artist));
-   newRecord[colOwnerObjects.name] = record->name;
-   if (record->year)
-      newRecord[colOwnerObjects.year] = record->year.toString ();
-   changeGenre (newRecord, record->genre);
+   newRecord[colOwnerObjects.name] = record->getName ();
+   if (record->getYear ())
+      newRecord[colOwnerObjects.year] = record->getYear ().toString ();
+   changeGenre (newRecord, record->getGenre ());
 
    return newRecord;
 }
@@ -92,10 +92,9 @@ HRecord RecordList::getRecordAt (const Gtk::TreeIter iter) const {
    HEntity hRec (getObjectAt (iter)); Check3 (hRec.isDefined ());
    HRecord record (HRecord::cast (hRec));
    TRACE7 ("CDManager::getRecordAt (const Gtk::TreeIter&) - Selected record: " <<
-	   record->id << '/' << record->name);
+	   record->getId () << '/' << record->getName ());
    return record;
 }
-
 
 //-----------------------------------------------------------------------------
 /// Sets the name of the object
@@ -105,7 +104,7 @@ HRecord RecordList::getRecordAt (const Gtk::TreeIter iter) const {
 //-----------------------------------------------------------------------------
 void RecordList::setName (HEntity& object, const Glib::ustring& value) {
    HRecord m (HRecord::cast (object));
-   m->name = value;
+   m->setName (value);
 }
 
 //-----------------------------------------------------------------------------
@@ -116,7 +115,7 @@ void RecordList::setName (HEntity& object, const Glib::ustring& value) {
 //-----------------------------------------------------------------------------
 void RecordList::setYear (HEntity& object, const Glib::ustring& value) {
    HRecord m (HRecord::cast (object));
-   m->year = value;
+   m->setYear (value);
 }
 
 //-----------------------------------------------------------------------------
@@ -127,7 +126,7 @@ void RecordList::setYear (HEntity& object, const Glib::ustring& value) {
 //-----------------------------------------------------------------------------
 void RecordList::setGenre (HEntity& object, unsigned int value) {
    HRecord m (HRecord::cast (object));
-   m->genre = value;
+   m->setGenre (value);
 }
 
 //-----------------------------------------------------------------------------

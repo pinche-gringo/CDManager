@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.21 2004/11/27 04:20:11 markus Exp $
+//$Id: CDManager.h,v 1.22 2004/11/28 01:05:37 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -60,7 +60,8 @@ class CDManager : public XGP::XApplication {
  private:
    // IDs for menus
    enum { LOGIN = XApplication::LAST, SAVE, LOGOUT, MEDIT, NEW_ARTIST,
-	  NEW_RECORD, NEW_SONG, NEW_MOVIE, NEW_DIRECTOR, DELETE, EXIT };
+	  NEW_RECORD, NEW_SONG, NEW_MOVIE, NEW_DIRECTOR, DELETE, EXPORT,
+	  EXIT };
 
    // Protected manager functions
    CDManager (const CDManager&);
@@ -95,6 +96,9 @@ class CDManager : public XGP::XApplication {
 
    void removeDeletedEntries ();
    void writeChangedEntries ();
+
+   void exportMovies ();
+   void exportRecords ();
 
    static XGP::XApplication::MenuEntry menuItems[];
 
@@ -135,6 +139,9 @@ class CDManager : public XGP::XApplication {
    std::map<HDirector, HDirector>   changedDirectors;
 
    unsigned int loadedPages;
+
+   std::vector<HDirector>  directors;
+   std::vector<HInterpret> artists;
 };
 
 #endif

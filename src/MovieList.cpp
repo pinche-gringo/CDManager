@@ -1,11 +1,11 @@
-//$Id: MovieList.cpp,v 1.10 2004/12/09 03:19:46 markus Exp $
+//$Id: MovieList.cpp,v 1.11 2004/12/10 00:12:56 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.10 $
+//REVISION    : $Revision: 1.11 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (A) 2004
@@ -30,6 +30,8 @@
 #include <cerrno>
 #include <cstdlib>
 
+#define CHECK 9
+#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/Tokenize.h>
@@ -72,6 +74,7 @@ MovieList::MovieList (const std::map<unsigned int, Glib::ustring>& genres)
    Gtk::TreeViewColumn* column (new Gtk::TreeViewColumn
 				(_("Type"), *Gtk::manage (renderer)));
    append_column (*Gtk::manage (column));
+   column->add_attribute (renderer->property_text (), colMovies.type);
    column->set_resizable ();
 
    renderer->signal_edited ().connect
@@ -118,6 +121,7 @@ Gtk::TreeModel::Row MovieList::append (HMovie& movie,
    newMovie[colMovies.name] = movie->getName ();
    newMovie[colMovies.year] = movie->getYear ().toString ();
    changeGenre (newMovie, movie->getGenre ());
+
    newMovie[colMovies.type] = CDType::getInstance ()[movie->getType ()];
 
    setLanguage (newMovie, movie->getLanguage ());
@@ -264,36 +268,37 @@ bool MovieList::on_button_press_event (GdkEventButton* e) {
        && (oldSel == selection->get_selected ())
        && (selection->get_selected ()->parent ())) {
       unsigned int i (0);
-      unsigned int width (0);
 
-      Glib::ListHandle<Gtk::TreeViewColumn*> cols (get_columns ());
-      Glib::ListHandle<Gtk::TreeViewColumn*>::const_iterator c (cols.begin ());
-      for (; i++ < 4; ++c)
-	 width += (*c)->get_width ();
+      Gdk::Rectangle cellArea;
+      Check3 (get_column (4));
+      TRACE ("Getting area: " << get_column (4) << '/' << mOwnerObjects->get_path (oldSel).to_string ());
+      get_cell_area (mOwnerObjects->get_path (oldSel), *get_column (4), cellArea);
 
       // If event is within the language column
-      if ((e->x > width) && (e->x <= (width + (*c)->get_width ()))) {
+      if ((e->x > cellArea.get_x ())
+	  && (e->x <= (cellArea.get_x () + cellArea.get_width ()))) {
 	 TRACE9 ("MovieList::on_button_press_event (GdkEventButton*) - Column "
-		 << i << ": " << width << '-' << e->x << '-'
-		 << (width + (*c)->get_width ()));
+		 << i << ": " << cellArea.get_x () << '-' << e->x << '-'
+		 << (cellArea.get_x () + cellArea.get_width ()));
 	 // Create the popup-window
 	 Check2 (!list);
 	 popup = new Gtk::Window (Gtk::WINDOW_POPUP);
 	 list = new Gtk::TreeView;
 
-	 Gtk::TreeViewColumn* column (new Gtk::TreeViewColumn (""));
+	 Gtk::TreeViewColumn* column (new Gtk::TreeViewColumn (_("Add language")));
 	 column->pack_start (colLang.flag, false);
 	 column->pack_start (colLang.name);
 	 list->append_column (*Gtk::manage (column));
-	 list->get_selection ()->set_mode (Gtk::SELECTION_EXTENDED);
 	 list->set_model (model);
-	 list->set_headers_visible (false);
+	 list->get_selection ()->set_mode (Gtk::SELECTION_MULTIPLE);
+	 list->get_selection ()->signal_changed ().connect
+	    (bind (mem_fun (*this, &MovieList::languageSelected), &list, model)); 
 
 	 list->show ();
 	 popup->add (*Gtk::manage (list));
 
 	 // Add language values
-	 if (model->children ().empty ())
+	 if (model->children ().empty ()) {
 	    for (std::map<std::string, Language>::const_iterator l (Language::begin ());
 		 l != Language::end (); ++l) {
 	       TRACE9 ("MovieList::on_button_press_event (GdkEventButton*) - Adding "
@@ -304,15 +309,21 @@ bool MovieList::on_button_press_event (GdkEventButton* e) {
 	       lang[colLang.flag] = l->second.getFlag ();
 	       lang[colLang.name] = l->second.getInternational ();
 	    }
+	    Gtk::TreeModel::Row lang (*model->append ());
+	    lang[colLang.name] = _("Remove language");
+	 }
 
 	 // Move the window below the selected line in the language column
 	 Gtk::Requisition size;
 	 popup->size_request (size);
 
-	 int x ((int)(((e->x + size.width) > Gdk::screen_width ())
-		      ? e->x - size.width : e->x));
-	 int y ((int)(((e->y + size.height) > Gdk::screen_width ())
-		      ? e->y - size.height : e->y));
+	 int x ((int)e->x_root - ((int)e->x - cellArea.get_x ()));
+	 if ((x + size.width) > Gdk::screen_width ())
+	    x = Gdk::screen_width () - size.width;
+	 int y ((int)e->y_root - ((int)e->y - cellArea.get_y ()));
+	 y = (((y + size.height) > Gdk::screen_height ())
+	      ? (y - size.height)
+	      : (y + cellArea.get_height ()));
 	 popup->move (x, y);
 
 	 popup->show ();
@@ -357,4 +368,14 @@ void MovieList::setLanguage (Gtk::TreeModel::Row& row, const std::string& langua
    while (langs.getNextNode (',').size ()
 	  && (i < (sizeof (columns) / sizeof (*columns))))
       row[(*columns)[i++]] = Language::findFlag (langs.getActNode ());
+}
+
+//-----------------------------------------------------------------------------
+/// Callback after a language has been selected
+/// \param list: Pointer to pointer to language-list
+/// \param model: List-model
+/// \remarks The list is removed and its pointer cleared
+//-----------------------------------------------------------------------------
+void MovieList::languageSelected (Gtk::TreeView** list,
+				  Glib::RefPtr<Gtk::ListStore> model) {
 }

@@ -1,7 +1,7 @@
 #ifndef SONGLIST_H
 #define SONGLIST_H
 
-//$Id: SongList.h,v 1.3 2004/11/06 17:24:22 markus Exp $
+//$Id: SongList.h,v 1.4 2004/11/11 04:26:33 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,6 +22,9 @@
 #include <gtkmm/liststore.h>
 
 #include <Song.h>
+
+
+class CellRendererList;
 
 
 /**Class describing the columns in the song-model
@@ -49,6 +52,8 @@ class SongList : public Gtk::TreeView {
 
    void append (HSong& song);
    void clear () { mSongs->clear (); }
+
+   void updateGenres ();
 
    sigc::signal<void, const HSong&> signalChanged;
 

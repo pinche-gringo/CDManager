@@ -1,11 +1,11 @@
-//$Id: SongList.cpp,v 1.4 2004/11/06 19:23:30 markus Exp $
+//$Id: SongList.cpp,v 1.5 2004/11/11 04:27:16 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -26,9 +26,6 @@
 
 
 #include <cdmgr-cfg.h>
-
-#include <cerrno>
-#include <cstdlib>
 
 #define CHECK 9
 #define TRACELEVEL 9

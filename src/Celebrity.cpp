@@ -1,14 +1,14 @@
-//$Id: Celebrity.cpp,v 1.5 2005/01/10 02:11:44 markus Exp $
+//$Id: Celebrity.cpp,v 1.6 2005/01/18 03:56:56 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Celebrity
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
-//COPYRIGHT   : Copyright (A) 2004, 2005
+//COPYRIGHT   : Copyright (C) 2004, 2005
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

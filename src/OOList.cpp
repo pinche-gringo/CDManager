@@ -1,14 +1,14 @@
-//$Id: OOList.cpp,v 1.10 2004/12/22 16:59:20 markus Exp $
+//$Id: OOList.cpp,v 1.11 2005/01/18 03:56:57 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.10 $
+//REVISION    : $Revision: 1.11 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
-//COPYRIGHT   : Copyright (A) 2004
+//COPYRIGHT   : Copyright (C) 2004, 2005
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

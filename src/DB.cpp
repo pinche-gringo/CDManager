@@ -1,14 +1,14 @@
-//$Id: DB.cpp,v 1.3 2004/12/07 03:37:05 markus Rel $
+//$Id: DB.cpp,v 1.4 2005/01/18 03:56:56 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Database
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 16.10.2004
-//COPYRIGHT   : Copyright (A) 2004
+//COPYRIGHT   : Copyright (C) 2004, 2005
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,8 +33,6 @@
 #  error No supported database detected!
 #endif
 
-#define CHECK 9
-#define TRACELEVEL 5
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 

@@ -1,14 +1,14 @@
-//$Id: RecordList.cpp,v 1.12 2004/12/07 03:36:00 markus Rel $
+//$Id: RecordList.cpp,v 1.13 2005/01/18 03:56:57 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.12 $
+//REVISION    : $Revision: 1.13 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
-//COPYRIGHT   : Copyright (A) 2004
+//COPYRIGHT   : Copyright (C) 2004, 2005
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

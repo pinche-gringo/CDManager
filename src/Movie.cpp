@@ -1,14 +1,14 @@
-//$Id: Movie.cpp,v 1.6 2005/01/10 02:11:44 markus Exp $
+//$Id: Movie.cpp,v 1.7 2005/01/18 03:56:56 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movie
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 29.11.2004
-//COPYRIGHT   : Copyright (A) 2004, 2005
+//COPYRIGHT   : Copyright (C) 2004, 2005
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.14 2004/11/07 02:33:58 markus Exp $
+//$Id: CDManager.cpp,v 1.15 2004/11/11 04:24:35 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : Free handles in record listbox
 //BUGS        :
-//REVISION    : $Revision: 1.14 $
+//REVISION    : $Revision: 1.15 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -278,6 +278,8 @@ CDManager::CDManager ()
 
    records.signalOwnerChanged.connect (mem_fun (*this, &CDManager::artistChanged));
    records.signalObjectChanged.connect (mem_fun (*this, &CDManager::recordChanged));
+   records.signalArtistChanged.connect (mem_fun (*this, &CDManager::artistChanged));
+   records.signalRecordChanged.connect (mem_fun (*this, &CDManager::recordChanged));
    movies.signalObjectChanged.connect (mem_fun (*this, &CDManager::movieChanged));
    Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
    recordSel->set_mode (Gtk::SELECTION_EXTENDED);
@@ -320,6 +322,54 @@ void CDManager::command (int menu) {
    TRACE2 ("CDManager::command (int) - " << menu);
    switch (menu) {
    case SAVE:
+      while (changedInterprets.size ()) {
+	 HInterpret artist (changedInterprets.begin ()->first);
+	 Check3 (artist.isDefined ());
+	 try {
+	    std::stringstream query;
+	    query << (artist->id ? "UPDATE Interprets" : "INSERT into Interprets")
+		  << " SET name=\"" << artist->name << '"';
+	    if (artist->id)
+	       query << " WHERE id=" << artist->id;
+	    Database::store (query.str ().c_str ());
+	 }
+	 catch (std::exception& err) {
+	    Glib::ustring msg (_("Can't write interpret %1!\n\nReason: %2"));
+	    msg.replace (msg.find ("%1"), 2, artist->name);
+	    msg.replace (msg.find ("%2"), 2, err.what ());
+	    Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+	    dlg.run ();
+	 }
+
+	 changedInterprets.erase (changedInterprets.begin ());
+      } // endwhile
+
+      while (changedRecords.size ()) {
+	 HRecord record (changedRecords.begin ()->first); Check3 (record.isDefined ());
+	 try {
+	    std::stringstream query;
+	    query << (record->id ? "UPDATE Records" : "INSERT into Records")
+		  << " SET name=\"" << record->name << "\", year=" << record->year
+		  << ", genre=" << record->genre;
+	    if (relRecords.isRelated (record)) {
+	       HInterpret artist (relRecords.getParent (record)); Check3 (artist.isDefined ());
+	       query << ", interpret=" << artist->id;
+	    }
+	    if (record->id)
+	       query << " WHERE id=" << record->id;
+	    Database::store (query.str ().c_str ());
+	 }
+	 catch (std::exception& err) {
+	    Glib::ustring msg (_("Can't write record %1!\n\nReason: %2"));
+	    msg.replace (msg.find ("%1"), 2, record->name);
+	    msg.replace (msg.find ("%2"), 2, err.what ());
+	    Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+	    dlg.run ();
+	 }
+
+	 changedRecords.erase (changedRecords.begin ());
+      } // endwhile
+
       while (changedSongs.size ()) {
 	 HSong song (changedSongs.begin ()->first); Check3 (song.isDefined ());
 	 try {
@@ -374,7 +424,7 @@ void CDManager::command (int menu) {
 	 Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
 
 	 Gtk::TreeIter iter (records.get_model ()->get_iter (*i)); Check3 (iter);
-	 HRecord hRec (records.getEntry(iter));
+	 HRecord hRec (records.getRecordAt (iter));
 	 TRACE9 ("CDManager::command (int) -Deleting " << hRec->name);
 
 	 Check3 (relRecords.isRelated (hRec));
@@ -680,7 +730,7 @@ void CDManager::recordSelected () {
 
       if ((*i)->parent ()) {
 	 HRecord hRecord (records.getRecordAt (i)); Check3 (hRecord.isDefined ());
-      HRecord hRecord (records.getEntry (i));
+      HRecord hRecord (records.getRecordAt (i));
       if (!relSongs.isRelated (hRecord))
 	 loadSongs (hRecord);
 
@@ -761,8 +811,37 @@ void CDManager::songChanged (const HSong& song) {
 	   << (song.isDefined () ? song->name.c_str () : "Undefined"));
 // void CDManager::artistChanged (const HInterpret& artist)
    if (changedSongs.find (song) == changedSongs.end ()) {
-      HSong newSong (new Song (*song));
-      changedSongs[song] = newSong;
+      changedSongs[song] = new Song (*song);
+      apMenus[SAVE]->set_sensitive (true);
+   }
+}
+// void CDManager::recordChanged (const HRecord& record)
+/// Callback when changing a record
+/// Callback when a song is being changed
+/// \param song: Handle to changed interpret
+
+void CDManager::artistChanged (const HInterpret& artist) {
+   TRACE9 ("CDManager::artistChanged (const HInterpret& artist) - "
+	   << (artist.isDefined () ? artist->id : -1UL) << '/'
+	   << (artist.isDefined () ? artist->name.c_str () : "Undefined"));
+// void CDManager::directorChanged (const HDirector& director)
+   if (changedInterprets.find (artist) == changedInterprets.end ()) {
+      changedInterprets[artist] = new Interpret (*artist);
+      apMenus[SAVE]->set_sensitive (true);
+   }
+}
+// void CDManager::movieChanged (const HMovie& movie)
+/// Callback when changing a movie
+/// Callback when a song is being changed
+/// \param song: Handle to changed song
+
+void CDManager::recordChanged (const HRecord& record) {
+   TRACE9 ("CDManager::recordChanged (const HInterpret& record) - "
+	   << (record.isDefined () ? record->id : -1UL) << '/'
+	   << (record.isDefined () ? record->name.c_str () : "Undefined"));
+
+   if (changedRecords.find (record) == changedRecords.end ()) {
+      changedRecords[record] = new Record (*record);
       apMenus[SAVE]->set_sensitive (true);
    }
 }

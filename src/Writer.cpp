@@ -1,11 +1,11 @@
-//$Id: Writer.cpp,v 1.1 2004/11/28 01:05:38 markus Rel $
+//$Id: Writer.cpp,v 1.2 2004/12/03 06:06:27 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Writer
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 27.11.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -46,7 +46,7 @@ MovieWriter::~MovieWriter () {
 //-----------------------------------------------------------------------------
 std::string MovieWriter::getSubstitute (const char ctrl, bool extend) const {
    if (hMovie.isDefined ()) {
-      Check2 (!hDirector.isDefined ());
+      Check2 (hDirector.isDefined ());
 
       switch (ctrl) {
       case 'n':
@@ -59,10 +59,14 @@ std::string MovieWriter::getSubstitute (const char ctrl, bool extend) const {
       case 'g':
 	 Check3 (genres.find (hMovie->getGenre ()) != genres.end ());
 	 return genres.find (hMovie->getGenre ())->second;
+
+      case 'd':
+	 return hDirector->getName ();
       } // endswitch
    }
    else {
       Check2 (hDirector.isDefined ());
+      Check3 (!hMovie.isDefined ());
 
       if (ctrl == 'n')
 	 return hDirector->getName ();
@@ -74,18 +78,24 @@ std::string MovieWriter::getSubstitute (const char ctrl, bool extend) const {
 //-----------------------------------------------------------------------------
 /// Writes a movie into the table
 /// \param movie: Movie to write
+/// \param director: Director of movie
 /// \param out: Stream to write to
 //-----------------------------------------------------------------------------
-void MovieWriter::writeMovie (const HMovie& movie, std::ostream& out) {
+void MovieWriter::writeMovie (const HMovie& movie, const HDirector& director,
+			      std::ostream& out) {
    Check2 (!hMovie.isDefined ()); Check2 (!hDirector.isDefined ());
    hMovie = movie;
+   hDirector = director;
 
    std::string value;
+   out << "<tr class=\"" << (oddLine ? "odd" : "even") << "\">";
+   oddLine = !oddLine;
    while (!((value = getNextNode ()).empty ()))
       out << "<td>" << value << "</td>";
    out << "</tr>\n";
 
    hMovie.undefine ();
+   hDirector.undefine ();
 }
 
 //-----------------------------------------------------------------------------
@@ -95,4 +105,10 @@ void MovieWriter::writeMovie (const HMovie& movie, std::ostream& out) {
 //-----------------------------------------------------------------------------
 void MovieWriter::writeDirector (const HDirector& director, std::ostream& out) {
    Check2 (!hMovie.isDefined ()); Check2 (!hDirector.isDefined ());
+   hDirector = director;
+   out << "<tr><td>&nbsp;</td></tr>\n"
+       << "<tr><td colspan=\"3\" class=\"owner\">" << hDirector->getName () << "</td></tr>\n";
+   hDirector.undefine ();
+
+   oddLine = true;
 }

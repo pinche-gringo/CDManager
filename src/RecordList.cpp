@@ -1,11 +1,11 @@
-//$Id: RecordList.cpp,v 1.4 2004/11/15 19:35:02 markus Exp $
+//$Id: RecordList.cpp,v 1.5 2004/11/17 17:33:16 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        : Check if handles are freed in record listbox
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -30,6 +30,8 @@
 #include <cerrno>
 #include <cstdlib>
 
+#define CHECK 9
+#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/StatusObj.h>
@@ -106,7 +108,7 @@ Gtk::TreeModel::Row RecordList::append (HRecord& record,
    Check1 (record.isDefined ());
 
    Gtk::TreeModel::Row newRecord (*mRecords->append (artist.children ()));
-   newRecord[colRecords.entry] = new HRecord (record);
+   newRecord[colRecords.entry] = YGP::Handle<YGP::Entity>::cast (record);
    newRecord[colRecords.name] = record->name;
    if (record->year)
       newRecord[colRecords.year] = record->year;
@@ -130,7 +132,7 @@ Gtk::TreeModel::Row RecordList::append (const HInterpret& artist) {
    Check1 (artist.isDefined ());
 
    Gtk::TreeModel::Row newArtist (*mRecords->append ());
-   newArtist[colRecords.entry] = new HInterpret (artist);
+   newArtist[colRecords.entry] = YGP::Handle<YGP::Entity>::cast (artist);
    newArtist[colRecords.name] = artist->name;
 
    return newArtist;
@@ -213,42 +215,18 @@ void RecordList::updateGenres () {
 }
 
 //-----------------------------------------------------------------------------
-/// Callback after deleting a row in the list
-/// \param row: Path to the row
-//-----------------------------------------------------------------------------
-void RecordList::on_row_deleted (const Gtk::TreeModel::Path& row) {
-   Gtk::TreeModel::Row r (*mRecords->get_iter (row));
-   Check2 (r[colRecords.entry]);
-#if TRACELEVEL > 8
-   if (typeid (*((*r)[colRecords.entry])) == typeid (HRecord)) {
-      HRecord record (getRecordAt (r)); Check3 (record.isDefined ());
-      TRACE ("RecordList::on_row_deleted (const Gtk::TreeModel::Path&) - "
-	     "Deleting record " << record->id << '/' << record->name);
-   }
-   else {
-      HInterpret interpret (getInterpretAt (r)); Check3 (interpret.isDefined ());
-      TRACE ("RecordList::on_row_deleted (const Gtk::TreeModel::Path&) - "
-	     "Deleting interpret " << interpret->id << '/' << interpret->name);
-   }
-#endif
-
-   delete r[colRecords.entry];
-}
-
-//-----------------------------------------------------------------------------
 /// Returns the handle (casted to a HRecord) at the passed position
 /// \param iter: Iterator to position in the list
 /// \returns HRecord: Handle of the selected line
 //-----------------------------------------------------------------------------
 HRecord RecordList::getRecordAt (const Gtk::TreeIter iter) const {
-   Check2 (!iter->children ().size ());
-   Check1 ((*iter)[colRecords.entry] != NULL);
-   Check1 (typeid (*((*iter)[colRecords.entry])) == typeid (HRecord));
-   YGP::IHandle* phRec ((**iter)[colRecords.entry]);
-   Check1 (typeid (*phRec) == typeid (HRecord));
+   Check2 ((*iter)->parent ());
+   YGP::Handle<YGP::Entity> hRec ((*iter)[colRecords.entry]);
+   Check3 (hRec.isDefined ());
+   HRecord record (HRecord::cast (hRec));
    TRACE7 ("CDManager::getRecordAt (const Gtk::TreeIter&) - Selected record: " <<
-	   (*(HRecord*)phRec)->id << '/' << (*(HRecord*)phRec)->name);
-   return *(HRecord*)phRec;
+	   record->id << '/' << record->name);
+   return record;
 }
 
 //-----------------------------------------------------------------------------
@@ -257,12 +235,11 @@ HRecord RecordList::getRecordAt (const Gtk::TreeIter iter) const {
 /// \returns HRecord: Handle of the selected line
 //-----------------------------------------------------------------------------
 HInterpret RecordList::getInterpretAt (const Gtk::TreeIter iter) const {
-   Check2 (iter->children ().size ());
-   Check1 ((*iter)[colRecords.entry] != NULL);
-   Check1 (typeid (*((*iter)[colRecords.entry])) == typeid (HInterpret));
-   YGP::IHandle* phArtist ((**iter)[colRecords.entry]);
-   Check1 (typeid (*phArtist) == typeid (HInterpret));
-   TRACE7 ("CDManager::getInterpretAt (const Gtk::TreeIter&) - Selected record: " <<
-	   (*(HInterpret*)phArtist)->id << '/' << (*(HInterpret*)phArtist)->name);
-   return *(HInterpret*)phArtist;
+   Check2 (!(*iter)->parent ());
+   YGP::Handle<YGP::Entity> hArtist ((*iter)[colRecords.entry]);
+   Check3 (hArtist.isDefined ());
+   HInterpret artist (HInterpret::cast (hArtist));
+   TRACE7 ("CDManager::getInterpretAt (const Gtk::TreeIter&) - Selected artist: " <<
+	   artist->id << '/' << artist->name);
+   return artist;
 }

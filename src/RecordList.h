@@ -1,7 +1,7 @@
 #ifndef RECORDLIST_H
 #define RECORDLIST_H
 
-//$Id: RecordList.h,v 1.4 2004/11/15 19:35:02 markus Exp $
+//$Id: RecordList.h,v 1.5 2004/11/17 17:33:16 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -35,10 +35,10 @@ class RecordColumns : public Gtk::TreeModel::ColumnRecord {
    RecordColumns () {
       add (entry); add (name); add (year); add (genre); }
 
-   Gtk::TreeModelColumn<YGP::IHandle*> entry;
-   Gtk::TreeModelColumn<Glib::ustring> name;
-   Gtk::TreeModelColumn<YGP::AYear>    year;
-   Gtk::TreeModelColumn<Glib::ustring> genre;
+   Gtk::TreeModelColumn<YGP::Handle<YGP::Entity> > entry;
+   Gtk::TreeModelColumn<Glib::ustring>             name;
+   Gtk::TreeModelColumn<YGP::AYear>                year;
+   Gtk::TreeModelColumn<Glib::ustring>             genre;
 };
 
 
@@ -66,7 +66,6 @@ class RecordList : public Gtk::TreeView {
  protected:
    void valueChanged (const Glib::ustring& path, const Glib::ustring& value,
 		      unsigned int column);
-   virtual void on_row_deleted (const Gtk::TreeModel::Path& row);
 
  private:
    RecordList (const RecordList& other);

@@ -1,7 +1,7 @@
 #ifndef MOVIELIST_H
 #define MOVIELIST_H
 
-//$Id: MovieList.h,v 1.1 2004/11/17 20:37:53 markus Exp $
+//$Id: MovieList.h,v 1.2 2004/11/25 23:20:21 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ class MovieColumns : public Gtk::TreeModel::ColumnRecord {
 
    Gtk::TreeModelColumn<YGP::Handle<YGP::Entity> > entry;
    Gtk::TreeModelColumn<Glib::ustring>             name;
-   Gtk::TreeModelColumn<YGP::AYear>                year;
+   Gtk::TreeModelColumn<Glib::ustring>             year;
    Gtk::TreeModelColumn<Glib::ustring>             genre;
 };
 
@@ -70,6 +70,8 @@ class MovieList : public Gtk::TreeView {
  private:
    MovieList (const MovieList& other);
    const MovieList& operator= (const MovieList& other);
+
+   Glib::ustring getLiveSpan (const HDirector& director);
 
    const std::map<unsigned int, Glib::ustring>& genres;
 

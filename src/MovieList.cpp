@@ -1,11 +1,11 @@
-//$Id: MovieList.cpp,v 1.1 2004/11/17 20:37:53 markus Exp $
+//$Id: MovieList.cpp,v 1.2 2004/11/25 23:20:21 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -102,7 +102,7 @@ MovieList::~MovieList () {
 /// \returns Gtk::TreeModel::Row: Inserted row
 //-----------------------------------------------------------------------------
 Gtk::TreeModel::Row MovieList::append (HMovie& movie,
-					const Gtk::TreeModel::Row& director) {
+				       const Gtk::TreeModel::Row& director) {
    TRACE3 ("MovieList::append (HMovie&, Gtk::TreeModel::Row) - "
 	   << (movie.isDefined () ? movie->name.c_str () : "None"));
    Check1 (movie.isDefined ());
@@ -111,7 +111,7 @@ Gtk::TreeModel::Row MovieList::append (HMovie& movie,
    newMovie[colMovies.entry] = YGP::Handle<YGP::Entity>::cast (movie);
    newMovie[colMovies.name] = movie->name;
    if (movie->year)
-      newMovie[colMovies.year] = movie->year;
+      newMovie[colMovies.year] = movie->year.toString ();
 
    std::map<unsigned int, Glib::ustring>::const_iterator g
       (genres.find (movie->genre));
@@ -134,6 +134,7 @@ Gtk::TreeModel::Row MovieList::append (const HDirector& director) {
    Gtk::TreeModel::Row newDirector (*mMovies->append ());
    newDirector[colMovies.entry] = YGP::Handle<YGP::Entity>::cast (director);
    newDirector[colMovies.name] = director->name;
+   newDirector[colMovies.year] = getLiveSpan (director);
 
    return newDirector;
 }
@@ -148,6 +149,7 @@ void MovieList::valueChanged (const Glib::ustring& path,
 			       const Glib::ustring& value, unsigned int column) {
    TRACE9 ("MovieList::valueChanged (2x const Glib::ustring&, unsigned int) - "
 	   << path << "->" << value);
+   Check2 (column < 3);
 
    Gtk::TreeModel::Row row (*mMovies->get_iter (Gtk::TreeModel::Path (path)));
 
@@ -160,7 +162,8 @@ void MovieList::valueChanged (const Glib::ustring& path,
 	    row[colMovies.name] = movie->name= value;
 	    break;
 	 case 1:
-	    row[colMovies.year] = movie->year = value;
+	    movie->year = value;
+	    row[colMovies.year] = value;
 	    break;
 	 case 2: {
 	    for (std::map<unsigned int, Glib::ustring>::const_iterator g (genres.begin ());
@@ -173,18 +176,39 @@ void MovieList::valueChanged (const Glib::ustring& path,
 	       }
 	    throw (std::invalid_argument (_("Unknown genre!")));
 	    break; }
-	 default:
-	    Check3 (0);
 	 } // endswitch
       } // endif movie edited
       else {
-	 if (!column) {
-	    HDirector director (getDirectorAt (row));
-	    Check3 (director.isDefined ());
+	 HDirector director (getDirectorAt (row));
+	 Check3 (director.isDefined ());
+	 signalDirectorChanged.emit (director);
 
+	 switch (column) {
+	 case 0:
 	    row[colMovies.name] = director->name= value;
-	    signalDirectorChanged.emit (director);
-	 }
+	    break;
+	 case 1:
+	    if (value.size ()) {
+	       unsigned int pos (value.find ("- "));
+	       if (pos != std::string::npos)
+		  director->died = value.substr (pos + 2);
+	       else
+		  director->died.undefine ();
+
+	       if ((pos == std::string::npos)
+		   || ((pos > 0) && (value[pos - 1] == ' ')))
+		  director->born = value.substr (0, pos - 1);
+	       else
+		  director->born.undefine ();
+	    }
+	    else {
+	       director->born.undefine ();
+	       director->died.undefine ();
+	    }
+
+	    row[colMovies.year] = getLiveSpan (director);
+	    break;
+	 } // end-switch
       } // end-else director edited
    } // end-try
    catch (std::exception& e) {
@@ -241,4 +265,23 @@ HDirector MovieList::getDirectorAt (const Gtk::TreeIter iter) const {
    TRACE7 ("CDManager::getDirectorAt (const Gtk::TreeIter&) - Selected director: " <<
 	   director->id << '/' << director->name);
    return director;
+}
+
+
+//-----------------------------------------------------------------------------
+/// Shows the time of live of the passed director
+/// \param director: Director to display
+/// \returns Glib::ustring: Text to display
+//-----------------------------------------------------------------------------
+Glib::ustring MovieList::getLiveSpan (const HDirector& director) {
+   TRACE9 ("MovieList::getLiveSpan (const HDirector&) - " << (director.isDefined () ? director->name.c_str () : "None"));
+   Check1 (director.isDefined ());
+
+   Glib::ustring tmp (director->born.toString ());
+   if (director->born.isDefined ())
+      tmp.append (1, ' ');
+   if (director->died.isDefined ())
+      tmp.append ("- ");
+   tmp.append (director->died.toString ());
+   return tmp;
 }

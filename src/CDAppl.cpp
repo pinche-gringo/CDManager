@@ -1,11 +1,11 @@
-//$Id: CDAppl.cpp,v 1.1 2004/12/22 22:51:12 markus Exp $
+//$Id: CDAppl.cpp,v 1.2 2004/12/24 04:09:08 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : <FILLIN>
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.12.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -108,6 +108,7 @@ void CDAppl::readINIFile (const char* pFile) {
       INIOBJ (options, Export);
 
       INIFILE_READ ();
+      options.pINIFile = pFile;
    }
    catch (std::string& error) {
       Glib::ustring err ("-warning: Error reading INI-file `%1'");
@@ -117,7 +118,7 @@ void CDAppl::readINIFile (const char* pFile) {
 }
 
 //-----------------------------------------------------------------------------
-/// Performs the job of the applications
+/// Performs the job of the application
 /// \param int: Number of parameters (without options)
 /// \param const char*: Array with pointer to arguments
 /// \returns \c int: Status

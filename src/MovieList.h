@@ -1,7 +1,7 @@
 #ifndef MOVIELIST_H
 #define MOVIELIST_H
 
-//$Id: MovieList.h,v 1.2 2004/11/25 23:20:21 markus Exp $
+//$Id: MovieList.h,v 1.3 2004/11/26 03:32:06 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,59 +24,35 @@
 #include "Movie.h"
 #include "Director.h"
 
+#include "OOList.h"
+
 
 class CellRendererList;
 
 
-/**Class describing the columns in the movie-model
- */
-class MovieColumns : public Gtk::TreeModel::ColumnRecord {
- public:
-   MovieColumns () {
-      add (entry); add (name); add (year); add (genre); }
-
-   Gtk::TreeModelColumn<YGP::Handle<YGP::Entity> > entry;
-   Gtk::TreeModelColumn<Glib::ustring>             name;
-   Gtk::TreeModelColumn<Glib::ustring>             year;
-   Gtk::TreeModelColumn<Glib::ustring>             genre;
-};
-
-
 /**Class to hold a list of movies
  */
-class MovieList : public Gtk::TreeView {
+class MovieList : public OwnerObjectList {
  public:
    MovieList (const std::map<unsigned int, Glib::ustring>& genres);
    virtual ~MovieList ();
 
-   Gtk::TreeModel::Row append (const HDirector& director);
+   Gtk::TreeModel::Row append (const HDirector& director) {
+      return OwnerObjectList::append (director); }
    Gtk::TreeModel::Row append (HMovie& movie, const Gtk::TreeModel::Row& director);
-   void clear () { mMovies->clear (); }
 
-   void updateGenres ();
-
-   sigc::signal<void, const HDirector&> signalDirectorChanged;
-   sigc::signal<void, const HMovie&> signalMovieChanged;
-   sigc::signal<void, const HMovie&> signalMovieGenreChanged;
-
-   Glib::RefPtr<Gtk::TreeStore> getModel () const { return mMovies; }
    HMovie getMovieAt (const Gtk::TreeIter iterator) const;
-   HDirector getDirectorAt (const Gtk::TreeIter iterator) const;
+   HDirector getDirectorAt (const Gtk::TreeIter iterator) const {
+      return getCelebrityAt (iterator); }
 
  protected:
-   void valueChanged (const Glib::ustring& path, const Glib::ustring& value,
-		      unsigned int column);
+   virtual void setName (HEntity& object, const Glib::ustring& value);
+   virtual void setYear (HEntity& object, const Glib::ustring& value);
+   virtual void setGenre (HEntity& object, unsigned int value);
 
  private:
    MovieList (const MovieList& other);
    const MovieList& operator= (const MovieList& other);
-
-   Glib::ustring getLiveSpan (const HDirector& director);
-
-   const std::map<unsigned int, Glib::ustring>& genres;
-
-   MovieColumns colMovies;
-   Glib::RefPtr<Gtk::TreeStore> mMovies;
 };
 
 

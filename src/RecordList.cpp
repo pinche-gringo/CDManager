@@ -1,11 +1,11 @@
-//$Id: RecordList.cpp,v 1.3 2004/11/14 21:24:27 markus Exp $
+//$Id: RecordList.cpp,v 1.4 2004/11/15 19:35:02 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        : Check if handles are freed in record listbox
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -99,7 +99,8 @@ RecordList::~RecordList () {
 /// \param artist: Interpret of the record
 /// \returns Gtk::TreeModel::Row: Inserted row
 //-----------------------------------------------------------------------------
-Gtk::TreeModel::Row RecordList::append (HRecord& record, Gtk::TreeModel::Row artist) {
+Gtk::TreeModel::Row RecordList::append (HRecord& record,
+					const Gtk::TreeModel::Row& artist) {
    TRACE3 ("RecordList::append (HRecord&, Gtk::TreeModel::Row) - "
 	   << (record.isDefined () ? record->name.c_str () : "None"));
    Check1 (record.isDefined ());
@@ -149,7 +150,7 @@ void RecordList::valueChanged (const Glib::ustring& path,
    Gtk::TreeModel::Row row (*mRecords->get_iter (Gtk::TreeModel::Path (path)));
 
    try {
-      if (row.children ().empty ()) {
+      if (row.parent ()) {
 	 HRecord record (getRecordAt (row));
 	 signalRecordChanged.emit (record);
 	 switch (column) {

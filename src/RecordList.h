@@ -1,7 +1,7 @@
 #ifndef RECORDLIST_H
 #define RECORDLIST_H
 
-//$Id: RecordList.h,v 1.3 2004/11/14 21:24:27 markus Exp $
+//$Id: RecordList.h,v 1.4 2004/11/15 19:35:02 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -49,8 +49,8 @@ class RecordList : public Gtk::TreeView {
    RecordList (const std::map<unsigned int, Glib::ustring>& genres);
    virtual ~RecordList ();
 
-   Gtk::TreeModel::Row append (const HInterpret& record);
-   Gtk::TreeModel::Row append (HRecord& record, Gtk::TreeModel::Row artist);
+   Gtk::TreeModel::Row append (const HInterpret& artist);
+   Gtk::TreeModel::Row append (HRecord& record, const Gtk::TreeModel::Row& artist);
    void clear () { mRecords->clear (); }
 
    void updateGenres ();

@@ -1,7 +1,7 @@
 #ifndef DIRECTOR_H
 #define DIRECTOR_H
 
-//$Id: Director.h,v 1.1 2004/11/17 20:37:53 markus Exp $
+//$Id: Director.h,v 1.2 2004/11/24 21:54:32 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,11 +18,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 
-#include <vector>
-
-#include <glibmm/ustring.h>
-
-#include "Celibrity.h"
+#include "Celebrity.h"
 
 
 typedef Celibrity Director;

@@ -1,7 +1,7 @@
 #ifndef OOLIST_H
 #define OOLIST_H
 
-//$Id: OOList.h,v 1.3 2004/11/27 04:49:05 markus Exp $
+//$Id: OOList.h,v 1.4 2004/11/29 19:02:40 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -79,6 +79,7 @@ class OwnerObjectList : public Gtk::TreeView {
    void changeGenre (Gtk::TreeModel::Row& row, unsigned int value);
 
    int sortByName (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
+   virtual int sortEntity (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
 
    const std::map<unsigned int, Glib::ustring>& genres;
 

@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.3 2004/11/28 01:05:38 markus Exp $
+//$Id: OOList.cpp,v 1.4 2004/11/29 19:02:40 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (A) 2004
@@ -333,16 +333,8 @@ void OwnerObjectList::changeGenre (Gtk::TreeModel::Row& row, unsigned int value)
 //-----------------------------------------------------------------------------
 int OwnerObjectList::sortByName (const Gtk::TreeModel::iterator& a,
 				 const Gtk::TreeModel::iterator& b) {
-   if ((*a)->parent ()) {
-      Gtk::TreeRow ra (*a);
-      Gtk::TreeRow rb (*b); Check2 (rb->parent ());
-
-      Glib::ustring a (ra[colOwnerObjects.name]);
-      Glib::ustring b (rb[colOwnerObjects.name]);
-      TRACE9 ("OwnerObjectList::sortByName (2x const Gtk::TreeModel::iterator&) - "
-	      << a << '/' << b << '=' << a.compare (b));
-      return a.compare (b);
-   }
+   if ((*a)->parent ())
+      return sortEntity (a, b);
    else {
       HCelebrity ha (getCelebrityAt (a)); Check3 (ha.isDefined ());
       HCelebrity hb (getCelebrityAt (b)); Check3 (hb.isDefined ());
@@ -356,4 +348,23 @@ int OwnerObjectList::sortByName (const Gtk::TreeModel::iterator& a,
 		  : ha->getName ().compare (hb->getName ())));
       return ((aname < bname) ? -1 : (bname < aname) ? 1
 	      : ha->getName ().compare (hb->getName ()));
-}}
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Sorts the entries in the listbox according to the name
+/// \param a: First entry to compare
+/// \param a: Second entry to compare
+/// \returns int: Value as strcmp
+//-----------------------------------------------------------------------------
+int OwnerObjectList::sortEntity (const Gtk::TreeModel::iterator& a,
+				 const Gtk::TreeModel::iterator& b) {
+   Gtk::TreeRow ra (*a);
+   Gtk::TreeRow rb (*b); Check2 (rb->parent ());
+
+   Glib::ustring sa (ra[colOwnerObjects.name]);
+   Glib::ustring sb (rb[colOwnerObjects.name]);
+   TRACE9 ("OwnerObjectList::sortEntity (2x const Gtk::TreeModel::iterator&) - "
+	   << sa << '/' << sb << '=' << sa.compare (sb));
+   return sa.compare (sb);
+}

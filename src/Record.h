@@ -1,7 +1,7 @@
 #ifndef RECORD_H
 #define RECORD_H
 
-//$Id: Record.h,v 1.9 2004/11/28 01:05:38 markus Exp $
+//$Id: Record.h,v 1.10 2004/11/29 19:03:57 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,6 +23,10 @@
 #include <YGP/AYear.h>
 #include <YGP/Handle.h>
 #include <YGP/Entity.h>
+
+
+class Record;
+defineHndl(Record);
 
 
 /**Class to hold a record
@@ -48,6 +52,11 @@ class Record : public YGP::Entity {
    bool areSongsLoaded () const { return songsLoaded; }
    void setSongsLoaded () { songsLoaded = true; }
 
+   static Glib::ustring removeIgnored (const Glib::ustring& name);
+   static bool compByName (const HRecord& a, const HRecord& b);
+   static bool compByYear (const HRecord& a, const HRecord& b);
+   static bool compByGenre (const HRecord& a, const HRecord& b);
+
  private:
    unsigned long int id;
    Glib::ustring     name;
@@ -58,6 +67,5 @@ class Record : public YGP::Entity {
    //Prohibited manager functions
    const Record& operator= (const Record& other);
 };
-defineHndl(Record);
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.17 2004/11/17 20:39:56 markus Exp $
+//$Id: CDManager.h,v 1.18 2004/11/24 21:53:45 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -72,6 +72,7 @@ class CDManager : public XGP::XApplication {
    virtual void showAboutbox ();
    virtual const char* getHelpfile ();
    void recordSelected ();
+   void pageSwitched (GtkNotebookPage* page, guint iPage);
 
    typedef enum { NONE_SELECTED, ARTIST_SELECTED, RECORD_SELECTED } SELECTED;
    void enableEdit (SELECTED selected);
@@ -84,6 +85,9 @@ class CDManager : public XGP::XApplication {
    void recordChanged (const HRecord& record);
    void recordGenreChanged (const HRecord& record);
    void songChanged (const HSong& song);
+   void directorChanged (const HDirector& director);
+   void movieChanged (const HMovie& movie);
+   void movieGenreChanged (const HMovie& movie);
 
    void deleteRecord (const Gtk::TreeIter& record);
    void deleteSelectedRecords ();
@@ -125,10 +129,14 @@ class CDManager : public XGP::XApplication {
    std::vector<HSong>      deletedSongs;
    std::vector<HRecord>    deletedRecords;
    std::vector<HInterpret> deletedInterprets;
+   std::vector<HMovie>     deletedMovies;
+   std::vector<HInterpret> deletedDirectors;
 
    std::map<HSong,HSong>            changedSongs;
    std::map<HRecord, HRecord>       changedRecords;
    std::map<HInterpret, HInterpret> changedInterprets;
+   std::map<HMovie, HMovie>         changedMovies;
+   std::map<HDirector, HDirector>   changedDirectors;
 };
 
 #endif

@@ -1,11 +1,11 @@
-//$Id: Words.cpp,v 1.1 2004/11/29 18:37:21 markus Rel $
+//$Id: Words.cpp,v 1.2 2004/12/04 04:06:21 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Celebrity
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -51,6 +51,7 @@ void Words::init () {
    articles.push_back ("Ein");
    articles.push_back ("Eine");
    articles.push_back ("Einer");
+   articles.push_back ("El");
    articles.push_back ("La");
    articles.push_back ("Las");
    articles.push_back ("Le");

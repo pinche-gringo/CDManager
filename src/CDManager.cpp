@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.9 2004/10/30 17:51:43 markus Exp $
+//$Id: CDManager.cpp,v 1.10 2004/10/31 05:02:38 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : Free handles in record listbox
 //BUGS        :
-//REVISION    : $Revision: 1.9 $
+//REVISION    : $Revision: 1.10 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -308,8 +308,13 @@ CDManager::CDManager ()
 
 #define TEST
 #ifdef TEST
+   login ("cdmgr", "");
+#else
+   XGP::TLoginDialog<CDManager>::create (_("Database login"), *this,
+					 &CDManager::login)->setCurrentUser ();
 #endif
 }
+
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------
@@ -544,47 +549,61 @@ void CDManager::loadDatabase () {
       }
       std::sort (artists.begin (), artists.end (), &Interpret::compByName);
 
-      for (std::vector<HInterpret>::iterator i (artists.begin ());
-	   i != artists.end (); ++i) {
-	 // Load data from record table
-	 std::ostringstream ostr;
-	 
-	 ostr << "SELECT id, name, year, genre FROM Records WHERE interpret="
-	      << (*i)->id;
-	 Database::store (ostr.str ().c_str ());
-	 TRACE8 ("CDManager::loadDatabase () - Found " << Database::resultSize ()
-		 << " records");
 
-	 if (cRecords = Database::resultSize ()) {
-	    Gtk::TreeModel::Row lastRowArtist (*mRecords->append ());
-	    lastRowArtist[colRecords.name] = (*i)->name;
-	    lastRowArtist[colRecords.entry] = new HInterpret (*i);
+      Database::store ("SELECT id, name, interpret, year, genre FROM "
+		       "Records ORDER BY interpret, year");
+      TRACE8 ("CDManager::loadDatabase () - Found " << Database::resultSize ()
+	      << " records");
 
-	    while (Database::hasData ()) {
-	       // Fill and store record entry from DB-values
-	       HRecord newRec (new Record);
-	       newRec->id = Database::getResultColumnAsUInt (0);
-	       newRec->year = Database::getResultColumnAsUInt (2);
+      if (cRecords = Database::resultSize ()) {
+	 std::map<unsigned int, std::vector<HRecord> > aRecords;
 
-	       relRecords.relate (*i, newRec);
+	 HRecord newRec;
+	 while (Database::hasData ()) {
+	    // Fill and store record entry from DB-values
+	    TRACE8 ("CDManager::loadDatabase () - Adding record "
+		 << Database::getResultColumnAsUInt (0) << '/'
+		 << Database::getResultColumnAsString (1));
 
-	       Gtk::TreeModel::Row row (*(mRecords->append (lastRowArtist.children ())));
-	       row[colRecords.entry] = new HRecord (newRec);
-	       newRec->name = row[colRecords.name] =
-		  Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
-	       if (newRec->year)
-		  row[colRecords.year] = Database::getResultColumnAsString (2);
+	    newRec.define ();
+	    newRec->id = Database::getResultColumnAsUInt (0);
+	    newRec->name =
+	       Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
+	    newRec->year = Database::getResultColumnAsUInt (3);
+	    newRec->genre = Database::getResultColumnAsUInt (4);
+	    aRecords[Database::getResultColumnAsUInt (2)].push_back (newRec);
+	    Database::getNextResultRow ();
+	 } // end-while has records
 
-	       newRec->genre = Database::getResultColumnAsUInt (3);
-	       row[colRecords.genre] = genres[newRec->genre];
-	       Database::getNextResultRow ();
-	    } // end-while has records
-	 } // end-if () {
-      }
+	 Gtk::TreeModel::Row lastRowArtist;
+	 for (std::vector<HInterpret>::const_iterator i (artists.begin ());
+	      i != artists.end (); ++i) {
+	    std::map<unsigned int, std::vector<HRecord> >::iterator iRec
+	       (aRecords.find ((*i)->id));
+	    if (iRec != aRecords.end ()) {
+	       // Create new interpret, if it has records
+	       lastRowArtist = (*mRecords->append ());
+	       lastRowArtist[colRecords.name] = (*i)->name;
+	       lastRowArtist[colRecords.entry] = new HInterpret (*i);
 
-      if (mRecords->children ().begin())
-	 records.get_selection ()->select (mRecords->children ().begin());
-      records.expand_all ();
+	       for (std::vector<HRecord>::iterator r (iRec->second.begin ());
+		    r != iRec->second.end (); ++r) {
+		  Gtk::TreeModel::Row row (*(mRecords->append (lastRowArtist.children ())));
+		  row[colRecords.entry] = new HRecord (*r);
+		  changeRecord (row);
+
+		  relRecords.relate (*i, *r);
+	       } // end-for all records for an artist
+	       aRecords.erase (iRec);
+	    } // end-if artist has record
+	 } // end-for all artists
+
+	 records.expand_all ();
+	 if (mRecords->children ().size ()
+	     && mRecords->children ().begin ()->children ().size ())
+	    records.get_selection ()->select
+	       (mRecords->children ().begin()->children ().begin ());
+      } // end-if database contains records
    }
    catch (std::exception& err) {
       Glib::ustring msg (_("Can't query available records!\n\nReason: %1"));
@@ -614,6 +633,8 @@ void CDManager::loadDatabase () {
    }
 
    Check3 ((nb.get_current_page () >= 0) || (nb.get_current_page () < 2));
+   if (nb.get_current_page () == 0)
+      records.grab_focus ();
    enableEdit (false);
    status.pop ();
 }
@@ -770,15 +791,46 @@ void CDManager::recordChanged (HRecord& hRecord) {
       line = mRecords->append ();
       
       line = mRecords->append (line->children ());
+      (*line)[colRecords.entry] = new HRecord (hRecord);
    }
 
-   (*line)[colRecords.name] = hRecord->name;
-   (*line)[colRecords.genre] = genres[hRecord->genre];
+   Gtk::TreeModel::Row row (*line);
+   changeRecord (row);
+}
+
+//-----------------------------------------------------------------------------
+/// Changes a record-line in the listbox
+/// \param line: Line to change
+//-----------------------------------------------------------------------------
+void CDManager::changeRecord (Gtk::TreeModel::Row& line) {
+   HRecord hRecord (getRecordAtPos (line));
+   Check1 (hRecord.isDefined ());
+   line[colRecords.name] = hRecord->name;
+   line[colRecords.genre] = genres[hRecord->genre];
    if (hRecord->year) {
       std::ostringstream ostr;
       ostr << hRecord->year;
-      (*line)[colRecords.year] = ostr.str ();
+      line[colRecords.year] = ostr.str ();
    }
+}
+
+//-----------------------------------------------------------------------------
+/// Returns the interpret with the passed number
+/// \param nr: Number of interpret to search for
+/// \returns HInterpret: Found interpret
+/// \remarks If the number specifies a non-existing interpret and undefined
+///          handle is returned
+//-----------------------------------------------------------------------------
+HInterpret CDManager::getInterpret (unsigned int nr) const {
+   TRACE9 ("CDManager::getInterpret (unsigned int) - " << nr);
+
+   for (std::vector<HInterpret>::const_iterator i (artists.begin ());
+	i != artists.end (); ++i)
+      if ((*i)->id == nr)
+	 return *i;
+
+   HInterpret tmp;
+   return tmp;
 }
 
 /// Exports the stored information to HTML documents

@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.5 2004/12/03 03:57:27 markus Exp $
+//$Id: OOList.cpp,v 1.6 2004/12/04 04:05:21 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (A) 2004
@@ -155,23 +155,22 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 	 HEntity object (getObjectAt (row));
 	 signalObjectChanged.emit (object);
 	 switch (column) {
-	 case 0:
-	    for (Gtk::TreeModel::const_iterator i (row.parent ()->children ().begin ());
-		 i != row.parent ()->children ().end (); ++i) {
-	       Gtk::TreeModel::Row actRow (*i);
-	       if (actRow[colOwnerObjects.name] == value) {
-		  Glib::ustring e (_("Entry `%1' already exists!"));
-		  e.replace (e.find ("%1"), 2, value);
-		  throw (std::runtime_error (e));
-	       }
+	 case 0: {
+	    Gtk::TreeModel::const_iterator i (getObject (row.parent (), value));
+	    if ((i != row) && (i != row.parent ()->children ().end ())) {
+	       Glib::ustring e (_("Entry `%1' already exists!"));
+	       e.replace (e.find ("%1"), 2, value);
+	       throw (std::runtime_error (e));
 	    }
 	    setName (object, value);
 	    row[colOwnerObjects.name] = value;
-	    break;
+	    break; }
+
 	 case 1:
 	    setYear (object, value);
 	    row[colOwnerObjects.year] = value;
 	    break;
+
 	 case 2: {
 	    for (std::map<unsigned int, Glib::ustring>::const_iterator g (genres.begin ());
 		 g != genres.end (); ++g)
@@ -191,19 +190,17 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 	 signalOwnerChanged.emit (celeb);
 
 	 switch (column) {
-	 case 0:
-	    for (Gtk::TreeModel::const_iterator i (mOwnerObjects->children ().begin ());
-		 i != mOwnerObjects->children ().end (); ++i) {
-	       Gtk::TreeModel::Row actRow (*i);
-	       if (actRow[colOwnerObjects.name] == value) {
+	 case 0: {
+	    Gtk::TreeModel::const_iterator i (getOwner (value));
+	    if ((i != row) && (i != mOwnerObjects->children ().end ())) {
 		  Glib::ustring e (_("Entry `%1' already exists!"));
 		  e.replace (e.find ("%1"), 2, value);
 		  throw (std::runtime_error (e));
-	       }
 	    }
 	    celeb->setName (value);
 	    row[colOwnerObjects.name] = celeb->getName ();
-	    break;
+	    break; }
+
 	 case 1:
 	    if (value.size ()) {
 	       unsigned int pos (value.find ("- "));
@@ -385,4 +382,36 @@ int OwnerObjectList::sortEntity (const Gtk::TreeModel::iterator& a,
    TRACE9 ("OwnerObjectList::sortEntity (2x const Gtk::TreeModel::iterator&) - "
 	   << sa << '/' << sb << '=' << sa.compare (sb));
    return sa.compare (sb);
+}
+
+//-----------------------------------------------------------------------------
+/// Returns an iterator to the owner having the passed value as name
+/// \param name: Name of entry
+/// \returns Gtk::TreeModel::iterator: Iterator to found entry or end ().
+//-----------------------------------------------------------------------------
+Gtk::TreeModel::iterator OwnerObjectList::getOwner (const Glib::ustring& name) {
+   for (Gtk::TreeModel::const_iterator i (mOwnerObjects->children ().begin ());
+	i != mOwnerObjects->children ().end (); ++i) {
+      Gtk::TreeModel::Row actRow (*i);
+      if (actRow[colOwnerObjects.name] == name)
+	 return i;
+   }
+   return mOwnerObjects->children ().end ();
+}
+
+//-----------------------------------------------------------------------------
+/// Returns an iterator to the children having the passed value as name
+/// \param parent: Parent row
+/// \param name: Name of entry
+/// \returns Gtk::TreeModel::iterator: Iterator to found entry or end ().
+//-----------------------------------------------------------------------------
+Gtk::TreeModel::iterator OwnerObjectList::getObject (const Gtk::TreeIter& parent,
+						     const Glib::ustring& name) {
+   for (Gtk::TreeModel::const_iterator i (parent->children ().begin ());
+	i != parent->children ().end (); ++i) {
+      Gtk::TreeModel::Row actRow (*i);
+      if (actRow[colOwnerObjects.name] == name)
+	 return i;
+   }
+   return parent->children ().end ();
 }

@@ -1,7 +1,7 @@
                        CDManager
 
 Utility to manage CDs (audio and video)
-Copyright (C) 2004 Markus Schwab <g17m0@lycos.com> 
+Copyright (C) 2004, 2005 Markus Schwab <g17m0@lycos.com>
 -----------------------------------------------------------------------
 
 The package is distributed under the GNU General Public License; in the hope
@@ -10,7 +10,74 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 file COPYING for details.
 
 
-How to build CDManager (see the file INSTALL for more details)
+How to build the CDManager
+--------------------------
 
-./configure [--prefix=<path>]     # Default: /usr/local
-make
+  Basically with the GNU mantra:
+
+    ./configure
+    make
+
+  See the file INSTALL for more details.
+
+
+Setting up the database
+-----------------------
+
+  MySQL should be already running. Consult your local documentation
+  how to setup and configure it.
+
+  The database can be created by running
+
+    make createDB
+
+  the SQL directory. You are prompted to enter the root password and
+  the database is created.
+
+  For security reasons I recommend to define a dedicated user to run
+  the application. This is beyond the scope of this document; see the
+  MySQL documentation for how to do so.
+
+
+Changing the genres of records/movies
+-------------------------------------
+
+  The file "Genres.dat" in the "data" directory contains the genres of
+  both records and movies (as I use them). The syntax is like those of
+  INI-file and should be self-explainatory.
+
+  Note that one should not change the numbers for any genre, as they
+  are used in the database to define its assigned genre.
+
+  After changing the file it must be installed (by make install in the
+  data directory).
+
+
+Changing the sort order of the entries
+--------------------------------------
+
+  The program tries to sort the entries in a human-like way. To do so,
+  it first tries to remove a single leading article and then any
+  leading first names (except if this would remove the last word).
+
+  This should lead to a list sorted by sure names or - in case of
+  groups - to names having the articles stripped of.
+
+  To be able to do so, the program needs to know, what articles and
+  first names are. They can be added via the settings dialog (and are
+  stored in the database).
+
+  The SQl directory contains a file (populateDB.sql) which pre-fills
+  the database with english, german and spanish articles and a few
+  first names. Load it into the database with
+
+    make populateDB
+
+  in the SQL directory. Note that this needs a (MySQL) user called
+  cdmgr, for which password you are prompted.
+
+
+Exporting the database to HTML documents
+----------------------------------------
+
+  TODO: Write me!

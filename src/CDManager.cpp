@@ -1,4 +1,4 @@
-//$Id: CDManager.cpp,v 1.33 2004/12/13 02:32:32 markus Rel $
+//$Id: CDManager.cpp,v 1.34 2004/12/18 20:14:35 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
@@ -6,7 +6,7 @@
 //TODO        : - Export movies in every language
 //              - Show tooltips with real language names for movies - or flags
 //BUGS        :
-//REVISION    : $Revision: 1.33 $
+//REVISION    : $Revision: 1.34 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -37,7 +37,6 @@
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/scrolledwindow.h>
 
-#define TRACELEVEL 0
 #include <YGP/Process.h>
 #include <YGP/Tokenize.h>
 #include <YGP/ADate.h>
@@ -59,6 +58,7 @@
 #include "CDManager.h"
 #include "Director.h"
 #include "Interpret.h"
+#include "SearchDlg.h"
 
 
 // Defines
@@ -290,7 +290,9 @@ XGP::XApplication::MenuEntry CDManager::menuItems[] = {
     { _("_New Movie") ,     _("<ctl><alt>N"),  NEW_MOVIE,    ITEM },
     { "",                   "",                0  ,          SEPARATOR },
     { _("_Delete"),         _("<ctl>Delete"),  DELETE,       ITEM },
-    { _("_Options"),        _("<alt>O"),       0,            BRANCH },
+    { "",                   "",                0  ,          SEPARATOR },
+    { _("_Find ..."),       _("<ctl>F"),       FIND,         ITEM },
+    { "",                   "",                0  ,          SEPARATOR },
     { _("_Preferences"),    _("F9"),           PREFERENCES,  ITEM }
 };
 
@@ -458,11 +460,9 @@ void CDManager::command (int menu) {
       director.define ();
       directors.push_back (director);
 
-      movieSel->unselect_all ();
       Gtk::TreeModel::iterator i (movies.append (director));
-      movieSel->select (i);
-      movies.scroll_to_row (movies.getModel ()->get_path (i), 0.5);
-      // moviesChanged (director);
+      movies.selectRow (i);
+      recordChanged (HEntity::cast (director));
       break; }
 
    case NEW_MOVIE: {
@@ -476,11 +476,9 @@ void CDManager::command (int menu) {
 
       HMovie movie;
       movie.define ();
-      movieSel->unselect_all ();
       Gtk::TreeIter i (movies.append (movie, *p));
       movies.expand_row (model->get_path (p), false);
-      movieSel->select (i);
-      movies.scroll_to_row (movies.getModel ()->get_path (i), 0.8);
+      movies.selectRow (i);
 
       HDirector director;
       director = movies.getDirectorAt (p);
@@ -493,6 +491,11 @@ void CDManager::command (int menu) {
       else if (songs.has_focus ())
 	 deleteSelectedSongs ();
       break;
+
+   case FIND: {
+      SearchDialog* sdlg (SearchDialog::create (get_window ()));
+      sdlg->signalFind.connect (mem_fun (*this, &CDManager::find));
+      break; }
 
    case EXIT:
       hide ();
@@ -1616,9 +1619,9 @@ void CDManager::exportMovies () throw (Glib::ustring) {
       title.replace (pos, 2, _("Language"));
    file << title;
 
-   file << ("<div class=\"header\"><a href=\"Movies-Down.html\">Director</a> | "
-	    "<a href=\"Movies-Name.html\">Name</a> | "
-	    "|<a href=\"Movies-Year.html\">Year</a> | "
+   file << ("<div class=\"header\"><a href=\"Movies-Name.html\">Name</a> | "
+	    "<a href=\"Movies.html\">Director</a> | "
+	    "<a href=\"Movies-Year.html\">Year</a> | "
 	    "<a href=\"Movies-Genre.html\">Genre</a> | "
 	    "<a href=\"Movies-Media.html\">Media</a></div>\n");
 
@@ -1631,14 +1634,22 @@ void CDManager::exportMovies () throw (Glib::ustring) {
    file << "</div>";
 
    MovieWriter langWriter ("%l|%n|%d||%y|%g|%t", mgenres);
-
    std::sort (movies.begin (), movies.end (), &Movie::compByName);
+
+   writer.printStart (file, "");
+
    for (std::map<std::string, Language>::const_iterator l (Language::begin ());
 	l != Language::end (); ++l) {
-      file << "<a name=\"" << l->first << "\">\n<h1>" << l->second.getNational ()
-	   << '/' << l->second.getInternational () << "</h1>";
+      file << "<tr><td colspan=\"6\"><div class=\"header\"><a name=\"" << l->first << "\">\n<br><h1>"
+	   << l->second.getNational () << '/' << l->second.getInternational ()
+	   << "</div></h1></td></tr>";
 
-      langWriter.printStart (file, "");
+      file << ("<tr><td><div class=\"header\">&nbsp;</div></td>"
+	       "<td><div class=\"header\"><a href=\"Movies-Name.html\">Name</a></div></td>"
+	       "<td><div class=\"header\"><a href=\"Movies.html\">Director</a></div></td>"
+	       "<td><div class=\"header\"><a href=\"Movies-Year.html\">Year</a></div></td>"
+	       "<td><div class=\"header\"><a href=\"Movies-Genre.html\">Genre</a></div></td>"
+	       "<td><div class=\"header\"><a href=\"Movies-Media.html\">Media(s)</a></div></td></tr>");
 
       for (std::vector<HMovie>::const_iterator m (movies.begin ());
 	   m != movies.end (); ++m)
@@ -1648,9 +1659,9 @@ void CDManager::exportMovies () throw (Glib::ustring) {
 	    director = relMovies.getParent (*m); Check3 (director.isDefined ());
 	    langWriter.writeMovie (*m, director, file);
 	 }
-      langWriter.printEnd (file);
    }
 
+   langWriter.printEnd (file);
    file << htmlData[1].target;
 //-----------------------------------------------------------------------------
 /// Reads the ID3 information from a MP3 file
@@ -1848,10 +1859,7 @@ void CDManager::parseMP3Info (const std::string& file) {
 	 rec = records.getRecordAt (r);
 	 records.selectRow (r);
       }
-	 records.scroll_to_row (records.getModel ()->get_path (r), 0.80);
-	 Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
-	 recordSel->unselect_all ();
-	 recordSel->select (r);
+
       HSong hSong;
       Gtk::TreeIter s (songs.getSong (song));
       if (s == songs.getModel ()->children ().end ()) {
@@ -1932,10 +1940,8 @@ Gtk::TreeIter CDManager::addArtist (const HInterpret& artist) {
 
    Gtk::TreeModel::iterator i (records.append (artist));
    records.selectRow (i);
-   recordSel->unselect_all ();
    artistChanged (artist);
-   recordSel->select (i);
-   records.scroll_to_row (records.getModel ()->get_path (i), 0.5);
+   return i;
 }
 
 //-----------------------------------------------------------------------------
@@ -1947,13 +1953,10 @@ Gtk::TreeIter CDManager::addArtist (const HInterpret& artist) {
 Gtk::TreeIter CDManager::addRecord (Gtk::TreeIter& parent, HRecord& record) {
    Gtk::TreeIter i (records.append (record, *parent));
    Glib::RefPtr<Gtk::TreeStore> model (records.getModel ());
-   Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
-   recordSel->unselect_all ();
    records.expand_row (model->get_path (parent), false);
    records.selectRow (i);
    recordChanged (HEntity::cast (record));
-   recordSel->select (i);
-   records.scroll_to_row (records.getModel ()->get_path (i), 0.80);
+
    HInterpret artist;
    artist = records.getInterpretAt (parent);
    relRecords.relate (artist, record);
@@ -1999,6 +2002,18 @@ void CDManager::createFile (const char* name, std::ofstream& file) throw (Glib::
       msg.replace (msg.find ("%2"), 2, strerror (errno));
       throw msg;
    }
+}
+
+//-----------------------------------------------------------------------------
+/// Finds the passed text
+/// \param find: Text to find
+//-----------------------------------------------------------------------------
+void CDManager::find (const Glib::ustring& find) {
+   Glib::ustring search (".*");
+   search += find;
+   search += ".*";
+   (nb.get_current_page ()
+    ? (OwnerObjectList&)movies : (OwnerObjectList&)records).selectRow (search);
 }
 
 /// Entrypoint of application

@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.27 2004/12/24 04:09:34 markus Exp $
+//$Id: CDManager.h,v 1.28 2005/01/13 22:32:57 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@
 
 #include "Song.h"
 #include "Movie.h"
+#include "Genres.h"
 #include "Record.h"
 #include "Options.h"
 #include "SongList.h"
@@ -122,8 +123,8 @@ class CDManager : public XGP::XApplication {
 
    static const char* const DBNAME;
 
-   std::map<unsigned int, Glib::ustring> genres;
-   std::map<unsigned int, Glib::ustring> mgenres;
+   Genres recGenres;
+   Genres movieGenres;
 
    YGP::Relation1_N<HDirector, HMovie> relMovies;
 

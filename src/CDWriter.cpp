@@ -1,11 +1,11 @@
-//$Id: CDWriter.cpp,v 1.5 2005/01/13 18:40:18 markus Exp $
+//$Id: CDWriter.cpp,v 1.6 2005/01/13 22:32:57 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDWriter
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -49,6 +49,7 @@
 
 #include "DB.h"
 #include "Movie.h"
+#include "Genres.h"
 #include "Writer.h"
 #include "Director.h"
 
@@ -207,27 +208,8 @@ int CDWriter::perform (int argc, const char** argv) {
       return - 1;
    }
 
-   std::map<unsigned int, Glib::ustring> genres;
-#if 0
-   Database::store ("SELECT id, genre FROM MGenres");
-   while (Database::hasData ()) {
-      // Fill and store artist entry from DB-values
-      genres[Database::getResultColumnAsUInt (0)] =
-	 Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
-
-      Database::getNextResultRow ();
-   }
-#else
-   genres[0] = "Undefined";
-   genres[1] = "Comedy";
-   genres[2] = "Comedy";
-   genres[3] = "Comedy";
-   genres[4] = "Comedy";
-   genres[5] = "Drama";
-   genres[6] = "Drama";
-   genres[7] = "Drama";
-   genres[8] = "Drama";
-#endif
+   Genres movieGenres, recGenres;
+   Genres::loadFromFile (DATADIR "Genres.dat", recGenres, movieGenres);
 
    Glib::ustring transTitle (_("Movies (by %1)"));
 
@@ -267,7 +249,7 @@ int CDWriter::perform (int argc, const char** argv) {
 
    writeHeader (argv[0], "[d-n-y-g-m-l]", file);
 
-   MovieWriter writer ("%n|%y|%g|%t|%l", genres);
+   MovieWriter writer ("%n|%y|%g|%t|%l", movieGenres);
    writer.printStart (file, "");
    file.flush ();
 
@@ -380,7 +362,7 @@ int CDWriter::perform (int argc, const char** argv) {
 
       std::sort (movies.begin (), movies.end (), aOutputs[i].fnCompare);
 
-      MovieWriter writer (aOutputs[i].format, genres);
+      MovieWriter writer (aOutputs[i].format, movieGenres);
 
       { std::stringstream header;
       writeHeader (argv[0], aOutputs[i].title, header);
@@ -437,7 +419,7 @@ int CDWriter::perform (int argc, const char** argv) {
    }
    file << "</div>";
 
-   MovieWriter langWriter ("%l|%n|%d||%y|%g|%t", genres);
+   MovieWriter langWriter ("%l|%n|%d||%y|%g|%t", movieGenres);
    std::sort (movies.begin (), movies.end (), &Movie::compByName);
 
    writer.printStart (file, "");

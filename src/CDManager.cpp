@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.38 2005/01/13 19:18:20 markus Exp $
+//$Id: CDManager.cpp,v 1.39 2005/01/13 22:32:57 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.38 $
+//REVISION    : $Revision: 1.39 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -306,8 +306,9 @@ CDManager::CDManager (Options& options)
    : XApplication (PACKAGE " V" PRG_RELEASE), relMovies ("movies"),
      relRecords ("records"), relSongs ("songs"), songs (recGenres),
      movies (movieGenres), records (recGenres), loadedPages (-1U),
-     relRecords ("records"), relSongs ("songs"), songs (genres), movies (mgenres),
-     records (genres), loadedPages (-1U), opt (options) {
+     opt (options) {
+   TRACE9 ("CDManager::CDManager ()");
+
    Language::init ();
 
    setIconProgram (xpmProgram);
@@ -581,30 +582,11 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
       (bind_return (mem_fun (*this, &CDManager::loadDatabase), false));
 
    try {
-      if (genres.empty ()) {
-	 Database::store ("SELECT id, genre FROM Genres");
+      if (recGenres.empty ()) {
+	 Genres::loadFromFile (DATADIR "Genres.dat", recGenres, movieGenres);
 
-	 while (Database::hasData ()) {
-	    // Fill and store artist entry from DB-values
-	    genres[Database::getResultColumnAsUInt (0)] =
-	       Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
-
-	    Database::getNextResultRow ();
-	 }
 	 records.updateGenres ();
 	 songs.updateGenres ();
-      }
-
-      if (mgenres.empty ()) {
-	 Database::store ("SELECT id, genre FROM MGenres");
-
-	 while (Database::hasData ()) {
-	    // Fill and store artist entry from DB-values
-	    mgenres[Database::getResultColumnAsUInt (0)] =
-	       Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
-
-	    Database::getNextResultRow ();
-	 }
 	 movies.updateGenres ();
       }
 

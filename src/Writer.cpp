@@ -1,11 +1,11 @@
-//$Id: Writer.cpp,v 1.8 2005/01/12 22:48:50 markus Exp $
+//$Id: Writer.cpp,v 1.9 2005/01/14 02:45:29 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Writer
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.8 $
+//REVISION    : $Revision: 1.9 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 27.11.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -35,8 +35,6 @@
 
 #include <gtkmm/messagedialog.h>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/File.h>
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
@@ -157,7 +155,7 @@ std::string MovieWriter::addLanguageLinks (const std::string& languages) {
       output += langs.getActNode ();
       output += ".png\" alt=\"";
       output += langs.getActNode ();
-      output += "\">";
+      output += " \">";
    } // endwhile
    return output;
 }
@@ -243,168 +241,4 @@ void RecordWriter::writeInterpret (const HInterpret& interpret, std::ostream& ou
    hInterpret.undefine ();
 
    oddLine = true;
-}
-
-//-----------------------------------------------------------------------------
-/// Exports the movies from the passed directors
-/// \param opt: Options; contains output files and -directories
-/// \param genres: Genres
-/// \param artists: Vectors holding the interprets
-//-----------------------------------------------------------------------------
-void RecordWriter::exportRecords (const Options& opt,
-				  std::map<unsigned int, Glib::ustring> genres,
-				  std::vector<HInterpret>& artists) {
-#if 0
-   struct {
-      const std::string name;
-      std::string       target;
-   } htmlData[] =
-      { { DATADIR + opt.getRHeader () },
-	 { DATADIR + opt.getRFooter () } };
-
-   for (unsigned int i (0); i < (sizeof (htmlData) / sizeof (*htmlData)); ++i)
-      if (!readHeaderFile (htmlData[i].name.c_str (), htmlData[i].target,
-			   _("Records (by %1)"))) {
-	 Glib::ustring error (_("Error reading header file `%1'!\n\nReason: %2"));
-	 error.replace (error.find ("%1"), 2, htmlData[i].name);
-	 error.replace (error.find ("%2"), 2, strerror (errno));
-	 Gtk::MessageDialog dlg (error, Gtk::MESSAGE_WARNING);
-	 dlg.run ();
-      }
-
-   std::sort (artists.begin (), artists.end (), &Interpret::compByName);
-
-   std::ofstream file;
-   createFile ((opt.getDirOutput () + "Records.html").c_str (), file);
-   std::string title (htmlData[0].target);
-   unsigned int pos;
-   while ((pos = title.find ("%1")) != std::string::npos)
-      title.replace (pos, 2, _("Interpret"));
-   file << title;
-
-   file << ("<div class=\"header\"><a href=\"Records-Down.html\">Interpret</a> | "
-	    "<a href=\"Records-Name.html\">Name</a> | "
-	    "|<a href=\"Records-Year.html\">Year</a> | "
-	    "<a href=\"Records-Genre.html\">Genre</a></div>\n");
-
-   RecordWriter writer ("%n|%y|%g", genres);
-   writer.printStart (file, "");
-
-   std::vector<HRecord> records;
-   YGP::Relation1_N<HInterpret, HRecord>& relRecords
-      (*dynamic_cast<YGP::Relation1_N<HInterpret, HRecord>*>
-       (YGP::RelationManager::getRelation ("records")));
-   for (std::vector<HDirector>::const_iterator i (artists.begin ());
-	i != artists.end (); ++i)
-      if (relRecords.isRelated (*i)) {
-	 writer.writeInterpret (*i, file);
-
-	 std::vector<HRecord>& dirRecords (relRecords.getObjects (*i));
-	 Check3 (dirRecords.size ());
-	 for (std::vector<HRecord>::const_iterator m (dirRecords.begin ());
-	      m != dirRecords.end (); ++m) {
-	    writer.writeRecord (*m, *i, file);
-	    records.push_back (*m);
-	 }
-      }
-   writer.printEnd (file);
-   file << htmlData[1].target;
-
-   // Sort reverse
-   file.close ();
-   createFile ((opt.getDirOutput () + "Records-Down.html").c_str (), file);
-   file << title;
-
-   file << ("<div class=\"header\"><a href=\"Records.html\">Interpret</a> | "
-	    "<a href=\"Records-Name.html\">Name</a> | "
-	    "|<a href=\"Records-Year.html\">Year</a> | "
-	    "<a href=\"Records-Genre.html\">Genre</a></div>\n");
-
-   writer.printStart (file, "");
-   for (std::vector<HInterpret>::reverse_iterator i (artists.rbegin ());
-	i != artists.rend (); ++i)
-      if (relRecords.isRelated (*i)) {
-	 writer.writeInterpret (*i, file);
-
-	 std::vector<HRecord>& dirRecords (relRecords.getObjects (*i));
-	 Check3 (dirRecords.size ());
-	 for (std::vector<HRecord>::const_iterator m (dirRecords.begin ());
-	      m != dirRecords.end (); ++m)
-	    writer.writeRecord (*m, *i, file);
-      }
-   writer.printEnd (file);
-   file << htmlData[1].target;
-
-   typedef bool (*PFNCOMPARE) (const HRecord&, const HRecord&);
-   struct {
-      const char* title;
-      const char* file;
-      const char* filedown;
-      const char* format;
-      const char* sorted;
-      PFNCOMPARE  fnCompare;
-   } aOutputs[] =
-	 { { "<div class=\"header\"><a href=\"%1\">Name</a></div>"
-	     "|<div class=\"header\"><a href=\"Records.html\">Interpret</a></div>|"
-	     "|<div class=\"header\"><a href=\"Records-Year.html\">Year</a></div>|"
-	     "<div class=\"header\"><a href=\"Records-Genre.html\">Genre</a></div>",
-	     "Records-Name.html", "Records-Namedown.html",
-	     "%n|%d|%y|%g", N_("Name"), &Record::compByName },
-	   { "|<div class=\"header\"><a href=\"%1\">Year</a></div>|"
-	     "<div class=\"header\"><a href=\"Records-Name.html\">Name</a></div></p>"
-	     "|<div class=\"header\"><a href=\"Records.html\">Interpret</a></div>|"
-	     "<div class=\"header\"><a href=\"Records-Genre.html\">Genre</a></div>",
-	     "Records-Year.html", "Records-Yeardown.html",
-	     "%y|%n|%d|%g", N_("Year"), &Record::compByYear },
-	   { "<div class=\"header\"><a href=\"%1\">Genre</a></div>|"
-	     "<div class=\"header\"><a href=\"Records-Name.html\">Name</a></div>"
-	     "|<div class=\"header\"><a href=\"Records.html\">Interpret</a></div>|"
-	     "|<div class=\"header\"><a href=\"Records-Year.html\">Year</a></div>",
-	     "Records-Genre.html", "Records-Genredown.html",
-	     "%g|%n|%d|%y", N_("Genre"), &Record::compByGenre } };
-
-   for (unsigned int i (0); i < (sizeof (aOutputs) / sizeof (*aOutputs)); ++i) {
-      file.close ();
-      createFile ((opt.getDirOutput () + aOutputs[i].file).c_str (), file);
-      title = htmlData[0].target;
-      while ((pos = title.find ("%1")) != std::string::npos)
-	 title.replace (pos, 2, _(aOutputs[i].sorted));
-      file << title;
-
-      std::sort (records.begin (), records.end (), aOutputs[i].fnCompare);
-
-      std::string header (aOutputs[i].title);
-      header.replace (header.find ("%1"), 2, aOutputs[i].filedown);
-      RecordWriter writer (aOutputs[i].format, genres);
-      writer.printStart (file, header);
-
-      for (std::vector<HRecord>::const_iterator m (records.begin ());
-	   m != records.end (); ++m) {
-	 HInterpret interpret;
-	 interpret = relRecords.getParent (*m); Check3 (interpret.isDefined ());
-	 writer.writeRecord (*m, interpret, file);
-      }
-
-      writer.printEnd (file);
-      file << htmlData[1].target;
-
-      file.close ();
-      createFile ((opt.getDirOutput () + aOutputs[i].filedown).c_str (), file);
-      file << title;
-
-      header = aOutputs[i].title;
-      header.replace (header.find ("%1"), 2, aOutputs[i].file);
-      writer.printStart (file, header);
-
-      for (std::vector<HRecord>::reverse_iterator m (records.rbegin ());
-	   m != records.rend (); ++m) {
-	 HInterpret interpret;
-	 interpret = relRecords.getParent (*m); Check3 (interpret.isDefined ());
-	 writer.writeRecord (*m, interpret, file);
-      }
-
-      writer.printEnd (file);
-      file << htmlData[1].target;
-   }
-#endif
 }

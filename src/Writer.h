@@ -1,7 +1,7 @@
 #ifndef WRITER_H
 #define WRITER_H
 
-//$Id: Writer.h,v 1.7 2005/01/12 22:48:50 markus Exp $
+//$Id: Writer.h,v 1.8 2005/01/14 02:45:29 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -71,13 +71,6 @@ class RecordWriter : public YGP::HTMLWriter {
 
    void writeRecord    (const HRecord& record, const HInterpret& interpret, std::ostream& out);
    void writeInterpret (const HInterpret& interpret, std::ostream& out);
-
-   static void exportRecords (const Options& opt,
-			      std::map<unsigned int, Glib::ustring> genres,
-			      std::vector<HDirector>& directors);
-   static void createFile (const char* name, std::ofstream& file) throw (Glib::ustring) { }
-   static bool readHeaderFile (const char* file, std::string& target,
-			       const Glib::ustring& title) { return true; }
 
  protected:
    virtual std::string getSubstitute (const char ctrl, bool extend = false) const;

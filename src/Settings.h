@@ -1,7 +1,7 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-//$Id: Settings.h,v 1.2 2005/01/17 18:15:28 markus Exp $
+//$Id: Settings.h,v 1.3 2005/01/18 01:04:34 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -56,6 +56,8 @@ class Settings : public XGP::XDialog {
    XGP::XAttributeEntry<std::string> ftrMovie;
    XGP::XAttributeEntry<std::string> hdrRecord;
    XGP::XAttributeEntry<std::string> ftrRecord;
+
+   Gtk::Widget* wordDialog;
 
    static XGP::XAttributeEntry<std::string> Settings::* fields[];
    static Settings* instance;

@@ -1,11 +1,11 @@
-//$Id: Settings.cpp,v 1.2 2005/01/17 18:15:28 markus Exp $
+//$Id: Settings.cpp,v 1.3 2005/01/18 01:04:34 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Settings
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 23.12.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -51,7 +51,8 @@ Settings::Settings (Options& options)
    : XGP::XDialog (OKCANCEL),
      txtOutput (options.dirOutput), hdrMovie (options.mHeader),
      ftrMovie (options.mFooter), hdrRecord (options.rHeader),
-     ftrRecord (options.rFooter) {
+     ftrRecord (options.rFooter),
+     wordDialog (Words::makeDialog ()) {
    Check3 (instance == NULL);
    instance =  this;
 
@@ -77,7 +78,7 @@ Settings::Settings (Options& options)
    pagExport.show ();
 
    nb.append_page (pagExport, "_Export", true);
-   nb.append_page (*manage (Words::makeDialog ()), "Reserved _words", true);
+   nb.append_page (*manage (wordDialog), "Reserved _words", true);
 
    get_vbox ()->pack_start (nb, true, true, 5);
    show_all_children ();
@@ -98,6 +99,8 @@ void Settings::okEvent () {
    ok->grab_focus ();
    for (unsigned int i (0); i < (sizeof (fields) / sizeof (*fields)); ++i)
       (this->*fields[i]).commit ();
+
+   Words::commitDialogData (wordDialog);
 }
 
 //-----------------------------------------------------------------------------

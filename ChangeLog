@@ -1,3 +1,184 @@
+2005-01-20  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* ChangeLog, NEWS: Overview of changes in V0.6.00 added
+
+	* po/de.po, po/en.po, po/es.po:
+	  Displaying copyright-symbol instead of (C) in about box
+
+	* README: Documented files used in export to HTML
+
+	* src/CDManager.cpp: Aktualized copyright in about box
+
+	* src/CDAppl.cpp, src/CDWriter.cpp:
+	  Displaying copyright when showing version info
+
+2005-01-19  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* AUTHORS: Added reference for flags
+
+	* src/CDWriter.cpp, src/CDWriter.h:
+	  Reading headers/footers with language-id; Improved error handling
+
+2005-01-18  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* data/Makefile.am: Added Genres.dat
+
+	* SQL/populateDB.sql:
+	  Pre-filling the DB with english, spanish and german articles
+
+	* configure.ac: Needing libYGP 0.7; Minor fixes
+
+	* po/de.po, po/en.po, po/es.po:
+	  Added messages from settings dialogue and the CDWriter
+
+	* src/Settings.cpp: Marked forgotten messages for translation
+
+	* src/CDWriter.cpp: Fixed short program information
+
+	* po/POTFILES.in: New file.
+
+	* README: Added setting up the DB and the input files
+
+	* src/OOList.cpp, src/Record.cpp, src/RecordList.cpp, src/SongList.cpp, src/Celebrity.cpp, src/DB.cpp, src/DB.h, src/Movie.cpp, src/MovieList.cpp:
+	  Changed copyright
+
+	* src/Words.h: Added access-methods for words/article iterators
+
+	* src/CDManager.cpp:
+	  Storing/loading special names/articles in/from DB; Moved main to CDAppl
+
+	* src/CDAppl.cpp: Moved main from CDManager
+
+	* src/Words.cpp:
+	  Inserting new words sorted (as else binary search fails)
+
+	* src/Settings.cpp, src/Settings.h:
+	  Storing pointer to widget to manipulate the special words
+
+	* src/Words.cpp, src/Words.h:
+	  Added widget to manipulate words and articles
+
+2005-01-17  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* src/Settings.cpp, src/Settings.h:
+	  Showing settings in a notebook with export paths and words; Only 1 instance
+
+2005-01-14  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* SQL/populateDB.sql: Removed filling genres
+
+	* SQL/createDB.sql:
+	  Removing genre-tables; Removed foreign-key constraints
+
+	* src/Writer.cpp, src/Writer.h: Moved record-export to CDWriter
+
+	* src/CDManager.cpp, src/CDManager.h: Exporting records with CDWriter
+
+	* src/CDWriter.cpp, src/CDWriter.h: Exporting records
+
+2005-01-13  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* src/Makefile.am: Added Genres to library
+
+	* src/CDManager.cpp, src/CDManager.h, src/CDWriter.cpp:
+	  Reading genres from file
+
+	* src/Genres.cpp, src/Genres.h, data/Genres.dat: New file.
+
+	* src/Options.h: Returning reference to values and not copies
+
+	* src/Language.cpp, src/Language.h: Flag, if flags are needed added
+
+	* src/CDWriter.h: Declaration of writeHeader added
+
+	* src/CDManager.cpp:
+	  Passing settings to CDWriter; showing CDWriter-output (if any)
+
+	* src/CDWriter.cpp: Fixed help-info and I18n
+
+	* src/CDWriter.cpp: Fixed exporting language-page
+
+	* src/CDWriter.cpp:
+	  Translating exported columns; Linking to other documents of the same language
+
+2005-01-12  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* src/Writer.cpp, src/Writer.h: Moved writing movies to CDWriter
+
+	* src/CDWriter.cpp: Writing movies and directors to files
+
+	* src/CDManager.cpp: Exporting movies with CDWriter-application
+
+	* src/CDAppl.cpp: Improved help-text
+
+2005-01-10  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* src/Makefile.am: Putted shared code into a library
+
+	* src/Makefile.am: Added CDWriter; added mgeni-files
+
+	* src/Celebrity.cpp, src/Celebrity.h, src/Movie.cpp, src/Movie.h, src/Record.cpp, src/Record.h:
+	  Generating constructor/destructor with mgeni; Declared attributes
+
+	* src/CDWriter.cpp, src/CDWriter.h: New file.
+
+2005-01-07  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* po/de.po: Added translations for settings dialog
+
+	* po/es.po: New file.
+
+2005-01-03  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* po/de.po: New file.
+
+2004-12-25  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* doc/CDManager.html.en:
+	  Removed description of find; added those of settings-dialog
+
+	* doc/CDManager.html.de: New file.
+
+2004-12-24  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* src/Writer.cpp, src/Writer.h: Using information from Options
+
+	* src/Options.h: Added record header/footer-info
+
+	* src/Makefile.am: Added Settings dialog
+
+	* src/CDManager.cpp, src/CDManager.h:
+	  Calling setting dialogs; saving settings
+
+	* src/CDAppl.cpp: Storing the name of the INI-file
+
+	* src/Settings.cpp, src/Settings.h: New file.
+
+2004-12-22  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* src/CDAppl.cpp, src/CDAppl.h: New file.
+
+	* data/Makefile.am: Renamed header-files
+
+	* src/SongList.cpp: Search uses name-column
+
+	* src/Language.cpp: Fixed french in original language
+
+	* src/OOList.h, src/OOList.cpp: Removed search
+
+	* src/CDManager.cpp, src/CDManager.h, src/Writer.cpp, src/Writer.h:
+	  Moved HTML-export to Writer-classes
+
+2004-12-21  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* doc/CDManager.html.en: New file.
+
+2004-12-18  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* src/OOList.cpp, src/OOList.h: Added method to search for content
+
+	* src/CDManager.cpp: Improved movie-export; Added find
+
 2004-12-13  Markus Schwab  <markus@markus.linuxnet.ve>
 
 	* ChangeLog, NEWS: Overview of changes in V0.5.00 added

@@ -1,3 +1,15 @@
+Overview of changes in version 0.6.00:
+
+  - Export to HTML generates documents in various languages
+  - Reading/saving options from/to INI-file
+  - Added settings dialog
+  - Added documentation
+  - Added translations (de, es)
+  - Loading genres from Genres.dat (and not from database)
+  - Storing articles in the database
+  - The words to ignore for the comparison can be changed in the settings
+  - Explained setting up the database and the input-files in the README
+
 Overview of changes in version 0.5.00:
 
   - Export to HTML improved

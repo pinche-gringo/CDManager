@@ -1,7 +1,8 @@
 #!/bin/sh
 
 if [ -z "$1" ]; then
-   echo "Creates a SQL-script to fill the CD-database with the files found"
+   echo "Creates a SQL-script to fill the CD-database with the MP3-files found in"
+   echo "the passed directories"
 
    echo "Invalid usage!"
    echo "$0 PATH"
@@ -38,7 +39,7 @@ while [ -n "$1" ]; do
 	echo 'INSERT INTO Songs SET name="'$title'", idRecord=-1;'>>populateSongs
     done
     insertRecord "$record">>populateSongs;
-    echo 'INSERT INTO Interprets SET name="'${dir##*/}'";'>>populateSongs
+    echo 'INSERT INTO Celebrities SET name="'${dir##*/}'";'>>populateSongs
     echo "UPDATE Records SET interpret=LAST_INSERT_ID() WHERE interpret=-1;">>populateSongs
 
     shift

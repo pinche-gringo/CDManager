@@ -1,0 +1,18 @@
+# $Id: POTFILES.in,v 1.1 2005/01/18 17:48:59 markus Rel $
+#
+# List of source files containing translatable strings.
+#
+# Package source files
+src/CDManager.cpp
+src/MovieList.cpp
+src/RecordList.cpp
+src/SongList.cpp
+src/OOList.cpp
+src/CDType.cpp
+src/LangDlg.cpp
+src/Language.cpp
+src/Writer.cpp
+src/CDAppl.cpp
+src/Settings.cpp
+src/Words.cpp
+src/CDWriter.cpp

@@ -1,7 +1,7 @@
 #ifndef INTERPRET_H
 #define INTERPRET_H
 
-//$Id: Interpret.h,v 1.4 2004/11/11 04:25:00 markus Rel $
+//$Id: Interpret.h,v 1.5 2004/11/17 20:38:23 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,42 +22,10 @@
 
 #include <glibmm/ustring.h>
 
-#include <YGP/ADate.h>
-#include <YGP/Handle.h>
-#include <YGP/Entity.h>
+#include "Celibrity.h"
 
 
-class Interpret;
-defineHndl(Interpret);
-
-
-/**Class to hold an interpret
- */
-class Interpret : public YGP::Entity {
-   friend class CDManager;
-   friend class RecordList;
-
- public:
-   Interpret () : id (0) { }
-   Interpret (const Interpret& other) : id (other.id), name (other.name),
-      born (other.born), died (other.died) { }
-   virtual ~Interpret () { }
-
-   static bool compByName (const HInterpret& a, const HInterpret& b);
-
- private:
-   unsigned long int id;
-   Glib::ustring     name;
-   YGP::ADate        born;
-   YGP::ADate        died;
-
-   static Glib::ustring removeIgnored (const Glib::ustring& name);
-
-   //Prohibited manager functions
-   const Interpret& operator= (const Interpret& other);
-
-   static std::vector<Glib::ustring> ignore;
-};
+typedef Celibrity Interpret;
 defineHndl(Interpret);
 
 #endif

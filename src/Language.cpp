@@ -1,14 +1,14 @@
-//$Id: Language.cpp,v 1.4 2004/12/22 16:59:51 markus Exp $
+//$Id: Language.cpp,v 1.5 2005/01/13 19:19:09 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Language
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 6.12.2004
-//COPYRIGHT   : Copyright (A) 2004
+//COPYRIGHT   : Copyright (C) 2004, 2005
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -62,7 +62,6 @@ Language::Language (const Language& other)
 Language::Language (const Glib::ustring& internat, const Glib::ustring& national,
 		    const Glib::RefPtr<Gdk::Pixbuf>& image)
    : nameNational (national), nameInternational (internat), flag (image) {
-   Check2 (flag);
 }
 
 //-----------------------------------------------------------------------------
@@ -88,20 +87,22 @@ Language& Language::operator= (const Language& other) {
 
 //-----------------------------------------------------------------------------
 /// Initializes the articles
+/// \param loadFlags: Flag if the flags should be loaded
 //-----------------------------------------------------------------------------
-void Language::init () {
+void Language::init (bool loadFlags) {
+   Glib::RefPtr<Gdk::Pixbuf> null;
    languages["de"] = Language (N_("German"), Glib::locale_to_utf8 ("Deutsch"),
-			       loadFlag (DATADIR "de.png"));
+			       loadFlags ? loadFlag (DATADIR "de.png") : null);
    languages["en"] = Language (N_("English"), Glib::locale_to_utf8 ("English"),
-			       loadFlag (DATADIR "en.png"));
+			       loadFlags ? loadFlag (DATADIR "en.png") : null);
    languages["es"] = Language (N_("Spanish"), Glib::locale_to_utf8 ("Español"),
-			       loadFlag (DATADIR "es.png"));
+			       loadFlags ? loadFlag (DATADIR "es.png") : null);
    languages["fr"] = Language (N_("French"), Glib::locale_to_utf8 ("Français"),
-			       loadFlag (DATADIR "fr.png"));
+			       loadFlags ? loadFlag (DATADIR "fr.png") : null);
    languages["it"] = Language (N_("Italian"), Glib::locale_to_utf8 ("Italiano"),
-			       loadFlag (DATADIR "it.png"));
+			       loadFlags ? loadFlag (DATADIR "it.png") : null);
    languages["pt"] = Language (N_("Portugese"), Glib::locale_to_utf8 ("Português"),
-			       loadFlag (DATADIR "pt.png"));
+			       loadFlags ? loadFlag (DATADIR "pt.png") : null);
 }
 
 //-----------------------------------------------------------------------------

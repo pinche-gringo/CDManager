@@ -1,7 +1,7 @@
 #ifndef LANGUAGE_H
 #define LANGUAGE_H
 
-//$Id: Language.h,v 1.3 2004/12/11 22:52:21 markus Rel $
+//$Id: Language.h,v 1.4 2005/01/13 19:19:09 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
  */
 struct Language {
  public:
-   static void init ();
+   static void init (bool loadFlags = true);
 
    static Glib::ustring findNational (const std::string& lang) throw (std::out_of_range);
    static Glib::ustring findInternational (const std::string& lang) throw (std::out_of_range);

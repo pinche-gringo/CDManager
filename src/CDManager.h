@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.26 2004/12/22 16:58:55 markus Exp $
+//$Id: CDManager.h,v 1.27 2004/12/24 04:09:34 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -50,19 +50,19 @@ namespace YGP {
 }
 
 
-/**Class for application to manager CDs (audio and video)
+/**Class for application to manage CDs (audio and video)
 */
 class CDManager : public XGP::XApplication {
  public:
    // Manager functions
-   CDManager ();
+   CDManager (Options& options);
    ~CDManager ();
 
  private:
    // IDs for menus
    enum { LOGIN = XApplication::LAST, SAVE, LOGOUT, MEDIT, NEW_ARTIST,
 	  NEW_RECORD, NEW_SONG, NEW_MOVIE, NEW_DIRECTOR, DELETE, EXPORT,
-	  IMPORT_MP3, PREFERENCES, EXIT };
+	  IMPORT_MP3, PREFERENCES, SAVE_PREF, EXIT };
 
    // Protected manager functions
    CDManager (const CDManager&);
@@ -155,7 +155,7 @@ class CDManager : public XGP::XApplication {
    std::vector<HDirector>  directors;
    std::vector<HInterpret> artists;
 
-   Options opt;
+   Options& opt;
 };
 
 #endif

@@ -1,12 +1,11 @@
-//$Id: CDManager.cpp,v 1.35 2004/12/22 16:58:55 markus Exp $
+//$Id: CDManager.cpp,v 1.36 2004/12/24 04:09:34 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : - Export movies in every language
-//              - Show tooltips with real language names for movies - or flags
 //BUGS        :
-//REVISION    : $Revision: 1.35 $
+//REVISION    : $Revision: 1.36 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -37,8 +36,10 @@
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/scrolledwindow.h>
 
+#include <YGP/Trace.h>
 #include <YGP/Process.h>
 #include <YGP/Tokenize.h>
+#include <YGP/INIFile.h>
 #include <XGP/XAbout.h>
 #include <YGP/StatusObj.h>
 #include <XGP/XFileDlg.h>
@@ -53,6 +54,8 @@
 #include "Words.h"
 #include "Record.h"
 #include "Writer.h"
+#include "Language.h"
+
 #include "CDManager.h"
 #include "Director.h"
 #include "Interpret.h"
@@ -288,17 +291,19 @@ XGP::XApplication::MenuEntry CDManager::menuItems[] = {
     { "",                   "",                0  ,          SEPARATOR },
     { _("_Delete"),         _("<ctl>Delete"),  DELETE,       ITEM },
     { _("_Options"),        _("<alt>O"),       0,            BRANCH },
-    { _("_Preferences"),    _("F9"),           PREFERENCES,  ITEM }
+    { _("_Preferences"),    _("F9"),           PREFERENCES,  ITEM },
+    { _("_Save preferences"), _("<ctl>F9"),    SAVE_PREF,    ITEM }
 };
 
 /// Defaultconstructor; all widget are created
 /// \param options: Options for the program
 //-----------------------------------------------------------------------------
+CDManager::CDManager (Options& options)
    : XApplication (PACKAGE " V" PRG_RELEASE), relMovies ("movies"),
-CDManager::CDManager ()
+     relRecords ("records"), relSongs ("songs"), songs (recGenres),
      movies (movieGenres), records (recGenres), loadedPages (-1U),
      relRecords ("records"), relSongs ("songs"), songs (genres), movies (mgenres),
-     records (genres), loadedPages (-1U) {
+     records (genres), loadedPages (-1U), opt (options) {
    Language::init ();
 
    setIconProgram (xpmProgram);
@@ -406,6 +411,12 @@ void CDManager::command (int menu) {
 /// Saves the DB
    case EXPORT:
       try {
+	 std::string dir (opt.getDirOutput ());
+	 if (dir.size () && (dir[dir.size () - 1] != YGP::File::DIRSEPARATOR)) {
+	    dir += YGP::File::DIRSEPARATOR;
+	    opt.setDirOutput (dir);
+	 }
+/// Adds a new interpret to the list
 	 exportRecords ();
 	 exportMovies ();
       }
@@ -491,6 +502,24 @@ void CDManager::command (int menu) {
       hide ();
       break;
 
+   case PREFERENCES:
+      Settings::create (get_window (), opt);
+      break;
+
+   case SAVE_PREF: {
+      std::ofstream inifile (opt.pINIFile);
+      if (inifile) {
+         YGP::INIFile::write (inifile, "Export", opt);
+      }
+      else {
+	 Glib::ustring msg (_("Can't create file `%1'!\n\nReason: %2."));
+	 msg.replace (msg.find ("%1"), 2, opt.pINIFile);
+	 msg.replace (msg.find ("%2"), 2, strerror (errno));
+	 Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+	 dlg.run ();
+      }
+      break; }
+/// Adds a new movie to the first selected director
    default:
       XApplication::command (menu);
    } // end-switch
@@ -1391,7 +1420,7 @@ void CDManager::exportMovies () throw (Glib::ustring) {
 
    std::sort (directors.begin (), directors.end (), &Director::compByName);
    std::sort (artists.begin (), artists.end (), &Interpret::compByName);
-   MovieWriter::exportMovies (opt.getDirOutput (), mgenres, directors);
+   MovieWriter::exportMovies (opt, mgenres, directors);
 //-----------------------------------------------------------------------------
 /// Reads the ID3 information from a MP3 file
 /// \param file: Name of file to analzye
@@ -1402,7 +1431,7 @@ void CDManager::exportRecords () throw (Glib::ustring) {
    if (!(loadedPages & 2))
       loadRecords ();
 
-   RecordWriter::exportRecords (opt.getDirOutput (), genres, artists);
+   RecordWriter::exportRecords (opt, genres, artists);
 }
 
 //-----------------------------------------------------------------------------
@@ -1573,8 +1602,7 @@ Gtk::TreeIter CDManager::addSong (HSong& song) {
 /// \returns \c int: Status
 //-----------------------------------------------------------------------------
 int main (int argc, char* argv[]) {
-   Gtk::Main appl (argc, argv);
-   CDManager win;
-   appl.run (win);
-   return 0;
+   Gtk::Main gtk (argc, argv);
+   CDAppl appl (argc, const_cast<const char**> (argv));
+   return appl.run ();
 }

@@ -1,4 +1,4 @@
-//$Id: CDManager.cpp,v 1.32 2004/12/12 03:14:02 markus Exp $
+//$Id: CDManager.cpp,v 1.33 2004/12/13 02:32:32 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
@@ -6,7 +6,7 @@
 //TODO        : - Export movies in every language
 //              - Show tooltips with real language names for movies - or flags
 //BUGS        :
-//REVISION    : $Revision: 1.32 $
+//REVISION    : $Revision: 1.33 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -37,6 +37,7 @@
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/scrolledwindow.h>
 
+#define TRACELEVEL 0
 #include <YGP/Process.h>
 #include <YGP/Tokenize.h>
 #include <YGP/ADate.h>
@@ -1080,6 +1081,22 @@ void CDManager::removeDeletedEntries () {
 }
 
 //-----------------------------------------------------------------------------
+/// \returns Glib::ustring: Escaped text
+//-----------------------------------------------------------------------------
+Glib::ustring CDManager::escapeDBValue (const Glib::ustring& value) {
+   unsigned int pos (0);
+   Glib::ustring rc (value);
+   while ((pos = rc.find ('"', pos)) != std::string::npos) {
+      rc.replace (pos, 1, "\\\"");
+      pos += 2;
+   }
+   TRACE9 ("CDManager::escapeDBValue (const Glib::ustring&) - Escaped: " << rc);
+   return rc;
+}
+
+//-----------------------------------------------------------------------------
+/// Callback when switching the notebook pages
+/// \param iPage: Index of the newly selected page
 /// Aktualizes changed entries in the database
 //-----------------------------------------------------------------------------
 void CDManager::writeChangedEntries () {
@@ -1089,8 +1106,10 @@ void CDManager::writeChangedEntries () {
 	 Check3 (artist.isDefined ());
 	 try {
 	    std::stringstream query;
+	    std::string tmp (escapeDBValue (artist->getName ()));
 	    query << (artist->getId () ? "UPDATE Celebrities" : "INSERT into Celebrities")
-		  << " SET name=\"" << artist->getName () << "\", born="
+		  << " SET name=\"" << tmp
+		  << "\", born="
 		  << (artist->getBorn ().isDefined () ? artist->getBorn () : YGP::AYear (0))
 		  << ", died="
 		  << (artist->getDied ().isDefined () ? artist->getDied () : YGP::AYear (0));
@@ -1119,8 +1138,8 @@ void CDManager::writeChangedEntries () {
 	 try {
 	    std::stringstream query;
 	    query << (record->getId () ? "UPDATE Records" : "INSERT into Records")
-		  << " SET name=\"" << record->getName () << "\", genre="
-		  << record->getGenre ();
+		  << " SET name=\"" << escapeDBValue (record->getName ())
+		  << "\", genre=" << record->getGenre ();
 	    if (record->getYear ().isDefined ())
 	       query << ", year=" << record->getYear ();
 	    if (relRecords.isRelated (record)) {
@@ -1149,8 +1168,9 @@ void CDManager::writeChangedEntries () {
 	 try {
 	    std::stringstream query;
 	    query << (song->getId () ? "UPDATE Songs" : "INSERT into Songs")
-		  << " SET name=\"" << song->getName () << "\", duration=\""
-		  << song->getDuration () << "\", genre=" << song->getGenre ();
+		  << " SET name=\"" << escapeDBValue (song->getName ())
+		  << "\", duration=\"" << song->getDuration () << "\", genre="
+		  << song->getGenre ();
 	    if (song->getTrack ().isDefined ())
 	       query << ", track=" << song->getTrack ();
 	    if (relSongs.isRelated (song)) {
@@ -1180,7 +1200,8 @@ void CDManager::writeChangedEntries () {
 	 try {
 	    std::stringstream query;
 	    query << (director->getId () ? "UPDATE Celebrities" : "INSERT into Celebrities")
-		  << " SET name=\"" << director->getName () << "\", born="
+		  << " SET name=\"" << escapeDBValue (director->getName ())
+		  << "\", born="
 		  << (director->getBorn ().isDefined () ? director->getBorn () : YGP::AYear (0))
 		  << ", died="
 		  << (director->getDied ().isDefined () ? director->getDied () : YGP::AYear (0));
@@ -1209,10 +1230,10 @@ void CDManager::writeChangedEntries () {
 	 try {
 	    std::stringstream query;
 	    query << (movie->getId () ? "UPDATE Movies" : "INSERT into Movies")
-		  << " SET name=\"" << movie->getName () << "\", genre="
-		  << movie->getGenre () << ", languages=\"" << movie->getLanguage ()
-		  << "\", subtitles=\"" << movie->getTitles () << "\", type="
-		  << movie->getType ();
+		  << " SET name=\"" << escapeDBValue (movie->getName ())
+		  << "\", genre=" << movie->getGenre () << ", languages=\""
+		  << movie->getLanguage () << "\", subtitles=\""
+		  << movie->getTitles () << "\", type=" << movie->getType ();
 	    if (movie->getYear ().isDefined ())
 	       query << ", year=" << movie->getYear ();
 	    if (relMovies.isRelated (movie)) {
@@ -1370,6 +1391,48 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 //-----------------------------------------------------------------------------
 /// Exports the stored information to HTML documents
 //-----------------------------------------------------------------------------
+/// Reads the contents of the passed file into the passed variable and performs
+/// some substitutions within.
+///
+/// The substitutions are:
+///   - @TITLE@ with the passed title
+///   - @TIMESTAMPE@ with the current date/time
+///   - @DATE@ with current date
+///   - @YEAR@ with the current year
+/// \param file: File to read from
+/// \param target: Variable receiving the input
+/// \param title: Value to substitute @TITLE@ with
+/// \returns bool: True, if successful
+//-----------------------------------------------------------------------------
+bool CDManager::readHeaderFile (const char* file, std::string& target,
+				const Glib::ustring& title) {
+   TRACE9 ("CDManager::readHeaderFile (const char*) - " << file << " - "
+	   << title);
+   std::ifstream input (file);
+   if (!input)
+      return false;
+
+   unsigned int i (512);
+   char buffer[i];
+   // Read as long as there is data or an error occurs
+   while (input.read (buffer, i), input.gcount ())
+      target.append (buffer, input.gcount ());
+
+   while ((i = target.find ("@TITLE@")) != std::string::npos)
+      target.replace (i, 7, title);
+
+   while ((i = target.find ("@TIMESTAMP@")) != std::string::npos)
+      target.replace (i, 11, YGP::ATimestamp::now ().toString ());
+
+   while ((i = target.find ("@DATE@")) != std::string::npos)
+      target.replace (i, 6, YGP::ADate::today ().toString ());
+
+   while ((i = target.find ("@YEAR@")) != std::string::npos)
+      target.replace (i, 6, YGP::ADate::today ().toString ("%Y"));
+   return true;
+}
+
+//-----------------------------------------------------------------------------
 /// Exports the movies to a HTML document
    std::string dir (opt.getDirOutput ());
 void CDManager::exportMovies () throw (Glib::ustring) {
@@ -1378,41 +1441,21 @@ void CDManager::exportMovies () throw (Glib::ustring) {
    std::sort (directors.begin (), directors.end (), &Director::compByName);
    std::sort (artists.begin (), artists.end (), &Interpret::compByName);
    struct {
-      std::string names;
+      const char* name;
       std::string target;
    } htmlData[] =
       { { DATADIR "Movies.header" },
 	 { DATADIR "Movies.footer" } };
-   unsigned int pos;
 
-   for (unsigned int i (0); i < (sizeof (htmlData) / sizeof (*htmlData)); ++i) {
-      std::ifstream input (htmlData[i].names.c_str ());
-      if (!input) {
-	 Glib::ustring error (_("-error: `%1' is not a (readable) file!"));
-	 error.replace (error.find ("%1"), 2, htmlData[i].names);
+   for (unsigned int i (0); i < (sizeof (htmlData) / sizeof (*htmlData)); ++i)
+      if (!readHeaderFile (htmlData[i].name, htmlData[i].target,
+			   _("Movies (by %1)"))) {
+	 Glib::ustring error (_("Error reading header file `%1'!\n\nReason: %2"));
+	 error.replace (error.find ("%1"), 2, htmlData[i].name);
+	 error.replace (error.find ("%2"), 2, strerror (errno));
 	 Gtk::MessageDialog dlg (error, Gtk::MESSAGE_WARNING);
 	 dlg.run ();
       }
-      else {
-	 static const unsigned int bufLen (512);
-	 char buffer[bufLen];
-	 // Read as long as there is data/or an error occurs
-	 while (input.read (buffer, bufLen), input.gcount ())
-	    htmlData[i].target.append (buffer, input.gcount ());
-      }
-
-      while ((pos = htmlData[i].target.find ("@TITLE@")) != std::string::npos)
-	 htmlData[i].target.replace (pos, 7, _("Movies (by %1)"));
-
-      while ((pos = htmlData[i].target.find ("@TIMESTAMP@")) != std::string::npos)
-	 htmlData[i].target.replace (pos, 11, YGP::ATimestamp::now ().toString ());
-
-      while ((pos = htmlData[i].target.find ("@DATE@")) != std::string::npos)
-	 htmlData[i].target.replace (pos, 6, YGP::ADate::today ().toString ());
-
-      while ((pos = htmlData[i].target.find ("@YEAR@")) != std::string::npos)
-	 htmlData[i].target.replace (pos, 6, YGP::ADate::today ().toString ("%Y"));
-   }
 
    std::sort (directors.begin (), directors.end (), &Director::compByName);
 
@@ -1420,6 +1463,7 @@ void CDManager::exportMovies () throw (Glib::ustring) {
    createFile ((opt.getDirOutput () + "Movies.html").c_str (), file);
 
    std::string title (htmlData[0].target);
+   unsigned int pos;
    while ((pos = title.find ("%1")) != std::string::npos)
       title.replace (pos, 2, _("Director"));
    file << title;
@@ -1427,9 +1471,11 @@ void CDManager::exportMovies () throw (Glib::ustring) {
    file << ("<div class=\"header\"><a href=\"Movies-Down.html\">Director</a> | "
 	    "<a href=\"Movies-Name.html\">Name</a> | "
 	    "|<a href=\"Movies-Year.html\">Year</a> | "
-	    "<a href=\"Movies-Genre.html\">Genre</a></div>\n");
+	    "<a href=\"Movies-Genre.html\">Genre</a> | "
+	    "<a href=\"Movies-Media.html\">Media</a> | "
+	    "<a href=\"Movies-Lang.html\">Languages</a></div>\n");
 
-   MovieWriter writer ("%n|%y|%g", mgenres);
+   MovieWriter writer ("%n|%y|%g|%t|%l", mgenres);
    writer.printStart (file, "");
 
    std::vector<HMovie> movies;
@@ -1457,7 +1503,9 @@ void CDManager::exportMovies () throw (Glib::ustring) {
    file << ("<div class=\"header\"><a href=\"Movies.html\">Director</a> | "
 	    "<a href=\"Movies-Name.html\">Name</a> | "
 	    "|<a href=\"Movies-Year.html\">Year</a> | "
-	    "<a href=\"Movies-Genre.html\">Genre</a></div>\n");
+	    "<a href=\"Movies-Genre.html\">Genre</a> | "
+	    "<a href=\"Movies-Media.html\">Media</a> | "
+	    "<a href=\"Movies-Lang.html\">Languages</a></div>\n");
 
    writer.printStart (file, "");
    for (std::vector<HDirector>::reverse_iterator i (directors.rbegin ());
@@ -1486,21 +1534,35 @@ void CDManager::exportMovies () throw (Glib::ustring) {
 	 { { "<div class=\"header\"><a href=\"%1\">Name</a></div>"
 	     "|<div class=\"header\"><a href=\"Movies.html\">Director</a></div>|"
 	     "|<div class=\"header\"><a href=\"Movies-Year.html\">Year</a></div>|"
-	     "<div class=\"header\"><a href=\"Movies-Genre.html\">Genre</a></div>",
+	     "<div class=\"header\"><a href=\"Movies-Genre.html\">Genre</a></div>|"
+	     "<div class=\"header\"><a href=\"Movies-Media.html\">Media</a></div>|"
+	     "<div class=\"header\"><a href=\"Movies-Lang.html\">Language(s)</a></div>",
 	     "Movies-Name.html", "Movies-Namedown.html",
-	     "%n|%d|%y|%g", N_("Name"), &Movie::compByName },
+	     "%n|%d|%y|%g|%t|%l", N_("Name"), &Movie::compByName },
 	   { "|<div class=\"header\"><a href=\"%1\">Year</a></div>|"
 	     "<div class=\"header\"><a href=\"Movies-Name.html\">Name</a></div></p>"
 	     "|<div class=\"header\"><a href=\"Movies.html\">Director</a></div>|"
-	     "<div class=\"header\"><a href=\"Movies-Genre.html\">Genre</a></div>",
+	     "<div class=\"header\"><a href=\"Movies-Genre.html\">Genre</a></div>|"
+	     "<div class=\"header\"><a href=\"Movies-Media.html\">Media</a></div>|"
+	     "<div class=\"header\"><a href=\"Movies-Lang.html\">Language(s)</a></div>",
 	     "Movies-Year.html", "Movies-Yeardown.html",
-	     "%y|%n|%d|%g", N_("Year"), &Movie::compByYear },
+	     "%y|%n|%d|%g|%t|%l", N_("Year"), &Movie::compByYear },
 	   { "<div class=\"header\"><a href=\"%1\">Genre</a></div>|"
 	     "<div class=\"header\"><a href=\"Movies-Name.html\">Name</a></div>"
 	     "|<div class=\"header\"><a href=\"Movies.html\">Director</a></div>|"
-	     "|<div class=\"header\"><a href=\"Movies-Year.html\">Year</a></div>",
+	     "|<div class=\"header\"><a href=\"Movies-Year.html\">Year</a></div>|"
+	     "<div class=\"header\"><a href=\"Movies-Media.html\">Media</a></div>|"
+	     "<div class=\"header\"><a href=\"Movies-Lang.html\">Language(s)</a></div>",
 	     "Movies-Genre.html", "Movies-Genredown.html",
-	     "%g|%n|%d|%y", N_("Genre"), &Movie::compByGenre } };
+	     "%g|%n|%d|%y|%t|%l", N_("Genre"), &Movie::compByGenre },
+	   { "<div class=\"header\"><a href=\"%1\">Media</a></div>|"
+	     "<div class=\"header\"><a href=\"Movies-Name.html\">Name</a></div>"
+	     "|<div class=\"header\"><a href=\"Movies.html\">Director</a></div>|"
+	     "|<div class=\"header\"><a href=\"Movies-Year.html\">Year</a></div>|"
+	     "<div class=\"header\"><a href=\"Movies-Genre.html\">Genre</a></div>|"
+	     "<div class=\"header\"><a href=\"Movies-Lang.html\">Language(s)</a></div>",
+	     "Movies-Media.html", "Movies-Mediadown.html",
+	     "%t|%n|%d|%y|%g|%l", N_("Media"), &Movie::compByMedia } };
 
    for (unsigned int i (0); i < (sizeof (aOutputs) / sizeof (*aOutputs)); ++i) {
       file.close ();
@@ -1545,6 +1607,51 @@ void CDManager::exportMovies () throw (Glib::ustring) {
       writer.printEnd (file);
       file << htmlData[1].target;
    }
+
+   // Export by language
+   file.close ();
+   createFile ((opt.getDirOutput () + "Movies-Lang.html").c_str (), file);
+   title = htmlData[0].target;
+   while ((pos = title.find ("%1")) != std::string::npos)
+      title.replace (pos, 2, _("Language"));
+   file << title;
+
+   file << ("<div class=\"header\"><a href=\"Movies-Down.html\">Director</a> | "
+	    "<a href=\"Movies-Name.html\">Name</a> | "
+	    "|<a href=\"Movies-Year.html\">Year</a> | "
+	    "<a href=\"Movies-Genre.html\">Genre</a> | "
+	    "<a href=\"Movies-Media.html\">Media</a></div>\n");
+
+   file << "<div class=\"header\">|";
+   for (std::map<std::string, Language>::const_iterator l (Language::begin ());
+	l != Language::end (); ++l) {
+      file << " <a href=\"#" << l->first << "\"><img src=\"images/" << l->first
+	   << ".png\"> " << l->second.getInternational () << "</a> |";
+   }
+   file << "</div>";
+
+   MovieWriter langWriter ("%l|%n|%d||%y|%g|%t", mgenres);
+
+   std::sort (movies.begin (), movies.end (), &Movie::compByName);
+   for (std::map<std::string, Language>::const_iterator l (Language::begin ());
+	l != Language::end (); ++l) {
+      file << "<a name=\"" << l->first << "\">\n<h1>" << l->second.getNational ()
+	   << '/' << l->second.getInternational () << "</h1>";
+
+      langWriter.printStart (file, "");
+
+      for (std::vector<HMovie>::const_iterator m (movies.begin ());
+	   m != movies.end (); ++m)
+	 if (((*m)->getLanguage ().find (l->first) != std::string::npos)
+	     || ((*m)->getTitles ().find (l->first) != std::string::npos)) {
+	    HDirector director;
+	    director = relMovies.getParent (*m); Check3 (director.isDefined ());
+	    langWriter.writeMovie (*m, director, file);
+	 }
+      langWriter.printEnd (file);
+   }
+
+   file << htmlData[1].target;
 //-----------------------------------------------------------------------------
 /// Reads the ID3 information from a MP3 file
 /// \param file: Name of file to analzye
@@ -1556,47 +1663,28 @@ void CDManager::exportRecords () throw (Glib::ustring) {
       loadRecords ();
 
    struct {
-      std::string names;
+      const char* name;
       std::string target;
    } htmlData[] =
       { { DATADIR "Records.header" },
 	 { DATADIR "Records.footer" } };
-   unsigned int pos;
 
-   for (unsigned int i (0); i < (sizeof (htmlData) / sizeof (*htmlData)); ++i) {
-      std::ifstream input (htmlData[i].names.c_str ());
-      if (!input) {
-	 Glib::ustring error (_("-error: `%1' is not a (readable) file!"));
-	 error.replace (error.find ("%1"), 2, htmlData[i].names);
+   for (unsigned int i (0); i < (sizeof (htmlData) / sizeof (*htmlData)); ++i)
+      if (!readHeaderFile (htmlData[i].name, htmlData[i].target,
+			   _("Records (by %1)"))) {
+	 Glib::ustring error (_("Error reading header file `%1'!\n\nReason: %2"));
+	 error.replace (error.find ("%1"), 2, htmlData[i].name);
+	 error.replace (error.find ("%2"), 2, strerror (errno));
 	 Gtk::MessageDialog dlg (error, Gtk::MESSAGE_WARNING);
 	 dlg.run ();
       }
-      else {
-	 static const unsigned int bufLen (512);
-	 char buffer[bufLen];
-	 // Read as long as there is data/or an error occurs
-	 while (input.read (buffer, bufLen), input.gcount ())
-	    htmlData[i].target.append (buffer, input.gcount ());
-      }
-
-      while ((pos = htmlData[i].target.find ("@TITLE@")) != std::string::npos)
-	 htmlData[i].target.replace (pos, 7, _("Records (by %1)"));
-
-      while ((pos = htmlData[i].target.find ("@TIMESTAMP@")) != std::string::npos)
-	 htmlData[i].target.replace (pos, 11, YGP::ATimestamp::now ().toString ());
-
-      while ((pos = htmlData[i].target.find ("@DATE@")) != std::string::npos)
-	 htmlData[i].target.replace (pos, 6, YGP::ADate::today ().toString ());
-
-      while ((pos = htmlData[i].target.find ("@YEAR@")) != std::string::npos)
-	 htmlData[i].target.replace (pos, 6, YGP::ADate::today ().toString ("%Y"));
-   }
 
    std::sort (artists.begin (), artists.end (), &Interpret::compByName);
 
    std::ofstream file;
    createFile ((opt.getDirOutput () + "Records.html").c_str (), file);
    std::string title (htmlData[0].target);
+   unsigned int pos;
    while ((pos = title.find ("%1")) != std::string::npos)
       title.replace (pos, 2, _("Interpret"));
    file << title;

@@ -1,11 +1,11 @@
-//$Id: Movie.cpp,v 1.2 2004/12/07 03:37:05 markus Exp $
+//$Id: Movie.cpp,v 1.3 2004/12/09 03:20:47 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movie
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 29.11.2004
 //COPYRIGHT   : Copyright (A) 2004
@@ -34,6 +34,21 @@
 
 #include "Words.h"
 #include "Movie.h"
+
+
+//-----------------------------------------------------------------------------
+/// Defaultconstructor
+//-----------------------------------------------------------------------------
+Movie::Movie () : id (0), genre (0), type (0) {
+}
+
+//-----------------------------------------------------------------------------
+/// Copyonstructor
+//-----------------------------------------------------------------------------
+Movie::Movie (const Movie& other)
+   : id (other.id), name (other.name), year (other.year),
+     genre (other.genre), type (other.type) {
+ }
 
 
 //-----------------------------------------------------------------------------

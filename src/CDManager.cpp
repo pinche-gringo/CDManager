@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.48 2005/02/18 22:21:41 markus Exp $
+//$Id: CDManager.cpp,v 1.49 2005/02/19 03:04:09 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : - Display icon to change movie-language in statusbar
 //BUGS        :
-//REVISION    : $Revision: 1.48 $
+//REVISION    : $Revision: 1.49 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -54,6 +54,7 @@
 #include <XGP/LoginDlg.h>
 
 #include "CDAppl.h"
+#include "LangDlg.h"
 #include "Settings.h"
 #include "Language.h"
 
@@ -746,9 +747,10 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
    TRACE9 ("CDManager::pageSwitched (GtkNotebookPage*, guint) - " << iPage);
    Check1 (iPage < 2);
 
-   static Gtk::UIManager::ui_merge_id idMrg (-1U);
-   if (idMrg != -1U)
-      mgrUI->remove_ui (idMrg);
+   static Gtk::UIManager::ui_merge_id idPageMrg (-1U);
+   if (idPageMrg != -1U)
+      mgrUI->remove_ui (idPageMrg);
+   pageData.clean ();
 
    Glib::ustring ui ("<menubar name='Menu'>"
 		     "  <menu action='Edit'>"
@@ -759,12 +761,12 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
       if (!(loadedPages & (1 << iPage)))
 	 loadDatabase ();
 
-      static Glib::RefPtr<Gdk::Pixbuf> pic (Gdk::Pixbuf::create_from_file (DATADIR "in.png"));
-      Gtk::Image* img (new Gtk::Image (pic));
-      Gtk::Button* but (new Gtk::Button);
-      but->add (*img);
-      but->show (); img->show ();
-      status.pack_end (*but, Gtk::PACK_SHRINK, 5);
+      pageData.img = new LanguageImg (Movie::currLang.c_str ());
+      pageData.img->signal_clicked ().connect
+	 (mem_fun (*this, &CDManager::selectLanguage));
+      pageData.img->show ();
+
+      status.pack_end (*pageData.img, Gtk::PACK_SHRINK, 5);
 
       ui += ("<menuitem action='NDirector'/><menuitem action='NMovie'/>"
 	     "</placeholder></menu><placeholder name='Lang'><menu action='Lang'><menuitem action='Orig'/>");
@@ -793,7 +795,6 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 
 	 Glib::RefPtr<Gtk::RadioAction> act
 	    (Gtk::RadioAction::create (grpLang, i->first, i->second.getInternational ()));
-	 TRACE1 ("Langs: " << i->first << " - " << Movie::currLang);
 
 	 if (accel[5] <= '9') {
 	    grpAction->add (act, Gtk::AccelKey (accel),
@@ -829,7 +830,7 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
    }
 
    mgrUI->insert_action_group (grpAction);
-   idMrg = mgrUI->add_ui_from_string (ui);
+   idPageMrg = mgrUI->add_ui_from_string (ui);
 }
 
 //-----------------------------------------------------------------------------
@@ -1119,7 +1120,8 @@ Gtk::TreeIter CDManager::addSong (HSong& song) {
 }
 
 //-----------------------------------------------------------------------------
-/// Changes the language in which the movies are displayed
+/// Callback after selecting menu to set the language in which the
+/// movies are displayed
 /// \param lang: Lanuage in which the movies should be displayed
 //-----------------------------------------------------------------------------
 void CDManager::changeLanguage (const std::string& lang) {
@@ -1132,9 +1134,34 @@ void CDManager::changeLanguage (const std::string& lang) {
    if (ignore)
       return;
 
+   setLanguage (lang);
+}
+
+//-----------------------------------------------------------------------------
+/// Changes the language in which the movies are displayed
+/// \param lang: Lanuage in which the movies should be displayed
+//-----------------------------------------------------------------------------
+void CDManager::setLanguage (const std::string& lang) {
+   TRACE9 ("CDManager::setLanguage (const std::string&) - " << lang);
    Movie::currLang = lang;
    if ((lang.size () == 2) && !loadedLangs[lang])
       loadMovies (lang);
 
    movies.update (lang);
+   pageData.img->update (lang.c_str ());
+}
+
+//-----------------------------------------------------------------------------
+/// Callback to select the language in which to display the movies
+//-----------------------------------------------------------------------------
+void CDManager::selectLanguage () {
+   TRACE9 ("CDManager::selectLanguage ()");
+
+   std::string lang (Movie::currLang);
+   LanguageDialog dlg (lang, 1, false);
+   dlg.set_title (_("Choose language"));
+   dlg.run ();
+
+   if (lang != Movie::currLang)
+      setLanguage (lang);
 }

@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.34 2005/02/18 22:20:27 markus Exp $
+//$Id: CDManager.h,v 1.35 2005/02/19 03:04:22 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@
 #include "Genres.h"
 #include "Record.h"
 #include "Options.h"
+#include "LangImg.h"
 #include "SongList.h"
 #include "Director.h"
 #include "Interpret.h"
@@ -79,6 +80,8 @@ class CDManager : public XGP::XApplication {
    void editPreferences ();
    void savePreferences ();
 
+   void selectLanguage ();
+   void setLanguage (const std::string& lang);
    void changeLanguage (const std::string& lang);
 
    virtual void showAboutbox ();
@@ -165,6 +168,15 @@ class CDManager : public XGP::XApplication {
 
    unsigned int                loadedPages;
    std::map<std::string, bool> loadedLangs;
+
+   union PageData {
+      LanguageImg* img;
+
+      PageData () { img = NULL; }
+      ~PageData () { clean () ;}
+
+      void clean () { delete img; img = NULL; }
+   } pageData;
 
    std::vector<HDirector>  directors;
    std::vector<HInterpret> artists;

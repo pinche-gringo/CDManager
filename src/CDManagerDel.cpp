@@ -1,11 +1,11 @@
-//$Id: CDManagerDel.cpp,v 1.1 2005/01/25 01:39:36 markus Exp $
+//$Id: CDManagerDel.cpp,v 1.2 2005/01/31 05:14:11 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.1.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -78,7 +78,12 @@ void CDManager::deleteSelectedRecords () {
 	    records.getModel ()->erase (iter);
 	 // Though artist is already removed from the listbox, it still
 	 // has to be removed from the database
-	 deletedInterprets.push_back (artist);
+	 if (artist->getId ())
+	    deletedInterprets.push_back (artist);
+	 else {
+	    Check3 (changedInterprets.find (artist) != changedInterprets.end ());
+	    changedInterprets.erase (changedInterprets.find (artist));
+	 }
       }
    }
    apMenus[SAVE]->set_sensitive (true);
@@ -106,7 +111,13 @@ void CDManager::deleteRecord (const Gtk::TreeIter& record) {
       deletedSongs.push_back (*s);
    }
    relRecords.unrelate (hArtist, hRec);
-   deletedRecords.push_back (hRec);
+
+   if (hRec->getId ())
+      deletedRecords.push_back (hRec);
+   else {
+      Check3 (changedRecords.find (hRec) != changedRecords.end ());
+      changedRecords.erase (changedRecords.find (hRec));
+   }
 
    // Delete artist from listbox if it doesn't have any records
    Glib::RefPtr<Gtk::TreeStore> model (records.getModel ());
@@ -140,7 +151,12 @@ void CDManager::deleteSelectedSongs () {
       HRecord record (relSongs.getParent (song));
 
       relSongs.unrelate (record, song);
-      deletedSongs.push_back (song);
+      if (song->getId ())
+	 deletedSongs.push_back (song);
+      else {
+	 Check3 (changedSongs.find (song) != changedSongs.end ());
+	 changedSongs.erase (changedSongs.find (song));
+      }
       songs.getModel ()->erase (iter);
    }
 
@@ -176,7 +192,12 @@ void CDManager::deleteSelectedMovies () {
 	    records.getModel ()->erase (iter);
 	 // Though director is already removed from the listbox, it still
 	 // has to be removed from the database
-	 deletedDirectors.push_back (director);
+	 if (director->getId ())
+	    deletedDirectors.push_back (director);
+	 else {
+	    Check3 (changedDirectors.find (director) != changedDirectors.end ());
+	    changedDirectors.erase (changedDirectors.find (director));
+	 }
       }
    }
    apMenus[SAVE]->set_sensitive (true);
@@ -196,7 +217,12 @@ void CDManager::deleteMovie (const Gtk::TreeIter& movie) {
    HDirector hDirector (relMovies.getParent (hMovie)); Check3 (hDirector.isDefined ());
 
    relMovies.unrelate (hDirector, hMovie);
-   deletedMovies.push_back (hMovie);
+   if (hMovie->getId ())
+      deletedMovies.push_back (hMovie);
+   else {
+      Check3 (changedMovies.find (hMovie) != changedMovies.end ());
+      changedMovies.erase (changedMovies.find (hMovie));
+   }
 
    // Delete director from listbox if (s)he doesn't have any movies
    Glib::RefPtr<Gtk::TreeStore> model (movies.getModel ());

@@ -1,7 +1,7 @@
 #ifndef WRITER_H
 #define WRITER_H
 
-//$Id: Writer.h,v 1.6 2004/12/24 04:11:03 markus Exp $
+//$Id: Writer.h,v 1.7 2005/01/12 22:48:50 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -43,13 +43,6 @@ class MovieWriter : public YGP::HTMLWriter {
    void writeMovie    (const HMovie& movie, const HDirector& director, std::ostream& out);
    void writeDirector (const HDirector& director, std::ostream& out);
 
-   static void exportMovies (const Options& opt,
-			     std::map<unsigned int, Glib::ustring> genres,
-			     std::vector<HDirector>& directors);
-   static void createFile (const char* name, std::ofstream& file) throw (Glib::ustring);
-   static bool readHeaderFile (const char* file, std::string& target,
-			       const Glib::ustring& title);
-
  protected:
    virtual std::string getSubstitute (const char ctrl, bool extend = false) const;
 
@@ -82,12 +75,9 @@ class RecordWriter : public YGP::HTMLWriter {
    static void exportRecords (const Options& opt,
 			      std::map<unsigned int, Glib::ustring> genres,
 			      std::vector<HDirector>& directors);
-   static void createFile (const char* name, std::ofstream& file) throw (Glib::ustring) {
-      MovieWriter::createFile (name, file); }
+   static void createFile (const char* name, std::ofstream& file) throw (Glib::ustring) { }
    static bool readHeaderFile (const char* file, std::string& target,
-			       const Glib::ustring& title) {
-      return MovieWriter::readHeaderFile (file, target, title);
-   }
+			       const Glib::ustring& title) { return true; }
 
  protected:
    virtual std::string getSubstitute (const char ctrl, bool extend = false) const;

@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.37 2005/01/12 22:47:37 markus Exp $
+//$Id: CDManager.cpp,v 1.38 2005/01/13 19:18:20 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.37 $
+//REVISION    : $Revision: 1.38 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -37,7 +37,8 @@
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/scrolledwindow.h>
 
-#define TRACELEVEL 9
+#define CHECK 9
+#define TRACELEVEL 1
 #include <YGP/Trace.h>
 #include <YGP/Process.h>
 #include <YGP/Tokenize.h>
@@ -1430,7 +1431,12 @@ void CDManager::exportMovies () throw (Glib::ustring) {
       int pipes[2];
       const char* args[] = { "CDWriter", "--outputDir", opt.getDirOutput ().c_str (),
 			     "--recHeader", opt.getRHeader ().c_str (),
-      const char* args[] = { "CDWriter", "-dtmp/", lang.c_str (), NULL };
+			     "--recFooter", opt.getRFooter ().c_str (),
+			     "--movieHeader", opt.getMHeader ().c_str (),
+			     "--movieFooter", opt.getMFooter ().c_str (),
+			     lang.c_str (), NULL };
+      try {
+	 pipe (pipes);
 	 YGP::Process::execIOConnected ("CDWriter", args, pipes);
       }
       catch (std::string& e) {
@@ -1454,10 +1460,24 @@ void CDManager::exportMovies () throw (Glib::ustring) {
 	    TRACE9 ("CDManager::export () - Writing: " << output.str ());
 	    ::write (pipes[1], output.str ().data (), output.str ().size ());
 	 }
-	    write (pipes[1], output.str ().data (), output.str ().size ());
+
       // Write record-information
+      char output[128] = "";
+      std::string allOut;
+      int cRead;
+      while ((cRead = ::read (pipes[0], output, sizeof (output))) != -1) {
+	 allOut.append (output, cRead);
+	 if ((unsigned int)cRead < sizeof (output))
+	    break;
+      }
+      if (allOut.size ()) {
+	 Gtk::MessageDialog dlg (Glib::locale_to_utf8 (output), Gtk::MESSAGE_INFO);
+	 dlg.set_title (_("Export Warning!"));
+	 dlg.run ();
+      }
+
+      close (pipes[0]);
    }
-      close (pipes[1]);
 }
 
 //-----------------------------------------------------------------------------

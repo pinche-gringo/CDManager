@@ -1,3 +1,120 @@
+2004-11-29  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* ChangeLog, NEWS: Overview of changes in V0.4.00 added
+
+	* configure.ac: Version to 0.4.00
+
+	* SQL/populateDB.sql: Added loads of values
+
+	* SQL/createDB.sql: Renamed Celibrities to Celebrities
+
+	* src/CDManager.cpp: First draft of exporting movies
+
+	* src/Makefile.am: Added Record.cpp
+
+	* src/Record.h: Added compare-methods
+
+	* src/Record.cpp: New file.
+
+	* src/MovieList.cpp, src/MovieList.h, src/RecordList.cpp, src/RecordList.h:
+	  Added a sort-function (ignoring articles)
+
+	* src/OOList.cpp, src/OOList.h:
+	  Sorting entries 'logically' (ignoring articles)
+
+	* src/Celebrity.cpp, src/Celebrity.h:
+	  Removed handling of reserved words to Words
+
+	* src/Makefile.am: Added Words
+
+	* src/Words.cpp, src/Movie.cpp, src/Words.h: New file.
+
+2004-11-28  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* src/MovieList.cpp, src/OOList.cpp, src/Record.h, src/RecordList.cpp, src/Song.h, src/SongList.cpp, src/Writer.cpp, src/Writer.h, src/CDManager.cpp, src/CDManager.h, src/Celebrity.h, src/Makefile.am:
+	  Entities got get/set-methods
+
+2004-11-27  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* src/MovieList.cpp, src/RecordList.cpp: Initializing the OOList
+
+	* src/Celebrity.h: Made removeIgnored public
+
+	* src/OOList.cpp, src/OOList.h:
+	  Sorting by names sorts owner with respect to words to ignore
+
+	* src/CDManager.cpp, src/CDManager.h:
+	  Loading from database when selecting NB-pages
+
+2004-11-26  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* src/Celebrity.h: Declared OOList as friend
+
+	* src/CDManager.cpp, src/CDManager.h: Using unified Record/MovieList
+
+	* src/MovieList.cpp, src/MovieList.h: Implemented getColumnName()
+
+	* src/RecordList.cpp, src/RecordList.h: Deriving from OOList
+
+	* src/OOList.h: Added method to get the name of the 1st column
+
+	* src/Makefile.am: Added OOList
+
+	* src/MovieList.h, src/MovieList.cpp: Deriving from OOList
+
+	* src/OOList.cpp, src/OOList.h: New file.
+
+2004-11-25  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* src/CDManager.h: Moved the scrolled windows to the source
+
+	* src/Celebrity.h: Born/died values is only an AYear
+
+	* src/MovieList.cpp, src/MovieList.h:
+	  Handling born/died of the directors
+
+	* src/CDManager.cpp:
+	  Storing born/died of involved persons; Movies-list got scrollbars
+
+	* src/Director.h, src/Interpret.h: Using new Celebrity
+
+	* src/Celebrity.h: Renamed to Celebrity
+
+	* src/Celebrity.cpp:
+	  Fixed sorting names starting with various words to ignore
+
+2004-11-24  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* src/Celebrity.h: Fixed typo
+
+	* src/Director.h, src/Interpret.h: Removed unneeded includes
+
+	* src/CDManager.cpp:
+	  Storing deleted/changed movies; handling switching between NB-pages
+
+	* src/CDManager.h: Storing deleted/changed movies
+
+	* src/Makefile.am: Renamed Celibrity to Celebrity
+
+2004-11-17  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* SQL/createDB.sql:
+	  Added Celebrities tables, from which all persons "derive"
+
+	* src/CDManager.cpp, src/CDManager.h:
+	  Adapted to new DB-design; Handling movies
+
+	* src/RecordList.cpp: Disabled checks and traces
+
+	* src/Makefile.am: Classes to handle movies added
+
+	* src/Interpret.h: Moved everything to base class Celibrity
+
+	* src/Celebrity.cpp, src/Celebrity.h, src/Director.h, src/MovieList.cpp, src/MovieList.h:
+	  New file.
+
+	* src/Interpret.cpp: Renamed to Celibrity.cpp
+
 2004-11-17  Markus Schwab  <markus@markus.linuxnet.ve>
 
 	* ChangeLog, NEWS: Overview of changes in V0.3.00 added

@@ -1,3 +1,12 @@
+Overview of changes in version 0.4.00:
+
+  - Added handling of movies
+  - Displaying interprets even if they have no records
+  - Fixed deleting interpret without any records
+  - Storing born/died values of involved persons
+  - Pages are loaded, when needed
+  - Generating web-pages out of stored info
+
 Overview of changes in version 0.3.00:
 
   - Changing genre of a record sets undefined genres of the songs

@@ -1,7 +1,7 @@
 #ifndef CELIBRITY_H
 #define CELIBRITY_H
 
-//$Id: Celebrity.h,v 1.3 2004/11/25 13:23:53 markus Exp $
+//$Id: Celebrity.h,v 1.4 2004/11/25 23:20:55 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 
 #include <glibmm/ustring.h>
 
-#include <YGP/ADate.h>
+#include <YGP/AYear.h>
 #include <YGP/Handle.h>
 #include <YGP/Entity.h>
 
@@ -49,8 +49,8 @@ class Celebrity : public YGP::Entity {
  private:
    unsigned long int id;
    Glib::ustring     name;
-   YGP::ADate        born;
-   YGP::ADate        died;
+   YGP::AYear        born;
+   YGP::AYear        died;
 
    static Glib::ustring removeIgnored (const Glib::ustring& name);
 

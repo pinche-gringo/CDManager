@@ -1,7 +1,7 @@
 #ifndef SONG_H
 #define SONG_H
 
-//$Id: Song.h,v 1.1 2004/10/25 06:28:23 markus Rel $
+//$Id: Song.h,v 1.2 2004/11/02 00:03:07 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
  */
 class Song : public YGP::Entity {
    friend class CDManager;
-   friend class RecordEdit;
+   friend class SongList;
 
  public:
    Song () { }
@@ -38,6 +38,7 @@ class Song : public YGP::Entity {
  private:
    unsigned long int id;
    Glib::ustring     name;
+   unsigned int      track;
    YGP::ATime        duration;
    unsigned long int genre;
 

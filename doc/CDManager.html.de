@@ -1,0 +1,172 @@
+<!-- -*-HTML-*- -->
+<!-- $Id: CDManager.html.de,v 1.1 2004/12/25 23:29:08 markus Rel $ -->
+
+<!--
+  Copyright (C) 2004 Markus Schwab (g17m0@lycos.com)
+
+  This is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public
+  License as published by the Free Software Foundation; either
+  version 2 of the License, or (at your option) any later version.
+
+  This is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+-->
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//DE"
+        "http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+  <head>
+    <title>CDManager - Utility zum Verwalten von Platten und Filmen</title>
+    <meta name="description" content="Dokumentation des CD-Manager">
+    <meta name="keywords" content="Dokumentation, Doku, CD, film,
+                platte, manager, verwaltung, CDManager, CD-Manager">
+
+    <meta name="DC.Creator" content="Markus Schwab">
+    <meta name="DC.Date" content="2004-12-21">
+    <meta name="DC.Rights" content="Copyright (C) 2004, distributed under the GNU Free Documentation License">
+  </head>
+
+  <body>
+    <h1 align="center">Allgemeine Informationen &uuml;ber den CD-Manager</h1>
+    <table width="100%">
+      <tr><td align="center" width="33%"><a href="#Intro">Einf&uuml;hrung</a></td>
+        <td align="center" width="33%"><a href="#Mainwindow">Das Hauptfenster</a></td>
+        <td align="center" width="33%"><a href="#Dialogs">Dialoge</a></p></td></tr>
+    </table>
+    <hr size=2>
+
+    <h2><a name="Intro"></a>Einf&uuml;hrung</h2>
+
+    <p>Der CD-Manager ist ein Utility zum Verwalten von Platten und Filmen.</p>
+
+    <p>Er kann unter anderem die verwalteten Datentr&auml;ger zu
+      HTML-Seiten exportieren und Platten von Musikst&uuml;cken im
+      MP3-Format (sofern sie ein ID3-Tag aufweisen) importieren.</p>
+
+    <p>Vertrieben wird das Programm unter der GNU General Public License, die
+      prinizipell folgendes aussagt (Details findet man in der in diesem Paket
+      enthaltenen Datei <tt>COPYING</tt> oder auf der
+      <a href="http://www.gnu.org">GNU Homepage (http://www.gnu.org)</a>):</p>
+
+    <blockquote><em><p>Dieses Programm ist freie Software. Sie k&ouml;nnen es
+        unter den Bedingungen der GNU General Public License, wie von der
+        Free Software Foundation herausgegeben, weitergeben und/oder
+        modifizieren, entweder unter Version 2 der Lizenz oder (wenn Sie
+        es w&uuml;nschen) jeder sp&auml;teren Version.</p>
+
+      <p>Der Vertrieb dieses Programms erfolgt in der Hoffnung,
+        n&uuml;tzlich zu sein, aber OHNE JEGLICHE GEW&Auml;HRLEISTUNG - sogar
+        ohne die implizite Gewährleistung der MARKTREIFE oder der
+        EIGNUNG F&Uuml;R EINEN BESTIMMTEN ZWECK.  Details finden Sie in der
+        GNU General Public License.</p></em></blockquote>
+
+    <h2><a name="Mainwindow"></a>Das Hauptfenster</h2>
+    <p>Das Hauptfenster enth&auml;lt ein Notebook mit zwei Reitern;
+      eines f&uuml;r die Platten und das andere f&uuml;r die Filme.</p>
+
+    <h3>Platten-Reiter</h3>
+    <p>Diese Seite enth&auml;lt zwei Listen; die linke zeigt die gespeicherten
+      Platten mit deren Interpreten (sortiert nach Interpret; mit deren
+      Platten sortiert nach Name).</p>
+
+    <p>Die angezeigten Werte k&ouml;nnen &ldquo;inline&rdquo;
+      ge&auml;ndert werden (das bedeutet: Durch Anklicken der Spalte
+      der ausgew&auml;hlten Zeile, die ge&auml;ndert werden
+      soll). Normalerweise wird dadurch ein Feld, in das Daten
+      eingetragen werden k&ouml;nnen, oder ein Liste aus der Werte
+      ausgew&auml;hlt werden k&ouml;nnen, angezeigt.</p>
+
+    <p>Wenn eine Platte ausgew&auml;hlt wird, werden in der rechten
+      Liste deren Lieder angezeigt. Diese Liste kann ebenfalls
+      &ldquo;inline&rdquo; bearbeitet werden.</p>
+
+    <p>Beide Listen k&ouml;nnen nach ihren verschiedenen Spalten
+      sortiert werden (durch Anklicken deren &Uuml;berschriften).</p>
+
+    <p>Neue Entr&auml;ge k&ouml;nnen durch Ausw&auml;hlen des
+      passenden Eintrags im <tt>Bearbeiten</tt> Men&uuml; oder durch
+      Importieren des ID3-Tags von MP3-Musikst&uuml;cken (Men&uuml;
+      <tt>Importieren von MP3-info</tt> inm <tt>CD</tt> Men&uuml;).</p>
+
+    <p>Innerhalb der (ausgew&auml;hlten) Liste kann nach
+      Eintr&auml;gen gesucht werden. Dazu mu&szlig;
+      <tt>&lt;Strg&gt;-F</tt> gedr&uuml;ckt werden; innerhalb des
+      erscheinenden Such-Feldes kann durch die Tastenkombinationen
+      <tt>&lt;Strg&gt;-Auf</tt> und <tt>&lt;Strg&gt;-Ab</tt> der
+      vorherige/n&auml;chste passende Eintrag gesucht werden.</p>
+
+    <h3>Film-Reiter</h3>
+
+    <p>Dieser Reiter enth&auml;hlt die Filme; sortiert nach Regiseur
+      (und innerhalb dessen Filmen nach Jahr). Genau wie die Platten
+      kann der Inhalt dieser Liste &ldquo;inline&rdquo; (siehe oben)
+      bearbeitet werden.</p>
+
+    <p>Neue Eintr&auml;ge k&ouml;nnen durch Ausw&auml;hlen des
+      entsprechenden Eintrags im <tt>Bearbeiten</tt> Men&uuml;
+      hinzugef&uuml;gt werden.</p>
+
+    <p>Genau wie bei den Platten kann innerhalb der (aktiven) Liste
+      kann nach Eintr&auml;gen gesucht werden. Dazu mu&szlig;
+      <tt>&lt;Strg&gt;-F</tt> gedr&uuml;ckt werden (siehe oben).</p>
+
+    <h2><a name="Dialogs"></a>Dialoge</h2>
+
+    <h3>Anmelden</h3>
+    <p>Dieser Dialog wird durch Ausw&auml;hlen von <tt>Anmelden ...</tt> im
+      <tt>CDs</tt> Men&uuml; ge&ouml;ffnet. In diesem kleinen Fenster
+      kann man die Benutzer-ID und (optional) ein Pa&szlig;wort
+      eingegeben. Diese Information wird zum Verbinden mit der
+      Datenbank verwendet.</p>
+
+    <h3>Import</h3>
+    <p>Dieser Dialog wird mittels <tt>Importieren von MP3-Info
+      ...</tt> im <tt>CDs</tt> Men&uuml; ausgew&auml;lt. Er erm&ouml;glicht
+      ein Durchwandern der Verzeichnisstruktur und die Auswahl von
+      Dateien, die dann nach einem ID3-Tag f&uuml;r MP3-Dateien
+      durchsucht werden. Diese Information wird in die Datenbank importiert.</p>
+
+    <p>Beachte, da&szlig; dieser Import Doppel-Eintr&auml;ge
+      verursachen kann, wenn die Namen unterschiedlich geschrieben
+      sind oder die L&auml;gen der ID3-Information (max. 30/32
+      Zeichen) &uuml;berschreiten.</p>
+
+    <h3>Einstellungen</h3>
+    <p>Der <i>Einstellungen-Dialog</i> wird mit <tt>Einstellungen ...</tt> im
+      <tt>Optionen</tt>-Men&uuml; aufgerufen.</p>
+
+    <p>Er erm&ouml;glicht das &Auml;ndern von diversenen Einstellungen
+    des Programs (bez&uuml;glich des Exports von HTML Dokumenten).</p>
+
+    <h2>Autor</h2>
+    <p>Sowohl die Dokumentation als auch das Spiel wurden von Markus Schwab
+      erstellt.</p>
+
+    <h2>Aufruf</h2>
+    <p>Prinzipell startet man das Programm ohne jegliche Optionen, also etwa</p>
+
+    <pre>   CDManager</pre>
+
+    <p>Eine &Uuml;bersicht &uuml;ber die vorhandenen Optionen
+    erh&auml;lt man mit</p>
+
+    <pre>   CDManager --help</pre>
+
+    <h2>Danksagung</h2>
+    <p>Dank an die Leute von MySQL f&uuml;r deren gro&szlig;artige Datenbank
+      und die mysql++ library.</p>
+
+    <hr noshade="noshade" size="2">
+    <address>
+      <a href="mailto:g17m0@lycos.com">Markus Schwab (g17m0@lycos.com)</a><br>
+    </address>
+  </body>
+</html>

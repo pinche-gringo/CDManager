@@ -1,7 +1,7 @@
-#ifndef OOIST_H
+#ifndef OOLIST_H
 #define OOLIST_H
 
-//$Id: OOList.h,v 1.1 2004/11/26 03:31:54 markus Exp $
+//$Id: OOList.h,v 1.2 2004/11/26 04:06:02 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -71,6 +71,8 @@ class OwnerObjectList : public Gtk::TreeView {
    virtual void setName (HEntity& object, const Glib::ustring& value);
    virtual void setYear (HEntity& object, const Glib::ustring& value);
    virtual void setGenre (HEntity& object, unsigned int value);
+
+   virtual Glib::ustring getColumnName () const = 0;
 
    void changeGenre (Gtk::TreeModel::Row& row, unsigned int value);
 

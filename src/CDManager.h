@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.32 2005/01/29 19:54:46 markus Exp $
+//$Id: CDManager.h,v 1.33 2005/01/31 05:12:18 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -79,6 +79,8 @@ class CDManager : public XGP::XApplication {
    void editPreferences ();
    void savePreferences ();
 
+   void changeLanguage (const std::string& lang);
+
    virtual void showAboutbox ();
    virtual const char* getHelpfile ();
    void recordSelected ();
@@ -91,6 +93,7 @@ class CDManager : public XGP::XApplication {
    void loadDatabase ();
    void loadRecords ();
    void loadMovies ();
+   void loadMovies (const std::string& lang);
    void enableMenus (bool enable);
    void loadSongs (const HRecord& record);
    void exportData () throw (Glib::ustring);
@@ -152,20 +155,21 @@ class CDManager : public XGP::XApplication {
    std::vector<HMovie>     deletedMovies;
    std::vector<HDirector>  deletedDirectors;
 
-   std::map<HSong,HSong>            changedSongs;
+   std::map<HSong, HSong>           changedSongs;
    std::map<HRecord, HRecord>       changedRecords;
    std::map<HInterpret, HInterpret> changedInterprets;
    std::map<HMovie, HMovie>         changedMovies;
    std::map<HDirector, HDirector>   changedDirectors;
 
-   unsigned int loadedPages;
+   unsigned int                loadedPages;
+   std::map<std::string, bool> loadedLangs;
 
    std::vector<HDirector>  directors;
    std::vector<HInterpret> artists;
 
    enum { LOGIN = 0, SAVE, LOGOUT, EXPORT, IMPORT_MP3, MEDIT, NEW1, NEW2, NEW3,
-	  DELETE, LAST };
-   Gtk::Widget* apMenus[LAST];
+	  DELETE, SAVE_PREFS, LAST };
+   Glib::RefPtr<Gtk::Action> apMenus[LAST];
    Options& opt;
 };
 

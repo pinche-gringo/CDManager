@@ -1,7 +1,7 @@
 #ifndef OOLIST_H
 #define OOLIST_H
 
-//$Id: OOList.h,v 1.5 2004/12/04 04:05:21 markus Exp $
+//$Id: OOList.h,v 1.6 2004/12/07 03:35:22 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ class OwnerObjectList : public Gtk::TreeView {
 				       const Glib::ustring& name);
 
  protected:
-   void init ();
+   void init (const OwnerObjectColumns& cols);
 
    void valueChanged (const Glib::ustring& path, const Glib::ustring& value,
 		      unsigned int column);
@@ -83,11 +83,14 @@ class OwnerObjectList : public Gtk::TreeView {
    void changeGenre (Gtk::TreeModel::Row& row, unsigned int value);
 
    int sortByName (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
+   int sortByYear (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
+   int sortByGenre (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
    virtual int sortEntity (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
+   int sortOwner (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
 
    const std::map<unsigned int, Glib::ustring>& genres;
+   const OwnerObjectColumns* colOwnerObjects;
 
-   OwnerObjectColumns colOwnerObjects;
    Glib::RefPtr<Gtk::TreeStore> mOwnerObjects;
 
  private:

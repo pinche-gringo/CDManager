@@ -1,9 +1,9 @@
-dnl $Id: configure.ac,v 1.7 2005/01/18 20:10:15 markus Rel $
+dnl $Id: configure.ac,v 1.8 2005/01/31 05:17:36 markus Exp $
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.52)
-AC_REVISION($Revision: 1.7 $)
-AC_INIT(CDManager, 0.6.00, [g17m0@lycos.com], CDManager)
+AC_REVISION($Revision: 1.8 $)
+AC_INIT(CDManager, 0.7.00, [g17m0@lycos.com], CDManager)
 
 RELEASE=${PACKAGE_VERSION%.*}
 AC_DEFINE_UNQUOTED(PRG_RELEASE, "$RELEASE", [Define to the release of the program])
@@ -34,7 +34,7 @@ AC_CHECK_LIB(stdc++, main)
 AC_CHECK_LIB(mysqlpp, main)
 
 PKG_CHECK_MODULES(DEPS, gtkmm-2.4 >= 2.4.0 gthread-2.0 > 2.2.0
-                  YGP >= 0.7.00 XGP >= 0.7.00)
+                  YGP >= 0.7.00 XGP >= 0.7.01)
 AC_SUBST(DEPS_CFLAGS)
 AC_SUBST(DEPS_LIBS)
 
@@ -211,7 +211,7 @@ dnl Settings for autoheader
 AH_TOP([#ifndef CDMANAGER_CFG_H
 #define CDMANAGER_CFG_H
 
-//$Id: configure.ac,v 1.7 2005/01/18 20:10:15 markus Rel $
+//$Id: configure.ac,v 1.8 2005/01/31 05:17:36 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

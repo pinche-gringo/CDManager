@@ -1,11 +1,11 @@
-//$Id: RecEdit.cpp,v 1.2 2004/10/18 15:09:30 markus Exp $
+//$Id: RecEdit.cpp,v 1.3 2004/10/25 06:29:44 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : RecordEdit
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 17.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -36,7 +36,16 @@
 #include <gtkmm/adjustment.h>
 #include <gtkmm/messagedialog.h>
 
+
+#define CHECK 9
+#define TRACELEVEL 9
+#include <YGP/Check.h>
+#include <YGP/Trace.h>
+#include <YGP/Relation.h>
+
 #include "DB.h"
+#include "Interpret.h"
+
 #include "RecEdit.h"
 
 
@@ -64,8 +73,9 @@ RecordEdit::RecordEdit (HRecord record)
    spinYear->set_flags (Gtk::CAN_FOCUS);
    spinYear->set_update_policy (Gtk::UPDATE_ALWAYS);
    spinYear->set_numeric (true);
-   spinYear->set_digits (4);
+   spinYear->set_digits (0);
    spinYear->set_wrap (true);
+   spinYear->set_max_length (4);
    txtRecord->set_flags (Gtk::CAN_FOCUS);
    txtRecord->grab_focus ();
 
@@ -74,8 +84,8 @@ RecordEdit::RecordEdit (HRecord record)
    optArtist->set_model (mArtists);
    optGenre->set_model (mGenres);
 
-   optGenre->append_column ("_Genre", colGenres.colName);
-   optGenre->get_selection ()->set_mode (Gtk::SELECTION_EXTENDED);
+   optGenre->append_column (_("Genre"), colGenres.colName);
+   optArtist->pack_start (colArtists.colName);
 
    lblRecord->set_mnemonic_widget (*txtRecord);
    lblArtist->set_mnemonic_widget (*optArtist);
@@ -121,7 +131,7 @@ void RecordEdit::okEvent () {
 
 
 //-----------------------------------------------------------------------------
-/// Fills the genre option-menu
+/// Fills the genre listbox
 //-----------------------------------------------------------------------------
 void RecordEdit::fillGenres () {
    try {
@@ -132,10 +142,11 @@ void RecordEdit::fillGenres () {
 	 Gtk::TreeModel::Row row = *(mGenres->append ());
 	 unsigned int id (Database::getResultColumnAsUInt (0));
 	 row[colGenres.colID] = id;
-	 row[colGenres.colName] =
-	    Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
+	 Glib::ustring genre
+	    (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
+	 row[colGenres.colName] = genre;
 
-	 if (hRecord.isDefined () && (hRecord->id & id))
+	 if (hRecord.isDefined () && (hRecord->genre == genre))
 	    optGenre->get_selection ()->select (row);
 
 	 Database::getNextResultRow ();
@@ -150,9 +161,22 @@ void RecordEdit::fillGenres () {
 }
 
 //-----------------------------------------------------------------------------
-/// Fills the genre option-menu
+/// Fills the artist combobox
 //-----------------------------------------------------------------------------
 void RecordEdit::fillInterprets () {
+   YGP::Relation1_N<HInterpret, HRecord>* rel;
+   HInterpret hArtist;
+   if (hRecord.isDefined ()) {
+      rel = (dynamic_cast<YGP::Relation1_N<HInterpret, HRecord>*>
+	     (YGP::RelationManager::getRelation ("records")));
+      Check3 (rel);
+
+      hArtist = rel->getParent (hRecord);
+      Check3 (hArtist.isDefined ());
+      TRACE5 ("RecordEdit::fillInterprets () - Artist: "
+	      << (hArtist.isDefined () ? hArtist->name.c_str () : "None"));
+   }
+
    try {
       Database::store ("SELECT id, name FROM Interprets");
 
@@ -164,7 +188,10 @@ void RecordEdit::fillInterprets () {
 	 row[colArtists.colName] =
 	    Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
 
-	 if (hRecord.isDefined () && (hRecord->id == id))
+	 TRACE5 ("RecordEdit::fillInterprets () - Adding Artist "
+		 << id << '/' << Database::getResultColumnAsString (1));
+
+	 if (hArtist.isDefined () && (hArtist->id == id))
 	    optArtist->set_active (row);
 
 	 Database::getNextResultRow ();

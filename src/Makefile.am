@@ -7,7 +7,7 @@ bin_PROGRAMS=CDManager CDWriter
 libCDMgr_la_SOURCES=Options.h Movie.cpp Movie.h Celebrity.cpp		\
 		    Celebrity.h CDType.cpp CDType.h Language.cpp	\
 		    Language.h Words.cpp Words.h Record.cpp Record.h	\
-		    DB.cpp DB.h Interpret.h
+		    DB.cpp DB.h Interpret.h Genres.cpp Genres.h
 
 CDManager_SOURCES=Settings.cpp Settings.h CDAppl.cpp CDAppl.h	\
 		  LangDlg.cpp LangDlg.h OOList.cpp OOList.h	\
@@ -18,12 +18,12 @@ CDManager_SOURCES=Settings.cpp Settings.h CDAppl.cpp CDAppl.h	\
 
 INCLUDES = @INCLUDES@ -I../Common @DEPS_CFLAGS@
 
-CDManager_LDFLAGS=@DEPS_LIBS@ @LTLIBINTL@ -lCDMgr
+CDManager_LDFLAGS=-lCDMgr @DEPS_LIBS@ @LTLIBINTL@
 DEFS = @DEFS@ -Wall
 
 CDWriter_SOURCES=CDWriter.cpp CDWriter.h Writer.cpp Writer.h
 
-CDWriter_LDFLAGS=@DEPS_LIBS@ @LTLIBINTL@ -lCDMgr
+CDWriter_LDFLAGS=-lCDMgr @DEPS_LIBS@ @LTLIBINTL@
 
 Options.meta: Options.h
 	mgeni.pl Options.h > Options.meta

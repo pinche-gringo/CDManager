@@ -1,11 +1,11 @@
-//$Id: SongList.cpp,v 1.5 2004/11/11 04:27:16 markus Rel $
+//$Id: SongList.cpp,v 1.6 2004/11/13 23:58:20 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -27,15 +27,12 @@
 
 #include <cdmgr-cfg.h>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/StatusObj.h>
 
 #include <XGP/XValue.h>
 #include <XGP/MessageDlg.h>
-#include "Words.h"
 
-#include <XGP/XValue.h>
+#include "Words.h"
 
 #include "RendererList.h"
 
@@ -59,7 +56,7 @@ SongList::SongList (const std::map<unsigned int, Glib::ustring>& genres)
       Gtk::TreeViewColumn* column (get_column (i));
       column->set_sort_column (i + 1);
       column->set_resizable ();
-      column->set_sort_column_id (i + 1);
+
       Check3 (get_column_cell_renderer (i));
       Gtk::CellRenderer* r (get_column_cell_renderer (i)); Check3 (r);
       Check3 (typeid (*r) == typeid (Gtk::CellRendererText));
@@ -78,12 +75,13 @@ SongList::SongList (const std::map<unsigned int, Glib::ustring>& genres)
    column->set_sort_column (4);
    column->add_attribute (renderer->property_text(), colSongs.colGenre);
    column->set_resizable ();
-   column->set_sort_column_id (4);
+   column->add_attribute (renderer->property_text (), colSongs.colGenre);
 
       (bind (mem_fun (*this, &SongList::valueChanged), 3));
 
    mSongs->set_sort_column (colSongs.colTrack, Gtk::SORT_ASCENDING);
    mSongs->set_sort_func (colSongs.colTrack,
+			  sigc::mem_fun (*this, &SongList::sortByTrack));
    mSongs->set_sort_func (colSongs.colName,
 			  sigc::mem_fun (*this, &SongList::sortByName));
 //-----------------------------------------------------------------------------

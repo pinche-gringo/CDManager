@@ -1,11 +1,11 @@
-//$Id: Movie.cpp,v 1.3 2004/12/09 03:20:47 markus Exp $
+//$Id: Movie.cpp,v 1.4 2004/12/12 03:12:01 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movie
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 29.11.2004
 //COPYRIGHT   : Copyright (A) 2004
@@ -47,7 +47,8 @@ Movie::Movie () : id (0), genre (0), type (0) {
 //-----------------------------------------------------------------------------
 Movie::Movie (const Movie& other)
    : id (other.id), name (other.name), year (other.year),
-     genre (other.genre), type (other.type) {
+     genre (other.genre), type (other.type), lang (other.lang),
+     titles (other.titles) {
  }
 
 

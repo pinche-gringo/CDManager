@@ -1,7 +1,7 @@
 #ifndef MOVIE_H
 #define MOVIE_H
 
-//$Id: Movie.h,v 1.6 2005/01/31 05:15:27 markus Exp $
+//$Id: Movie.h,v 1.7 2005/02/18 22:23:35 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -53,9 +53,9 @@ class Movie : public YGP::Entity {
    std::string       getTitles () const { return titles; }
 
    void setId       (unsigned long int value) { id = value; }
-   void setName     (const Glib::ustring& value) { name[currLang] = value; }
-   void setName     (const Glib::ustring& value, const std::string& lang) {
-      name[lang] = value; }
+   void setName     (const Glib::ustring& value) {
+      ((name.find ("") != name.end ()) ? name[currLang] :  name[""]) = value; }
+   void setName     (const Glib::ustring& value, const std::string& lang) { name[lang] = value; }
    std::map<std::string, Glib::ustring>& getNames () { return name; }
    void setYear     (const YGP::AYear& value) { year = value; }
    void setYear     (const std::string& value) { year = value; }

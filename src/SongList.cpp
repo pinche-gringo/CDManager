@@ -1,11 +1,11 @@
-//$Id: SongList.cpp,v 1.3 2004/11/06 17:24:22 markus Exp $
+//$Id: SongList.cpp,v 1.4 2004/11/06 19:23:30 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -40,6 +40,8 @@
 
 #include <XGP/XValue.h>
 
+#include "RendererList.h"
+
 
 //-----------------------------------------------------------------------------
 /// Default constructor
@@ -55,11 +57,10 @@ SongList::SongList (const std::map<unsigned int, Glib::ustring>& genres)
    append_column (_("Duration"), colSongs.colDuration);
 
    set_headers_clickable ();
-   append_column (_("Genre"), colSongs.colGenre);
 
    for (unsigned int i (0); i < 3; ++i) {
       Gtk::TreeViewColumn* column (get_column (i));
-   for (unsigned int i (0); i < 4; ++i) {
+      column->set_sort_column (i + 1);
       column->set_resizable ();
       column->set_sort_column_id (i + 1);
       Check3 (get_column_cell_renderer (i));
@@ -73,6 +74,19 @@ SongList::SongList (const std::map<unsigned int, Glib::ustring>& genres)
 
    Gtk::TreeViewColumn* const column (new Gtk::TreeViewColumn (_("Genre")));
    Gtk::CellRendererCombo* const renderer (new Gtk::CellRendererCombo);
+   CellRendererList*    const renderer (new CellRendererList ());
+   renderer->property_editable () = true;
+   Gtk::TreeViewColumn* const column   (new Gtk::TreeViewColumn
+					(_("Genre"), *Gtk::manage (renderer)));
+   column->set_sort_column (4);
+   column->add_attribute (renderer->property_text(), colSongs.colGenre);
+   column->set_resizable ();
+   column->set_sort_column_id (4);
+
+      (bind (mem_fun (*this, &SongList::valueChanged), 3));
+
+   mSongs->set_sort_column (colSongs.colTrack, Gtk::SORT_ASCENDING);
+   mSongs->set_sort_func (colSongs.colTrack,
    mSongs->set_sort_func (colSongs.colName,
 			  sigc::mem_fun (*this, &SongList::sortByName));
 //-----------------------------------------------------------------------------
@@ -132,8 +146,18 @@ void SongList::valueChanged (const Glib::ustring& path,
 	 row[colSongs.colDuration] = song->getDuration ();
 	 row[colSongs.colDuration] = song->duration = value;
 	 for (std::map<unsigned int, Glib::ustring>::const_iterator g (genres.begin ());
-      case 3:
-	 break;
+	      g != genres.end (); ++g)
+	    if (g->second == value) {
+	       song->setGenre (g->first);
+	       row[colSongs.colGenre] = value;
+	       song->genre = g->first;
+	    }
+	 throw (std::invalid_argument (_("Unknown genre!")));
+	 break; }
+      default:
+	 Check3 (0);
+      } // endswitch
+   }
    catch (std::exception& e) {
       YGP::StatusObject obj (YGP::StatusObject::ERROR, e.what ());
       obj.generalize (_("Invalid value!"));
@@ -163,3 +187,18 @@ int SongList::sortByTrack (const Gtk::TreeModel::iterator& a,
    HSong hb (rowb[colSongs.entry]);
 }
    return ha->track - hb->track;
+//-----------------------------------------------------------------------------
+/// Sorts the entries in the song listbox
+/// \param a: First entry to compare
+void SongList::updateGenres () {
+   TRACE9 ("SongList::updateGenres () - Genres: " << genres.size ());
+
+   mSongGenres->clear ();
+   for (std::map<unsigned int, Glib::ustring>::const_iterator g (genres.begin ());
+   Check3 (get_column_cell_renderer (3));
+   Gtk::CellRenderer* r (get_column_cell_renderer (3)); Check3 (r);
+   Check3 (typeid (*r) == typeid (CellRendererList));
+   CellRendererList* renderer (dynamic_cast<CellRendererList*> (r));
+
+      Gtk::TreeModel::Row newGenre (*mSongGenres->append ());
+	g != genres.end (); ++g)

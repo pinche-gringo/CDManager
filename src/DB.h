@@ -1,7 +1,7 @@
 #ifndef DB_H
 #define DB_H
 
-//$Id: DB.h,v 1.1 2004/10/17 03:09:14 markus Rel $
+//$Id: DB.h,v 1.2 2004/11/12 03:56:48 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,7 +22,11 @@
 #include <stdexcept>
 
 
-/**This class encapsulates all methods to the database
+/**This class encapsulates all methods to access the database.
+
+   It is not sovled very elegantly, but mysql++ defines a Row (to MysqlRow)
+   which quite interferes with as Row-datatype (such as Gtk::Table's) and so
+   the database-access was totally encapsulated.
  */
 class Database {
  public:
@@ -30,13 +34,14 @@ class Database {
       throw (std::exception&);
    static void close () throw (std::exception&);
 
-   static void  store (const char* query) throw (std::exception&);
+   static void store (const char* query) throw (std::exception&);
    static unsigned int resultSize ();
    static bool hasData ();
    static void getNextResultRow ();
    static std::string getResultColumnAsString (unsigned int column);
    static unsigned int getResultColumnAsUInt (unsigned int column);
    static int getResultColumnAsInt (unsigned int column);
+   static long getIDOfInsert ();
 
  private:
    Database ();

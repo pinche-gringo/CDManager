@@ -1,11 +1,11 @@
-//$Id: DB.cpp,v 1.1 2004/10/17 03:09:14 markus Rel $
+//$Id: DB.cpp,v 1.2 2004/11/12 03:56:48 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Database
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 16.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -34,7 +34,7 @@
 #endif
 
 #define CHECK 9
-#define TRACELEVEL 9
+#define TRACELEVEL 5
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 
@@ -49,7 +49,7 @@ void Database::connect (const char* db, const char* user, const char* pwd) throw
    TRACE9 ("Database::connect (const char* (3x) - " << db << " from " << user);
    con.connect (db, NULL, user, pwd);
 }
- 
+
 void Database::close () throw (std::exception&) {
    TRACE9 ("Database::close ()");
    con.close ();
@@ -93,4 +93,8 @@ int Database::getResultColumnAsInt (unsigned int column) {
    TRACE9 ("Database::getResultColumnAsInt (unsigned int) - " << column);
    int ret ((*i)[column]);
    return ret;
+}
+
+long Database::getIDOfInsert () {
+   return con.insert_id ();
 }

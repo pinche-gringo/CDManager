@@ -6,6 +6,7 @@ CREATE TABLE Movies
      id		BIGINT		NOT NULL AUTO_INCREMENT,
      year	INT,
      director	BIGINT,
+     genre      BIGINT,
      PRIMARY KEY (id));
 CREATE INDEX movieNames ON Movies (name);
 
@@ -52,14 +53,17 @@ DROP TABLE Songs;
 CREATE TABLE Songs
     (name	VARCHAR(64)	NOT NULL,
      id		BIGINT		NOT NULL AUTO_INCREMENT,
+     idRecord   BIGINT,
      duration	TIME,
+     genre      BIGINT,
      PRIMARY KEY (id));
 CREATE INDEX songNames ON Songs (name);
+CREATE INDEX songRecord ON Songs (idRecord);
 
 DROP TABLE Interprets;
 CREATE TABLE Interprets
     (name	VARCHAR (64)	NOT NULL,
-     id		BIGINT		NOT NULL,
+     id		BIGINT		NOT NULL AUTO_INCREMENT,
      born	DATE,
      died	DATE,
      PRIMARY KEY (id));

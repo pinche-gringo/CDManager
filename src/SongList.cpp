@@ -1,11 +1,11 @@
-//$Id: SongList.cpp,v 1.7 2004/11/14 21:23:18 markus Exp $
+//$Id: SongList.cpp,v 1.8 2004/11/17 17:34:14 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -97,8 +97,9 @@ SongList::~SongList () {
 /// \param song: Song to add
 /// \returns Gtk::TreeModel::iterator: Inserted row
 //-----------------------------------------------------------------------------
+Gtk::TreeModel::iterator SongList::append (HSong& song) {
    TRACE3 ("SongList::append (HSong&) - " << (song.isDefined () ? song->getName ().c_str () : "None"));
-void SongList::append (HSong& song) {
+   Check1 (song.isDefined ());
    TRACE3 ("SongList::append (HSong&) - " << (song.isDefined () ? song->name.c_str () : "None"));
    Gtk::TreeModel::Row newSong (*mSongs->append ());
    newSong[colSongs.entry] = song;
@@ -113,6 +114,7 @@ void SongList::append (HSong& song) {
    newSong[colSongs.colGenre] = g->second;
    return newSong;
 }
+
 //-----------------------------------------------------------------------------
 /// Callback after changing a value in the listbox
 /// \param path: Path to changed line

@@ -1,14 +1,14 @@
-//$Id: LangDlg.cpp,v 1.3 2004/12/12 03:08:28 markus Rel $
+//$Id: LangDlg.cpp,v 1.4 2005/02/18 22:22:52 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Language
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 11.12.2004
-//COPYRIGHT   : Copyright (C) 2004
+//COPYRIGHT   : Copyright (C) 2004, 2005
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@
 
 #include <gtkmm/box.h>
 #include <gtkmm/label.h>
-#include <gtkmm/image.h>
 #include <gtkmm/button.h>
 #include <gtkmm/combobox.h>
 #include <gtkmm/treeview.h>

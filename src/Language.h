@@ -1,7 +1,7 @@
 #ifndef LANGUAGE_H
 #define LANGUAGE_H
 
-//$Id: Language.h,v 1.1 2004/12/07 03:33:57 markus Exp $
+//$Id: Language.h,v 1.2 2004/12/09 03:19:05 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,7 +19,10 @@
 
 
 #include <map>
+#include <string>
+#include <stdexcept>
 
+#include <gdkmm/pixbuf.h>
 #include <glibmm/ustring.h>
 
 
@@ -27,25 +30,39 @@
  */
 struct Language {
  public:
-   typedef enum { ENGLISH = 0, FRENCH, GERMAN, ITALIAN, SPANISH } LANG;
    static void init ();
+
+   static Glib::ustring findNational (const std::string& lang) throw (std::out_of_range);
+   static Glib::ustring findInternational (const std::string& lang) throw (std::out_of_range);
+   static Glib::RefPtr<Gdk::Pixbuf> findFlag (const std::string& lang) throw (std::out_of_range);
+   static bool exists (const std::string& lang);
+
+   Glib::ustring getNational () const { return nameNational; }
+   Glib::ustring getInternational () const { return nameInternational; }
+   const Glib::RefPtr<Gdk::Pixbuf> getFlag () const {return flag; }
 
    Language ();
    Language (const Language& other);
-   Language (const char* id, const Glib::ustring& internatnat,
-	     const Glib::ustring& national);
-   ~Language ();
+   Language (const Glib::ustring& internat, const Glib::ustring& national,
+	     const Glib::RefPtr<Gdk::Pixbuf>& image);
 
    Language& operator= (const Language& other);
+   ~Language ();
+
+   static std::map<std::string, Language>::const_iterator begin () {
+      return languages.begin (); }
+   static std::map<std::string, Language>::const_iterator end () {
+      return languages.end (); }
+
+ protected:
+   static Glib::RefPtr<Gdk::Pixbuf> loadFlag (const char* file);
 
  private:
-   const char*   id;
    Glib::ustring nameNational;
    Glib::ustring nameInternational;
+   Glib::RefPtr<Gdk::Pixbuf> flag;
 
-   static std::map<LANG, Language> languages;
+   static std::map<std::string, Language> languages;
 };
-
-typedef Language::LANG LANG;
 
 #endif

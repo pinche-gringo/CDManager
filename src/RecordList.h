@@ -1,7 +1,7 @@
 #ifndef RECORDLIST_H
 #define RECORDLIST_H
 
-//$Id: RecordList.h,v 1.2 2004/11/11 04:26:06 markus Rel $
+//$Id: RecordList.h,v 1.3 2004/11/14 21:24:27 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -57,6 +57,7 @@ class RecordList : public Gtk::TreeView {
 
    sigc::signal<void, const HInterpret&> signalArtistChanged;
    sigc::signal<void, const HRecord&> signalRecordChanged;
+   sigc::signal<void, const HRecord&> signalRecordGenreChanged;
 
    Glib::RefPtr<Gtk::TreeStore> getModel () const { return mRecords; }
    HRecord getRecordAt (const Gtk::TreeIter iterator) const;

@@ -1,11 +1,11 @@
-//$Id: RecordList.cpp,v 1.2 2004/11/11 04:26:06 markus Rel $
+//$Id: RecordList.cpp,v 1.3 2004/11/14 21:24:27 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
-//TODO        :
+//TODO        : Check if handles are freed in record listbox
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -30,8 +30,6 @@
 #include <cerrno>
 #include <cstdlib>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/StatusObj.h>
@@ -61,7 +59,7 @@ RecordList::RecordList (const std::map<unsigned int, Glib::ustring>& genres)
 
    for (unsigned int i (0); i < 2; ++i) {
       Gtk::TreeViewColumn* column (get_column (i));
-      column->set_sort_column_id (i + 1);
+      column->set_sort_column (i + 1);
       column->set_resizable ();
 
       Check3 (get_column_cell_renderer (i));
@@ -80,7 +78,7 @@ RecordList::RecordList (const std::map<unsigned int, Glib::ustring>& genres)
    append_column (*Gtk::manage (column));
    column->add_attribute (renderer->property_text(), colRecords.genre);
 
-   column->set_sort_column_id (3);
+   column->set_sort_column (3);
    column->set_resizable ();
 
    renderer->signal_edited ().connect
@@ -167,6 +165,7 @@ void RecordList::valueChanged (const Glib::ustring& path,
 	       if (g->second == value) {
 		  record->genre = g->first;
 		  row[colRecords.genre] = value;
+		  signalRecordGenreChanged.emit (record);
 		  return;
 	       }
 	    throw (std::invalid_argument (_("Unknown genre!")));

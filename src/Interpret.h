@@ -1,7 +1,7 @@
 #ifndef INTERPRET_H
 #define INTERPRET_H
 
-//$Id: Interpret.h,v 1.3 2004/11/07 02:34:23 markus Exp $
+//$Id: Interpret.h,v 1.4 2004/11/11 04:25:00 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -39,6 +39,8 @@ class Interpret : public YGP::Entity {
 
  public:
    Interpret () : id (0) { }
+   Interpret (const Interpret& other) : id (other.id), name (other.name),
+      born (other.born), died (other.died) { }
    virtual ~Interpret () { }
 
    static bool compByName (const HInterpret& a, const HInterpret& b);
@@ -52,7 +54,6 @@ class Interpret : public YGP::Entity {
    static Glib::ustring removeIgnored (const Glib::ustring& name);
 
    //Prohibited manager functions
-   Interpret (const Interpret& other);
    const Interpret& operator= (const Interpret& other);
 
    static std::vector<Glib::ustring> ignore;

@@ -1,11 +1,11 @@
-//$Id: Writer.cpp,v 1.3 2004/12/05 03:30:00 markus Exp $
+//$Id: Writer.cpp,v 1.4 2004/12/05 17:05:55 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Writer
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 27.11.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -25,7 +25,8 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 
-#define CHECK 9
+#include <glibmm/convert.h>
+
 #include <YGP/Check.h>
 
 #include "Writer.h"
@@ -50,7 +51,7 @@ std::string MovieWriter::getSubstitute (const char ctrl, bool extend) const {
 
       switch (ctrl) {
       case 'n':
-	 return hMovie->getName ();
+	 return changeSpecialChars (Glib::locale_from_utf8 (hMovie->getName ()));
 	 break;
 
       case 'y':
@@ -58,10 +59,10 @@ std::string MovieWriter::getSubstitute (const char ctrl, bool extend) const {
 
       case 'g':
 	 Check3 (genres.find (hMovie->getGenre ()) != genres.end ());
-	 return genres.find (hMovie->getGenre ())->second;
+	 return changeSpecialChars (Glib::locale_from_utf8 (genres.find (hMovie->getGenre ())->second));
 
       case 'd':
-	 return hDirector->getName ();
+	 return changeSpecialChars (Glib::locale_from_utf8 (hDirector->getName ()));
       } // endswitch
    }
    else {
@@ -69,7 +70,7 @@ std::string MovieWriter::getSubstitute (const char ctrl, bool extend) const {
       Check3 (!hMovie.isDefined ());
 
       if (ctrl == 'n')
-	 return hDirector->getName ();
+	 return changeSpecialChars (Glib::locale_from_utf8 (hDirector->getName ()));
       return "";
    }
    return std::string (1, ctrl);
@@ -132,7 +133,7 @@ std::string RecordWriter::getSubstitute (const char ctrl, bool extend) const {
 
       switch (ctrl) {
       case 'n':
-	 return hRecord->getName ();
+	 return changeSpecialChars (Glib::locale_from_utf8 (hRecord->getName ()));
 	 break;
 
       case 'y':
@@ -140,10 +141,10 @@ std::string RecordWriter::getSubstitute (const char ctrl, bool extend) const {
 
       case 'g':
 	 Check3 (genres.find (hRecord->getGenre ()) != genres.end ());
-	 return genres.find (hRecord->getGenre ())->second;
+	 return changeSpecialChars (Glib::locale_from_utf8 (genres.find (hRecord->getGenre ())->second));
 
       case 'd':
-	 return hInterpret->getName ();
+	 return changeSpecialChars (Glib::locale_from_utf8 (hInterpret->getName ()));
       } // endswitch
    }
    else {
@@ -151,7 +152,7 @@ std::string RecordWriter::getSubstitute (const char ctrl, bool extend) const {
       Check3 (!hRecord.isDefined ());
 
       if (ctrl == 'n')
-	 return hInterpret->getName ();
+	 return changeSpecialChars (Glib::locale_from_utf8 (hInterpret->getName ()));
       return "";
    }
    return std::string (1, ctrl);

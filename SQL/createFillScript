@@ -1,0 +1,45 @@
+#!/bin/sh
+
+if [ -z "$1" ]; then
+   echo "Creates a SQL-script to fill the CD-database with the files found"
+
+   echo "Invalid usage!"
+   echo "$0 PATH"
+   exit 1
+fi
+
+function insertRecord () {
+    echo 'INSERT INTO Records SET name="'$1'", interpret=-1;'
+    echo "UPDATE Songs SET idRecord=LAST_INSERT_ID() WHERE idRecord=-1;"
+}
+
+
+rm populateSongs
+while [ -n "$1" ]; do
+    dir="${1%/}"
+    echo "Handling $dir ..."
+    oldRec="";
+    for file in "$dir"/*.mp3; do
+	artist=${file##*/[}
+	artist=${artist%]-*}
+
+	record=${file#*-(}
+	record=${record%)-*}
+
+	title=${file#*)-}
+	title=${title%.mp3}
+	# echo "Artist '$artist'; record: '$record', Title: '$title'"
+
+	if [ "$oldRec" != "$record" ]; then
+	    [ ! -z "$oldRec" ] && insertRecord "$oldRec">>populateSongs;
+	    oldRec="$record";
+	fi
+
+	echo 'INSERT INTO Songs SET name="'$title'", idRecord=-1;'>>populateSongs
+    done
+    insertRecord "$record">>populateSongs;
+    echo 'INSERT INTO Interprets SET name="'${dir##*/}'";'>>populateSongs
+    echo "UPDATE Records SET interpret=LAST_INSERT_ID() WHERE interpret=-1;">>populateSongs
+
+    shift
+done

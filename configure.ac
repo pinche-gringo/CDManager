@@ -1,9 +1,9 @@
-dnl $Id: configure.ac,v 1.5 2004/11/29 20:21:21 markus Rel $
+dnl $Id: configure.ac,v 1.6 2004/12/13 02:42:02 markus Rel $
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.52)
-AC_REVISION($Revision: 1.5 $)
-AC_INIT(CDManager, 0.4.00, [g17m0@lycos.com], CDManager)
+AC_REVISION($Revision: 1.6 $)
+AC_INIT(CDManager, 0.5.00, [g17m0@lycos.com], CDManager)
 
 RELEASE=${PACKAGE_VERSION%.*}
 AC_DEFINE_UNQUOTED(PRG_RELEASE, "$RELEASE", [Define to the release of the program])
@@ -12,7 +12,7 @@ AC_SUBST(RELEASE)
 
 AM_INIT_AUTOMAKE(dist-bzip2)
 
-INCLUDES="-I. -I\$(top_srcdir) -DLOCALEDIR=\\\"\$(datadir)/locale\\\" -DDOCUDIR=\\\"\$(datadir)/doc/\$(PACKAGE)/\\\""
+INCLUDES="-I. -I\$(top_srcdir) -DLOCALEDIR=\\\"\$(datadir)/locale\\\" -DDOCUDIR=\\\"\$(datadir)/doc/\$(PACKAGE)/\\\" -DDATADIR=\\\"\$(pkgdatadir)/\\\""
 
 AC_C_BIGENDIAN
 
@@ -203,14 +203,14 @@ AC_ARG_ENABLE(checks,
 
 
 AC_OUTPUT(Makefile intl/Makefile po/Makefile.in src/Makefile doc/Makefile\
-	  SQL/Makefile)
+	  SQL/Makefile data/Makefile)
 
 
 dnl Settings for autoheader
-AH_TOP([#ifndef CARDGAMES_CFG_H
-#define CARDGAMES_CFG_H
+AH_TOP([#ifndef CDMANAGER_CFG_H
+#define CDMANAGER_CFG_H
 
-//$Id: configure.ac,v 1.5 2004/11/29 20:21:21 markus Rel $
+//$Id: configure.ac,v 1.6 2004/12/13 02:42:02 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

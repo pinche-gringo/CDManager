@@ -1,7 +1,7 @@
 #ifndef RECORD_H
 #define RECORD_H
 
-//$Id: Record.h,v 1.3 2004/10/29 01:36:59 markus Rel $
+//$Id: Record.h,v 1.4 2004/10/30 17:50:54 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ class Record : public YGP::Entity {
    unsigned long int id;
    Glib::ustring     name;
    unsigned int      year;
-   Glib::ustring     genre;
+   unsigned int      genre;
 
    //Prohibited manager functions
    Record (const Record& other);

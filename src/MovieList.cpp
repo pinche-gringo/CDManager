@@ -1,11 +1,11 @@
-//$Id: MovieList.cpp,v 1.14 2005/01/18 03:56:56 markus Rel $
+//$Id: MovieList.cpp,v 1.15 2005/01/29 19:54:10 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.14 $
+//REVISION    : $Revision: 1.15 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -266,6 +266,7 @@ bool MovieList::on_button_press_event (GdkEventButton* e) {
 
    // Check if button 1 was pressed in the previously selected row
    if (((e->type == GDK_BUTTON_PRESS) && (e->button == 1))
+       && selection->get_selected () && oldSel
        && (oldSel == selection->get_selected ())
        && (selection->get_selected ()->parent ())) {
 

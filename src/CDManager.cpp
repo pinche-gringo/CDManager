@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.6 2004/10/28 19:11:05 markus Exp $
+//$Id: CDManager.cpp,v 1.7 2004/10/29 01:36:36 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : 
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -354,8 +354,48 @@ void CDManager::command (int menu) {
 	 editRecord (*i, NULL);
       break; }
 
-   case DELETE:
-      break;
+   case DELETE: {
+      Gtk::TreeSelection::ListHandle_Path list
+	 (records.get_selection ()->get_selected_rows ());
+      Check3 (list.size ());
+      for (Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
+	   i != list.end (); ++i) {
+	 Gtk::TreeIter iter (mRecords->get_iter (*i)); Check3 (iter);
+	 TRACE9 ("CDManager::command (int) -Deleting " << (**iter)[colRecords.name]);
+
+	 HRecord hRec (getRecordAtPos (iter));
+	 Check3 (relRecords.isRelated (hRec));
+	 HInterpret hArtist (relRecords.getParent (hRec));
+	 Check3 (hArtist.isDefined ());
+	 relRecords.unrelate (hArtist, hRec);
+
+	 try {
+	    std::stringstream id;
+	    id << hRec->id;
+	    std::string query ("DELETE FROM Records WHERE id=");
+	    query += id.str ();
+	    Database::store (query.c_str ());
+
+	    query = "DELETE FROM Songs WHERE idRecord=";
+	    query += id.str ();
+	    Database::store (query.c_str ());
+
+	    // Remove related songs
+	    for (std::vector<HSong>::iterator s (relSongs.getObjects (hRec).begin ());
+		 s != relSongs.getObjects (hRec).end (); ++s)
+	       relSongs.unrelate (hRec, *s);
+
+	    mRecords->erase (iter);
+	 }
+	 catch (std::exception& err) {
+	    Glib::ustring msg (_("Can't delete record %1!\n\nReason: %2"));
+	    msg.replace (msg.find ("%1"), 2, hRec->name);
+	    msg.replace (msg.find ("%2"), 2, err.what ());
+	    Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+	    dlg.run ();
+	 }
+      }
+      break; }
 
    case EXIT:
       hide ();
@@ -389,7 +429,6 @@ const char* CDManager::getHelpfile () {
 
 //-----------------------------------------------------------------------------
 /// Displays a dialog to Login to the database
-
 //-----------------------------------------------------------------------------
 /// Login to the database with the passed user/password pair
 /// \param user: User to connect to the DB with
@@ -451,6 +490,7 @@ void CDManager::loadDatabase () {
    status.push (_("Reading database ..."));
 
    if (nb.get_current_page ()) {
+   mRecords->clear ();
       loadMovies ();
    unsigned long int cRecords (0), cMovies (0);
 
@@ -501,6 +541,7 @@ void CDManager::loadDatabase () {
 	 Check3 (mRecords->children ().begin());
 	 records.get_selection ()->select (mRecords->children ().begin());
       }
+      records.expand_all ();
    }
    catch (std::exception& err) {
       Glib::ustring msg (_("Can't query available records!\n\nReason: %1"));
@@ -559,19 +600,15 @@ void CDManager::recordSelected () {
    if (list.size ()) {
 
       Gtk::TreeIter i (mRecords->get_iter (*list.begin ())); Check3 (i);
-      Check1 (typeid (*((*i)[colRecords.entry])) == typeid (HRecord));
-      YGP::IHandle* phRec ((**i)[colRecords.entry]);
-      Check1 (typeid (*phRec) == typeid (HRecord));
-      HRecord hRecord (*(HRecord*)phRec);
-      TRACE7 ("CDManager::recordSelected () - Selected record: " <<
-	      hRecord->id << '/' << hRecord->name);
 	 HRecord hRecord (records.getRecordAt (i)); Check3 (hRecord.isDefined ());
+      HRecord hRecord (getRecordAtPos (i));
       if (!relSongs.isRelated (hRecord)) {
 	 TRACE9 ("CDManager::recordSelected () - Record not loaded - loading");
 	 loadSongs (hRecord);
       }
 
       // Add related songs to the listbox
+      Check3 (relSongs.isRelated (hRecord));
       for (std::vector<HSong>::iterator i (relSongs.getObjects (hRecord).begin ());
 	   i != relSongs.getObjects (hRecord).end (); ++i)
 	 addSong (*i);
@@ -600,12 +637,9 @@ void CDManager::addSong (const HSong& song) {
 void CDManager::editRecord (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*) {
    Gtk::TreeIter iter (mRecords->get_iter (path)); Check3 (iter);
    if (iter) {
-      TRACE9 ("CDManager::editRecord (onst Gtk::TreeModel::Path): " << (**iter)[colRecords.name]);
+      TRACE9 ("CDManager::editRecord (const Gtk::TreeModel::Path): " << (**iter)[colRecords.name]);
       if (typeid (*((**iter)[colRecords.entry])) == typeid (HRecord)) {
-	 YGP::IHandle* phRec ((**iter)[colRecords.entry]);
-	 Check1 (typeid (*phRec) == typeid (HRecord));
-
-	 HRecord rec (*(HRecord*)(phRec)); Check3 (rec.isDefined ());
+	 HRecord rec (getRecordAtPos (iter)); Check3 (rec.isDefined ());
 	 if (!relSongs.isRelated (rec))
 	    loadSongs (rec);
 	 RecordEdit::create (rec);
@@ -647,6 +681,20 @@ void CDManager::loadSongs (const HRecord& record) {
       Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
       dlg.run ();
    }
+}
+
+//-----------------------------------------------------------------------------
+/// Returns the handle (casted to a HRecord) at the passed position
+/// \param i: Iterator to position in the list
+/// \returns HRecord: Handle of the selected line
+//-----------------------------------------------------------------------------
+HRecord& CDManager::getRecordAtPos (const Gtk::TreeIter& i) const {
+   Check1 (typeid (*((*i)[colRecords.entry])) == typeid (HRecord));
+   YGP::IHandle* phRec ((**i)[colRecords.entry]);
+   Check1 (typeid (*phRec) == typeid (HRecord));
+   TRACE7 ("CDManager::getRecordAtPos (const Gtk::TreeIter&) - Selected record: " <<
+	   (*(HRecord*)phRec)->id << '/' << (*(HRecord*)phRec)->name);
+   return *(HRecord*)phRec;
 }
 
 /// Exports the stored information to HTML documents

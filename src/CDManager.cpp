@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.5 2004/10/26 22:17:40 markus Exp $
+//$Id: CDManager.cpp,v 1.6 2004/10/28 19:11:05 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : 
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -244,7 +244,7 @@ XGP::XApplication::MenuEntry CDManager::menuItems[] = {
    : XApplication (PACKAGE " V" PRG_RELEASE), relMovies ("movies"),
 CDManager::CDManager ()
    : XApplication (PACKAGE " V" PRG_RELEASE), relRecords ("records"),
-     relSongs ("songs"), cds (4, 1), movies (4, 4) {
+     relSongs ("songs"), cds (2, 1), movies (4, 4) {
    Language::init ();
 
 
@@ -260,7 +260,7 @@ CDManager::CDManager ()
    Gtk::ScrolledWindow* scrlSongs (new Gtk::ScrolledWindow);
    Gtk::ScrolledWindow* scrlMovies (new Gtk::ScrolledWindow);
 
-   nb.append_page (cds, _("C_Ds"), true);
+   nb.append_page (cds, _("_Records"), true);
    cds.show ();
    nb.append_page (movies, _("_Movies"), true);
    movies.show ();
@@ -299,13 +299,9 @@ CDManager::CDManager ()
    recordSel->signal_changed ().connect
       (mem_fun (*this, &CDManager::recordSelected));
    cds->add1 (*manage (scrlRecords));
-   cds.attach (*manage (new Gtk::Label (_("Records"))), 0, 1, 0, 1,
-	       Gtk::SHRINK, Gtk::SHRINK, 5, 5);
-   cds.attach (*manage (new Gtk::Label (_("Songs"))), 0, 1, 2, 3,
-	       Gtk::SHRINK, Gtk::SHRINK, 5, 5);
-   cds.attach (scrlRecords, 0, 1, 1, 2, Gtk::FILL | Gtk::EXPAND,
+   cds.attach (scrlRecords, 0, 1, 0, 1, Gtk::FILL | Gtk::EXPAND,
 	       Gtk::FILL | Gtk::EXPAND, 5, 5);
-   cds.attach (scrlSongs, 0, 1, 3, 4, Gtk::FILL | Gtk::EXPAND,
+   cds.attach (scrlSongs, 0, 1, 1, 2, Gtk::FILL | Gtk::EXPAND,
 	       Gtk::FILL | Gtk::EXPAND, 5, 5);
 
    apMenus[SAVE]->set_sensitive (false);
@@ -495,7 +491,7 @@ void CDManager::loadDatabase () {
 	    newRec->name = row[colRecords.name] =
 	       Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
 	    if (newRec->year)
-	       row[colRecords.year] = Database::getResultColumnAsString (3);
+	       row[colRecords.year] = Database::getResultColumnAsString (4);
 
 	    newRec->genre = row[colRecords.genre] = 
 	       Glib::locale_to_utf8 (Database::getResultColumnAsString (5));
@@ -570,44 +566,15 @@ void CDManager::recordSelected () {
       TRACE7 ("CDManager::recordSelected () - Selected record: " <<
 	      hRecord->id << '/' << hRecord->name);
 	 HRecord hRecord (records.getRecordAt (i)); Check3 (hRecord.isDefined ());
-      if (relSongs.isRelated (hRecord)) {
-	 TRACE9 ("CDManager::recordSelected () - Record already loaded; " <<
-		 relSongs.getObjects (hRecord).size () << " songs");
-
-	 for (std::vector<HSong>::iterator i (relSongs.getObjects (hRecord).begin ());
-	      i != relSongs.getObjects (hRecord).end (); ++i)
-	    addSong (*i);
+      if (!relSongs.isRelated (hRecord)) {
+	 TRACE9 ("CDManager::recordSelected () - Record not loaded - loading");
+	 loadSongs (hRecord);
       }
-      else {
-	 TRACE9 ("CDManager::recordSelected () - Record not loaded");
 
-	 try {
-	    std::stringstream query;
-	    query << "SELECT id, name, duration, genre FROM Songs "
-	       "WHERE idRecord=" << hRecord->id;
-	    Database::store (query.str ().c_str ());
-
-	    HSong song;
-	    while (Database::hasData ()) {
-	       song.define ();
-	       song->id = Database::getResultColumnAsUInt (0);
-	       song->name = Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
-	       // song->duration = Database::getResultColumnAsString (2);
-	       song->genre = Database::getResultColumnAsUInt (3);
-
-	       relSongs.relate (hRecord, song);
-	       addSong (song);
-	       Database::getNextResultRow ();
-	    } // end-while
-	 }
-	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't query the songs of the selected record!"
-				 "\n\nReason: %1"));
-	    msg.replace (msg.find ("%1"), 2, err.what ());
-	    Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-	    dlg.run ();
-	 }
-      }
+      // Add related songs to the listbox
+      for (std::vector<HSong>::iterator i (relSongs.getObjects (hRecord).begin ());
+	   i != relSongs.getObjects (hRecord).end (); ++i)
+	 addSong (*i);
       enableEdit (NONE_SELECTED);
 //-----------------------------------------------------------------------------
 /// Callback after selecting a movie
@@ -616,7 +583,6 @@ void CDManager::recordSelected () {
 /// \param song: Song to add
 //-----------------------------------------------------------------------------
 void CDManager::addSong (const HSong& song) {
-   TRACE7 ("CDManager::addSong (const HSong&)");
    TRACE7 ("CDManager::addSong (const HSong&) - "
 	   << (song.isDefined () ? song->name.c_str () : "Undefined"));
    Check3 (song.isDefined ());
@@ -638,8 +604,48 @@ void CDManager::editRecord (const Gtk::TreeModel::Path& path, Gtk::TreeViewColum
       if (typeid (*((**iter)[colRecords.entry])) == typeid (HRecord)) {
 	 YGP::IHandle* phRec ((**iter)[colRecords.entry]);
 	 Check1 (typeid (*phRec) == typeid (HRecord));
-	 RecordEdit::create (*(HRecord*)(phRec));
+
+	 HRecord rec (*(HRecord*)(phRec)); Check3 (rec.isDefined ());
+	 if (!relSongs.isRelated (rec))
+	    loadSongs (rec);
+	 RecordEdit::create (rec);
       }
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Loads the songs for the passed record
+/// \param record: Handle to the record for which to load songs
+//-----------------------------------------------------------------------------
+void CDManager::loadSongs (const HRecord& record) {
+   TRACE9 ("CDManager::loadSongs (const HRecord& record) - "
+	   << (record.isDefined () ? record->name.c_str () : "Undefined"));
+   Check1 (record.isDefined ());
+
+   try {
+      std::stringstream query;
+      query << "SELECT id, name, duration, genre FROM Songs WHERE idRecord="
+	    << record->id;
+      Database::store (query.str ().c_str ());
+
+      HSong song;
+      while (Database::hasData ()) {
+	 song.define ();
+	 song->id = Database::getResultColumnAsUInt (0);
+	 song->name = Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
+	 // song->duration = Database::getResultColumnAsString (2);
+	 song->genre = Database::getResultColumnAsUInt (3);
+
+	 relSongs.relate (record, song);
+	 Database::getNextResultRow ();
+      } // end-while
+   }
+   catch (std::exception& err) {
+      Glib::ustring msg (_("Can't query the songs for record %1!\n\nReason: %2"));
+      msg.replace (msg.find ("%1"), 2, record->name);
+      msg.replace (msg.find ("%2"), 2, err.what ());
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
    }
 }
 

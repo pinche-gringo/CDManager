@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.12 2004/11/01 23:59:05 markus Exp $
+//$Id: CDManager.cpp,v 1.13 2004/11/06 18:39:15 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : Free handles in record listbox
 //BUGS        :
-//REVISION    : $Revision: 1.12 $
+//REVISION    : $Revision: 1.13 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -45,12 +45,10 @@
 #include "Record.h"
 #include "Interpret.h"
 
-#include "RecEdit.h"
-
 
 // Defines
-const unsigned int CDManager::WIDTH (760);
-const unsigned int CDManager::HEIGHT (750);
+
+const char* const CDManager::DBNAME ("CDMedia");
 
 
 // Pixmap for program
@@ -227,15 +225,16 @@ const char* CDManager::xpmAuthor[] = {
 // With a very ugly trick initialize I18n before the first use of gettext)
 XGP::XApplication::MenuEntry CDManager::menuItems[] = {
     { (initI18n (PACKAGE, LOCALEDIR),
-      _("_CD")),            _("<alt>C"), 0,        BRANCH },
-    { _("_Login"),          _("<ctl>L"), LOGIN,    ITEM },
-    { _("_Logout"),         _("<ctl>O"), LOGOUT,   ITEM },
-    { "",                   "",          0,        SEPARATOR },
-    { _("E_xit"),           _("<ctl>Q"), EXIT,     ITEM },
-    { _("_Edit"),          _("<alt>E"),  MEDIT,    BRANCH },
-    { _("_New"),            _("<ctl>N"), NEW,      ITEM },
-    { _("_Edit"),           _("<ctl>E"), EDIT,     ITEM },
-    { _("_Delete"),         _("<ctl>D"), DELETE,   ITEM }
+      _("_CD")),            _("<alt>C"),       0,          BRANCH },
+    { _("_Login"),          _("<ctl>L"),       LOGIN,      ITEM },
+    { _("_Logout"),         _("<ctl>O"),       LOGOUT,     ITEM },
+    { _("_Save DB"),        _("<ctl>S"),       SAVE,       ITEM },
+    { "",                   "",                0  ,        SEPARATOR },
+    { _("E_xit"),           _("<ctl>Q"),       EXIT,       ITEM },
+    { _("_Edit"),           _("<alt>E"),       MEDIT,      BRANCH },
+    { _("_New Interpret"),  _("<ctl>N"),       NEW_ARTIST, ITEM },
+    { _("_New Song"),       _("<ctl><shft>N"), NEW_SONG,   ITEM },
+    { _("_Delete"),         _("<del>"),        DELETE,     ITEM }
 };
 
 /// Defaultconstructor; all widget are created
@@ -244,7 +243,7 @@ XGP::XApplication::MenuEntry CDManager::menuItems[] = {
    : XApplication (PACKAGE " V" PRG_RELEASE), relMovies ("movies"),
 CDManager::CDManager ()
    : XApplication (PACKAGE " V" PRG_RELEASE), relRecords ("records"),
-     relSongs ("songs"), cds (2, 1), movies (4, 4), songs (genres)  {
+     relSongs ("songs"), movies (4, 4), songs (genres)  {
    Language::init ();
 
 
@@ -281,25 +280,24 @@ CDManager::CDManager ()
    songs.show ();
 
    records.signalOwnerChanged.connect (mem_fun (*this, &CDManager::artistChanged));
+   records.signalObjectChanged.connect (mem_fun (*this, &CDManager::recordChanged));
    movies.signalObjectChanged.connect (mem_fun (*this, &CDManager::movieChanged));
    records.append_column (_("Interpret/Record"), colRecords.name);
    records.append_column (_("Year"), colRecords.year);
    records.append_column (_("Genre"), colRecords.genre);
-   records.get_column (0)->set_min_width (400);
+   for (unsigned int i (0); i < 3; ++i)
+      records.get_column (i)->set_resizable ();
 
    Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
    recordSel->set_mode (Gtk::SELECTION_EXTENDED);
    recordSel->set_select_function
       (mem_fun (*this, &CDManager::canSelect));
-   records.signal_row_activated ().connect
-      (mem_fun (*this, &CDManager::editRecord));
    recordSel->signal_changed ().connect
       (mem_fun (*this, &CDManager::recordSelected));
    cds->add1 (*manage (scrlRecords));
-   cds.attach (scrlRecords, 0, 1, 0, 1, Gtk::FILL | Gtk::EXPAND,
-	       Gtk::FILL | Gtk::EXPAND, 5, 5);
-   cds.attach (scrlSongs, 0, 1, 1, 2, Gtk::FILL | Gtk::EXPAND,
-	       Gtk::FILL | Gtk::EXPAND, 5, 5);
+   cds.set_position ((WIDTH - 20) >> 1);
+   cds.add1 (scrlRecords);
+   cds.add2 (scrlSongs);
 
    apMenus[SAVE]->set_sensitive (false);
 
@@ -330,6 +328,35 @@ CDManager::~CDManager () {
 void CDManager::command (int menu) {
    TRACE2 ("CDManager::command (int) - " << menu);
    switch (menu) {
+   case SAVE:
+      while (changedSongs.size ()) {
+	 HSong song (changedSongs.begin ()->first); Check3 (song.isDefined ());
+	 try {
+	    std::stringstream query;
+	    query << (song->id ? "UPDATE Songs" : "INSERT into Songs")
+		  << " SET name=\"" << song->name << "\", track=" << song->track
+		  << ", duration=\"" << song->duration << "\", genre=" << song->genre;
+	    if (relSongs.isRelated (song)) {
+	       HRecord record (relSongs.getParent (song)); Check3 (record.isDefined ());
+	       query << ", idRecord=" << record->id;
+	    }
+	    if (song->id)
+	       query << " WHERE id=" << song->id;
+	    Database::store (query.str ().c_str ());
+	 }
+	 catch (std::exception& err) {
+	    Glib::ustring msg (_("Can't write song %1!\n\nReason: %2"));
+	    msg.replace (msg.find ("%1"), 2, song->name);
+	    msg.replace (msg.find ("%2"), 2, err.what ());
+	    Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+	    dlg.run ();
+	 }
+
+	 changedSongs.erase (changedSongs.begin ());
+      } // endwhile
+      apMenus[SAVE]->set_sensitive (false);
+      break;
+
    case LOGIN:
       XGP::TLoginDialog<CDManager>::create (_("Database login"), *this,
 					    &CDManager::login)->setCurrentUser ();
@@ -342,20 +369,11 @@ void CDManager::command (int menu) {
       status.push (_("Disconnected!"));
       break;
 /// Saves the DB
-   case NEW: {
-      HRecord hRec;
-      TRecordEdit<CDManager>::create (*this, &CDManager::recordChanged, hRec,
-				      artists, genres);
-      break; }
+   case NEW_ARTIST:
+      break;
 
-   case EDIT: {
-      Gtk::TreeSelection::ListHandle_Path list
-	 (records.get_selection ()->get_selected_rows ());
-      Check3 (list.size ());
-      for (Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
-	   i != list.end (); ++i)
-	 editRecord (*i, NULL);
-      break; }
+   case NEW_SONG:
+      break;
 
    case DELETE: {
       Glib::RefPtr<Gtk::TreeSelection> selection (records.get_selection ());
@@ -511,12 +529,14 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 void CDManager::enableMenus (bool enable) {
    apMenus[LOGOUT]->set_sensitive (enable);
    apMenus[MEDIT]->set_sensitive (enable);
-   apMenus[LOGIN]->set_sensitive (!enable);
    apMenus[EXPORT]->set_sensitive (enable);
    apMenus[IMPORT_MP3]->set_sensitive (enable);
 
    cds.set_sensitive (enable);
    movies.set_sensitive (enable);
+   apMenus[SAVE]->set_sensitive (enable);
+}
+
 //-----------------------------------------------------------------------------
 /// Enables or disables the edit-menus entries according to the selection
 /// \param enable: Flag, if menus should be enabled
@@ -524,7 +544,6 @@ void CDManager::enableMenus (bool enable) {
 void CDManager::enableEdit (SELECTED selected) {
    TRACE9 ("CDManager::enableEdit (SELECTED) - " << selected);
 void CDManager::enableEdit (bool enable) {
-   apMenus[EDIT]->set_sensitive (enable);
    apMenus[DELETE]->set_sensitive (enable);
 //-----------------------------------------------------------------------------
 /// Loads the database and shows its contents.
@@ -684,33 +703,15 @@ void CDManager::recordSelected () {
       }
 
       // Add related songs to the listbox
-      Check3 (relSongs.isRelated (hRecord));
-      for (std::vector<HSong>::iterator i (relSongs.getObjects (hRecord).begin ());
-	   i != relSongs.getObjects (hRecord).end (); ++i)
-	 songs.append (*i);
+      if (relSongs.isRelated (hRecord))
+	 for (std::vector<HSong>::iterator i (relSongs.getObjects (hRecord).begin ());
+	      i != relSongs.getObjects (hRecord).end (); ++i)
+	    songs.append (*i);
       enableEdit (NONE_SELECTED);
   enableEdit (list.size ());
 //-----------------------------------------------------------------------------
 /// Callback after selecting a movie
 /// \param row: Selected row
-/// Calls the edit-dialog with the record stored in the passed path
-/// \param path: Path to activated item
-//-----------------------------------------------------------------------------
-void CDManager::editRecord (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*) {
-   Gtk::TreeIter iter (mRecords->get_iter (path)); Check3 (iter);
-   if (iter) {
-      TRACE9 ("CDManager::editRecord (const Gtk::TreeModel::Path): " << (**iter)[colRecords.name]);
-
-      HRecord rec ((*iter)[colRecords.entry]); Check3 (rec.isDefined ());
-      if (!relSongs.isRelated (rec))
-	 loadSongs (rec);
-
-      TRecordEdit<CDManager>::create (*this, &CDManager::recordChanged, rec,
-				      artists, genres);
-   }
-}
-
-//-----------------------------------------------------------------------------
 /// Loads the songs for the passed record
 /// \param record: Handle to the record for which to load songs
 //-----------------------------------------------------------------------------
@@ -730,7 +731,9 @@ void CDManager::loadSongs (const HRecord& record) {
 	 song.define ();
 	 song->id = Database::getResultColumnAsUInt (0);
 	 song->name = Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
-	 // song->duration = Database::getResultColumnAsString (2);
+	 std::string time (Database::getResultColumnAsString (2));
+	 if (time != "00:00:00")
+	    song->duration = time;
 	 song->genre = Database::getResultColumnAsUInt (3);
 	 song->track = Database::getResultColumnAsUInt (4);
 
@@ -814,6 +817,22 @@ HInterpret CDManager::getInterpret (unsigned int nr) const {
    return tmp;
 }
 
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+defineChangeObject(Song, song, changedSongs)
+
+void CDManager::songChanged (const HSong& song) {
+   TRACE9 ("CDManager::songChanged (const HSong& song) - "
+	   << (song.isDefined () ? song->id : -1UL) << '/'
+	   << (song.isDefined () ? song->name.c_str () : "Undefined"));
+// void CDManager::artistChanged (const HInterpret& artist)
+   if (changedSongs.find (song) == changedSongs.end ()) {
+      HSong newSong (new Song (*song));
+      changedSongs[song] = newSong;
+      apMenus[SAVE]->set_sensitive (true);
+   }
+}
+/// Callback (additional to recordChanged) when the genre of a record is being
 /// Exports the stored information to HTML documents
 //-----------------------------------------------------------------------------
 /// \param argv: Array with pointer to parameter

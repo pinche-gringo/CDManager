@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.11 2004/11/01 23:59:05 markus Exp $
+//$Id: CDManager.h,v 1.12 2004/11/06 18:39:15 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 #include <vector>
 
 #include <gtkmm/table.h>
+#include <gtkmm/paned.h>
 #include <gtkmm/notebook.h>
 #include <gtkmm/treeview.h>
 #include <gtkmm/liststore.h>
@@ -32,6 +33,7 @@
 #include "Song.h"
 #include "Record.h"
 #include "SongList.h"
+#include "Interpret.h"
 #include "RecordList.h"
 
 #include <YGP/Relation.h>
@@ -70,7 +72,8 @@ class CDManager : public XGP::XApplication {
 
  private:
    // IDs for menus
-   enum { LOGIN = XApplication::LAST, LOGOUT, MEDIT, NEW, EDIT, DELETE, EXIT };
+   enum { LOGIN = XApplication::LAST, SAVE, LOGOUT, MEDIT, NEW_ARTIST,
+	  NEW_SONG, DELETE, EXIT };
 
    // Protected manager functions
    CDManager (const CDManager&);
@@ -81,7 +84,6 @@ class CDManager : public XGP::XApplication {
    virtual void showAboutbox ();
    virtual const char* getHelpfile ();
    void recordSelected ();
-   void editRecord (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*);
    void recordChanged (HRecord& hRecord);
 
    bool login (const Glib::ustring& user, const Glib::ustring& pwd);
@@ -90,6 +92,7 @@ class CDManager : public XGP::XApplication {
    void enableEdit (bool enable);
    void loadSongs (const HRecord& record);
 
+   void songChanged (const HSong& song);
    void changeRecord (Gtk::TreeModel::Row& line);
    HInterpret getInterpret (unsigned int nr) const;
    bool canSelect (const Glib::RefPtr<Gtk::TreeModel>& model,
@@ -112,7 +115,7 @@ class CDManager : public XGP::XApplication {
    YGP::Relation1_N<HRecord, HSong>      relSongs;
 
    Gtk::Notebook  nb;
-   Gtk::Table     cds;
+   Gtk::HPaned    cds;
    Gtk::Table     movies;
 
    RecordColumns                colRecords;
@@ -123,6 +126,10 @@ class CDManager : public XGP::XApplication {
    Gtk::ScrolledWindow          scrlRecords;
 
    Gtk::Statusbar status;
+
+   std::map<HSong,HSong>            changedSongs;
+   std::map<HRecord, HRecord>       changedRecords;
+   std::map<HInterpret, HInterpret> changedInterpret;
 };
 
 #endif

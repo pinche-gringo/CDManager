@@ -1,11 +1,11 @@
-//$Id: Celebrity.cpp,v 1.2 2004/11/25 13:23:39 markus Exp $
+//$Id: Celebrity.cpp,v 1.3 2004/11/29 18:45:59 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Celebrity
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -32,35 +32,22 @@
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 
+#include "Words.h"
 #include "Celebrity.h"
 
 
-std::vector<Glib::ustring> Celebrity::ignore;
-
-
 //-----------------------------------------------------------------------------
-/// Removes the leading parts of names, which are marked in the ignore vector.
+/// Removes the leading parts (articles, names) of a name.
 /// \param name: Name to manipulate
 /// \returns Glib::ustring: Changed name
 //-----------------------------------------------------------------------------
 Glib::ustring Celebrity::removeIgnored (const Glib::ustring& name) {
    TRACE9 ("Celebrity::removeIgnored (const Glib::ustring&) - " << name);
 
-   unsigned int pos (0);
-   for (std::vector<Glib::ustring>::const_iterator i (ignore.begin ());
-	i != ignore.end (); ++i)
-      if ((*i == name.substr (pos, i->size ()))
-	  && (!isalnum (name[pos + i->size ()]))) {
-	  pos += i->size () + 1;
-
-	  while (!isalnum (name[pos]))
-	     ++pos;
-	  i = ignore.begin ();
-      }
-
-   TRACE8 ("Celebrity::removeIgnored (const Glib::ustring&) - " << name << "->"
-	   << name.substr (pos));
-   return name.substr (pos);
+   Glib::ustring result (name);
+   result = Words::removeArticle (name);
+   result = Words::removeNames (result);
+   return result;
 }
 
 //-----------------------------------------------------------------------------
@@ -76,5 +63,3 @@ bool Celebrity::compByName (const HCelebrity& a, const HCelebrity& b) {
    Glib::ustring bname (removeIgnored (b->name));
    return aname < bname;
 }
-
-

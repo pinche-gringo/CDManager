@@ -1,7 +1,7 @@
 #ifndef CELIBRITY_H
 #define CELIBRITY_H
 
-//$Id: Celebrity.h,v 1.7 2004/11/28 01:05:37 markus Exp $
+//$Id: Celebrity.h,v 1.8 2004/11/29 18:45:59 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -58,10 +58,6 @@ class Celebrity : public YGP::Entity {
    void setDied (const YGP::AYear& value) { died = value; }
    void setDied (const std::string& value) { died = value; }
 
-   static bool cIgnoreWords () { return ignore.size (); }
-   static void addWord2Ignore (const Glib::ustring& word) {
-      ignore.push_back (word); }
-
  private:
    unsigned long int id;   // %attrib%
    Glib::ustring     name; // %attrib%
@@ -70,8 +66,6 @@ class Celebrity : public YGP::Entity {
 
    //Prohibited manager functions
    const Celebrity& operator= (const Celebrity& other);
-
-   static std::vector<Glib::ustring> ignore;
 };
 
 #endif

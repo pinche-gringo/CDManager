@@ -1,11 +1,11 @@
-//$Id: Language.cpp,v 1.2 2004/12/09 03:19:05 markus Exp $
+//$Id: Language.cpp,v 1.3 2004/12/11 22:52:21 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Language
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 6.12.2004
 //COPYRIGHT   : Copyright (A) 2004
@@ -141,6 +141,19 @@ Glib::RefPtr<Gdk::Pixbuf> Language::findFlag (const std::string& lang) throw (st
    if (i != languages.end ())
       return i->second.flag;
    throw std::out_of_range ("Language::findFlag (const std::string&)");
+}
+
+//-----------------------------------------------------------------------------
+/// Returns the whole Language-entity
+/// \param lang: Language to get
+/// \returns const Language&: Language
+/// \throws std::out_of_range: If the value does not exist
+//-----------------------------------------------------------------------------
+const Language& Language::findLanguage (const std::string& lang) throw (std::out_of_range) {
+   std::map<std::string, Language>::const_iterator i (languages.find (lang));
+   if (i != languages.end ())
+      return i->second;
+   throw std::out_of_range ("Language::findLanguage (const std::string&)");
 }
 
 //-----------------------------------------------------------------------------

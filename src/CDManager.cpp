@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.43 2005/01/25 01:41:22 markus Exp $
+//$Id: CDManager.cpp,v 1.44 2005/01/29 19:18:35 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.43 $
+//REVISION    : $Revision: 1.44 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -294,11 +294,7 @@ CDManager::CDManager (Options& options)
 		     "  <menu action='Edit'>"
 		     "    <placeholder name='List'/>"
 		     "    <separator/>"
-		     "    <menuitem action='NInterpret'/>"
-		     "    <menuitem action='NRecord'/>"
-		     "    <menuitem action='NSong'/>"
-		     "    <menuitem action='NDirector'/>"
-		     "    <menuitem action='NMovie'/>"
+		     "    <menuitem action='Delete'/>"
 		     "  </menu>"
 		     "  <menu action='Options'>"
 		     "    <menuitem action='Prefs'/>"
@@ -325,21 +321,6 @@ CDManager::CDManager (Options& options)
    grpAction->add (Gtk::Action::create ("Edit", _("_Edit")));
    grpAction->add (Gtk::Action::create ("Delete", Gtk::Stock::DELETE,_("_Delete")),
 		   Gtk::AccelKey (_("<ctl>Delete")),
-   grpAction->add (Gtk::Action::create ("NInterpret", _("New _Interpret")),
-		   Gtk::AccelKey (_("<ctl>N")),
-		   mem_fun (*this, &CDManager::newInterpret));
-   grpAction->add (Gtk::Action::create ("NRecord", _("_New Record")),
-		   Gtk::AccelKey (_("<ctl><alt>N")),
-		   mem_fun (*this, &CDManager::newRecord));
-   grpAction->add (Gtk::Action::create ("NSong", _("New _Song")),
-		   Gtk::AccelKey (_("<ctl><shft>N")),
-		   mem_fun (*this, &CDManager::newSong));
-   grpAction->add (Gtk::Action::create ("NDirector", _("New _Director")),
-		   Gtk::AccelKey (_("<ctl>N")),
-		   mem_fun (*this, &CDManager::newDirector));
-   grpAction->add (Gtk::Action::create ("NMovie", _("_New Movie")),
-		   Gtk::AccelKey (_("<ctl><alt>N")),
-		   mem_fun (*this, &CDManager::newMovie));
    grpAction->add (Gtk::Action::create ("Delete", _("_Delete")),
    grpAction->add (Gtk::Action::create ("Options", _("_Options")));
    grpAction->add (Gtk::Action::create ("Prefs", Gtk::Stock::PREFERENCES),
@@ -365,11 +346,6 @@ CDManager::CDManager (Options& options)
    apMenus[MEDIT]        = mgrUI->get_widget("/Menu/Edit"); Check3 (apMenus[MEDIT]);
    apMenus[DELETE]       = mgrUI->get_widget("/Menu/Edit/Delete"); Check3 (apMenus[DELETE]);
 
-   apMenus[NEW_ARTIST]   = mgrUI->get_widget("/Menu/Edit/NInterpret"); Check3 (apMenus[NEW_ARTIST]);
-   apMenus[NEW_RECORD]   = mgrUI->get_widget("/Menu/Edit/NRecord"); Check3 (apMenus[NEW_RECORD]);
-   apMenus[NEW_SONG]     = mgrUI->get_widget("/Menu/Edit/NSong"); Check3 (apMenus[NEW_SONG]);
-   apMenus[NEW_DIRECTOR] = mgrUI->get_widget("/Menu/Edit/NDirector"); Check3 (apMenus[NEW_DIRECTOR]);
-   apMenus[NEW_MOVIE]    = mgrUI->get_widget("/Menu/Edit/NMovie"); Check3 (apMenus[NEW_MOVIE]);
    ((Gtk::MenuItem*)(mgrUI->get_widget("/Menu/Help")))->set_right_justified ();
 
    enableMenus (false);
@@ -596,11 +572,13 @@ void CDManager::enableEdit (SELECTED selected) {
    TRACE9 ("CDManager::enableEdit (SELECTED) - " << selected);
    Check2 (apMenus[NEW1]); Check2 (apMenus[NEW2]);
 
+   apMenus[DELETE]->set_sensitive (selected != NONE_SELECTED);
    apMenus[NEW1]->set_sensitive (true);
    apMenus[NEW2]->set_sensitive (selected > NONE_SELECTED);
-   apMenus[NEW_ARTIST]->set_sensitive (true);
-   apMenus[NEW_RECORD]->set_sensitive (selected > NONE_SELECTED);
-   apMenus[NEW_SONG]->set_sensitive (selected == RECORD_SELECTED);
+   if (apMenus[NEW3])
+      apMenus[NEW3]->set_sensitive (selected == OBJECT_SELECTED);
+}
+
 //-----------------------------------------------------------------------------
 /// Loads the database and shows its contents.
 ///
@@ -651,10 +629,10 @@ void CDManager::recordSelected () {
 
 	 enableEdit (OBJECT_SELECTED);
       }
-	 enableEdit (RECORD_SELECTED);
+      else
 	 enableEdit (OWNER_SELECTED);
    }
-	 enableEdit (ARTIST_SELECTED);
+   else
       enableEdit (NONE_SELECTED);
 }
 
@@ -743,22 +721,55 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 
    static Gtk::UIManager::ui_merge_id idMrg (-1U);
    if (idMrg != -1U)
+      mgrUI->remove_ui (idMrg);
 
-      apMenus[NEW_DIRECTOR]->show ();
-      apMenus[NEW_MOVIE]->show ();
+   Glib::ustring ui ("<menubar name='Menu'>"
+		     "  <menu action='Edit'>"
+		     "    <placeholder name='List'>");
+
+   Glib::RefPtr<Gtk::ActionGroup> grpAction (Gtk::ActionGroup::create ());
+   if (iPage) {
+      ui += "<menuitem action='NDirector'/><menuitem action='NMovie'/>";
+
+      grpAction->add (Gtk::Action::create ("NDirector", Gtk::Stock::NEW,
 					   _("New _Director")),
-      apMenus[NEW_ARTIST]->hide ();
-      apMenus[NEW_RECORD]->hide ();
-      apMenus[NEW_SONG]->hide ();
+      grpAction->add (Gtk::Action::create ("NDirector", _("New _Director")),
+      grpAction->add (Gtk::Action::create ("NMovie", _("_New Movie")),
+		      Gtk::AccelKey (_("<ctl><alt>N")),
+		      mem_fun (*this, &CDManager::newMovie));
+   }
+   else {
       ui += ("<menuitem action='NInterpret'/><menuitem action='NRecord'/>"
 	     "<menuitem action='NSong'/>");
-      apMenus[NEW_DIRECTOR]->hide ();
-      apMenus[NEW_MOVIE]->hide ();
-   idMrg = mgrUI->add_ui_from_string (ui);
-      apMenus[NEW_ARTIST]->show ();
-      apMenus[NEW_RECORD]->show ();
-      apMenus[NEW_SONG]->show ();
 
+      grpAction->add (Gtk::Action::create ("NInterpret", Gtk::Stock::NEW,
+					   _("New _Interpret")),
+      grpAction->add (Gtk::Action::create ("NInterpret", _("New _Interpret")),
+      grpAction->add (Gtk::Action::create ("NRecord", _("_New Record")),
+		      Gtk::AccelKey (_("<ctl><alt>N")),
+		      mem_fun (*this, &CDManager::newRecord));
+      grpAction->add (Gtk::Action::create ("NSong", _("New _Song")),
+		      Gtk::AccelKey (_("<ctl><shft>N")),
+		      mem_fun (*this, &CDManager::newSong));
+   }
+   ui += "</placeholder></menu></menubar>";
+
+   mgrUI->insert_action_group (grpAction);
+   idMrg = mgrUI->add_ui_from_string (ui);
+
+   if (iPage) {
+      apMenus[NEW1] = mgrUI->get_widget ("/Menu/Edit/List/NDirector");
+      apMenus[NEW2] = mgrUI->get_widget ("/Menu/Edit/List/NMovie");
+      apMenus[NEW3] = NULL;
+
+      movieSelected ();
+      apMenus[NEW1] = mgrUI->get_widget ("/Menu/Edit/List/NInterpret");
+      apMenus[NEW2] = mgrUI->get_widget ("/Menu/Edit/List/NRecord");
+      apMenus[NEW3] = mgrUI->get_widget ("/Menu/Edit/List/NSong"); Check3 (apMenus[NEW3]);
+
+      recordSelected ();
+
+   if (!(loadedPages & (1 << iPage)))
       loadDatabase ();
 }
 

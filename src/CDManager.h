@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.30 2005/01/25 01:41:03 markus Exp $
+//$Id: CDManager.h,v 1.31 2005/01/29 19:18:35 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ class CDManager : public XGP::XApplication {
    void recordSelected ();
    void pageSwitched (GtkNotebookPage* page, guint iPage);
 
-   typedef enum { NONE_SELECTED, ARTIST_SELECTED, RECORD_SELECTED } SELECTED;
+   typedef enum { NONE_SELECTED, OWNER_SELECTED, OBJECT_SELECTED } SELECTED;
    void enableEdit (SELECTED selected);
    bool login (const Glib::ustring& user, const Glib::ustring& pwd);
    void loadDatabase ();
@@ -162,8 +162,8 @@ class CDManager : public XGP::XApplication {
    std::vector<HDirector>  directors;
    std::vector<HInterpret> artists;
 
-   enum { LOGIN = 0, SAVE, LOGOUT, EXPORT, IMPORT_MP3, MEDIT, NEW_ARTIST,
-	  NEW_RECORD, NEW_SONG, NEW_DIRECTOR, NEW_MOVIE, DELETE, LAST };
+   enum { LOGIN = 0, SAVE, LOGOUT, EXPORT, IMPORT_MP3, MEDIT, NEW1, NEW2, NEW3,
+	  DELETE, LAST };
    Gtk::Widget* apMenus[LAST];
    Options& opt;
 };

@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.15 2004/11/12 03:57:39 markus Exp $
+//$Id: CDManager.h,v 1.16 2004/11/17 17:37:42 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ class CDManager : public XGP::XApplication {
  private:
    // IDs for menus
    enum { LOGIN = XApplication::LAST, SAVE, LOGOUT, MEDIT, NEW_ARTIST,
-	  NEW_SONG, DELETE, EXIT };
+	  NEW_RECORD, NEW_SONG, DELETE, EXIT };
 
    // Protected manager functions
    CDManager (const CDManager&);
@@ -70,14 +70,16 @@ class CDManager : public XGP::XApplication {
    virtual const char* getHelpfile ();
    void recordSelected ();
 
+   typedef enum { NONE_SELECTED, ARTIST_SELECTED, RECORD_SELECTED } SELECTED;
+   void enableEdit (SELECTED selected);
    bool login (const Glib::ustring& user, const Glib::ustring& pwd);
    void loadDatabase ();
    void enableMenus (bool enable);
-   void enableEdit (bool enable);
    void loadSongs (const HRecord& record);
 
    void artistChanged (const HInterpret& artist);
    void recordChanged (const HRecord& record);
+   void recordGenreChanged (const HRecord& record);
    void songChanged (const HSong& song);
    HInterpret getInterpret (unsigned int nr) const;
 

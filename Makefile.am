@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = intl src po doc
+SUBDIRS = intl SQL src po doc
 
 DEFS=@DEFS@
 

@@ -1,7 +1,7 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-//$Id: Settings.h,v 1.1 2004/12/24 04:08:43 markus Exp $
+//$Id: Settings.h,v 1.2 2005/01/17 18:15:28 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -39,13 +39,7 @@ class Settings : public XGP::XDialog {
  public:
    virtual ~Settings ();
 
-   static Settings* create (const Glib::RefPtr<Gdk::Window>& parent,
-			    Options& options) {
-      Settings* dlg (new Settings (options));
-      dlg->get_window ()->set_transient_for (parent);
-      dlg->signal_response ().connect (mem_fun (*dlg, &Settings::free));
-      return dlg;
-   }
+   static Settings* create (const Glib::RefPtr<Gdk::Window>& parent, Options& options);
 
  protected:
    Settings (Options& options);
@@ -63,9 +57,8 @@ class Settings : public XGP::XDialog {
    XGP::XAttributeEntry<std::string> hdrRecord;
    XGP::XAttributeEntry<std::string> ftrRecord;
 
-   Gtk::Table* pClient;
-
    static XGP::XAttributeEntry<std::string> Settings::* fields[];
+   static Settings* instance;
 };
 
 #endif

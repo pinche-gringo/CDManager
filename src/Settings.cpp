@@ -1,11 +1,11 @@
-//$Id: Settings.cpp,v 1.1 2004/12/24 04:08:43 markus Exp $
+//$Id: Settings.cpp,v 1.2 2005/01/17 18:15:28 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Settings
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 23.12.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -27,7 +27,9 @@
 
 #include <gtkmm/label.h>
 #include <gtkmm/table.h>
+#include <gtkmm/notebook.h>
 
+#include "Words.h"
 #include "Options.h"
 #include "Options.meta"
 
@@ -38,6 +40,8 @@ XGP::XAttributeEntry<std::string> Settings::* Settings::fields[] =
    { &Settings::txtOutput, &Settings::hdrMovie, &Settings::ftrMovie,
      &Settings::hdrRecord, &Settings::ftrRecord };
 
+Settings* Settings::instance (NULL);
+
 
 //-----------------------------------------------------------------------------
 /// Constructor
@@ -47,8 +51,15 @@ Settings::Settings (Options& options)
    : XGP::XDialog (OKCANCEL),
      txtOutput (options.dirOutput), hdrMovie (options.mHeader),
      ftrMovie (options.mFooter), hdrRecord (options.rHeader),
-     ftrRecord (options.rFooter), pClient (new Gtk::Table (5, 2)) {
+     ftrRecord (options.rFooter) {
+   Check3 (instance == NULL);
+   instance =  this;
+
    set_title (_("Preferences"));
+   set_size_request (450, 350);
+
+   Gtk::Notebook& nb (*manage (new Gtk::Notebook));
+   Gtk::Table& pagExport (*manage (new Gtk::Table (5, 2)));
 
    Glib::ustring lbls[sizeof (fields) / sizeof (*fields)] =
       { _("Output _directory:"), _("_Header for movies:"),
@@ -57,15 +68,18 @@ Settings::Settings (Options& options)
 
    Gtk::Label* lbl;
    for (unsigned int i (0); i < (sizeof (fields) / sizeof (*fields)); ++i) {
-      lbl = new Gtk::Label (lbls[i], true);
+      lbl = manage (new Gtk::Label (lbls[i], true));
       lbl->set_mnemonic_widget (this->*fields[i]);
-      pClient->attach (*lbl, 0, 1, i, i + 1, Gtk::FILL, Gtk::FILL, 5);
-      pClient->attach (this->*fields[i], 1, 2, i, i + 1, Gtk::FILL | Gtk::EXPAND, Gtk::FILL, 5);
+      pagExport.attach (*lbl, 0, 1, i, i + 1, Gtk::FILL, Gtk::FILL, 5);
+      pagExport.attach (this->*fields[i], 1, 2, i, i + 1, Gtk::FILL | Gtk::EXPAND, Gtk::FILL, 5);
    }
 
-   pClient->show ();
+   pagExport.show ();
 
-   get_vbox ()->pack_start (*pClient, false, false, 5);
+   nb.append_page (pagExport, "_Export", true);
+   nb.append_page (*manage (Words::makeDialog ()), "Reserved _words", true);
+
+   get_vbox ()->pack_start (nb, true, true, 5);
    show_all_children ();
    show ();
 }
@@ -74,6 +88,7 @@ Settings::Settings (Options& options)
 /// Destructor
 //-----------------------------------------------------------------------------
 Settings::~Settings () {
+   instance = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -83,4 +98,22 @@ void Settings::okEvent () {
    ok->grab_focus ();
    for (unsigned int i (0); i < (sizeof (fields) / sizeof (*fields)); ++i)
       (this->*fields[i]).commit ();
+}
+
+//-----------------------------------------------------------------------------
+/// Creates or selects (if already existing) a dialog to change the
+/// preferences.
+/// \param parent: Parent window
+/// \returns Settings*: Pointer to the created window
+//-----------------------------------------------------------------------------
+Settings* Settings::create (const Glib::RefPtr<Gdk::Window>& parent,
+			    Options& options) {
+   if (instance == NULL) {
+      new Settings (options); Check3 (instance);
+      instance->get_window ()->set_transient_for (parent);
+      instance->signal_response ().connect (mem_fun (*instance, &Settings::free));
+   }
+   else
+      instance->present ();
+   return instance;
 }

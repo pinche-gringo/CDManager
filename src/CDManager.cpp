@@ -1,12 +1,12 @@
-//$Id: CDManager.cpp,v 1.31 2004/12/07 03:36:53 markus Exp $
+//$Id: CDManager.cpp,v 1.32 2004/12/12 03:14:02 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : - Export movies in every language
-//              - Show languages of movies
+//              - Show tooltips with real language names for movies - or flags
 //BUGS        :
-//REVISION    : $Revision: 1.31 $
+//REVISION    : $Revision: 1.32 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -42,10 +42,12 @@
 #include <YGP/ADate.h>
 #include <YGP/ATStamp.h>
 #include <XGP/XAbout.h>
+#include <YGP/StatusObj.h>
 #include <XGP/XFileDlg.h>
 #include <XGP/LoginDlg.h>
 
 #include "CDAppl.h"
+#include <XGP/MessageDlg.h>
 #include "Settings.h"
 #include "DB.h"
 #include "Song.h"
@@ -771,6 +773,7 @@ void CDManager::loadMovies () {
       Database::store ("SELECT d.id, c.name, c.born, c.died FROM Directors d, "
 		       "Celebrities c WHERE c.id = d.id");
 
+      YGP::StatusObject stat;
       HDirector hDirector;
       while (Database::hasData ()) {
 	 TRACE5 ("CDManager::laodMovies () - Adding Director "
@@ -778,24 +781,33 @@ void CDManager::loadMovies () {
 		 << Database::getResultColumnAsString (1));
 
 	 // Fill and store artist entry from DB-values
-	 hDirector.define ();
-	 hDirector->setId (Database::getResultColumnAsUInt (0));
-	 hDirector->setName (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
+	 try {
+	    hDirector.define ();
+	    hDirector->setName (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
+	    hDirector->setId (Database::getResultColumnAsUInt (0));
 
-	 std::string tmp (Database::getResultColumnAsString (2));
-	 if (tmp != "0000")
-	    hDirector->setBorn (tmp);
-	 tmp = Database::getResultColumnAsString (3);
-	 if (tmp != "0000")
-	    hDirector->setDied (tmp);
+	    std::string tmp (Database::getResultColumnAsString (2));
+	    if (tmp != "0000")
+	       hDirector->setBorn (tmp);
+	    tmp = Database::getResultColumnAsString (3);
+	    if (tmp != "0000")
+	       hDirector->setDied (tmp);
+	 }
+	 catch (std::exception& e) {
+	    Glib::ustring msg (_("Warning loading director `%1': %2"));
+	    msg.replace (msg.find ("%1"), 2, hDirector->getName ());
+	    msg.replace (msg.find ("%2"), 2, e.what ());
+	    stat.setMessage (YGP::StatusObject::WARNING, msg);
+	 }
+
 	 directors.push_back (hDirector);
 
 	 Database::getNextResultRow ();
       }
       std::sort (directors.begin (), directors.end (), &Director::compByName);
 
-      Database::store ("SELECT id, name, director, year, genre, type "
-		       "FROM Movies ORDER BY director, year");
+      Database::store ("SELECT id, name, director, year, genre, type, languages"
+		       ", subtitles FROM Movies ORDER BY director, year");
       TRACE8 ("CDManager::loadMovies () - Found " << Database::resultSize ()
 	      << " movies");
 
@@ -809,14 +821,24 @@ void CDManager::loadMovies () {
 		 << Database::getResultColumnAsUInt (0) << '/'
 		 << Database::getResultColumnAsString (1));
 
-	    movie.define ();
-	    movie->setId (Database::getResultColumnAsUInt (0));
-	    movie->setName
-	       (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
-	    if (Database::getResultColumnAsUInt (3))
-	       movie->setYear (Database::getResultColumnAsUInt (3));
-	    movie->setGenre (Database::getResultColumnAsUInt (4));
-	    movie->setType (Database::getResultColumnAsUInt (5));
+	    try {
+	       movie.define ();
+	       movie->setName
+		  (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
+	       movie->setId (Database::getResultColumnAsUInt (0));
+	       if (Database::getResultColumnAsUInt (3))
+		  movie->setYear (Database::getResultColumnAsUInt (3));
+	       movie->setGenre (Database::getResultColumnAsUInt (4));
+	       movie->setType (Database::getResultColumnAsUInt (5));
+	       movie->setLanguage (Database::getResultColumnAsString (6));
+	       movie->setTitles (Database::getResultColumnAsString (7));
+	    }
+	    catch (std::exception& e) {
+	       Glib::ustring msg (_("Warning loading movie `%1': %2"));
+	       msg.replace (msg.find ("%1"), 2, movie->getName ());
+	       msg.replace (msg.find ("%2"), 2, e.what ());
+	       stat.setMessage (YGP::StatusObject::WARNING, msg);
+	    }
 
 	    aMovies[Database::getResultColumnAsUInt (2)].push_back (movie);
 	    Database::getNextResultRow ();
@@ -848,6 +870,11 @@ void CDManager::loadMovies () {
       status.push (msg);
 
       loadedPages |= 2;
+
+      if (stat.getType () > YGP::StatusObject::UNDEFINED) {
+	 stat.generalize (_("Warnings loading movies"));
+	 XGP::MessageDlg::create (stat);
+      }
    }
    catch (std::exception& err) {
       Glib::ustring msg (_("Can't query available movies!\n\nReason: %1"));
@@ -1183,7 +1210,9 @@ void CDManager::writeChangedEntries () {
 	    std::stringstream query;
 	    query << (movie->getId () ? "UPDATE Movies" : "INSERT into Movies")
 		  << " SET name=\"" << movie->getName () << "\", genre="
-		  << movie->getGenre () << ", type=" << movie->getType ();
+		  << movie->getGenre () << ", languages=\"" << movie->getLanguage ()
+		  << "\", subtitles=\"" << movie->getTitles () << "\", type="
+		  << movie->getType ();
 	    if (movie->getYear ().isDefined ())
 	       query << ", year=" << movie->getYear ();
 	    if (relMovies.isRelated (movie)) {

@@ -1,7 +1,7 @@
 #ifndef RECORDLIST_H
 #define RECORDLIST_H
 
-//$Id: RecordList.h,v 1.1 2004/11/07 02:33:21 markus Exp $
+//$Id: RecordList.h,v 1.2 2004/11/11 04:26:06 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@
 #include <gtkmm/treeview.h>
 #include <gtkmm/treestore.h>
 
-#include <Record.h>
-#include <Interpret.h>
+#include "Record.h"
+#include "Interpret.h"
 
 
 class CellRendererList;
@@ -35,9 +35,9 @@ class RecordColumns : public Gtk::TreeModel::ColumnRecord {
    RecordColumns () {
       add (entry); add (name); add (year); add (genre); }
 
-   Gtk::TreeModelColumn<HRecord>       entry;
+   Gtk::TreeModelColumn<YGP::IHandle*> entry;
    Gtk::TreeModelColumn<Glib::ustring> name;
-   Gtk::TreeModelColumn<unsigned int>  year;
+   Gtk::TreeModelColumn<YGP::AYear>    year;
    Gtk::TreeModelColumn<Glib::ustring> genre;
 };
 
@@ -55,15 +55,17 @@ class RecordList : public Gtk::TreeView {
 
    void updateGenres ();
 
-   sigc::signal<void, const HRecord&> signalChanged;
+   sigc::signal<void, const HInterpret&> signalArtistChanged;
+   sigc::signal<void, const HRecord&> signalRecordChanged;
 
    Glib::RefPtr<Gtk::TreeStore> getModel () const { return mRecords; }
-   HRecord getEntry (const Gtk::TreeIter iterator) const {
-      return (*iterator)[colRecords.entry]; }
+   HRecord getRecordAt (const Gtk::TreeIter iterator) const;
+   HInterpret getInterpretAt (const Gtk::TreeIter iterator) const;
 
  protected:
    void valueChanged (const Glib::ustring& path, const Glib::ustring& value,
 		      unsigned int column);
+   virtual void on_row_deleted (const Gtk::TreeModel::Path& row);
 
  private:
    RecordList (const RecordList& other);

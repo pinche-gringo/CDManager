@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.3 2004/10/22 03:47:47 markus Exp $
+//$Id: CDManager.h,v 1.4 2004/10/25 06:30:35 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,13 +26,16 @@
 #include <gtkmm/statusbar.h>
 #include <gtkmm/scrolledwindow.h>
 
+#include "Song.h"
+
+#include <YGP/Relation.h>
+
 #include <XGP/XApplication.h>
 
 
 // Forward declarations
 namespace YGP {
    class Entity;
-   class IHandle;
 }
 
 
@@ -57,9 +60,10 @@ class RecordColumns : public Gtk::TreeModel::ColumnRecord {
 class SongColumns : public Gtk::TreeModel::ColumnRecord {
  public:
    SongColumns () {
-      add (name); add (duration);
+      add (entry); add (name); add (duration);
    }
 
+   Gtk::TreeModelColumn<HSong>         entry;
    Gtk::TreeModelColumn<Glib::ustring> name;
    Gtk::TreeModelColumn<Glib::ustring> duration;
 };
@@ -85,11 +89,14 @@ class CDManager : public XGP::XApplication {
    virtual void command (int menu);
    virtual void showAboutbox ();
    virtual const char* getHelpfile ();
+   void recordSelected ();
+   void editRecord (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*);
 
    bool login (const Glib::ustring& user, const Glib::ustring& pwd);
    void loadDatabase ();
    void enableMenus (bool enable);
    void enableEdit (bool enable);
+   void addSong (const HSong& song);
 
    bool canSelect (const Glib::RefPtr<Gtk::TreeModel>& model,
 		   const Gtk::TreeModel::Path& path, bool);
@@ -103,6 +110,9 @@ class CDManager : public XGP::XApplication {
    static const unsigned int HEIGHT;
 
    static const char* const DBNAME;
+
+   YGP::Relation1_N<HInterpret, HRecord> relRecords;
+   YGP::Relation1_N<HRecord, HSong>      relSongs;
 
    Gtk::Notebook  nb;
    Gtk::Table     cds;

@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.3 2004/10/22 03:47:47 markus Exp $
+//$Id: CDManager.cpp,v 1.4 2004/10/25 06:30:35 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : 
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -26,6 +26,8 @@
 
 #include <cdmgr-cfg.h>
 
+#include <sstream>
+
 #include <gtkmm/box.h>
 #include <gtkmm/label.h>
 #include <gtkmm/messagedialog.h>
@@ -39,6 +41,7 @@
 #include "CDAppl.h"
 #include "Settings.h"
 #include "DB.h"
+#include "Song.h"
 #include "Record.h"
 #include "Interpret.h"
 
@@ -240,8 +243,8 @@ XGP::XApplication::MenuEntry CDManager::menuItems[] = {
 //-----------------------------------------------------------------------------
    : XApplication (PACKAGE " V" PRG_RELEASE), relMovies ("movies"),
 CDManager::CDManager ()
-   : XApplication (PACKAGE " V" PRG_RELEASE), cds (4, 1), records (), songs (),
-     movies (4, 4) {
+   : XApplication (PACKAGE " V" PRG_RELEASE), relRecords ("records"),
+     relSongs ("songs"), cds (4, 1), movies (4, 4) {
    Language::init ();
 
 
@@ -278,7 +281,7 @@ CDManager::CDManager ()
    songs.show ();
 
    songs.append_column (_("Song"), colSongs.name);
-   songs.append_column (_("Genre"), colSongs.duration);
+   songs.append_column (_("Duration"), colSongs.duration);
    songs.get_column (0)->set_min_width (400);
    records.signalOwnerChanged.connect (mem_fun (*this, &CDManager::artistChanged));
    movies.signalObjectChanged.connect (mem_fun (*this, &CDManager::movieChanged));
@@ -286,9 +289,15 @@ CDManager::CDManager ()
    records.append_column (_("Year"), colRecords.year);
    records.append_column (_("Genre"), colRecords.genre);
    records.get_column (0)->set_min_width (400);
-   records.get_selection ()->set_mode (Gtk::SELECTION_EXTENDED);
-   records.get_selection ()->set_select_function
+
+   Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
+   recordSel->set_mode (Gtk::SELECTION_EXTENDED);
+   recordSel->set_select_function
       (mem_fun (*this, &CDManager::canSelect));
+   records.signal_row_activated ().connect
+      (mem_fun (*this, &CDManager::editRecord));
+   recordSel->signal_changed ().connect
+      (mem_fun (*this, &CDManager::recordSelected));
    cds->add1 (*manage (scrlRecords));
    cds.attach (*manage (new Gtk::Label (_("Records"))), 0, 1, 0, 1,
 	       Gtk::SHRINK, Gtk::SHRINK, 5, 5);
@@ -337,8 +346,7 @@ void CDManager::command (int menu) {
 /// Saves the DB
    case NEW: {
       HRecord hRec;
-      RecordEdit* dlg = new RecordEdit (hRec);
-      dlg->run ();
+      RecordEdit::create (hRec);
       break; }
 
    case EDIT: {
@@ -346,14 +354,8 @@ void CDManager::command (int menu) {
 	 (records.get_selection ()->get_selected_rows ());
       Check3 (list.size ());
       for (Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
-	   i != list.end (); ++i) {
-	 Gtk::TreeIter iter (mRecords->get_iter (*i)); Check3 (iter);
-	 TRACE9 ("CDManager::command (int) - EDIT: " << (**iter)[colRecords.name]);
-	 Check1 (typeid (*((**iter)[colRecords.entry])) == typeid (HRecord));
-	 YGP::IHandle* phRec ((**iter)[colRecords.entry]);
-	 Check1 (typeid (*phRec) == typeid (HRecord));
-	 new RecordEdit (*(HRecord*)(phRec));
-      }
+	   i != list.end (); ++i)
+	 editRecord (*i, NULL);
       break; }
 
    case DELETE:
@@ -458,7 +460,7 @@ void CDManager::loadDatabase () {
 
    try {
       // Load data from record table
-      Database::store ("SELECT r.id, r.name, i.name, year, g.genre FROM "
+      Database::store ("SELECT r.id, r.name, i.name, i.id, year, g.genre FROM "
 		       "Records r, Interprets i, Genres g "
 		       "WHERE r.interpret = i.id AND r.genre = g.id "
 		       "ORDER BY i.name, r.name");
@@ -478,13 +480,16 @@ void CDManager::loadDatabase () {
 	       hArtist.define ();
 	       lastRowArtist[colRecords.name] = hArtist->name = artist;
 	       lastRowArtist[colRecords.entry] = new HInterpret (hArtist);
+	       hArtist->id = Database::getResultColumnAsUInt (3);
 	    }
 
 	    // Fill and store record entry from DB-values
-	    Record* newRec (new Record);
+	    HRecord newRec (new Record);
 	    newRec->id = Database::getResultColumnAsUInt (0);
 	    newRec->name = Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
-	    newRec->year = Database::getResultColumnAsUInt (3);
+	    newRec->year = Database::getResultColumnAsUInt (4);
+
+	    relRecords.relate (hArtist, newRec);
 
 	    Gtk::TreeModel::Row row (*(mRecords->append (lastRowArtist.children ())));
 	    newRec->name = row[colRecords.name] =
@@ -493,7 +498,7 @@ void CDManager::loadDatabase () {
 	       row[colRecords.year] = Database::getResultColumnAsString (3);
 
 	    newRec->genre = row[colRecords.genre] = 
-	       Glib::locale_to_utf8 (Database::getResultColumnAsString (4));
+	       Glib::locale_to_utf8 (Database::getResultColumnAsString (5));
 	    row[colRecords.entry] = new HRecord (newRec);
 	    Database::getNextResultRow ();
 	 } // end-while has records
@@ -542,6 +547,89 @@ bool CDManager::canSelect (const Glib::RefPtr<Gtk::TreeModel>& model,
 			   const Gtk::TreeModel::Path& path, bool) {
   const Gtk::TreeModel::iterator iter (model->get_iter (path));
   return iter->children ().empty (); // only allow leaf nodes to be selected
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CDManager::recordSelected () {
+   TRACE9 ("CDManager::recordSelected ()");
+   songs.clear ();
+   Check3 (records.get_selection ());
+
+   TRACE9 ("CDManager::recordSelected () - Size: " << list.size ());
+   if (list.size ()) {
+
+      Gtk::TreeIter i (mRecords->get_iter (*list.begin ())); Check3 (i);
+      Check1 (typeid (*((*i)[colRecords.entry])) == typeid (HRecord));
+      YGP::IHandle* phRec ((**i)[colRecords.entry]);
+      Check1 (typeid (*phRec) == typeid (HRecord));
+      HRecord hRecord (*(HRecord*)phRec);
+      TRACE9 ("CDManager::recordSelected () - Selected record: " <<
+	      hRecord->id << '/' << hRecord->name);
+	 HRecord hRecord (records.getRecordAt (i)); Check3 (hRecord.isDefined ());
+      // mSongs.clear ();
+
+      if (relSongs.isRelated (hRecord)) {
+	 for (std::vector<HSong>::iterator i (relSongs.getObjects (hRecord).begin ());
+	      i != relSongs.getObjects (hRecord).end (); ++i)
+	    addSong (**i);
+      }
+      else {
+	 try {
+	    std::stringstream query;
+	    query << "SELECT id, name, duration, genre FROM Songs "
+	       "WHERE idRecord=" << hRecord->id;
+	    Database::store (query.str ().c_str ());
+
+	    HSong song;
+	    while (Database::hasData ()) {
+	       song.define ();
+	       song->id = Database::getResultColumnAsUInt (0);
+	       song->name = Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
+	       // song->duration = Database::getResultColumnAsString (2);
+	       song->genre = Database::getResultColumnAsUInt (3);
+
+	       relSongs.relate (hRecord, song);
+	       addSong (song);
+	       Database::getNextResultRow ();
+	    } // end-while
+	 }
+	 catch (std::exception& err) {
+	    Glib::ustring msg (_("Can't query the songs of the selected record!"
+				 "\n\nReason: %1"));
+	    msg.replace (msg.find ("%1"), 2, err.what ());
+	    Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+	    dlg.run ();
+	 }
+      }
+      enableEdit (NONE_SELECTED);
+//-----------------------------------------------------------------------------
+/// Callback after selecting a movie
+/// \param row: Selected row
+/// Adds a song to the song listbox
+/// \param song: Song to add
+//-----------------------------------------------------------------------------
+void CDManager::addSong (const HSong& song) {
+   Gtk::TreeModel::Row newSong (*mSongs->append ());
+   newSong[colSongs.entry] = song;
+   newSong[colSongs.name] = song->name;
+   newSong[colSongs.duration] = song->duration.toString ();
+}
+
+//-----------------------------------------------------------------------------
+/// Calls the edit-dialog with the record stored in the passed path
+/// \param path: Path to activated item
+//-----------------------------------------------------------------------------
+void CDManager::editRecord (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*) {
+   Gtk::TreeIter iter (mRecords->get_iter (path)); Check3 (iter);
+   if (iter) {
+      TRACE9 ("CDManager::editRecord (onst Gtk::TreeModel::Path): " << (**iter)[colRecords.name]);
+      if (typeid (*((**iter)[colRecords.entry])) == typeid (HRecord)) {
+	 YGP::IHandle* phRec ((**iter)[colRecords.entry]);
+	 Check1 (typeid (*phRec) == typeid (HRecord));
+	 RecordEdit::create (*(HRecord*)(phRec));
+      }
+   }
 }
 
 /// Exports the stored information to HTML documents

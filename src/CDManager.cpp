@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.44 2005/01/29 19:18:35 markus Exp $
+//$Id: CDManager.cpp,v 1.45 2005/01/29 19:54:46 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.44 $
+//REVISION    : $Revision: 1.45 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -33,6 +33,7 @@
 #include <sstream>
 
 #include <gtkmm/box.h>
+#include <gtkmm/stock.h>
 #include <gtkmm/label.h>
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/scrolledwindow.h>
@@ -321,7 +322,7 @@ CDManager::CDManager (Options& options)
    grpAction->add (Gtk::Action::create ("Edit", _("_Edit")));
    grpAction->add (Gtk::Action::create ("Delete", Gtk::Stock::DELETE,_("_Delete")),
 		   Gtk::AccelKey (_("<ctl>Delete")),
-   grpAction->add (Gtk::Action::create ("Delete", _("_Delete")),
+		   mem_fun (*this, &CDManager::deleteSelection));
    grpAction->add (Gtk::Action::create ("Options", _("_Options")));
    grpAction->add (Gtk::Action::create ("Prefs", Gtk::Stock::PREFERENCES),
 		   Gtk::AccelKey (_("F9")),
@@ -387,10 +388,12 @@ CDManager::CDManager (Options& options)
 
    Glib::RefPtr<Gtk::TreeSelection> sel (records.get_selection ());
    sel->set_mode (Gtk::SELECTION_EXTENDED);
-   Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
-   recordSel->set_mode (Gtk::SELECTION_EXTENDED);
-   recordSel->signal_changed ().connect
-      (mem_fun (*this, &CDManager::recordSelected));
+   sel->signal_changed ().connect (mem_fun (*this, &CDManager::recordSelected));
+
+   sel = movies.get_selection ();
+   sel->signal_changed ().connect (mem_fun (*this, &CDManager::movieSelected));
+
+   cds->set_position ((WIDTH - 20) >> 1);
    cds->add1 (*manage (scrlRecords));
    cds->add2 (*manage (scrlSongs));
 
@@ -600,8 +603,6 @@ void CDManager::loadDatabase () {
    }
 }
 
-
-   enableEdit (NONE_SELECTED);
 //-----------------------------------------------------------------------------
 /// Callback after selecting a record
 /// \param row: Selected row
@@ -639,6 +640,18 @@ void CDManager::recordSelected () {
 //-----------------------------------------------------------------------------
 /// Callback after selecting a movie
 /// \param row: Selected row
+//-----------------------------------------------------------------------------
+void CDManager::movieSelected () {
+   TRACE9 ("CDManager::movieSelected ()");
+   Check3 (movies.get_selection ());
+
+   Gtk::TreeIter s (movies.get_selection ()->get_selected ());
+   enableEdit (s ? OWNER_SELECTED : NONE_SELECTED);
+}
+
+//-----------------------------------------------------------------------------
+// void CDManager::songChanged (const HSong& song)
+/// Callback when a song is being changed
 /// \param song: Handle to changed song
 //-----------------------------------------------------------------------------
 defineChangeObject(Song, song, changedSongs)
@@ -733,7 +746,8 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 
       grpAction->add (Gtk::Action::create ("NDirector", Gtk::Stock::NEW,
 					   _("New _Director")),
-      grpAction->add (Gtk::Action::create ("NDirector", _("New _Director")),
+		      Gtk::AccelKey (_("<ctl>N")),
+		      mem_fun (*this, &CDManager::newDirector));
       grpAction->add (Gtk::Action::create ("NMovie", _("_New Movie")),
 		      Gtk::AccelKey (_("<ctl><alt>N")),
 		      mem_fun (*this, &CDManager::newMovie));
@@ -744,7 +758,8 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 
       grpAction->add (Gtk::Action::create ("NInterpret", Gtk::Stock::NEW,
 					   _("New _Interpret")),
-      grpAction->add (Gtk::Action::create ("NInterpret", _("New _Interpret")),
+		      Gtk::AccelKey (_("<ctl>N")),
+		      mem_fun (*this, &CDManager::newInterpret));
       grpAction->add (Gtk::Action::create ("NRecord", _("_New Record")),
 		      Gtk::AccelKey (_("<ctl><alt>N")),
 		      mem_fun (*this, &CDManager::newRecord));
@@ -763,11 +778,15 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
       apMenus[NEW3] = NULL;
 
       movieSelected ();
+   }
+   else {
       apMenus[NEW1] = mgrUI->get_widget ("/Menu/Edit/List/NInterpret");
       apMenus[NEW2] = mgrUI->get_widget ("/Menu/Edit/List/NRecord");
       apMenus[NEW3] = mgrUI->get_widget ("/Menu/Edit/List/NSong"); Check3 (apMenus[NEW3]);
 
       recordSelected ();
+   }
+   Check3 (apMenus[NEW1]); Check3 (apMenus[NEW2]);
 
    if (!(loadedPages & (1 << iPage)))
       loadDatabase ();

@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.31 2005/01/29 19:18:35 markus Exp $
+//$Id: CDManager.h,v 1.32 2005/01/29 19:54:46 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -82,6 +82,7 @@ class CDManager : public XGP::XApplication {
    virtual void showAboutbox ();
    virtual const char* getHelpfile ();
    void recordSelected ();
+   void movieSelected ();
    void pageSwitched (GtkNotebookPage* page, guint iPage);
 
    typedef enum { NONE_SELECTED, OWNER_SELECTED, OBJECT_SELECTED } SELECTED;

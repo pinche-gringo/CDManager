@@ -1,14 +1,14 @@
-//$Id: MovieList.cpp,v 1.8 2004/12/04 04:06:01 markus Exp $
+//$Id: MovieList.cpp,v 1.9 2004/12/07 03:34:40 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.8 $
+//REVISION    : $Revision: 1.9 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
-//COPYRIGHT   : Anticopyright (A) 2004
+//COPYRIGHT   : Copyright (A) 2004
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -34,10 +34,10 @@
 #include <YGP/Trace.h>
 #include <YGP/StatusObj.h>
 
+#include <XGP/XValue.h>
 #include <XGP/MessageDlg.h>
 
-#include <XGP/XValue.h>
-
+#include "CDType.h"
 #include "RendererList.h"
 
 #include "MovieList.h"
@@ -45,11 +45,28 @@
 
 //-----------------------------------------------------------------------------
 /// Default constructor
+/// \param genres: Genres which should be displayed in the 3rd column
 //-----------------------------------------------------------------------------
 MovieList::MovieList (const std::map<unsigned int, Glib::ustring>& genres)
    : OwnerObjectList (genres) {
    TRACE9 ("MovieList::MovieList (const std::map<unsigned int, Glib::ustring>&)");
-   init ();
+   mOwnerObjects = Gtk::TreeStore::create (colMovies);
+   init (colMovies);
+
+   CellRendererList* const renderer (new CellRendererList ());
+   renderer->property_editable () = true;
+   Gtk::TreeViewColumn* const column (new Gtk::TreeViewColumn
+				      (_("Type"), *Gtk::manage (renderer)));
+   append_column (*Gtk::manage (column));
+   column->add_attribute (renderer->property_text(), colMovies.type);
+   column->set_resizable ();
+
+   renderer->signal_edited ().connect
+      (bind (mem_fun (*this, &MovieList::valueChanged), 0));
+
+   CDType& type (CDType::getInstance ());
+   for (CDType::const_iterator t (type.begin ()); t != type.end (); ++t)
+      renderer->append_list_item (t->second);
 }
 
 //-----------------------------------------------------------------------------
@@ -74,10 +91,10 @@ Gtk::TreeModel::Row MovieList::append (HMovie& movie,
 
    HEntity obj (HEntity::cast (movie));
    Gtk::TreeModel::Row newMovie (OwnerObjectList::append (obj, director));
-   newMovie[colOwnerObjects.name] = movie->getName ();
-   newMovie[colOwnerObjects.year] = movie->getYear ().toString ();
+   newMovie[colMovies.name] = movie->getName ();
+   newMovie[colMovies.year] = movie->getYear ().toString ();
    changeGenre (newMovie, movie->getGenre ());
-
+   newMovie[colMovies.type] = CDType::getInstance ()[movie->getType ()];
    return newMovie;
 }
 
@@ -148,4 +165,46 @@ int MovieList::sortEntity (const Gtk::TreeModel::iterator& a,
 
    return ((aname < bname) ? -1 : (bname < aname) ? 1
 	   : ha->getName ().compare (hb->getName ()));
+}
+
+//-----------------------------------------------------------------------------
+/// Callback after changing a value in the listbox
+/// \param path: Path to changed line
+/// \param value: New value of entry
+/// \param column: Changed column
+//-----------------------------------------------------------------------------
+void MovieList::valueChanged (const Glib::ustring& path,
+			      const Glib::ustring& value, unsigned int column) {
+   TRACE9 ("MovieList::valueChanged (2x const Glib::ustring&, unsigned int) - "
+	   << path << "->" << value);
+   Check2 (column < 3);
+   Check2 (colMovies);
+
+   Gtk::TreeModel::Row row (*mOwnerObjects->get_iter (Gtk::TreeModel::Path (path)));
+
+   try {
+      if (row.parent ()) {
+	 HMovie movie (getMovieAt (row));
+	 signalObjectChanged.emit (getObjectAt (row));
+	 switch (column) {
+	 case 0: {
+	    CDType& type (CDType::getInstance ());
+	    if (!type.exists (value)) {
+	       Glib::ustring e (_("Unknown type of media!"));
+	       throw (std::runtime_error (e));
+	    }
+	    movie->setType (value);
+	    row[colMovies.type] = value;
+	    break; }
+	 } // end-switch
+      } // endif object edited
+   } // end-try
+   catch (std::exception& e) {
+      YGP::StatusObject obj (YGP::StatusObject::ERROR, e.what ());
+      obj.generalize (_("Invalid value!"));
+
+      XGP::MessageDlg* dlg (XGP::MessageDlg::create (obj));
+      dlg->set_title (PACKAGE);
+      dlg->get_window ()->set_transient_for (this->get_window ());
+   }
 }

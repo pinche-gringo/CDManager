@@ -1,7 +1,7 @@
 #ifndef MOVIELIST_H
 #define MOVIELIST_H
 
-//$Id: MovieList.h,v 1.5 2004/11/29 19:03:24 markus Rel $
+//$Id: MovieList.h,v 1.6 2004/12/07 03:34:40 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -30,6 +30,21 @@
 class CellRendererList;
 
 
+
+/**Class for the columns in the movie list
+ */
+class MovieColumns : public OwnerObjectColumns {
+ public:
+   MovieColumns () : OwnerObjectColumns () {
+      add (type); add (country); add (languages); }
+
+   Gtk::TreeModelColumn<Glib::ustring> type;
+   Gtk::TreeModelColumn<Glib::ustring> country;
+   Gtk::TreeModelColumn<Glib::ustring> languages;
+
+};
+
+
 /**Class to hold a list of movies
  */
 class MovieList : public OwnerObjectList {
@@ -53,9 +68,14 @@ class MovieList : public OwnerObjectList {
    virtual Glib::ustring getColumnName () const;
    virtual int sortEntity (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
 
+   void valueChanged (const Glib::ustring& path, const Glib::ustring& value,
+		      unsigned int column);
+
  private:
    MovieList (const MovieList& other);
    const MovieList& operator= (const MovieList& other);
+
+   MovieColumns colMovies;
 };
 
 

@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.22 2004/11/28 01:05:37 markus Rel $
+//$Id: CDManager.h,v 1.23 2004/12/04 06:26:48 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@
 #include "Song.h"
 #include "Movie.h"
 #include "Record.h"
+#include "Options.h"
 #include "SongList.h"
 #include "Director.h"
 #include "Interpret.h"
@@ -61,7 +62,7 @@ class CDManager : public XGP::XApplication {
    // IDs for menus
    enum { LOGIN = XApplication::LAST, SAVE, LOGOUT, MEDIT, NEW_ARTIST,
 	  NEW_RECORD, NEW_SONG, NEW_MOVIE, NEW_DIRECTOR, DELETE, EXPORT,
-	  EXIT };
+	  IMPORT_MP3, PREFERENCES, EXIT };
 
    // Protected manager functions
    CDManager (const CDManager&);
@@ -83,6 +84,10 @@ class CDManager : public XGP::XApplication {
    void enableMenus (bool enable);
    void loadSongs (const HRecord& record);
 
+   Gtk::TreeIter addArtist (const HInterpret& artist);
+   Gtk::TreeIter addRecord (Gtk::TreeIter& parent, HRecord& record);
+   Gtk::TreeIter addSong (HSong& song);
+
    void artistChanged (const HInterpret& artist);
    void recordChanged (const HEntity& record);
    void recordGenreChanged (const HEntity& record);
@@ -99,6 +104,12 @@ class CDManager : public XGP::XApplication {
 
    void exportMovies ();
    void exportRecords ();
+
+   std::string stripString (const std::string& value, unsigned int pos, unsigned int len);
+   bool parseMP3Info (std::istream& stream, Glib::ustring& artist,
+		      Glib::ustring& record, Glib::ustring& song,
+		      unsigned int& track);
+   void parseMP3Info (const std::string& file);
 
    static XGP::XApplication::MenuEntry menuItems[];
 
@@ -142,6 +153,8 @@ class CDManager : public XGP::XApplication {
 
    std::vector<HDirector>  directors;
    std::vector<HInterpret> artists;
+
+   Options opt;
 };
 
 #endif

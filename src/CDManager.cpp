@@ -1,10 +1,10 @@
-//$Id: CDManager.cpp,v 1.28 2004/12/03 17:54:47 markus Exp $
+//$Id: CDManager.cpp,v 1.29 2004/12/04 06:26:48 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //BUGS        :
-//REVISION    : $Revision: 1.28 $
+//REVISION    : $Revision: 1.29 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -42,6 +42,7 @@
 #include <XGP/XAbout.h>
 #include <XGP/XFileDlg.h>
 #include <XGP/LoginDlg.h>
+
 #include "CDAppl.h"
 #include "Settings.h"
 #include "DB.h"
@@ -272,6 +273,7 @@ XGP::XApplication::MenuEntry CDManager::menuItems[] = {
     { _("_Logout"),         _("<ctl>O"),       LOGOUT,       ITEM },
     { "",                   "",                0  ,          SEPARATOR },
     { _("_Export to HTML"), _("<ctl>E"),       EXPORT,       ITEM },
+    { _("_Import from MP3-info"), _("<ctl>I"), IMPORT_MP3,   ITEM },
     { "",                   "",                0  ,          SEPARATOR },
     { _("E_xit"),           _("<ctl>Q"),       EXIT,         ITEM },
     { _("_Edit"),           _("<alt>E"),       MEDIT,        BRANCH },
@@ -281,7 +283,9 @@ XGP::XApplication::MenuEntry CDManager::menuItems[] = {
     { _("New _Director") ,  _("<ctl>N"),       NEW_DIRECTOR, ITEM },
     { _("_New Movie") ,     _("<ctl><alt>N"),  NEW_MOVIE,    ITEM },
     { "",                   "",                0  ,          SEPARATOR },
-    { _("_Delete"),         _("<ctl>Delete"),  DELETE,       ITEM }
+    { _("_Delete"),         _("<ctl>Delete"),  DELETE,       ITEM },
+    { _("_Options"),        _("<alt>O"),       0,            BRANCH },
+    { _("_Preferences"),    _("F9"),           PREFERENCES,  ITEM }
 };
 
 /// Defaultconstructor; all widget are created
@@ -400,17 +404,17 @@ void CDManager::command (int menu) {
       exportMovies ();
       break;
 /// Adds a new record to the first selected interpret
+   case IMPORT_MP3:
+      XGP::TFileDialog<CDManager>::create (_("Select file"), *this,
+					   &CDManager::parseMP3Info,
+					   Gtk::FILE_CHOOSER_ACTION_OPEN,
+					   XGP::IFileDialog::MUST_EXIST);
+      break;
+
    case NEW_ARTIST: {
-      Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
       HInterpret artist;
       artist.define ();
-      artists.push_back (artist);
-
-      recordSel->unselect_all ();
-      Gtk::TreeModel::iterator i (records.append (artist));
-      recordSel->select (i);
-      records.scroll_to_row (records.getModel ()->get_path (i), 0.5);
-      artistChanged (artist);
+      addArtist (artist);
       break; }
 
    case NEW_RECORD: {
@@ -424,32 +428,13 @@ void CDManager::command (int menu) {
 
       HRecord record;
       record.define ();
-      recordSel->unselect_all ();
-      Gtk::TreeIter i (records.append (record, *p));
-      records.expand_row (model->get_path (p), false);
-      recordSel->select (i);
-      records.scroll_to_row (records.getModel ()->get_path (i), 0.99);
-      recordChanged (HEntity::cast (record));
-
-      HInterpret artist;
-      artist = records.getInterpretAt (p);
-      relRecords.relate (artist, record);
+      addRecord (p, record);
       break; }
 
    case NEW_SONG: {
-      Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
-      Gtk::TreeSelection::ListHandle_Path list (recordSel->get_selected_rows ());
-      Check3 (list.size ());
-      Gtk::TreeIter p (records.getModel ()->get_iter (*list.begin ())); Check3 (p);
-
-      HRecord record (records.getRecordAt (p)); Check3 (record.isDefined ());
       HSong song;
       song.define ();
-      relSongs.relate (record, song);
-      p = songs.append (song);
-      songs.scroll_to_row (songs.getModel ()->get_path (p), 0.99);
-      songs.get_selection ()->select (p);
-      songChanged (song);
+      addSong (song);
       break; }
 
    case NEW_DIRECTOR: {
@@ -480,7 +465,7 @@ void CDManager::command (int menu) {
       Gtk::TreeIter i (movies.append (movie, *p));
       movies.expand_row (model->get_path (p), false);
       movieSel->select (i);
-      movies.scroll_to_row (movies.getModel ()->get_path (i), 0.99);
+      movies.scroll_to_row (movies.getModel ()->get_path (i), 0.8);
 
       HDirector director;
       director = movies.getDirectorAt (p);
@@ -611,6 +596,7 @@ void CDManager::enableMenus (bool enable) {
    apMenus[EXPORT]->set_sensitive (enable);
    apMenus[IMPORT_MP3]->set_sensitive (enable);
 
+   nb.set_sensitive (enable);
 
    apMenus[LOGIN]->set_sensitive (enable = !enable);
    apMenus[SAVE]->set_sensitive (enable);
@@ -1515,6 +1501,175 @@ void CDManager::exportMovies () {
 void CDManager::exportRecords () {
 }
 
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CDManager::parseMP3Info (const std::string& file) {
+   TRACE9 ("CDManager::parseMP3Info (const std::string&) - " << file);
+   Check2 (file.size ());
+
+   std::ifstream stream (file.c_str ());
+   Glib::ustring artist, record, song;
+   unsigned int track;
+   if (stream && parseMP3Info (stream, artist, record, song, track)) {
+      TRACE9 ("CDManager::parseMP3Info (const std::string&) - " << artist
+	      << '/' << record << '/' << song << '/' << track);
+
+      HInterpret group;
+      Gtk::TreeIter i (records.getOwner (artist));
+      if (i == records.getModel ()->children ().end ()) {
+	 TRACE9 ("CDManager::parseMP3Info (const std::string&) - Adding band " << artist);
+	 group.define ();
+	 group->setName (artist);
+	 i = addArtist (group);
+      }
+      else
+	 group = records.getInterpretAt (i);
+
+      HRecord rec;
+      Gtk::TreeIter r (records.getObject (i, record));
+      if (r == i->children ().end ()) {
+	 TRACE9 ("CDManager::parseMP3Info (const std::string&) - Adding rec " << record);
+	 rec.define ();
+	 rec->setName (record);
+	 addRecord (i, rec);
+      }
+      else {
+	 rec = records.getRecordAt (r);
+	 records.selectRow (r);
+      }
+	 records.scroll_to_row (records.getModel ()->get_path (r), 0.80);
+	 Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
+	 recordSel->select (r);
+      HSong hSong;
+      Gtk::TreeIter s (songs.getSong (song));
+      if (s == songs.getModel ()->children ().end ()) {
+	 TRACE9 ("CDManager::parseMP3Info (const std::string&) - Adding song " << song);
+	 hSong.define ();
+	 hSong->setName (song);
+	 hSong->setTrack (track);
+	 addSong (hSong);
+      }
+      else {
+	 hSong = songs.getEntryAt (s);
+	 songs.scroll_to_row (songs.getModel ()->get_path (s), 0.80);
+	 Glib::RefPtr<Gtk::TreeSelection> songSel (songs.get_selection ());
+	 songSel->select (s);
+	 if (track) {
+	    hSong->setTrack (track);
+	    Gtk::TreeRow row (*s);
+	    songs.updateTrack (row, hSong->getTrack ());
+	 }
+      }
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Reads the ID3 information from a MP3 file
+/// \param stream: MP3-file to analyze
+/// \param artist: Found artist
+/// \param record: Found record name
+/// \param song: Found song
+/// \param track: Tracknumber
+/// \returns bool: True, if ID3 info has been found
+//-----------------------------------------------------------------------------
+bool CDManager::parseMP3Info (std::istream& stream, Glib::ustring& artist,
+			      Glib::ustring& record, Glib::ustring& song,
+			      unsigned int& track) {
+   stream.seekg (-0x80, std::ios::end);
+   std::string value;
+
+   std::getline (stream, value, '\xff');
+   TRACE9 ("CDManager::parseMP3Info (std::stream&, 3x Glib::ustring&, unsigned&) - Found: "
+	   << value << "; Length: " << value.size ());
+   if ((value[0] == 'T') && (value[1] == 'A') && (value[2] == 'G')) {
+      song = Glib::locale_to_utf8 (stripString (value, 3, 29));
+      artist = Glib::locale_to_utf8 (stripString (value, 33, 29));
+      record = Glib::locale_to_utf8 (stripString (value, 63, 29));
+      if (value[0x7d] != 0x20)
+	 track = value[0x7e];
+      return true;
+   }
+   return false;
+}
+
+//-----------------------------------------------------------------------------
+/// Returns the specified substring, removed from trailing spaces
+/// \param value: String to manipulate
+/// \param pos: Starting pos inside the string
+/// \param len: Maximal length of string
+/// \returns std::string: Stripped value
+//-----------------------------------------------------------------------------
+std::string CDManager::stripString (const std::string& value, unsigned int pos, unsigned int len) {
+   len += pos;
+   while (len > pos) {
+      if ((value[len] != ' ') && (value[len]))
+         break;
+      --len;
+   }
+   return (pos == len) ? " " : value.substr (pos, len - pos + 1);
+}
+
+//-----------------------------------------------------------------------------
+/// Adds an interpret to the record listbox
+/// \param artist: Handle to the new interpret
+/// \returns Gtk::TreeIter: Iterator to new added artist
+//-----------------------------------------------------------------------------
+Gtk::TreeIter CDManager::addArtist (const HInterpret& artist) {
+   Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
+   artists.push_back (artist);
+
+   Gtk::TreeModel::iterator i (records.append (artist));
+   records.selectRow (i);
+   recordSel->unselect_all ();
+   artistChanged (artist);
+   recordSel->select (i);
+   records.scroll_to_row (records.getModel ()->get_path (i), 0.5);
+}
+
+//-----------------------------------------------------------------------------
+/// Adds a record to the record listbox
+/// \param parent: Iterator to the interpret of the record
+/// \param record: Handle to the new record
+/// \returns Gtk::TreeIter: Iterator to new added record
+//-----------------------------------------------------------------------------
+Gtk::TreeIter CDManager::addRecord (Gtk::TreeIter& parent, HRecord& record) {
+   Gtk::TreeIter i (records.append (record, *parent));
+   Glib::RefPtr<Gtk::TreeStore> model (records.getModel ());
+   Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
+   recordSel->unselect_all ();
+   records.expand_row (model->get_path (parent), false);
+   records.selectRow (i);
+   recordChanged (HEntity::cast (record));
+   recordSel->select (i);
+   records.scroll_to_row (records.getModel ()->get_path (i), 0.80);
+   HInterpret artist;
+   artist = records.getInterpretAt (parent);
+   relRecords.relate (artist, record);
+   return i;
+}
+
+//-----------------------------------------------------------------------------
+/// Adds a song to the song listbox
+/// \param song: Handle to the new song
+/// \returns Gtk::TreeIter: Iterator to new added song
+//-----------------------------------------------------------------------------
+Gtk::TreeIter CDManager::addSong (HSong& song) {
+   Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
+   Gtk::TreeSelection::ListHandle_Path list (recordSel->get_selected_rows ());
+   Check3 (list.size ());
+   Gtk::TreeIter p (records.getModel ()->get_iter (*list.begin ())); Check3 (p);
+
+   HRecord record (records.getRecordAt (p)); Check3 (record.isDefined ());
+   relSongs.relate (record, song);
+   p = songs.append (song);
+   songs.scroll_to_row (songs.getModel ()->get_path (p), 0.8);
+   songs.get_selection ()->select (p);
+   songChanged (song);
+   return p;
+}
+
+
+//-----------------------------------------------------------------------------
 /// Entrypoint of application
 /// \param argc: Number of parameters
 /// \param argv: Array with pointer to parameter

@@ -1,9 +1,9 @@
-dnl $Id: configure.ac,v 1.2 2004/10/30 14:46:20 markus Rel $
+dnl $Id: configure.ac,v 1.3 2004/11/11 04:30:53 markus Rel $
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.52)
-AC_REVISION($Revision: 1.2 $)
-AC_INIT(CDManager, 0.1.00, [g17m0@lycos.com], CDManager)
+AC_REVISION($Revision: 1.3 $)
+AC_INIT(CDManager, 0.2.00, [g17m0@lycos.com], CDManager)
 
 RELEASE=${PACKAGE_VERSION%.*}
 AC_DEFINE_UNQUOTED(PRG_RELEASE, "$RELEASE", [Define to the release of the program])
@@ -210,7 +210,7 @@ dnl Settings for autoheader
 AH_TOP([#ifndef CARDGAMES_CFG_H
 #define CARDGAMES_CFG_H
 
-//$Id: configure.ac,v 1.2 2004/10/30 14:46:20 markus Rel $
+//$Id: configure.ac,v 1.3 2004/11/11 04:30:53 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

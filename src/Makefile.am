@@ -2,7 +2,8 @@
 
 bin_PROGRAMS=CDManager
 
-CDManager_SOURCES=LangDlg.cpp LangDlg.h CDType.cpp CDType.h		\
+CDManager_SOURCES=Settings.cpp Settings.h CDAppl.cpp CDAppl.h		\
+		  LangDlg.cpp LangDlg.h CDType.cpp CDType.h		\
 		  Language.cpp Language.h Words.cpp Words.h Writer.cpp	\
 		  Writer.h OOList.cpp OOList.h MovieList.cpp		\
 		  MovieList.h RecordList.cpp RecordList.h		\
@@ -15,3 +16,8 @@ INCLUDES = @INCLUDES@ -I../Common @DEPS_CFLAGS@
 
 CDManager_LDFLAGS=@DEPS_LIBS@ @LTLIBINTL@
 DEFS = @DEFS@ -Wall
+
+Options.meta: Options.h
+	mgeni.pl Options.h > Options.meta
+
+EXTRA_DIST=Options.meta

@@ -1,7 +1,7 @@
 #ifndef MOVIE_H
 #define MOVIE_H
 
-//$Id: Movie.h,v 1.2 2004/12/11 22:54:13 markus Exp $
+//$Id: Movie.h,v 1.3 2004/12/12 03:12:23 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -44,20 +44,22 @@ class Movie : public YGP::Entity {
    Glib::ustring     getName () const { return name; }
    YGP::AYear        getYear () const { return year; }
    unsigned int      getGenre () const { return genre; }
-   std::string       getLanguage () const { return lang; }
    int               getType () const { return type; }
+   std::string       getLanguage () const { return lang; }
+   std::string       getTitles () const { return titles; }
 
    void setId       (unsigned long int value) { id = value; }
    void setName     (const Glib::ustring& value) { name = value; }
    void setYear     (const YGP::AYear& value) { year = value; }
    void setYear     (const std::string& value) { year = value; }
    void setGenre    (unsigned int value) { genre = value; }
-   void setLanguage (const std::string& value) { lang = value; }
    void setType     (int value) throw (std::out_of_range) {
       CDType::getInstance ()[value];
       type = value; }
    void setType     (const std::string& value) throw (std::out_of_range) {
       type = CDType::getInstance ()[value]; }
+   void setLanguage (const std::string& value) { lang = value; }
+   void setTitles   (const std::string& value) { titles = value; }
 
    static Glib::ustring removeIgnored (const Glib::ustring& name);
    static bool compByName (const HMovie& a, const HMovie& b);
@@ -69,8 +71,9 @@ class Movie : public YGP::Entity {
    Glib::ustring     name;     // %attrib%;
    YGP::AYear        year;     // %attrib%;
    unsigned int      genre;    // %attrib%;
-   std::string       lang;
    int               type;
+   std::string       lang;
+   std::string       titles;
 
    //Prohibited manager functions
    const Movie& operator= (const Movie& other);

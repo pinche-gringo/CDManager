@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.1 2004/11/26 03:31:54 markus Exp $
+//$Id: OOList.cpp,v 1.2 2004/11/27 04:49:05 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (A) 2004
@@ -30,8 +30,6 @@
 #include <cerrno>
 #include <cstdlib>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/StatusObj.h>
@@ -51,10 +49,24 @@
 OwnerObjectList::OwnerObjectList (const std::map<unsigned int, Glib::ustring>& genres)
    : genres (genres), mOwnerObjects (Gtk::TreeStore::create (colOwnerObjects)) {
    TRACE9 ("OwnerObjectList::OwnerObjectList (const std::map<unsigned int, Glib::ustring>&)");
+}
 
+//-----------------------------------------------------------------------------
+/// Destructor
+//-----------------------------------------------------------------------------
+OwnerObjectList::~OwnerObjectList () {
+   TRACE9 ("OwnerObjectList::~OwnerObjectList ()");
+}
+
+
+//-----------------------------------------------------------------------------
+/// Initializes the class
+//-----------------------------------------------------------------------------
+void OwnerObjectList::init () {
+   TRACE9 ("OwnerObject::init ()");
    set_model (mOwnerObjects);
 
-   append_column (_("TODO"), colOwnerObjects.name);
+   append_column (getColumnName (), colOwnerObjects.name);
    append_column (_("Year"), colOwnerObjects.year);
 
    set_headers_clickable ();
@@ -85,15 +97,10 @@ OwnerObjectList::OwnerObjectList (const std::map<unsigned int, Glib::ustring>& g
 
    renderer->signal_edited ().connect
       (bind (mem_fun (*this, &OwnerObjectList::valueChanged), 2));
-}
 
-//-----------------------------------------------------------------------------
-/// Destructor
-//-----------------------------------------------------------------------------
-OwnerObjectList::~OwnerObjectList () {
-   TRACE9 ("OwnerObjectList::~OwnerObjectList ()");
+   mOwnerObjects->set_sort_func (colOwnerObjects.name,
+				 sigc::mem_fun (*this, &OwnerObjectList::sortByName));
 }
-
 
 //-----------------------------------------------------------------------------
 /// Appends an object to an owner in the list
@@ -314,3 +321,35 @@ void OwnerObjectList::changeGenre (Gtk::TreeModel::Row& row, unsigned int value)
       g = genres.begin ();
    row[colOwnerObjects.genre] = g->second;
 }
+
+//-----------------------------------------------------------------------------
+/// Sorts the entries in the listbox according to the name (ignoring first names,
+/// articles, ...)
+/// \param a: First entry to compare
+/// \param a: Second entry to compare
+/// \returns int: Value as strcmp
+//-----------------------------------------------------------------------------
+int OwnerObjectList::sortByName (const Gtk::TreeModel::iterator& a,
+				 const Gtk::TreeModel::iterator& b) {
+   if ((*a)->parent ()) {
+      Gtk::TreeRow ra (*a);
+      Gtk::TreeRow rb (*b); Check2 (rb->parent ());
+
+      Glib::ustring a (ra[colOwnerObjects.name]);
+      Glib::ustring b (rb[colOwnerObjects.name]);
+      TRACE9 ("OwnerObjectList::sortByName (2x const Gtk::TreeModel::iterator&) - "
+	      << a << '/' << b << '=' << a.compare (b));
+      return a.compare (b);
+   }
+   else {
+      HCelebrity ha (getCelebrityAt (a)); Check3 (ha.isDefined ());
+      HCelebrity hb (getCelebrityAt (b)); Check3 (hb.isDefined ());
+
+      Glib::ustring aname (Celebrity::removeIgnored (ha->name));
+      Glib::ustring bname (Celebrity::removeIgnored (hb->name));
+
+      TRACE9 ("OwnerObjectList::sortByName (2x const Gtk::TreeModel::iterator&) - "
+	      << aname << '/' << bname << '='
+	      << ((aname < bname) ? -1 : (bname < aname) ? 1 : ha->name.compare (hb->name)));
+      return ((aname < bname) ? -1 : (bname < aname) ? 1 : ha->name.compare (hb->name));
+}}

@@ -1,7 +1,7 @@
 #ifndef OOLIST_H
 #define OOLIST_H
 
-//$Id: OOList.h,v 1.2 2004/11/26 04:06:02 markus Exp $
+//$Id: OOList.h,v 1.3 2004/11/27 04:49:05 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -65,6 +65,8 @@ class OwnerObjectList : public Gtk::TreeView {
    HCelebrity getCelebrityAt (const Gtk::TreeIter iterator) const;
 
  protected:
+   void init ();
+
    void valueChanged (const Glib::ustring& path, const Glib::ustring& value,
 		      unsigned int column);
 
@@ -75,6 +77,8 @@ class OwnerObjectList : public Gtk::TreeView {
    virtual Glib::ustring getColumnName () const = 0;
 
    void changeGenre (Gtk::TreeModel::Row& row, unsigned int value);
+
+   int sortByName (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
 
    const std::map<unsigned int, Glib::ustring>& genres;
 

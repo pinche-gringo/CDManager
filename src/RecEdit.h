@@ -1,7 +1,7 @@
 #ifndef RECEDIT_H
 #define RECEDIT_H
 
-//$Id: RecEdit.h,v 1.5 2004/10/28 19:11:52 markus Exp $
+//$Id: RecEdit.h,v 1.6 2004/10/30 14:47:56 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -48,6 +48,11 @@ class RecordEdit : public XGP::XDialog {
       return dlg;
    }
 
+ protected:
+   HRecord hRecord;
+
+   virtual void okEvent ();
+
  private:
    //Prohibited manager functions
    RecordEdit (const RecordEdit& other);
@@ -56,8 +61,6 @@ class RecordEdit : public XGP::XDialog {
    void fillGenres ();
    void fillInterprets ();
 
-   virtual void okEvent ();
-
    Gtk::Table* pClient;
 
    XGP::XAttributeEntry<Glib::ustring>*                 txtRecord;
@@ -65,8 +68,6 @@ class RecordEdit : public XGP::XDialog {
    Gtk::ComboBox*   optArtist;
    Gtk::ComboBox*   optGenre;
    Gtk::TreeView*   lstSongs;
-
-   HRecord hRecord;
 
    class ArtistColumns : public Gtk::TreeModel::ColumnRecord {
     public:
@@ -105,5 +106,36 @@ class RecordEdit : public XGP::XDialog {
 
    std::map<unsigned int, Glib::ustring> genres;
 };
+
+
+template <class T>
+class TRecordEdit : public RecordEdit {
+ public:
+   typedef void (T::*PCALLBACK) (HRecord& hRecord);
+
+   TRecordEdit (T& parent, PCALLBACK callback, HRecord record)
+      : RecordEdit (record), obj (parent), pCallback (callback) { }
+   virtual ~TRecordEdit () { }
+
+   static TRecordEdit* create (T& parent, PCALLBACK callback, HRecord record) {
+      TRecordEdit* dlg (new TRecordEdit<T> (parent, callback, record));
+      dlg->signal_response ().connect (mem_fun (*dlg, &TRecordEdit<T>::free));
+      return dlg;
+   }
+
+ protected:
+   virtual void okEvent () {
+      RecordEdit::okEvent ();
+      (obj.*pCallback) (hRecord); }
+
+ private:
+   //Prohibited manager functions
+   TRecordEdit (const TRecordEdit& other);
+   const TRecordEdit& operator= (const TRecordEdit& other);
+
+   T&        obj;
+   PCALLBACK pCallback;
+};
+
 
 #endif

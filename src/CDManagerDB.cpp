@@ -1,11 +1,11 @@
-//$Id: CDManagerDB.cpp,v 1.3 2005/01/31 05:13:19 markus Exp $
+//$Id: CDManagerDB.cpp,v 1.4 2005/02/18 22:22:10 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
-//BUGS        :
-//REVISION    : $Revision: 1.3 $
+//BUGS        : - Updating movies can delete the translated names
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.1.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -37,6 +37,7 @@
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/INIFile.h>
+#include <YGP/Tokenize.h>
 #include <YGP/StatusObj.h>
 
 #include <XGP/MessageDlg.h>
@@ -214,7 +215,7 @@ void CDManager::loadRecords () {
       Glib::ustring msg (Glib::locale_to_utf8 (ngettext ("Loaded %1 record", "Loaded %1 records", cRecords)));
       msg.replace (msg.find ("%1"), 2, YGP::ANumeric::toString (cRecords));
 
-      Glib::ustring tmp (ngettext (" from %1 artist", " from %1 artists", artists.size ()));
+      Glib::ustring tmp (Glib::locale_to_utf8 (ngettext (" from %1 artist", " from %1 artists", artists.size ())));
       tmp.replace (tmp.find ("%1"), 2, YGP::ANumeric::toString (artists.size ()));
       msg += tmp;
       status.pop ();
@@ -449,7 +450,7 @@ void CDManager::writeChangedEntries () {
 	 try {
 	    std::stringstream query;
 	    std::string tmp (escapeDBValue (artist->getName ()));
-	    query << (artist->getId () ? "UPDATE Celebrities" : "INSERT into Celebrities")
+	    query << (artist->getId () ? "UPDATE Celebrities" : "INSERT INTO Celebrities")
 		  << " SET name=\"" << tmp
 		  << "\", born="
 		  << (artist->getBorn ().isDefined () ? artist->getBorn () : YGP::AYear (0))
@@ -462,7 +463,7 @@ void CDManager::writeChangedEntries () {
 
 	    if (!artist->getId ()) {
 	       artist->setId (Database::getIDOfInsert ());
-	       Database::store ("INSERT into Interprets set id=LAST_INSERT_ID()");
+	       Database::store ("INSERT INTO Interprets set id=LAST_INSERT_ID()");
 	    }
 	 }
 	 catch (std::exception& err) {
@@ -479,7 +480,7 @@ void CDManager::writeChangedEntries () {
 	 HRecord record (changedRecords.begin ()->first); Check3 (record.isDefined ());
 	 try {
 	    std::stringstream query;
-	    query << (record->getId () ? "UPDATE Records" : "INSERT into Records")
+	    query << (record->getId () ? "UPDATE Records" : "INSERT INTO Records")
 		  << " SET name=\"" << escapeDBValue (record->getName ())
 		  << "\", genre=" << record->getGenre ();
 	    if (record->getYear ().isDefined ())
@@ -509,7 +510,7 @@ void CDManager::writeChangedEntries () {
 	 HSong song (changedSongs.begin ()->first); Check3 (song.isDefined ());
 	 try {
 	    std::stringstream query;
-	    query << (song->getId () ? "UPDATE Songs" : "INSERT into Songs")
+	    query << (song->getId () ? "UPDATE Songs" : "INSERT INTO Songs")
 		  << " SET name=\"" << escapeDBValue (song->getName ())
 		  << "\", duration=\"" << song->getDuration () << "\", genre="
 		  << song->getGenre ();
@@ -541,7 +542,7 @@ void CDManager::writeChangedEntries () {
 	 Check3 (director.isDefined ());
 	 try {
 	    std::stringstream query;
-	    query << (director->getId () ? "UPDATE Celebrities" : "INSERT into Celebrities")
+	    query << (director->getId () ? "UPDATE Celebrities" : "INSERT INTO Celebrities")
 		  << " SET name=\"" << escapeDBValue (director->getName ())
 		  << "\", born="
 		  << (director->getBorn ().isDefined () ? director->getBorn () : YGP::AYear (0))
@@ -554,7 +555,7 @@ void CDManager::writeChangedEntries () {
 
 	    if (!director->getId ()) {
 	       director->setId (Database::getIDOfInsert ());
-	       Database::store ("INSERT into Directors set id=LAST_INSERT_ID()");
+	       Database::store ("INSERT INTO Directors set id=LAST_INSERT_ID()");
 	    }
 	 }
 	 catch (std::exception& err) {
@@ -571,7 +572,7 @@ void CDManager::writeChangedEntries () {
 	 HMovie movie (changedMovies.begin ()->first); Check3 (movie.isDefined ());
 	 try {
 	    std::stringstream query;
-	    query << (movie->getId () ? "UPDATE Movies" : "INSERT into Movies")
+	    query << (movie->getId () ? "UPDATE Movies" : "INSERT INTO Movies")
 		  << " SET name=\"" << escapeDBValue (movie->getName (""))
 		  << "\", genre=" << movie->getGenre () << ", languages=\""
 		  << movie->getLanguage () << "\", subtitles=\""
@@ -589,20 +590,25 @@ void CDManager::writeChangedEntries () {
 	    if (!movie->getId ())
 	       movie->setId (Database::getIDOfInsert ());
 
-	    std::map<std::string, Glib::ustring>::const_iterator l (movie->getNames ().begin ());
-	    Check3 (l != movie->getNames ().end ());
 	    Database::store ("START TRANSACTION");
 
-	    std::stringstream del;
-	    del << "DELETE FROM MovieNames WHERE id=" << movie->getId ();
-	    Database::store (del.str ().c_str ());
-	    for (++l; l != movie->getNames ().end (); ++l) {
-	       std::stringstream ins;
-	       ins << "INSERT INTO MovieNames SET id=" << movie->getId ()
-		   << ", name=\"" << escapeDBValue (movie->getName (l->first))
-		   << "\", language=\"" << l->first << '"';
-	       Database::store (ins.str ().c_str ());
-	    }
+	    YGP::Tokenize langs (changedMovieNames[movie]);
+	    std::string lang;
+	    while ((lang = langs.getNextNode (',')).size ()) {
+	       Check3 (Language::exists (lang));
+	       std::stringstream del;
+	       del << "DELETE FROM MovieNames WHERE id=" << movie->getId ()
+		   << " AND language='" << lang << '\'';
+	       Database::store (del.str ().c_str ());
+
+	       if (movie->getName (lang).size ()) {
+		  std::stringstream ins;
+		  ins << "INSERT INTO MovieNames SET id=" << movie->getId ()
+		      << ", name=\"" << escapeDBValue (movie->getName (lang))
+		      << "\", language='" << lang << '\'';
+		  Database::store (ins.str ().c_str ());
+	       } // endif has translation for language
+	    } // endwhile languages changed
 	    Database::store ("COMMIT");
 	 }
 	 catch (std::exception& err) {

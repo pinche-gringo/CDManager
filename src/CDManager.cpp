@@ -1,10 +1,10 @@
-//$Id: CDManager.cpp,v 1.21 2004/11/24 21:54:10 markus Exp $
+//$Id: CDManager.cpp,v 1.22 2004/11/25 23:17:57 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //BUGS        :
-//REVISION    : $Revision: 1.21 $
+//REVISION    : $Revision: 1.22 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -30,6 +30,7 @@
 #include <gtkmm/box.h>
 #include <gtkmm/label.h>
 #include <gtkmm/messagedialog.h>
+#include <gtkmm/scrolledwindow.h>
 
 #define CHECK 9
 #define TRACELEVEL 9
@@ -282,26 +283,25 @@ CDManager::CDManager ()
 
    Gtk::ScrolledWindow* scrlSongs (new Gtk::ScrolledWindow);
    Gtk::ScrolledWindow* scrlMovies (new Gtk::ScrolledWindow);
+   Gtk::ScrolledWindow* scrlRecords (new Gtk::ScrolledWindow);
+
+   scrlSongs->set_shadow_type (Gtk::SHADOW_ETCHED_IN);
+   scrlMovies->set_shadow_type (Gtk::SHADOW_ETCHED_IN);
+   scrlRecords->set_shadow_type (Gtk::SHADOW_ETCHED_IN);
+   scrlSongs->add (songs);
+   scrlMovies->add (movies);
+   scrlRecords->add (records);
+   scrlSongs->set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+   scrlMovies->set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+   scrlRecords->set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+
+   TRACE9 ("CDManager::CDManager () - Add NB");
+   Gtk::HPaned* cds (new Gtk::HPaned);
 
    nb.append_page (cds, _("_Records"), true);
-   cds.show ();
-   nb.append_page (movies, _("_Movies"), true);
-   movies.show ();
-   nb.popup_enable ();
+
    songs.get_selection ()->set_mode (Gtk::SELECTION_EXTENDED);
    songs.signalChanged.connect (mem_fun (*this, &CDManager::songChanged));
-   scrlSongs.set_shadow_type (Gtk::SHADOW_ETCHED_IN);
-   scrlRecords.set_shadow_type (Gtk::SHADOW_ETCHED_IN);
-   scrlSongs.add (songs);
-   scrlRecords.add (records);
-   scrlSongs.set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-   scrlRecords.set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-   scrlSongs.show ();
-   scrlRecords.show ();
-
-   records.show ();
-   songs.show ();
-
    records.signalOwnerChanged.connect (mem_fun (*this, &CDManager::artistChanged));
    records.signalObjectChanged.connect (mem_fun (*this, &CDManager::recordChanged));
    records.signalArtistChanged.connect (mem_fun (*this, &CDManager::artistChanged));
@@ -319,8 +319,8 @@ CDManager::CDManager ()
       (mem_fun (*this, &CDManager::recordSelected));
    cds->add1 (*manage (scrlRecords));
    cds.set_position ((WIDTH - 20) >> 1);
-   cds.add1 (scrlRecords);
-   cds.add2 (scrlSongs);
+   cds.add1 (*manage (scrlRecords));
+   cds.add2 (*manage (scrlSongs));
 
    apMenus[SAVE]->set_sensitive (false);
 
@@ -552,7 +552,7 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 
 	 while (Database::hasData ()) {
 	    // Fill and store artist entry from DB-values
-	    Celibrity::ignore.push_back
+	    Celebrity::ignore.push_back
 	       (Glib::locale_to_utf8 (Database::getResultColumnAsString (0)));
 	    Database::getNextResultRow ();
 	 }
@@ -605,6 +605,7 @@ void CDManager::loadDatabase () {
    status.push (_("Reading database ..."));
 
    if (nb.get_current_page ()) {
+   movies.clear ();
    records.clear ();
       loadMovies ();
    std::vector<HInterpret> artists;
@@ -623,6 +624,12 @@ void CDManager::loadDatabase () {
 	 hArtist.define ();
 	 hArtist->id = Database::getResultColumnAsUInt (0);
 	 hArtist->name = Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
+	 std::string tmp (Database::getResultColumnAsString (2));
+	 if (tmp != "0000")
+	    hArtist->born = tmp;
+	 tmp = Database::getResultColumnAsString (3);
+	 if (tmp != "0000")
+	    hArtist->died = tmp;
 	 artists.push_back (hArtist);
 
 	 Database::getNextResultRow ();
@@ -695,6 +702,15 @@ void CDManager::loadDatabase () {
 	 hDirector.define ();
 	 hDirector->id = Database::getResultColumnAsUInt (0);
 	 hDirector->name = Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
+
+	 TRACE9 ("Born: " << Database::getResultColumnAsString (2));
+	 TRACE9 ("Died: " << Database::getResultColumnAsString (3));
+	 std::string tmp (Database::getResultColumnAsString (2));
+	 if (tmp != "0000")
+	    hDirector->born = tmp;
+	 tmp = Database::getResultColumnAsString (3);
+	 if (tmp != "0000")
+	    hDirector->died = tmp;
 	 directors.push_back (hDirector);
 
 	 Database::getNextResultRow ();
@@ -743,6 +759,8 @@ void CDManager::loadDatabase () {
 	 } // end-for all directors
 	 records.expand_all ();
       } // end-if database contains records
+
+      movies.expand_all ();
    }
    catch (std::exception& err) {
       Glib::ustring msg (_("Can't query available movies!\n\nReason: %1"));
@@ -990,7 +1008,11 @@ void CDManager::writeChangedEntries () {
 	 try {
 	    std::stringstream query;
 	    query << (artist->id ? "UPDATE Celebrities" : "INSERT into Celebrities")
-		  << " SET name=\"" << artist->name << '"';
+		  << " SET name=\"" << artist->name << "\", born="
+		  << (artist->born.isDefined () ? artist->born : YGP::AYear (0))
+		  << ", died="
+		  << (artist->died.isDefined () ? artist->died : YGP::AYear (0));
+
 	    if (artist->id)
 	       query << " WHERE id=" << artist->id;
 	    Database::store (query.str ().c_str ());
@@ -1075,7 +1097,11 @@ void CDManager::writeChangedEntries () {
 	 try {
 	    std::stringstream query;
 	    query << (director->id ? "UPDATE Celebrities" : "INSERT into Celebrities")
-		  << " SET name=\"" << director->name << '"';
+		  << " SET name=\"" << director->name << "\", born="
+		  << (director->born.isDefined () ? director->born : YGP::AYear (0))
+		  << ", died="
+		  << (director->died.isDefined () ? director->died : YGP::AYear (0));
+
 	    if (director->id)
 	       query << " WHERE id=" << director->id;
 	    Database::store (query.str ().c_str ());

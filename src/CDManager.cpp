@@ -1,10 +1,10 @@
-//$Id: CDManager.cpp,v 1.27 2004/12/03 05:03:17 markus Exp $
+//$Id: CDManager.cpp,v 1.28 2004/12/03 17:54:47 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //BUGS        :
-//REVISION    : $Revision: 1.27 $
+//REVISION    : $Revision: 1.28 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -556,7 +556,7 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 
    try {
       if (genres.empty ()) {
-	 Database::store ("SELECT id, genre FROM Genres ORDER BY genre");
+	 Database::store ("SELECT id, genre FROM Genres");
 
 	 while (Database::hasData ()) {
 	    // Fill and store artist entry from DB-values
@@ -570,7 +570,7 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
       }
 
       if (mgenres.empty ()) {
-	 Database::store ("SELECT id, genre FROM MGenres ORDER BY genre");
+	 Database::store ("SELECT id, genre FROM MGenres");
 
 	 while (Database::hasData ()) {
 	    // Fill and store artist entry from DB-values
@@ -1360,7 +1360,7 @@ void CDManager::exportMovies () {
       if (!input) {
 	 Glib::ustring error (_("-error: `%1' is not a (readable) file!"));
 	 error.replace (error.find ("%1"), 2, htmlData[i].names);
-	 Gtk::MessageDialog dlg (error, Gtk::MESSAGE_ERROR);
+	 Gtk::MessageDialog dlg (error, Gtk::MESSAGE_WARNING);
 	 dlg.run ();
       }
       else {
@@ -1390,10 +1390,13 @@ void CDManager::exportMovies () {
    std::ofstream file ((opt.getDirOutput () + "Movies.html").c_str ());
    file << htmlData[0].target;
 
+   file << ("<div class=\"header\"><a href=\"Movies-Down.html\">Director</a> | "
+	    "<a href=\"Movies-Name.html\">Name</a> | "
+	    "|<a href=\"Movies-Year.html\">Year</a> | "
+	    "<a href=\"Movies-Genre.html\">Genre</a></div>\n");
+
    MovieWriter writer ("%n|%y|%g", mgenres);
-   writer.printStart (file, "<div class=\"header\"><a href=\"Movies-Name.html\">Name</a></div>"
-		      "|<div class=\"header\"><a href=\"Movies-Year.html\">Year</a></div>|"
-		      "<div class=\"header\"><a href=\"Movies-Genre.html\">Genre</a></div>");
+   writer.printStart (file, "");
 
    std::vector<HMovie> movies;
    for (std::vector<HDirector>::const_iterator i (directors.begin ());
@@ -1412,41 +1415,90 @@ void CDManager::exportMovies () {
    writer.printEnd (file);
    file << htmlData[1].target;
 
+   // Sort reverse
+   file.close ();
+   file.open ((opt.getDirOutput () + "Movies-Down.html").c_str ());
+   file << htmlData[0].target;
+
+   file << ("<div class=\"header\"><a href=\"Movies.html\">Director</a> | "
+	    "<a href=\"Movies-Name.html\">Name</a> | "
+	    "|<a href=\"Movies-Year.html\">Year</a> | "
+	    "<a href=\"Movies-Genre.html\">Genre</a></div>\n");
+
+   writer.printStart (file, "");
+   for (std::vector<HDirector>::reverse_iterator i (directors.rbegin ());
+	i != directors.rend (); ++i)
+      if (relMovies.isRelated (*i)) {
+	 writer.writeDirector (*i, file);
+
+	 std::vector<HMovie>& dirMovies (relMovies.getObjects (*i));
+	 Check3 (dirMovies.size ());
+	 for (std::vector<HMovie>::const_iterator m (dirMovies.begin ());
+	      m != dirMovies.end (); ++m)
+	    writer.writeMovie (*m, *i, file);
+      }
+   writer.printEnd (file);
+   file << htmlData[1].target;
+
    typedef bool (*PFNCOMPARE) (const HMovie&, const HMovie&);
    struct {
       const char* title;
       const char* file;
+      const char* filedown;
       const char* format;
       PFNCOMPARE  fnCompare;
    } aOutputs[] =
-	 { { "<div class=\"header\"><a href=\"Movies-Name.html\">Name</a></div>"
+	 { { "<div class=\"header\"><a href=\"%1\">Name</a></div>"
 	     "|<div class=\"header\"><a href=\"Movies.html\">Director</a></div>|"
 	     "|<div class=\"header\"><a href=\"Movies-Year.html\">Year</a></div>|"
 	     "<div class=\"header\"><a href=\"Movies-Genre.html\">Genre</a></div>",
-	     "tmp/Movies-Name.html", "%n|%d|%y|%g", &Movie::compByName },
-	   { "|<div class=\"header\"><a href=\"Movies-Year.html\">Year</a></div>|"
+	     "Movies-Name.html", "Movies-Namedown.html",
+	     "%n|%d|%y|%g", &Movie::compByName },
+	   { "|<div class=\"header\"><a href=\"%1\">Year</a></div>|"
 	     "<div class=\"header\"><a href=\"Movies-Name.html\">Name</a></div></p>"
 	     "|<div class=\"header\"><a href=\"Movies.html\">Director</a></div>|"
 	     "<div class=\"header\"><a href=\"Movies-Genre.html\">Genre</a></div>",
-	     "tmp/Movies-Year.html", "%y|%n|%d|%g", &Movie::compByYear },
-	   { "<div class=\"header\"><a href=\"Movies-Genre.html\">Genre</a></div>|"
+	     "Movies-Year.html", "Movies-Yeardown.html",
+	     "%y|%n|%d|%g", &Movie::compByYear },
+	   { "<div class=\"header\"><a href=\"%1\">Genre</a></div>|"
 	     "<div class=\"header\"><a href=\"Movies-Name.html\">Name</a></div>"
 	     "|<div class=\"header\"><a href=\"Movies.html\">Director</a></div>|"
 	     "|<div class=\"header\"><a href=\"Movies-Year.html\">Year</a></div>",
-	     "tmp/Movies-Genre.html", "%g|%n|%d|%y", &Movie::compByGenre } };
+	     "Movies-Genre.html", "Movies-Genredown.html",
+	     "%g|%n|%d|%y", &Movie::compByGenre } };
 
    for (unsigned int i (0); i < (sizeof (aOutputs) / sizeof (*aOutputs)); ++i) {
       file.close ();
-      file.open (aOutputs[i].file);
+      file.open ((opt.getDirOutput () + aOutputs[i].file).c_str ());
       file << htmlData[0].target;
 
       std::sort (movies.begin (), movies.end (), aOutputs[i].fnCompare);
 
+      std::string header (aOutputs[i].title);
+      header.replace (header.find ("%1"), 2, aOutputs[i].filedown);
       MovieWriter writer (aOutputs[i].format, mgenres);
-      writer.printStart (file, aOutputs[i].title);
+      writer.printStart (file, header);
 
       for (std::vector<HMovie>::const_iterator m (movies.begin ());
 	   m != movies.end (); ++m) {
+	 HDirector director;
+	 director = relMovies.getParent (*m); Check3 (director.isDefined ());
+	 writer.writeMovie (*m, director, file);
+      }
+
+      writer.printEnd (file);
+      file << htmlData[1].target;
+
+      file.close ();
+      file.open ((opt.getDirOutput () + aOutputs[i].filedown).c_str ());
+      file << htmlData[0].target;
+
+      header = aOutputs[i].title;
+      header.replace (header.find ("%1"), 2, aOutputs[i].file);
+      writer.printStart (file, header);
+
+      for (std::vector<HMovie>::reverse_iterator m (movies.rbegin ());
+	   m != movies.rend (); ++m) {
 	 HDirector director;
 	 director = relMovies.getParent (*m); Check3 (director.isDefined ());
 	 writer.writeMovie (*m, director, file);

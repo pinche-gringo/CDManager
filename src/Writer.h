@@ -1,7 +1,7 @@
 #ifndef WRITER_H
 #define WRITER_H
 
-//$Id: Writer.h,v 1.1 2004/11/28 01:05:38 markus Rel $
+//$Id: Writer.h,v 1.2 2004/12/04 04:06:44 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,10 +31,10 @@ class MovieWriter : public YGP::HTMLWriter {
  public:
    MovieWriter (const std::string& format,
 		std::map<unsigned int, Glib::ustring> genres)
-      : YGP::HTMLWriter (format), genres (genres) { }
+      : YGP::HTMLWriter (format), oddLine (true), genres (genres) { }
    virtual ~MovieWriter ();
 
-   void writeMovie    (const HMovie& movie, std::ostream& out);
+   void writeMovie    (const HMovie& movie, const HDirector& director, std::ostream& out);
    void writeDirector (const HDirector& director, std::ostream& out);
 
  protected:
@@ -47,6 +47,7 @@ class MovieWriter : public YGP::HTMLWriter {
    HMovie    hMovie;
    HDirector hDirector;
 
+   bool oddLine;
    std::map<unsigned int, Glib::ustring> genres;
 };
 

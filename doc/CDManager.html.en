@@ -1,5 +1,5 @@
 <!-- -*-HTML-*- -->
-<!-- $Id: CDManager.html.en,v 1.1 2004/12/21 05:16:39 markus Exp $ -->
+<!-- $Id: CDManager.html.en,v 1.2 2004/12/25 23:29:40 markus Rel $ -->
 
 <!--
   Copyright (C) 2004 Markus Schwab (g17m0@lycos.com)
@@ -92,6 +92,11 @@
       the <tt>Edit</tt> menu or by importing the ID3-tag from MP3 files
       (Menu <tt>Import from MP3-info</tt> in the <tt>CD</tt> menu).</p>
 
+    <p>Entries can be searched for (in the active list) by pressing
+      <tt>&lt;Ctrl&gt;-F</tt>; within the search-field the keys
+      <tt>&lt;Ctrl&gt;-Up</tt> and <tt>&lt;Ctrl&gt;-Down</tt> find the
+      previous/next matching entry.</p>
+
     <h3>Movie page</h3>
 
     <p>This page contains the movies, sorted by director and (within
@@ -100,6 +105,9 @@
 
     <p>New entries can be added by selecting the appropriate entry in
       the <tt>Edit</tt> menu.</p>
+
+    <p>Equal to the record pages, it is possible to searched for
+      Entries by pressing <tt>&lt;Ctrl&gt;-F</tt> (see above).</p>
 
     <h2><a name="Dialogs"></a>Dialogs</h2>
 
@@ -120,72 +128,12 @@
       are differently written or they exceed the the size of the ID3
       information (which is limited to 30/32 characters).</p>
 
-    <h3>Find</h3>
-    <p>The <i>Find-Dialog</i> is invoked with <tt>Find ...</tt> from
-      the <tt>Edit</tt> menu.</p>
+    <h3>Settings</h3>
+    <p>The <i>Settings-Dialog</i> is invoked with <tt>Preferences ...</tt> from
+      the <tt>Options</tt> menu.</p>
 
-    <p>A <a name="RegExp">regular expression</a> can be entered which
-      is then searched for in displayed list. This expression is
-      stored and displayed the next time the dialug is displayed again.</p>
-
-    <h2><a name="RegExp"></a>Regular expressions</h2>
-    <p>A fully description of regular expressions is beyond the scope
-      of this document; see regex(7) or the GNU regexp manual for a
-      better description.</p>
-
-    <p>Basically a regular expression consists of text, which might be
-      followed by a repeat count.</p>
-
-    <p>The following repeat counts exists:</p>
-
-    <ul>
-      <li><b>*</b> (Asterisk) repeats the (smallest possible)
-        preceding regular expression as many times as
-        possible (including none at all).</li>
-
-      <li><b>+</b> (Plus) is similar to '*', except that it requires
-        that the preceeding regular expression is matched at least
-        once.</li>
-
-      <li><b>?</b> (Question mark) is similar to '*', except that it
-        requires that the preceeding regular expression is matched
-        either once or not at all.</li>
-
-      <li><b>{i}, {i,}, {i,j}</b> the previous regular expression must
-        be repeated either exactly i times; i times or more; i through
-        j (inclusive) times.</li></ul>
-    </ul>
-
-    <p>The text which is repeated in the above way can also contain
-      some special constructs:</p>
-
-    <ul>
-      <li><b>.</b> (Dot) matches any single character.</li>
-
-      <li><b>^</b> (Caret) Matches an empty string in the beginning of
-        the line.</li>
-
-      <li><b>$</b> (Dollar) Similar to the caret (^) this matches the
-        end of the line.</li>
-
-      <li><b>\</b> (Backslash): Quotes the following character
-        (including the backlash (\) itself.</li>
-
-      <li><b>[&lt;match&gt;]</b> matches the characters specified
-        in match, while<li>
-
-      <li>'<b>[^&lt;match&gt;]</b> or <b>[!&lt;match&gt;]</b> matches
-          the characters not specified in match.
-
-	<p>In both cases the match might be a mixture of single
-	  charactes, ranges of characters (separated by the minus (-)
-	  or characters classes (like [:alpha:], [:digit:] or [:upper:]).</p></li>
-
-      <li><b>|</b> seperates two alternatives.</li>
-
-      <li><b>(...)</b> groups regular expressions and marks the
-        matching substring for future reference.</li>
-    </ul>
+    <p>It allows to change various aspects of the program (related to
+    the export of the information to HTML documents).</p>
 
     <h2>Author</h2>
     <p>Both the program and the documentation have been written by Markus
@@ -195,6 +143,10 @@
     <p>The program is started without any options, like this:</p>
 
     <pre>   CDManager</pre>
+
+    <p>An overview of the available options can be displayed with</p>
+
+    <pre>   CDManager --help</pre>
 
     <h2>Credits</h2>
     <p>Thanks to the folks at MySQL for their great database and the

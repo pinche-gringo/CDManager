@@ -1,10 +1,10 @@
-//$Id: CDManager.cpp,v 1.25 2004/11/28 01:05:37 markus Exp $
+//$Id: CDManager.cpp,v 1.26 2004/11/29 19:04:33 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //BUGS        :
-//REVISION    : $Revision: 1.25 $
+//REVISION    : $Revision: 1.26 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -25,6 +25,7 @@
 
 #include <cdmgr-cfg.h>
 
+#include <fstream>
 #include <sstream>
 
 #include <gtkmm/box.h>
@@ -44,6 +45,7 @@
 #include "DB.h"
 #include "Song.h"
 #include "Movie.h"
+#include "Words.h"
 #include "Record.h"
 #include "Writer.h"
 #include "Director.h"
@@ -576,12 +578,13 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 	 movies.updateGenres ();
       }
 
-      if (!Celebrity::cIgnoreWords ()) {
+      if (!Words::cArticles ()) {
+	 Words::init ();
 	 Database::store ("SELECT word FROM Words");
 
 	 while (Database::hasData ()) {
 	    // Fill and store artist entry from DB-values
-	    Celebrity::addWord2Ignore
+	    Words::addName2Ignore
 	       (Glib::locale_to_utf8 (Database::getResultColumnAsString (0)));
 	    Database::getNextResultRow ();
 	 }
@@ -1339,23 +1342,54 @@ void CDManager::exportMovies () {
 
    std::sort (directors.begin (), directors.end (), &Director::compByName);
    std::sort (artists.begin (), artists.end (), &Interpret::compByName);
+   std::ofstream file ("tmp/Movies.html");
+
    std::sort (directors.begin (), directors.end (), &Director::compByName);
 
    MovieWriter writer ("%n|%y|%g", mgenres);
-   writer.printStart (std::cout, _("Director"));
+   writer.printStart (file, _("Director"));
 
+   std::vector<HMovie> movies;
    for (std::vector<HDirector>::const_iterator i (directors.begin ());
 	i != directors.end (); ++i)
       if (relMovies.isRelated (*i)) {
-	 writer.writeDirector (*i, std::cout);
+	 writer.writeDirector (*i, file);
 
-	 std::vector<HMovie>& movies (relMovies.getObjects (*i));
-	 Check3 (movies.size ());
-	 for (std::vector<HMovie>::const_iterator m (movies.begin ());
-	      m != movies.end (); ++m)
-	    writer.writeMovie (*m, std::cout);
+	 std::vector<HMovie>& dirMovies (relMovies.getObjects (*i));
+	 Check3 (dirMovies.size ());
+	 for (std::vector<HMovie>::const_iterator m (dirMovies.begin ());
+	      m != dirMovies.end (); ++m) {
+	    writer.writeMovie (*m, file);
+	    movies.push_back (*m);
+	 }
       }
-   writer.printEnd (std::cout);
+   writer.printEnd (file);
+
+   typedef bool (*PFNCOMPARE) (const HMovie&, const HMovie&);
+   struct {
+      const char* file;
+      const char* format;
+      PFNCOMPARE  fnCompare;
+   } aOutputs[] =
+	 { { "tmp/Movies-Name.html", "%n|%y|%g", &Movie::compByName },
+	   { "tmp/Movies-Year.html", "%y|%n|%g", &Movie::compByYear },
+	   { "tmp/Movies-Genre.html", "%g|%n|%y", &Movie::compByGenre } };
+
+   for (unsigned int i (0); i < (sizeof (aOutputs) / sizeof (*aOutputs)); ++i) {
+      file.close ();
+      file.open (aOutputs[i].file);
+
+      std::sort (movies.begin (), movies.end (), aOutputs[i].fnCompare);
+
+      MovieWriter writer (aOutputs[i].format, mgenres);
+      writer.printStart (file, _("Movie"));
+
+      for (std::vector<HMovie>::const_iterator m (movies.begin ());
+	   m != movies.end (); ++m)
+	 writer.writeMovie (*m, file);
+
+      writer.printEnd (file);
+   }
 //-----------------------------------------------------------------------------
 /// Reads the ID3 information from a MP3 file
 /// \param file: Name of file to analzye

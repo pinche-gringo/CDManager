@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.46 2005/01/31 05:11:59 markus Exp $
+//$Id: CDManager.cpp,v 1.47 2005/02/11 01:45:58 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
-//TODO        :
+//TODO        : - Display icon to change movie-language in statusbar
 //BUGS        :
-//REVISION    : $Revision: 1.46 $
+//REVISION    : $Revision: 1.47 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -294,10 +294,11 @@ CDManager::CDManager (Options& options)
 		     "    <menuitem action='FQuit'/>"
 		     "  </menu>"
 		     "  <menu action='Edit'>"
-		     "    <placeholder name='List'/>"
+		     "    <placeholder name='EditAction'/>"
 		     "    <separator/>"
 		     "    <menuitem action='Delete'/>"
 		     "  </menu>"
+		     "  <placeholder name='Lang'/>"
 		     "  <menu action='Options'>"
 		     "    <menuitem action='Prefs'/>"
 		     "    <menuitem action='SavePrefs'/>"
@@ -731,7 +732,7 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 
    Glib::ustring ui ("<menubar name='Menu'>"
 		     "  <menu action='Edit'>"
-		     "    <placeholder name='List'>");
+		     "    <placeholder name='EditAction'>");
 
    Glib::RefPtr<Gtk::ActionGroup> grpAction (Gtk::ActionGroup::create ());
    if (iPage) {
@@ -739,7 +740,7 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 	 loadDatabase ();
 
       ui += ("<menuitem action='NDirector'/><menuitem action='NMovie'/>"
-	     "<separator/><menu action='Lang'><menuitem action='Orig'/>");
+	     "</placeholder></menu><placeholder name='Lang'><menu action='Lang'><menuitem action='Orig'/>");
 
       grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NDirector", Gtk::Stock::NEW,
 							   _("New _Director")),
@@ -752,9 +753,12 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 
       Gtk::RadioButtonGroup grpLang;
       grpAction->add (Gtk::Action::create ("Lang", _("_Language")));
-      grpAction->add (Gtk::RadioAction::create (grpLang, "Orig", _("Original name")),
+      grpAction->add (Gtk::RadioAction::create (grpLang, "Orig", _("_Original name")),
+		      Gtk::AccelKey ("<ctl>0"),
 		      bind (mem_fun (*this, &CDManager::changeLanguage), ""));
 
+      char accel[6];
+      strcpy (accel, "<ctl>1");
       for (std::map<std::string, Language>::const_iterator i (Language::begin ());
 	   i != Language::end (); ++i) {
 	 TRACE9 ("CDManager::CDManager (Options&) - Adding language " << i->first);
@@ -763,17 +767,25 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 	 Glib::RefPtr<Gtk::RadioAction> act
 	    (Gtk::RadioAction::create (grpLang, i->first, i->second.getInternational ()));
 	 TRACE1 ("Langs: " << i->first << " - " << Movie::currLang);
-	 grpAction->add (act, bind (mem_fun (*this, &CDManager::changeLanguage), i->first));
+
+	 if (accel[5] <= '9') {
+	    grpAction->add (act, Gtk::AccelKey (accel),
+			    bind (mem_fun (*this, &CDManager::changeLanguage), i->first));
+	    ++accel[5];
+	 }
+	 else
+           grpAction->add (act, bind (mem_fun (*this, &CDManager::changeLanguage), i->first));
+
 	 if (i->first == Movie::currLang)
 	    act->set_active ();
       }
-      ui += "</menu>";
+      ui += "</menu></placeholder></menubar>";
 
       movieSelected ();
    }
    else {
       ui += ("<menuitem action='NInterpret'/><menuitem action='NRecord'/>"
-	     "<menuitem action='NSong'/>");
+	     "<menuitem action='NSong'/></placeholder></menu></menubar>");
 
       grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NInterpret", Gtk::Stock::NEW,
 							   _("New _Interpret")),
@@ -788,7 +800,6 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 
       recordSelected ();
    }
-   ui += "</placeholder></menu></menubar>";
 
    mgrUI->insert_action_group (grpAction);
    idMrg = mgrUI->add_ui_from_string (ui);
@@ -830,8 +841,16 @@ void CDManager::exportData () throw (Glib::ustring) {
    YGP::Tokenize langs (LANGUAGES);
    std::string lang;
    std::string tmpLang (Movie::currLang);
+   std::string oldLang (getenv ("LANGUAGE"));
    while ((lang = langs.getNextNode (' ')).size ()) {
-      TRACE1 ("CDManager::exportData (const Options&, std::map&, std::vector&) - Lang: " << lang);
+      TRACE1 ("CDManager::exportData () - Lang: " << lang);
+      Glib::ustring stat (_("Exporting (language %1) ..."));
+      stat.replace (stat.find ("%1"), 2, Language::findInternational (lang));
+      status.push (stat);
+
+      Glib::RefPtr<Glib::MainContext> ctx (Glib::MainContext::get_default ());
+      while (ctx->iteration (false));                      // Update statusbar
+
       if (!loadedLangs[lang])
 	 loadMovies (lang);
 
@@ -905,7 +924,9 @@ void CDManager::exportData () throw (Glib::ustring) {
       }
 
       close (pipes[0]);
+      status.pop ();
    }
+   setenv ("LANGUAGE", oldLang.c_str (), true);
 }
 
 //-----------------------------------------------------------------------------

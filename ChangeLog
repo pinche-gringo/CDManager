@@ -1,3 +1,181 @@
+2004-11-11  Markus Schwab  <markus@markus.linuxnet.ve>
+
+	* NEWS, ChangeLog: Overview of changes in V0.2.00 added
+
+	* SQL/populateDB.sql: Some more words to ignore added
+
+	* SQL/createFillScript: Initializing genre and year
+
+	* SQL/createDB.sql:
+	  Most columns are not NULL; ids are also unsigned; added foreign keys
+
+	* README: Requiremnt mysql++ added
+
+	* configure.ac: Version to 0.2.00
+
+	* src/SongList.cpp, src/SongList.h: Removing unused include files
+
+	* src/RecordList.cpp, src/RecordList.h:
+	  Storing also interpret in enty-column; Using YGP::AYear to store year
+
+	* src/Interpret.h, src/Record.h, src/Song.h: Added copy constructor
+
+	* src/CDManager.cpp, src/CDManager.h:
+	  Addd callbacks after chaning records/interprets; Storing those changes in th eDB
+
+2004-11-07  Markus Schwab  <g17m0@lycos.com>
+
+	* src/Record.h: Changed friendships (from RecordEdit to RecordList)
+
+	* src/Song.h: Setting ATime-mode while constructing
+
+	* src/Makefile.am: Added RendererList
+
+	* src/Interpret.h: Changed friendships (from RecordEdit to RecordList)
+
+	* src/CDManager.cpp, src/CDManager.h:
+	  Moved record-tree related stuff into RecordList
+
+	* src/RecordList.cpp, src/RecordList.h: New file.
+
+2004-11-06  Markus Schwab  <g17m0@lycos.com>
+
+	* src/SongList.cpp: Genre can be set from a combobox
+
+	* src/CDManager.cpp, src/CDManager.h:
+	  Removed using RecordEdit; Added saving songs to the DB
+
+	* src/RendererList.cpp, src/RendererList.h: New file.
+
+	* src/SongList.cpp, src/SongList.h:
+	  Sorting tracks as number; Removed change-column; emitting changed-signal
+
+2004-11-02  Markus Schwab  <g17m0@lycos.com>
+
+	* src/SongList.cpp, src/SongList.h: Enabled sorting and editing
+
+	* src/Song.h: Track is an ANumeric
+
+	* src/Song.h: Added track; Added SongList as friend
+
+2004-11-01  Markus Schwab  <g17m0@lycos.com>
+
+	* src/Makefile.am: Added SongList and RecordList
+
+	* src/CDManager.cpp, src/CDManager.h, src/RecEdit.cpp, src/RecEdit.h:
+	  Using SongList
+
+	* src/SongList.cpp, src/SongList.h: New file.
+
+	* src/CDManager.cpp, src/CDManager.h: Fixed deleting of records
+
+2004-10-31  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDManager.cpp, src/CDManager.h:
+	Optimized filling of listbox (only one DB-query)
+
+2004-10-30  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDManager.cpp, src/CDManager.h, src/RecEdit.cpp, src/RecEdit.h:
+	  First version with artists and genres managed by CDManager
+
+	* src/Makefile.am: Added Interpret.cpp
+
+	* src/Record.h: Genre is an unsigned int
+
+	* src/Interpret.h: Added sort-function (by name)
+
+	* src/Interpret.cpp: New file.
+
+	* SQL/populateDB.sql: Added reserved words
+
+	* SQL/createDB.sql: Added table Words
+
+	* src/RecEdit.h: Templated RecordEdit to inform about changes
+
+	* src/RecEdit.cpp: Fixes
+
+	* src/CDManager.cpp, src/CDManager.h:
+	  Actualizing records after changing them
+
+	* configure.ac: Added tests for libmysql/libmysql++
+
+2004-10-29  Markus Schwab  <g17m0@lycos.com>
+
+	* src/Record.h: Initializing id to 0 when constructing
+
+	* src/CDManager.cpp, src/CDManager.h: Implemented deleting records
+
+2004-10-28  Markus Schwab  <g17m0@lycos.com>
+
+	* src/RecEdit.cpp, src/RecEdit.h: Started with commiting changes
+
+	* src/CDManager.cpp, src/CDManager.h: Loading songs before editing
+
+2004-10-27  Markus Schwab  <g17m0@lycos.com>
+
+	* src/RecEdit.cpp, src/RecEdit.h: Showing also songs
+
+2004-10-26  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDManager.cpp: Fixed selection of records
+
+	* Makefile.am: Added SQL subdirectory
+
+	* SQL/populateDB.sql: Added undefined for genres; added Skapunk-genre
+
+	* SQL/createFillScript: New file.
+
+	* SQL/createDB.sql: Fixes; Creating index songRecord)
+
+2004-10-25  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDManager.cpp, src/CDManager.h:
+	  Using relations to connect ArtistS/Records/Songs; Displaying the songs
+
+	* src/RecEdit.cpp: Fixes; Reading and setting the artist
+
+	* src/RecEdit.h: Provided a create method
+
+	* src/Makefile.am: Added Song.h and Interpret.h
+
+	* src/Song.h: New file.
+
+2004-10-22  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDManager.cpp, src/CDManager.h:
+	  Added edit of records; Records are shown in a tree
+
+	* src/Record.h: Removed the interpret
+
+	* src/Interpret.h: New file.
+
+2004-10-18  Markus Schwab  <g17m0@lycos.com>
+
+	* src/RecEdit.cpp, src/RecEdit.h: Filling genre and artist
+
+	* src/RecEdit.cpp, src/RecEdit.h, src/Record.h: New file.
+
+	* src/Makefile.am: Added Record and RecEdit
+
+2004-10-17  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDManager.cpp, src/CDManager.h: Creating CD-notebook page
+
+	* src/Makefile.am: Added DB
+
+	* src/DB.cpp, src/DB.h: New file.
+
+2004-10-16  Markus Schwab  <g17m0@lycos.com>
+
+	* SQL/Makefile.am, SQL/createDB.sql, SQL/populateDB.sql:
+	  Initial revision
+
+2004-10-11  Markus Schwab  <g17m0@lycos.com>
+
+	* ChangeLog, Makefile.am, NEWS, README, configure.ac, doc/Makefile.am, po/de.po, po/en.po, po/es.po, src/CDManager.cpp, src/CDManager.h, src/Makefile.am, AUTHORS:
+	  New file.
+
 2004-10-10  gettextize  <bug-gnu-gettext@gnu.org>
 
 	* configure.ac (AC_OUTPUT): Add intl/Makefile,

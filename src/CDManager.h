@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.12 2004/11/06 18:39:15 markus Exp $
+//$Id: CDManager.h,v 1.13 2004/11/07 02:33:58 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -47,21 +47,6 @@ namespace YGP {
 }
 
 
-/**Class holding the columns in the record listbox
- */
-class RecordColumns : public Gtk::TreeModel::ColumnRecord {
- public:
-   RecordColumns () {
-      add (entry); add (name); add (year); add (genre);
-   }
-
-   Gtk::TreeModelColumn<HRecord>       entry;
-   Gtk::TreeModelColumn<Glib::ustring> name;
-   Gtk::TreeModelColumn<Glib::ustring> year;
-   Gtk::TreeModelColumn<Glib::ustring> genre;
-};
-
-
 /**Class for application to manager CDs (audio and video)
 */
 class CDManager : public XGP::XApplication {
@@ -84,7 +69,6 @@ class CDManager : public XGP::XApplication {
    virtual void showAboutbox ();
    virtual const char* getHelpfile ();
    void recordSelected ();
-   void recordChanged (HRecord& hRecord);
 
    bool login (const Glib::ustring& user, const Glib::ustring& pwd);
    void loadDatabase ();
@@ -93,7 +77,6 @@ class CDManager : public XGP::XApplication {
    void loadSongs (const HRecord& record);
 
    void songChanged (const HSong& song);
-   void changeRecord (Gtk::TreeModel::Row& line);
    HInterpret getInterpret (unsigned int nr) const;
    bool canSelect (const Glib::RefPtr<Gtk::TreeModel>& model,
 		   const Gtk::TreeModel::Path& path, bool);
@@ -118,8 +101,6 @@ class CDManager : public XGP::XApplication {
    Gtk::HPaned    cds;
    Gtk::Table     movies;
 
-   RecordColumns                colRecords;
-   Glib::RefPtr<Gtk::TreeStore> mRecords;
    RecordList                   records;
    SongList                     songs;
    Gtk::ScrolledWindow          scrlSongs;

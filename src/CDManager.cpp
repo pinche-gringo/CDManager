@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.13 2004/11/06 18:39:15 markus Exp $
+//$Id: CDManager.cpp,v 1.14 2004/11/07 02:33:58 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : Free handles in record listbox
 //BUGS        :
-//REVISION    : $Revision: 1.13 $
+//REVISION    : $Revision: 1.14 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -243,7 +243,7 @@ XGP::XApplication::MenuEntry CDManager::menuItems[] = {
    : XApplication (PACKAGE " V" PRG_RELEASE), relMovies ("movies"),
 CDManager::CDManager ()
    : XApplication (PACKAGE " V" PRG_RELEASE), relRecords ("records"),
-     relSongs ("songs"), movies (4, 4), songs (genres)  {
+     relSongs ("songs"), movies (4, 4), records (genres), songs (genres)  {
    Language::init ();
 
 
@@ -273,21 +273,12 @@ CDManager::CDManager ()
    scrlSongs.show ();
    scrlRecords.show ();
 
-   mRecords = Gtk::TreeStore::create (colRecords);
-
-   records.set_model (mRecords);
    records.show ();
    songs.show ();
 
    records.signalOwnerChanged.connect (mem_fun (*this, &CDManager::artistChanged));
    records.signalObjectChanged.connect (mem_fun (*this, &CDManager::recordChanged));
    movies.signalObjectChanged.connect (mem_fun (*this, &CDManager::movieChanged));
-   records.append_column (_("Interpret/Record"), colRecords.name);
-   records.append_column (_("Year"), colRecords.year);
-   records.append_column (_("Genre"), colRecords.genre);
-   for (unsigned int i (0); i < 3; ++i)
-      records.get_column (i)->set_resizable ();
-
    Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
    recordSel->set_mode (Gtk::SELECTION_EXTENDED);
    recordSel->set_select_function
@@ -382,10 +373,10 @@ void CDManager::command (int menu) {
 	 Check3 (list.size ());
 	 Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
 
-	 Gtk::TreeIter iter (mRecords->get_iter (*i)); Check3 (iter);
-	 TRACE9 ("CDManager::command (int) -Deleting " << (**iter)[colRecords.name]);
+	 Gtk::TreeIter iter (records.get_model ()->get_iter (*i)); Check3 (iter);
+	 HRecord hRec (records.getEntry(iter));
+	 TRACE9 ("CDManager::command (int) -Deleting " << hRec->name);
 
-	 HRecord hRec ((*iter)[colRecords.entry]);
 	 Check3 (relRecords.isRelated (hRec));
 	 HInterpret hArtist (relRecords.getParent (hRec));
 	 Check3 (hArtist.isDefined ());
@@ -415,11 +406,11 @@ void CDManager::command (int menu) {
 	    // Delete artist from listbox if it doesn't have any records
 	    if (!relRecords.isRelated (hArtist)) {
 	       Gtk::TreeIter parent ((*iter)->parent ()); Check3 (parent);
-	       mRecords->erase (iter);
-	       mRecords->erase (parent);
+	       records.getModel ()->erase (iter);
+	       records.getModel ()->erase (parent);
 	    }
 	    else
-	       mRecords->erase (iter);
+	       records.getModel ()->erase (iter);
 	 }
 	 catch (std::exception& err) {
 	    Glib::ustring msg (_("Can't delete record %1!\n\nReason: %2"));
@@ -502,6 +493,8 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 
 	    Database::getNextResultRow ();
 	 }
+	 records.updateGenres ();
+	 songs.updateGenres ();
       }
 
       if (Interpret::ignore.empty ()) {
@@ -557,7 +550,7 @@ void CDManager::loadDatabase () {
    status.push (_("Reading database ..."));
 
    if (nb.get_current_page ()) {
-   mRecords->clear ();
+   records.clear ();
    artists.clear ();
       loadMovies ();
    unsigned long int cRecords (0), cMovies (0);
@@ -584,8 +577,7 @@ void CDManager::loadDatabase () {
 
       Database::store ("SELECT id, name, interpret, year, genre FROM "
 		       "Records ORDER BY interpret, year");
-      TRACE8 ("CDManager::loadDatabase () - Found " << Database::resultSize ()
-	      << " records");
+      TRACE8 ("CDManager::loadDatabase () - Records: " << Database::resultSize ());
 
       if (cRecords = Database::resultSize ()) {
 	 std::map<unsigned int, std::vector<HRecord> > aRecords;
@@ -607,34 +599,22 @@ void CDManager::loadDatabase () {
 	    Database::getNextResultRow ();
 	 } // end-while has records
 
-	 Gtk::TreeModel::Row lastRowArtist;
 	 for (std::vector<HInterpret>::const_iterator i (artists.begin ());
 	      i != artists.end (); ++i) {
 	    std::map<unsigned int, std::vector<HRecord> >::iterator iRec
 	       (aRecords.find ((*i)->id));
 	    if (iRec != aRecords.end ()) {
-	       // Create new interpret, if it has records
-	       lastRowArtist = (*mRecords->append ());
-	       lastRowArtist[colRecords.name] = (*i)->name;
-	       lastRowArtist[colRecords.entry] = *iRec->second.begin ();
+	       Gtk::TreeModel::Row artist (records.append (*i));
 
 	       for (std::vector<HRecord>::iterator r (iRec->second.begin ());
 		    r != iRec->second.end (); ++r) {
-		  Gtk::TreeModel::Row row (*(mRecords->append (lastRowArtist.children ())));
-		  row[colRecords.entry] = *r;
-		  changeRecord (row);
-
+		  records.append (*r, artist);
 		  relRecords.relate (*i, *r);
 	       } // end-for all records for an artist
 	       aRecords.erase (iRec);
 	    } // end-if artist has record
 	 } // end-for all artists
-
 	 records.expand_all ();
-	 if (mRecords->children ().size ()
-	     && mRecords->children ().begin ()->children ().size ())
-	    records.get_selection ()->select
-	       (mRecords->children ().begin()->children ().begin ());
       } // end-if database contains records
    }
    catch (std::exception& err) {
@@ -690,17 +670,19 @@ void CDManager::recordSelected () {
    songs.clear ();
    Check3 (records.get_selection ());
    Gtk::TreeSelection::ListHandle_Path list
+   TRACE9 ("CDManager::recordSelected () - 2");
 
+      (records.get_selection ()->get_selected_rows ());
+   TRACE9 ("CDManager::recordSelected () - 3");
    TRACE9 ("CDManager::recordSelected () - Size: " << list.size ());
    if (list.size ()) {
+      Gtk::TreeIter i (records.get_model ()->get_iter (*list.begin ())); Check3 (i);
 
-      Gtk::TreeIter i (mRecords->get_iter (*list.begin ())); Check3 (i);
+      if ((*i)->parent ()) {
 	 HRecord hRecord (records.getRecordAt (i)); Check3 (hRecord.isDefined ());
-      HRecord hRecord ((*i)[colRecords.entry]);
-      if (!relSongs.isRelated (hRecord)) {
-	 TRACE9 ("CDManager::recordSelected () - Record not loaded - loading");
+      HRecord hRecord (records.getEntry (i));
+      if (!relSongs.isRelated (hRecord))
 	 loadSongs (hRecord);
-      }
 
       // Add related songs to the listbox
       if (relSongs.isRelated (hRecord))
@@ -751,54 +733,6 @@ void CDManager::loadSongs (const HRecord& record) {
 }
 
 //-----------------------------------------------------------------------------
-/// Callback after editing a record
-/// \param hRecord: Edited record
-//-----------------------------------------------------------------------------
-void CDManager::recordChanged (HRecord& hRecord) {
-   Check1 (hRecord.isDefined ());
-
-   TRACE3 ("CDManager::recordChanged (int, HRecord&) - Changed record: "
-	   << hRecord->name);
-   Gtk::TreeModel::iterator line;
-   Gtk::TreeModel::iterator i (mRecords->children ().begin ());
-   for (; i != mRecords->children ().end (); ++i) {
-      for (line = i->children ().begin ();
-	   line != i->children ().end (); ++line) {
-	 HRecord hListRecord ((*line)[colRecords.entry]);
-	 if (hListRecord == hRecord)
-	    break;
-      }
-      if (line != i->children ().end ())
-	 break;
-   }
-   if (i == mRecords->children ().end ()) {
-      line = mRecords->append ();
-      
-      line = mRecords->append (line->children ());
-      (*line)[colRecords.entry] = hRecord;
-   }
-
-   Gtk::TreeModel::Row row (*line);
-   changeRecord (row);
-}
-
-//-----------------------------------------------------------------------------
-/// Changes a record-line in the listbox
-/// \param line: Line to change
-//-----------------------------------------------------------------------------
-void CDManager::changeRecord (Gtk::TreeModel::Row& line) {
-   HRecord hRecord ((*line)[colRecords.entry]);
-   Check1 (hRecord.isDefined ());
-   line[colRecords.name] = hRecord->name;
-   line[colRecords.genre] = genres[hRecord->genre];
-   if (hRecord->year) {
-      std::ostringstream ostr;
-      ostr << hRecord->year;
-      line[colRecords.year] = ostr.str ();
-   }
-}
-
-//-----------------------------------------------------------------------------
 /// Returns the interpret with the passed number
 /// \param nr: Number of interpret to search for
 /// \returns HInterpret: Found interpret
@@ -844,4 +778,3 @@ int main (int argc, char* argv[]) {
    appl.run (win);
    return 0;
 }
-

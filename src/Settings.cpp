@@ -1,14 +1,14 @@
-//$Id: Settings.cpp,v 1.3 2005/01/18 01:04:34 markus Exp $
+//$Id: Settings.cpp,v 1.4 2005/01/18 20:08:18 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Settings
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 23.12.2004
-//COPYRIGHT   : Copyright (C) 2004
+//COPYRIGHT   : Copyright (C) 2004, 2005
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+
+#include <cdmgr-cfg.h>
 
 #include <gtkmm/label.h>
 #include <gtkmm/table.h>
@@ -77,8 +79,8 @@ Settings::Settings (Options& options)
 
    pagExport.show ();
 
-   nb.append_page (pagExport, "_Export", true);
-   nb.append_page (*manage (wordDialog), "Reserved _words", true);
+   nb.append_page (pagExport, _("_Export"), true);
+   nb.append_page (*manage (wordDialog), _("Reserved _words"), true);
 
    get_vbox ()->pack_start (nb, true, true, 5);
    show_all_children ();

@@ -1,7 +1,7 @@
 #ifndef CELIBRITY_H
 #define CELIBRITY_H
 
-//$Id: Celebrity.h,v 1.5 2004/11/26 04:07:57 markus Exp $
+//$Id: Celebrity.h,v 1.6 2004/11/27 04:49:25 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -46,14 +46,13 @@ class Celebrity : public YGP::Entity {
    virtual ~Celebrity () { }
 
    static bool compByName (const HCelebrity& a, const HCelebrity& b);
+   static Glib::ustring removeIgnored (const Glib::ustring& name);
 
  private:
    unsigned long int id;
    Glib::ustring     name;
    YGP::AYear        born;
    YGP::AYear        died;
-
-   static Glib::ustring removeIgnored (const Glib::ustring& name);
 
    //Prohibited manager functions
    const Celebrity& operator= (const Celebrity& other);

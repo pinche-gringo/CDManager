@@ -1,11 +1,11 @@
-//$Id: CDWriter.cpp,v 1.1 2005/01/10 02:10:42 markus Exp $
+//$Id: CDWriter.cpp,v 1.2 2005/01/12 22:48:27 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDWriter
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -30,12 +30,14 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <stdexcept>
 
 #include <glibmm/ustring.h>
 #include <glibmm/convert.h>
 
 #include <gtkmm/messagedialog.h>
 
+#define CHECK 9
 #include <YGP/File.h>
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
@@ -51,6 +53,8 @@
 #include "CDWriter.h"
 #include "Options.meta"
 
+
+static std::ofstream e ("err.dat");
 
 const YGP::IVIOApplication::longOptions CDWriter::lo[] = {
    { IVIOAPPL_HELP_OPTION },
@@ -160,7 +164,13 @@ int CDWriter::perform (int argc, const char** argv) {
 #else
    genres[0] = "Undefined";
    genres[1] = "Comedy";
+   genres[2] = "Comedy";
+   genres[3] = "Comedy";
+   genres[4] = "Comedy";
    genres[5] = "Drama";
+   genres[6] = "Drama";
+   genres[7] = "Drama";
+   genres[8] = "Drama";
 #endif
 
    Glib::ustring transTitle (_("Movies (by %1)"));
@@ -226,33 +236,57 @@ int CDWriter::perform (int argc, const char** argv) {
    char type;
    std::cin >> type;
    while (!std::cin.eof ()) {
-      switch (type) {
-      case 'D':
-	 director.define ();
-	 director->readFromStream (std::cin);
-	 TRACE9 ("CDWriter::perform (int, const char**) - Director: " << director->getName ());
-	 directors.push_back (director);
-	 break;
+      e << "Found type: " << type << '\n'; e.flush ();
+      try {
+	 switch (type) {
+	 case 'D':
+	    director.define ();
+	    std::cin >> *director;
+	    e << "CDWriter::perform (int, const char**) - Director: " << director->getName () << '\n'; e.flush ();
+	    directors.push_back (director);
+	    break;
 
-      case 'M':
-	 Check3 (director.isDefined ());
-	 movie.define ();
-	 std::cin >> *movie;
-	 TRACE9 ("CDWriter::perform (int, const char**) - Movie: " << movie->getName ());
-	 if (!relMovies.isRelated (director))
-	    writer.writeDirector (director, file);
+	 case 'M':
+	    Check3 (director.isDefined ());
+	    movie.define ();
+	    std::cin >> *movie;
+	    e << "CDWriter::perform (int, const char**) - Movie: " << movie->getName () << '\n'; e.flush ();
+	    e << "CDWriter::perform (int, const char**) - Related: " << (relMovies.isRelated (director) ? "Yes": "No") << '\n'; e.flush ();
+	    if (!relMovies.isRelated (director)) {
+	       e << "CDWriter::perform (int, const char**) - Writing director\n"; e.flush ();
+	       writer.writeDirector (director, file);
+	       file.flush ();
+	    }
 
-	 relMovies.relate (director, movie);
-	 writer.writeMovie (movie, director, file);
-	 movies.push_back (movie);
-	 break;
+	    e << "CDWriter::perform (int, const char**) - Relating\n"; e.flush ();
+	    relMovies.relate (director, movie);
+	    e << "CDWriter::perform (int, const char**) - Writing movie\n"; e.flush ();
+	    writer.writeMovie (movie, director, file);
+	    e << "CDWriter::perform (int, const char**) - Storing movie\n"; e.flush ();
+	    movies.push_back (movie);
+	    e << "CDWriter::perform (int, const char**) - Flushing file"; e.flush ();
+	    e << "CDWriter::perform (int, const char**) - Finished"; e.flush ();
+	    break;
 
-      default:
-	 Check3 (0);
-	 return -1;
+	 default:
+	    Check3 (0);
+	    return -1;
+	 }
+
+	 std::cin >> type;
       }
-
-      std::cin >> type;
+      catch (std::string& error) {
+	 e << "Error: " << error << '\n';
+	 break;
+      }
+      catch (std::exception& error) {
+	 e << "Error: " << error.what () << '\n';
+	 break;
+      }
+      catch (...) {
+	 e << "Unspecified error!\n";
+	 break;
+      }
    } // end-while not eof
 
    writer.printEnd (file);
@@ -476,7 +510,7 @@ void CDWriter::createFile (const char* name, std::ofstream& file) throw (Glib::u
 //-----------------------------------------------------------------------------
 bool CDWriter::readHeaderFile (const char* file, std::string& target,
 			       const Glib::ustring& title) {
-   TRACE9 ("CDManager::readHeaderFile (const char*) - " << file << " - "
+   TRACE9 ("CDWriter::readHeaderFile (const char*) - " << file << " - "
 	   << title);
    std::ifstream input (file);
    if (!input)

@@ -52,6 +52,10 @@ Changing the genres of records/movies
   After changing the file it must be installed (by typing make install
   in the data directory).
 
+  This file is also internationalized (e.g. there might exist various
+  language specific versions of it, having the extension ".xx" with xx
+  indicating the language). Keep them syncronized!
+
 
 Changing the sort order of the entries
 --------------------------------------

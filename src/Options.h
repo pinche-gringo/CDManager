@@ -1,7 +1,7 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
-//$Id: Options.h,v 1.1 2004/12/07 03:33:57 markus Rel $
+//$Id: Options.h,v 1.2 2004/12/24 04:10:22 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,29 +23,39 @@
 
 #include <cdmgr-cfg.h>
 
+#include <YGP/Entity.h>
 
-class Options {
+
+class Options : public YGP::Entity {
+   friend class Settings;
+
  public:
-   Options::Options () : header ("movie.header") , footer ("movie.footer"),
-      dirOutput ("/var/www/cds/") { }
-   virtual ~Options () { }
+   Options::Options ();
+   virtual ~Options ();
 
-   std::string getHeader () const { return header; }
-   std::string getFooter () const { return footer; }
+   std::string Options::getMHeader () const { return mHeader; }
+   std::string getMFooter () const { return mFooter; }
+   std::string getRHeader () const { return rHeader; }
+   std::string getRFooter () const { return rFooter; }
    std::string getDirOutput () const { return dirOutput; }
 
-   void setHeader (const std::string& value) { header = value; }
-   void setFooter (const std::string& value) { footer = value; }
+   void setMHeader (const std::string& value) { mHeader = value; }
+   void setMFooter (const std::string& value) { mFooter = value; }
+   void setRHeader (const std::string& value) { rHeader = value; }
+   void setRFooter (const std::string& value) { rFooter = value; }
    void setDirOutput (const std::string& value) { dirOutput = value; }
+
+   const char* pINIFile;
 
  private:
    Options (const Options& other);
    const Options& operator= (const Options& other);
 
-   std::string header;
-   std::string footer;
-   std::string dirOutput;
+   std::string mHeader;             // %attrib%; MovieHead;       "Movies.head"
+   std::string mFooter;             // %attrib%; MovieFoot;       "Movies.foot"
+   std::string rHeader;             // %attrib%; RecordHead;     "Records.head"
+   std::string rFooter;             // %attrib%; RecordFoot;     "Records.foot"
+   std::string dirOutput;           // %attrib%; OutputDir;     "/var/www/cds/"
 };
-
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef WORDS_H
 #define WORDS_H
 
-//$Id: Words.h,v 1.2 2005/01/18 01:03:49 markus Exp $
+//$Id: Words.h,v 1.3 2005/01/18 03:56:49 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -48,6 +48,11 @@ class Words {
 
    static Gtk::Widget* makeDialog ();
    static void commitDialogData (Gtk::Widget* dialog);
+
+   static std::vector<Glib::ustring>::const_iterator namesEnd () { return names.end (); }
+   static std::vector<Glib::ustring>::const_iterator namesBegin () { return names.begin (); }
+   static std::vector<Glib::ustring>::const_iterator articlesEnd () { return articles.end (); }
+   static std::vector<Glib::ustring>::const_iterator articlesBegin () { return articles.begin (); }
 
  private:
    //Prohibited manager functions

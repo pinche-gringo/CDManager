@@ -1,7 +1,7 @@
 #ifndef WRITER_H
 #define WRITER_H
 
-//$Id: Writer.h,v 1.3 2004/12/05 03:30:00 markus Exp $
+//$Id: Writer.h,v 1.4 2004/12/13 02:33:46 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -47,6 +47,8 @@ class MovieWriter : public YGP::HTMLWriter {
  private:
    MovieWriter (const MovieWriter& other);
    const MovieWriter& operator= (const MovieWriter& other);
+
+   static std::string addLanguageLinks (const std::string& languages);
 
    HMovie    hMovie;
    HDirector hDirector;

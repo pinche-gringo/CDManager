@@ -1,11 +1,11 @@
-//$Id: Writer.cpp,v 1.4 2004/12/05 17:05:55 markus Exp $
+//$Id: Writer.cpp,v 1.5 2004/12/13 02:33:46 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Writer
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 27.11.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -28,6 +28,9 @@
 #include <glibmm/convert.h>
 
 #include <YGP/Check.h>
+#include <YGP/Tokenize.h>
+
+#include "CDType.h"
 
 #include "Writer.h"
 
@@ -63,6 +66,18 @@ std::string MovieWriter::getSubstitute (const char ctrl, bool extend) const {
 
       case 'd':
 	 return changeSpecialChars (Glib::locale_from_utf8 (hDirector->getName ()));
+
+      case 't':
+	 return changeSpecialChars (Glib::locale_from_utf8 (CDType::getInstance ()[hMovie->getType ()]));
+
+      case 'l': {
+	 std::string output (addLanguageLinks (hMovie->getLanguage ()));
+	 if (hMovie->getTitles ().size ()) {
+	    output += " &ndash; ";
+	    output += addLanguageLinks (hMovie->getTitles ());
+	 }
+	 return output;
+      }
       } // endswitch
    }
    else {
@@ -71,7 +86,6 @@ std::string MovieWriter::getSubstitute (const char ctrl, bool extend) const {
 
       if (ctrl == 'n')
 	 return changeSpecialChars (Glib::locale_from_utf8 (hDirector->getName ()));
-      return "";
    }
    return std::string (1, ctrl);
 }
@@ -108,11 +122,30 @@ void MovieWriter::writeDirector (const HDirector& director, std::ostream& out) {
    Check2 (!hMovie.isDefined ()); Check2 (!hDirector.isDefined ());
    hDirector = director;
    out << "<tr><td>&nbsp;</td></tr>\n"
-       << "<tr><td colspan=\"3\" class=\"owner\">" << hDirector->getName () << "</td></tr>\n";
+       << "<tr><td colspan=\"5\" class=\"owner\">" << hDirector->getName () << "</td></tr>\n";
    hDirector.undefine ();
 
    oddLine = true;
 }
+
+//-----------------------------------------------------------------------------
+/// Appends the links to the language-flags for the passed languages
+/// \param languages: List of languages (comma-separated)
+/// \returns HTML-text of links to languages
+//-----------------------------------------------------------------------------
+std::string MovieWriter::addLanguageLinks (const std::string& languages) {
+   std::string output;
+   YGP::Tokenize langs (languages);
+   while (langs.getNextNode (',').size ()) {
+      output += "<img src=\"images/";
+      output += langs.getActNode ();
+      output += ".png\" alt=\"";
+      output += langs.getActNode ();
+      output += "\">";
+   } // endwhile
+   return output;
+}
+
 
 //-----------------------------------------------------------------------------
 /// Destructor

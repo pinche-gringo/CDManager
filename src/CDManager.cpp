@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.39 2005/01/13 22:32:57 markus Exp $
+//$Id: CDManager.cpp,v 1.40 2005/01/14 02:45:08 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.39 $
+//REVISION    : $Revision: 1.40 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -422,8 +422,7 @@ void CDManager::command (int menu) {
 	    opt.setDirOutput (dir);
 	 }
 /// Adds a new interpret to the list
-	 exportRecords ();
-	 exportMovies ();
+	 exportData ();
       }
       catch (Glib::ustring& e) {
 	 Gtk::MessageDialog dlg (e, Gtk::MESSAGE_ERROR);
@@ -1397,19 +1396,23 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 //-----------------------------------------------------------------------------
 /// Exports the stored information to HTML documents
 //-----------------------------------------------------------------------------
-/// Exports the movies to a HTML document
+void CDManager::exportToHTML () {
    std::string dir (opt.getDirOutput ());
-void CDManager::exportMovies () throw (Glib::ustring) {
-   TRACE9 ("CDManager::exportMovies ()");
+   if (!(loadedPages & 1))
+      loadRecords ();
+
+   if (!(loadedPages & 2))
+      loadMovies ();
 
    std::sort (directors.begin (), directors.end (), &Director::compByName);
    std::sort (artists.begin (), artists.end (), &Interpret::compByName);
 
+   YGP::Tokenize langs (LANGUAGES);
    std::string lang;
    while ((lang = langs.getNextNode (' ')).size ()) {
       TRACE1 ("CDManager::exportData (const Options&, std::map&, std::vector&) - Lang: "
 	      << lang);
-      TRACE1 ("CDManager::exportMovies (const Options&, std::map&, std::vector&) - Lang: "
+      setenv ("LANGUAGE", lang.c_str (), true);
       int pipes[2];
       const char* args[] = { "CDWriter", "--outputDir", opt.getDirOutput ().c_str (),
 			     "--recHeader", opt.getRHeader ().c_str (),
@@ -1429,6 +1432,7 @@ void CDManager::exportMovies () throw (Glib::ustring) {
 
       // Write movie-information
       for (std::vector<HDirector>::const_iterator i (directors.begin ());
+	   i != directors.end (); ++i)
 	 if (relMovies.isRelated (*i)) {
 	    std::stringstream output;
 	    output << 'D' << **i;
@@ -1444,6 +1448,23 @@ void CDManager::exportMovies () throw (Glib::ustring) {
 	 }
 
       // Write record-information
+      for (std::vector<HInterpret>::const_iterator i (artists.begin ());
+	   i != artists.end (); ++i)
+	 if (relRecords.isRelated (*i)) {
+	    std::stringstream output;
+	    output << 'I' << **i;
+
+	    std::vector<HRecord>& records (relRecords.getObjects (*i));
+	    Check3 (records.size ());
+	    for (std::vector<HRecord>::const_iterator r (records.begin ());
+		 r != records.end (); ++r)
+	       output << "R" << **r;
+
+	    TRACE9 ("CDManager::export () - Writing: " << output.str ());
+	    ::write (pipes[1], output.str ().data (), output.str ().size ());
+	 }
+      close (pipes[1]);
+
       char output[128] = "";
       std::string allOut;
       int cRead;
@@ -1465,15 +1486,6 @@ void CDManager::exportMovies () throw (Glib::ustring) {
 //-----------------------------------------------------------------------------
 /// Reads the ID3 information from a MP3 file
 /// \param file: Name of file to analzye
-/// Exports the records to a HTML document
-//-----------------------------------------------------------------------------
-void CDManager::exportRecords () throw (Glib::ustring) {
-   TRACE9 ("CDManager::exportRecords ()");
-   if (!(loadedPages & 2))
-      loadRecords ();
-}
-
-//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CDManager::parseMP3Info (const std::string& file) {
    TRACE9 ("CDManager::parseMP3Info (const std::string&) - " << file);

@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.23 2004/12/04 06:26:48 markus Exp $
+//$Id: CDManager.h,v 1.24 2004/12/05 17:07:40 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -102,8 +102,9 @@ class CDManager : public XGP::XApplication {
    void removeDeletedEntries ();
    void writeChangedEntries ();
 
-   void exportMovies ();
-   void exportRecords ();
+   void exportMovies () throw (Glib::ustring);
+   void exportRecords () throw (Glib::ustring);
+   void createFile (const char* name, std::ofstream& file) throw (Glib::ustring);
 
    std::string stripString (const std::string& value, unsigned int pos, unsigned int len);
    bool parseMP3Info (std::istream& stream, Glib::ustring& artist,

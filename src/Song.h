@@ -1,7 +1,7 @@
 #ifndef SONG_H
 #define SONG_H
 
-//$Id: Song.h,v 1.2 2004/11/02 00:03:07 markus Exp $
+//$Id: Song.h,v 1.3 2004/11/02 20:36:18 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 
 #include <YGP/ATime.h>
 #include <YGP/Handle.h>
+#include <YGP/ANumeric.h>
+
 #include <YGP/Entity.h>
 
 
@@ -38,12 +40,11 @@ class Song : public YGP::Entity {
  private:
    unsigned long int id;
    Glib::ustring     name;
-   unsigned int      track;
+   YGP::ANumeric     track;
    YGP::ATime        duration;
    unsigned long int genre;
 
    //Prohibited manager functions
-   Song (const Song& other);
    const Song& operator= (const Song& other);
 };
 defineHndl(Song);

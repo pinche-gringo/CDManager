@@ -1,11 +1,11 @@
-//$Id: Language.cpp,v 1.3 2004/12/11 22:52:21 markus Rel $
+//$Id: Language.cpp,v 1.4 2004/12/22 16:59:51 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Language
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 6.12.2004
 //COPYRIGHT   : Copyright (A) 2004
@@ -96,7 +96,7 @@ void Language::init () {
 			       loadFlag (DATADIR "en.png"));
    languages["es"] = Language (N_("Spanish"), Glib::locale_to_utf8 ("Español"),
 			       loadFlag (DATADIR "es.png"));
-   languages["fr"] = Language (N_("French"), Glib::locale_to_utf8 ("Frances"),
+   languages["fr"] = Language (N_("French"), Glib::locale_to_utf8 ("Français"),
 			       loadFlag (DATADIR "fr.png"));
    languages["it"] = Language (N_("Italian"), Glib::locale_to_utf8 ("Italiano"),
 			       loadFlag (DATADIR "it.png"));

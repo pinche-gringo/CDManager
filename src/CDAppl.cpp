@@ -1,11 +1,11 @@
-//$Id: CDAppl.cpp,v 1.2 2004/12/24 04:09:08 markus Exp $
+//$Id: CDAppl.cpp,v 1.3 2005/01/12 22:47:17 markus Exp $
 
 //PROJECT     : CDManager
-//SUBSYSTEM   : <FILLIN>
+//SUBSYSTEM   : Application
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.12.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -38,6 +38,7 @@
 
 const YGP::IVIOApplication::longOptions CDAppl::lo[] = {
    { IVIOAPPL_HELP_OPTION },
+   { "file", 'f' },
    { "version", 'V' },
    { NULL, '\0' } };
 
@@ -53,7 +54,7 @@ CDAppl::~CDAppl () {
 /// Displays the help
 //-----------------------------------------------------------------------------
 void CDAppl::showHelp () const {
-   std::cout << _("Utility to manage CDs: ") << PACKAGE_NAME
+   std::cout << _("Utility to manage CDs\n\nUsage:") << PACKAGE
              << _(" [OPTIONS]\n\n")
              << "  -f, --file ......... " << _("[FILE] Use file as INI file\n")
              << "  -V, --version ...... " << _("Output version information and exit\n")

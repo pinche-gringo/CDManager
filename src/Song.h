@@ -1,7 +1,7 @@
 #ifndef SONG_H
 #define SONG_H
 
-//$Id: Song.h,v 1.7 2004/11/28 01:05:38 markus Rel $
+//$Id: Song.h,v 1.8 2004/12/07 03:33:02 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@
  */
 class Song : public YGP::Entity {
  public:
-   Song () : id (0){ duration.setMode (YGP::ATime::MODE_MMSS); }
+   Song () : id (0), genre (0) { duration.setMode (YGP::ATime::MODE_MMSS); }
    Song (const Song& other) : id (other.id), name (other.name),
       track (other.track), duration (other.duration), genre (other.genre) { }
    virtual ~Song () { }

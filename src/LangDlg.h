@@ -1,7 +1,7 @@
 #ifndef LANGDLG_H
 #define LANGDLG_H
 
-//$Id: LangDlg.h,v 1.1 2004/12/11 16:52:41 markus Exp $
+//$Id: LangDlg.h,v 1.2 2004/12/11 22:10:22 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -29,9 +29,23 @@
 
 namespace Gtk {
    class Box;
-   class Image;
+   class ComboBox;
    class TreeView;
 }
+class LanguageModel;
+
+
+/**Columns of language lists
+ */
+class LanguageColumns : public Gtk::TreeModel::ColumnRecord {
+ public:
+   LanguageColumns () {
+      add (flag); add (name); add (id); }
+
+   Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > flag;
+   Gtk::TreeModelColumn<Glib::ustring>              name;
+   Gtk::TreeModelColumn<std::string>                id;
+};
 
 
 /**Dialog allowing to select various languages
@@ -54,29 +68,26 @@ class LanguageDialog : public XGP::XDialog {
 
  private:
    //Prohibited manager functions
-   LanguageDialog (const LanguageDialog& other);
+   LanguageDialog ();
+   LanguageDialog (const LanguageDialog&);
    const LanguageDialog& operator= (const LanguageDialog& other);
 
    virtual void okEvent ();
+
+   void selectLanguage ();
 
    Gtk::Box*    pClient;
    std::string& languages;
    unsigned int maxLangs;
 
-   Gtk::Image*    imgLang;
+   Gtk::ComboBox* mainLang;
    Gtk::TreeView* listLang;
 
-   class LanguageColumns : public Gtk::TreeModel::ColumnRecord {
-    public:
-      LanguageColumns () {
-	 add (flag); add (name); add (id); }
+   std::string   main;
 
-      Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > flag;
-      Gtk::TreeModelColumn<Glib::ustring>              name;
-      Gtk::TreeModelColumn<std::string>                id;
-   };
    LanguageColumns colLang;
-   Glib::RefPtr<Gtk::ListStore> model;
+   Glib::RefPtr<LanguageModel> modelMain;
+   Glib::RefPtr<LanguageModel> modelList;
 };
 
 #endif

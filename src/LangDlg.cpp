@@ -1,11 +1,11 @@
-//$Id: LangDlg.cpp,v 1.1 2004/12/11 16:52:41 markus Exp $
+//$Id: LangDlg.cpp,v 1.2 2004/12/11 22:10:21 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Language
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 11.12.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -27,20 +27,103 @@
 
 #include <cdmgr-cfg.h>
 
+#include <map>
+
 #include <gtkmm/box.h>
 #include <gtkmm/label.h>
 #include <gtkmm/image.h>
 #include <gtkmm/button.h>
+#include <gtkmm/combobox.h>
 #include <gtkmm/treeview.h>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
+#include <YGP/Tokenize.h>
 
 #include "Language.h"
 
 #include "LangDlg.h"
+
+
+/**Model for language lists
+ */
+class LanguageModel : public Gtk::ListStore {
+ public:
+   static Glib::RefPtr<LanguageModel> create (const LanguageColumns& columns,
+					      bool withUndefined = false) {
+      return Glib::RefPtr<LanguageModel> (new LanguageModel (columns, withUndefined));
+   }
+   ~LanguageModel () { }
+
+   /// Returns the line of the passed language
+   Gtk::TreeIter getLine (const std::string& lang) {
+      return children ()[lines[lang]]; }
+
+   // Deletes the line with the passed language
+   void eraseLanguage (const std::string& lang) {
+      TRACE9 ("LanguageModel::eraseLanguage (const std::string&) - " << lang
+	      << '=' << lines[lang]);
+      erase (children ()[lines[lang]]);
+   }
+   void LanguageModel::insertLanguage (const std::string& lang, const LanguageColumns& cols) {
+      insertLanguage (lang, Language::findLanguage (lang), cols); }
+
+protected:
+   LanguageModel (const LanguageColumns& cols, bool withUndefined = false);
+
+   void LanguageModel::insertLanguage (const std::string& name, const Language& lang,
+				       const LanguageColumns& cols);
+
+ private:
+   LanguageModel ();
+   LanguageModel (const LanguageModel&);
+   LanguageModel& operator= (const LanguageModel&);
+
+   std::map<std::string, unsigned int> lines;
+};
+
+
+//-----------------------------------------------------------------------------
+/// Constructor
+/// \param cols: Columns of the model
+/// \param withUndefined: Flag, if undefined line should be displayed
+//-----------------------------------------------------------------------------
+LanguageModel::LanguageModel (const LanguageColumns& cols, bool withUndefined)
+   : Gtk::ListStore (cols) {
+   // Add language values
+   if (withUndefined) {
+      Gtk::TreeModel::Row lang (*append ());
+      lang[cols.id] = "";
+      lang[cols.name] = _("None");
+   }
+
+   for (std::map<std::string, Language>::const_iterator l (Language::begin ());
+	l != Language::end (); ++l)
+      insertLanguage (l->first, l->second, cols);
+}
+
+//-----------------------------------------------------------------------------
+/// Inserts a line into the model
+/// \param id: ID of language
+/// \param lang: Language description
+/// \param cols: Columns of the model
+//-----------------------------------------------------------------------------
+void LanguageModel::insertLanguage (const std::string& id, const Language& lang,
+				    const LanguageColumns& cols) {
+   TRACE9 ("LanguageModel::insertLanguage (const std::string&, const Language&, const Columns&) - "
+	   << id << '=' << ((lines.find (id) == lines.end ()) ? children ().size () : lines[id]));
+   Gtk::TreeModel::Row row;
+   if (lines.find (id) == lines.end ()) {
+      lines[id] = children ().size ();
+      row = *append ();
+   }
+   else
+      row = *insert (children ()[lines[id]]);
+
+   row[cols.id] = id;
+   row[cols.flag] = lang.getFlag ();
+   row[cols.name] = lang.getInternational ();
+}
 
 
 //-----------------------------------------------------------------------------
@@ -50,46 +133,52 @@
 //-----------------------------------------------------------------------------
 LanguageDialog::LanguageDialog (std::string& languages, unsigned int maxLangs)
    : XGP::XDialog (OKCANCEL), pClient (new Gtk::VBox), languages (languages),
-      maxLangs ( maxLangs), imgLang (new Gtk::Image),
-     listLang (new Gtk::TreeView), model (Gtk::ListStore::create (colLang)) {
+      maxLangs ( maxLangs),
+     mainLang (new Gtk::ComboBox),
+     listLang (new Gtk::TreeView),
+     modelMain (LanguageModel::create (colLang, true)),
+     modelList (LanguageModel::create (colLang)) {
+   TRACE9 ("LanguageDialog::LanguageDialog (std::string&, unsigned int) - Main: "
+	   << languages << '(' << maxLangs << ')');
+
    set_title (_("Select languages"));
 
+   // Label of the main language
    Gtk::Label*  lblLang (new Gtk::Label (_("_Language: "), true));
-   Gtk::Box*    boxLang (new Gtk::HBox);
-   Gtk::Button* mainLang (new Gtk::Button);
-   boxLang->pack_start (*manage (lblLang));
-   boxLang->pack_start (*manage (imgLang));
-   mainLang->add (*manage (boxLang));
 
-   lblLang->show ();
-   imgLang->show ();
-   boxLang->show ();
-   mainLang->show ();
+   // Combobox to select the main language
+   mainLang->pack_start (colLang.flag, false);
+   mainLang->pack_start (colLang.name);
+   mainLang->set_model (modelMain);
 
+   mainLang->signal_changed ().connect (mem_fun (*this, &LanguageDialog::selectLanguage));
+
+   // Listbox to select further languages
+   listLang->get_selection ()->set_mode (Gtk::SELECTION_EXTENDED);
    Gtk::TreeViewColumn* column (new Gtk::TreeViewColumn (_("Translations")));
    column->pack_start (colLang.flag, false);
    column->pack_start (colLang.name);
    listLang->append_column (*Gtk::manage (column));
-   listLang->set_model (model);
-   listLang->get_selection ()->set_mode (Gtk::SELECTION_EXTENDED);
+   listLang->set_model (modelList);
 
-   YGP::Tokenize langs (languages);
-   std::string main;
+   std::string tmp;
    if (languages.size ()) {
-      main = languages.getNextNode (',');
-      imgLang = Languages::getFlag (main);
+      YGP::Tokenize langs (languages);
+      tmp = langs.getNextNode (',');
+      TRACE9 ("LanguageDialog::LanguageDialog (std::string&, unsigned int) - Main: "
+	      << main);
+
+      std::string translation;
+      Glib::RefPtr<Gtk::TreeSelection> sel (listLang->get_selection ());
+      while ((translation = langs.getNextNode (',')).size ())
+	 sel->select (modelList->getLine (translation));
    }
+   else
+      listLang->set_sensitive (false);
+   mainLang->set_active (modelMain->getLine (tmp));
+   main = tmp;
 
-   // Add language values
-   if (model->children ().empty ())
-      for (std::map<std::string, Language>::const_iterator l (Language::begin ());
-	   l != Language::end (); ++l) {
-	 Gtk::TreeModel::Row lang (*model->append ());
-	 lang[colLang.id] = l->first;
-	 lang[colLang.flag] = l->second.getFlag ();
-	 lang[colLang.name] = l->second.getInternational ();
-      }
-
+   pClient->pack_start (*manage (lblLang), Gtk::PACK_EXPAND_PADDING, 5);
    pClient->pack_start (*manage (mainLang), Gtk::PACK_EXPAND_PADDING, 5);
    pClient->pack_start (*manage (listLang), Gtk::PACK_EXPAND_WIDGET, 5);
    pClient->show ();
@@ -111,26 +200,39 @@ LanguageDialog::~LanguageDialog () {
 void LanguageDialog::okEvent () {
    TRACE9 ("LanguageDialog::okEvent ()");
 
-#if 0
-   Glib::RefPtr<Gtk::TreeSelection> selection (get_selection ());
-   Gtk::TreeIter movieSel (selection->get_selected ()); Check3 (movieSel->parent ());
+   std::string translations;
+   Gtk::TreeSelection::ListHandle_Path list (listLang->get_selection ()
+					     ->get_selected_rows ());
+   if (list.size ()) {
+      Gtk::TreeSelection::ListHandle_Path::const_iterator i (list.begin ());
+      translations = (*modelList->get_iter (*i++))[colLang.id];
+      for (unsigned int c (0); (i != list.end ()) && (c < maxLangs); ++i) {
+	 translations.append (1, ',');
+	 translations += (*modelList->get_iter (*i))[colLang.id];
+      }
 
-   Gtk::TreeRow selFlag (*(*list)->get_selection ()->get_selected ());
-
-   std::string langs (getMovieAt (movieSel)->getLanguage ());
-   std::string newLang (selFlag[colLang.id]);
-   if (newLang.size ()) {
-      if (langs.size ())
-	 langs.append (1, ',');
-      langs += newLang;
-   } // end-if
-   else {
-      unsigned int pos (langs.rfind (','));
-      if (pos == std::string::npos)
-	 pos = 0;
-      TRACE1 ("Removing from " << pos << " of " << langs);
-      langs.replace (pos, langs.size () - pos, 0, '\0');
+      Check3 (main.size ());
+      main.append (1, ',');
+      main += translations;
    }
-   valueChanged (mOwnerObjects->get_path (movieSel).to_string (), langs, 1);
-#endif
+
+   TRACE3 ("LanguageDialog::okEvent () - " << main);
+   languages = main;
+}
+
+//-----------------------------------------------------------------------------
+/// Sets the main language (and removes it as translation)
+/// \param lang: Language to set
+//-----------------------------------------------------------------------------
+void LanguageDialog::selectLanguage () {
+   TRACE9 ("LanguageDialog::selectLanguage () - " << main << "->"
+	   << (std::string)(*mainLang->get_active ())[colLang.id]);
+
+   if (main.size ())
+      modelList->insertLanguage (main, colLang);
+   main = (*mainLang->get_active ())[colLang.id];
+
+   if (main.size ())
+      modelList->eraseLanguage (main);
+   listLang->set_sensitive (main.size ());
 }

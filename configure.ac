@@ -1,9 +1,9 @@
-dnl $Id: configure.ac,v 1.6 2004/12/13 02:42:02 markus Rel $
+dnl $Id: configure.ac,v 1.7 2005/01/18 20:10:15 markus Rel $
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.52)
-AC_REVISION($Revision: 1.6 $)
-AC_INIT(CDManager, 0.5.00, [g17m0@lycos.com], CDManager)
+AC_REVISION($Revision: 1.7 $)
+AC_INIT(CDManager, 0.6.00, [g17m0@lycos.com], CDManager)
 
 RELEASE=${PACKAGE_VERSION%.*}
 AC_DEFINE_UNQUOTED(PRG_RELEASE, "$RELEASE", [Define to the release of the program])
@@ -16,8 +16,6 @@ INCLUDES="-I. -I\$(top_srcdir) -DLOCALEDIR=\\\"\$(datadir)/locale\\\" -DDOCUDIR=
 
 AC_C_BIGENDIAN
 
-ALL_LINGUAS="de en es"
-
 dnl Checks for programs.
 AC_LANG_CPLUSPLUS
 AM_CONFIG_HEADER(cdmgr-cfg.h)
@@ -28,12 +26,15 @@ AC_PROG_MAKE_SET
 
 AM_GNU_GETTEXT
 
+ALL_LINGUAS="de en es"
+AC_DEFINE_UNQUOTED(CATALOGS, "$ALL_LINGUAS", [Translations])
+
 dnl Checks for libraries.
 AC_CHECK_LIB(stdc++, main)
 AC_CHECK_LIB(mysqlpp, main)
 
 PKG_CHECK_MODULES(DEPS, gtkmm-2.4 >= 2.4.0 gthread-2.0 > 2.2.0
-                  YGP >= 0.6.50 XGP >= 0.6.50)
+                  YGP >= 0.7.00 XGP >= 0.7.00)
 AC_SUBST(DEPS_CFLAGS)
 AC_SUBST(DEPS_LIBS)
 
@@ -210,7 +211,7 @@ dnl Settings for autoheader
 AH_TOP([#ifndef CDMANAGER_CFG_H
 #define CDMANAGER_CFG_H
 
-//$Id: configure.ac,v 1.6 2004/12/13 02:42:02 markus Rel $
+//$Id: configure.ac,v 1.7 2005/01/18 20:10:15 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -228,15 +229,23 @@ AH_TOP([#ifndef CDMANAGER_CFG_H
 ])
 AH_BOTTOM([#if defined (HAVE_GETTEXT) && defined (ENABLE_NLS)
 #  include <libintl.h>
-#  define _(String)                           Glib::locale_to_utf8 (gettext (String))
+#  ifdef DONT_CONVERT
+#     define _(String)                        gettext (String)
+#  else
+#     define _(String)                        Glib::locale_to_utf8 (gettext (String))
+#  endif
 #  define N_(String)                          gettext_noop (String)
 #  define gettext_noop(String)                (String)
+
+#  define LANGUAGES			      CATALOGS
 #else
 #  define _(String)                           (String)
 #  define N_(String)                          (String)
 #  define ngettext(Str1, Str2, flag)          (((flag) == 1) ? (Str1) : (Str2))
 #  define  binddomain(Domain)
 #  define bindtextdomain(Package, Directory)
+
+#  define LANGUAGES			      "en"
 #endif
 
 #endif])

@@ -16,7 +16,7 @@ How to build the CDManager
   Basically with the GNU mantra:
 
     ./configure
-    make
+    make install
 
   See the file INSTALL for more details.
 
@@ -44,13 +44,13 @@ Changing the genres of records/movies
 
   The file "Genres.dat" in the "data" directory contains the genres of
   both records and movies (as I use them). The syntax is like those of
-  INI-file and should be self-explainatory.
+  INI-files and should be self-explainatory.
 
   Note that one should not change the numbers for any genre, as they
   are used in the database to define its assigned genre.
 
-  After changing the file it must be installed (by make install in the
-  data directory).
+  After changing the file it must be installed (by typing make install
+  in the data directory).
 
 
 Changing the sort order of the entries
@@ -80,4 +80,20 @@ Changing the sort order of the entries
 Exporting the database to HTML documents
 ----------------------------------------
 
-  TODO: Write me!
+  The data is exported in a table-like structure; sorted by every
+  available criteria (up- and downwards).
+
+  This table is surrounded by header and footer information which are
+  read from files which can be specified in the settings dialog
+  (either with and absolut path; or else relative to the
+  data-directory (which is /usr/local/share/CDManager unless other
+  specified during configuring)).
+
+  Those files are searched first in a lanuguage-depended version with
+  a ".xx" appended (where xx is the language code like "de" or "es"
+  and than as entered in the dialog.
+
+  The generated HTML documents contains references to flags
+  representing the languages. Those flags are stored in the data
+  directory (/usr/local/share/CDManager, see above) and are called
+  "xx.png" (with "xx" again the two-letter code for the language).

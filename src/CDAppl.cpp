@@ -1,11 +1,11 @@
-//$Id: CDAppl.cpp,v 1.3 2005/01/12 22:47:17 markus Exp $
+//$Id: CDAppl.cpp,v 1.4 2005/01/18 03:55:15 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Application
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.12.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -144,3 +144,16 @@ const char* CDAppl::description () const {
 			"Public License")));
    return version.c_str ();
  }
+
+
+//-----------------------------------------------------------------------------
+/// Entrypoint of application
+/// \param argc: Number of parameters
+/// \param argv: Array with pointer to parameter
+/// \returns \c int: Status
+//-----------------------------------------------------------------------------
+int main (int argc, char* argv[]) {
+   Gtk::Main gtk (argc, argv);
+   CDAppl appl (argc, const_cast<const char**> (argv));
+   return appl.run ();
+}

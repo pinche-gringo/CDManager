@@ -1,7 +1,7 @@
 #ifndef MOVIELIST_H
 #define MOVIELIST_H
 
-//$Id: MovieList.h,v 1.8 2004/12/11 22:55:05 markus Exp $
+//$Id: MovieList.h,v 1.9 2004/12/12 03:13:36 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ class MovieColumns : public OwnerObjectColumns {
    MovieColumns () : OwnerObjectColumns () {
       add (type); add (lang1); add (lang2); add (lang3); add (lang4);
       add (lang5); add (langs); add (sub1); add (sub2); add (sub3); add (sub4);
-      add (sub5); add (sub6); }
+      add (sub5); add (sub6); add (titles); }
 
    Gtk::TreeModelColumn<Glib::ustring>              type;
    Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > lang1;
@@ -53,6 +53,7 @@ class MovieColumns : public OwnerObjectColumns {
    Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > sub4;
    Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > sub5;
    Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > sub6;
+   Gtk::TreeModelColumn<unsigned int>               titles;
 };
 
 
@@ -85,6 +86,7 @@ class MovieList : public OwnerObjectList {
    virtual bool on_button_press_event (GdkEventButton* event);
 
    void setLanguage (Gtk::TreeModel::Row& row, const std::string& languages);
+   void setTitles (Gtk::TreeModel::Row& row, const std::string& titles);
 
  private:
    MovieList (const MovieList& other);

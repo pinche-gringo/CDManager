@@ -1,11 +1,11 @@
-//$Id: MovieList.cpp,v 1.12 2004/12/11 22:55:05 markus Exp $
+//$Id: MovieList.cpp,v 1.13 2004/12/12 03:13:36 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.12 $
+//REVISION    : $Revision: 1.13 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (A) 2004
@@ -81,6 +81,18 @@ MovieList::MovieList (const std::map<unsigned int, Glib::ustring>& genres)
 
    append_column (*Gtk::manage (column));
    column->set_resizable ();
+
+   // Add column "Subtitles"
+   column = new Gtk::TreeViewColumn (_("Subtitles(s)"));
+   column->pack_start (colMovies.sub1, false);
+   column->pack_start (colMovies.sub2, false);
+   column->pack_start (colMovies.sub3, false);
+   column->pack_start (colMovies.sub4, false);
+   column->pack_start (colMovies.sub5, false);
+   column->pack_start (colMovies.sub6, false);
+
+   append_column (*Gtk::manage (column));
+   column->set_resizable ();
 }
 
 //-----------------------------------------------------------------------------
@@ -111,9 +123,8 @@ Gtk::TreeModel::Row MovieList::append (HMovie& movie,
 
    newMovie[colMovies.type] = CDType::getInstance ()[movie->getType ()];
 
-   std::string langs (movie->getLanguage ());
-   movie->setLanguage (langs);
-   setLanguage (newMovie, langs);
+   setLanguage (newMovie, movie->getLanguage ());
+   setTitles (newMovie, movie->getTitles ());
    return newMovie;
 }
 
@@ -215,6 +226,15 @@ void MovieList::valueChanged (const Glib::ustring& path,
 	    row[colMovies.type] = value;
 	    break; }
 
+	 case 1:
+	    setLanguage (row, value);
+	    movie->setLanguage (value);
+	    break;
+
+	 case 2:
+	    setTitles (row, value);
+	    movie->setTitles (value);
+
 	 default:
 	    Check3 (0);
 	 } // end-switch
@@ -248,26 +268,39 @@ bool MovieList::on_button_press_event (GdkEventButton* e) {
    if (((e->type == GDK_BUTTON_PRESS) && (e->button == 1))
        && (oldSel == selection->get_selected ())
        && (selection->get_selected ()->parent ())) {
-      unsigned int i (0);
 
-      Gdk::Rectangle cellArea;
-      Check3 (get_column (4));
-      get_cell_area (mOwnerObjects->get_path (oldSel), *get_column (4), cellArea);
+      Gdk::Rectangle areaLang, areaSub;
+      Check2 (get_column (4)); Check2 (get_column (5));
+      Gtk::TreePath path (mOwnerObjects->get_path (oldSel));
+      get_cell_area (path, *get_column (4), areaLang);
+      get_cell_area (path, *get_column (5), areaSub);
 
-      // If event is within the language column
-      if ((e->x > cellArea.get_x ())
-	  && (e->x <= (cellArea.get_x () + cellArea.get_width ()))) {
+      // If event is within the language or the subitles column
+      if ((e->x > areaLang.get_x ())
+	  && (e->x <= (areaSub.get_x () + areaSub.get_width ()))) {
 	 TRACE9 ("MovieList::on_button_press_event (GdkEventButton*) - Column "
-		 << i << ": " << cellArea.get_x () << '-' << e->x << '-'
-		 << (cellArea.get_x () + cellArea.get_width ()));
+		 << i << ": " << areaLang.get_x () << '-' << e->x << '-'
+		 << (areaSub.get_x () + areaSub.get_width ()));
 	 // Create the popup-window
-	 std::string languages (getMovieAt (oldSel)->getLanguage ());
-	 LanguageDialog dlg (languages, 5);
-	 dlg.run ();
+	 HMovie movie (getMovieAt (oldSel)); Check3 (movie.isDefined ());
+	 if (e->x < areaSub.get_x ()) {
+	    std::string languages (movie->getLanguage ());
+	    LanguageDialog dlg (languages, 4);
+	    dlg.run ();
 
-	 Gtk::TreeRow row (*oldSel);
-	 setLanguage (row, languages);
-	 getMovieAt (oldSel)->setLanguage (languages);
+	    if (languages != movie->getLanguage ())
+	       valueChanged (path.to_string (), languages, 1);
+	 }
+	 else {
+	    std::string titles (movie->getTitles ());
+	    LanguageDialog dlg (titles, 6, false);
+	    dlg.set_title (_("Select subtitles"));
+	    dlg.run ();
+
+	    if (titles != movie->getTitles ())
+	       valueChanged (path.to_string (), titles, 2);
+	 }
+
       }
    }
    return rc;
@@ -276,8 +309,7 @@ bool MovieList::on_button_press_event (GdkEventButton* e) {
 //-----------------------------------------------------------------------------
 /// Sets the language-flags according to the passed value
 /// \param row: Row to set the languages for
-/// \param languages: Languages to show; This string might be cut if it
-///        exceeds the number of columns
+/// \param languages: Languages to show
 //-----------------------------------------------------------------------------
 void MovieList::setLanguage (Gtk::TreeModel::Row& row, const std::string& languages) {
    YGP::Tokenize langs (languages);
@@ -293,6 +325,30 @@ void MovieList::setLanguage (Gtk::TreeModel::Row& row, const std::string& langua
 	 row[(*columns)[i]] = Glib::RefPtr<Gdk::Pixbuf> ();
 	 if (!countSet) {
 	    row[colMovies.langs] = i;
+	    countSet = true;
+	 }
+      }
+}
+
+//-----------------------------------------------------------------------------
+/// Sets the subtitle-flags according to the passed value
+/// \param row: Row to set the subtitles for
+/// \param titles: Subtitles to show
+//-----------------------------------------------------------------------------
+void MovieList::setTitles (Gtk::TreeModel::Row& row, const std::string& titles) {
+   YGP::Tokenize langs (titles);
+   bool countSet (false);
+   static const Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> >* columns[] =
+      { &colMovies.sub1, &colMovies.sub2, &colMovies.sub3, &colMovies.sub4,
+	&colMovies.sub5, &colMovies.sub6 };
+
+   for (unsigned int i (0); i < (sizeof (columns) / sizeof (*columns)); ++i)
+      if (langs.getNextNode (',').size ())
+	 row[(*columns)[i]] = Language::findFlag (langs.getActNode ());
+      else {
+	 row[(*columns)[i]] = Glib::RefPtr<Gdk::Pixbuf> ();
+	 if (!countSet) {
+	    row[colMovies.titles] = i;
 	    countSet = true;
 	 }
       }

@@ -1,11 +1,11 @@
-//$Id: Movie.cpp,v 1.4 2004/12/12 03:12:01 markus Exp $
+//$Id: Movie.cpp,v 1.5 2004/12/13 02:33:00 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movie
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 29.11.2004
 //COPYRIGHT   : Copyright (A) 2004
@@ -95,4 +95,15 @@ bool Movie::compByYear (const HMovie& a, const HMovie& b) {
 bool Movie::compByGenre (const HMovie& a, const HMovie& b) {
    Check1 (a.isDefined ()); Check1 (b.isDefined ());
    return a->genre < b->genre;
+}
+
+//-----------------------------------------------------------------------------
+/// Sorts movies by media.
+/// \param a: First movie
+/// \param b: Second movie
+/// \returns bool: True, if a->type < b->type
+//-----------------------------------------------------------------------------
+bool Movie::compByMedia (const HMovie& a, const HMovie& b) {
+   Check1 (a.isDefined ()); Check1 (b.isDefined ());
+   return a->type < b->type;
 }

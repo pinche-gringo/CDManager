@@ -1,7 +1,7 @@
 #ifndef MOVIE_H
 #define MOVIE_H
 
-//$Id: Movie.h,v 1.3 2004/12/12 03:12:23 markus Exp $
+//$Id: Movie.h,v 1.4 2004/12/13 02:33:00 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -65,6 +65,7 @@ class Movie : public YGP::Entity {
    static bool compByName (const HMovie& a, const HMovie& b);
    static bool compByYear (const HMovie& a, const HMovie& b);
    static bool compByGenre (const HMovie& a, const HMovie& b);
+   static bool compByMedia (const HMovie& a, const HMovie& b);
 
  private:
    unsigned long int id;       // %attrib%; format

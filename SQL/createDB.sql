@@ -74,3 +74,9 @@ CREATE TABLE Genres
     (id		BIGINT		NOT NULL,
      genre	VARCHAR(64)	NOT NULL,
      PRIMARY KEY (id));
+
+DROP TABLE Words;
+CREATE TABLE Words
+    (word       VARCHAR(32)     NOT NULL,
+     PRIMARY KEY (word));
+

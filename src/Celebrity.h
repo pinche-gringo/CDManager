@@ -1,7 +1,7 @@
 #ifndef CELIBRITY_H
 #define CELIBRITY_H
 
-//$Id
+//$Id: Celebrity.h,v 1.2 2004/11/24 21:54:49 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

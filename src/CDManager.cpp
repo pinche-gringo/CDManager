@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.2 2004/10/17 03:10:13 markus Exp $
+//$Id: CDManager.cpp,v 1.3 2004/10/22 03:47:47 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : 
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -39,6 +39,10 @@
 #include "CDAppl.h"
 #include "Settings.h"
 #include "DB.h"
+#include "Record.h"
+#include "Interpret.h"
+
+#include "RecEdit.h"
 
 
 // Defines
@@ -266,25 +270,25 @@ CDManager::CDManager ()
    scrlRecords.show ();
 
    mSongs = Gtk::ListStore::create (colSongs);
-   mRecords = Gtk::ListStore::create (colRecords);
+   mRecords = Gtk::TreeStore::create (colRecords);
 
    records.set_model (mRecords);
    songs.set_model (mSongs);
    records.show ();
    songs.show ();
 
-   songs.append_column ("Song", colSongs.name);
-   songs.append_column ("Genre", colSongs.duration);
+   songs.append_column (_("Song"), colSongs.name);
+   songs.append_column (_("Genre"), colSongs.duration);
    songs.get_column (0)->set_min_width (400);
    records.signalOwnerChanged.connect (mem_fun (*this, &CDManager::artistChanged));
    movies.signalObjectChanged.connect (mem_fun (*this, &CDManager::movieChanged));
-   records.append_column ("Record", colRecords.name);
-   records.append_column ("Interpret", colRecords.band);
-   records.append_column ("Year", colRecords.year);
-   records.append_column ("Genre", colRecords.genre);
-   records.get_column (0)->set_min_width (200);
-   records.get_column (1)->set_min_width (200);
+   records.append_column (_("Interpret/Record"), colRecords.name);
+   records.append_column (_("Year"), colRecords.year);
+   records.append_column (_("Genre"), colRecords.genre);
+   records.get_column (0)->set_min_width (400);
    records.get_selection ()->set_mode (Gtk::SELECTION_EXTENDED);
+   records.get_selection ()->set_select_function
+      (mem_fun (*this, &CDManager::canSelect));
    cds->add1 (*manage (scrlRecords));
    cds.attach (*manage (new Gtk::Label (_("Records"))), 0, 1, 0, 1,
 	       Gtk::SHRINK, Gtk::SHRINK, 5, 5);
@@ -331,11 +335,26 @@ void CDManager::command (int menu) {
       status.push (_("Disconnected!"));
       break;
 /// Saves the DB
-   case NEW:
-      break;
+   case NEW: {
+      HRecord hRec;
+      RecordEdit* dlg = new RecordEdit (hRec);
+      dlg->run ();
+      break; }
 
-   case EDIT:
-      break;
+   case EDIT: {
+      Gtk::TreeSelection::ListHandle_Path list
+	 (records.get_selection ()->get_selected_rows ());
+      Check3 (list.size ());
+      for (Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
+	   i != list.end (); ++i) {
+	 Gtk::TreeIter iter (mRecords->get_iter (*i)); Check3 (iter);
+	 TRACE9 ("CDManager::command (int) - EDIT: " << (**iter)[colRecords.name]);
+	 Check1 (typeid (*((**iter)[colRecords.entry])) == typeid (HRecord));
+	 YGP::IHandle* phRec ((**iter)[colRecords.entry]);
+	 Check1 (typeid (*phRec) == typeid (HRecord));
+	 new RecordEdit (*(HRecord*)(phRec));
+      }
+      break; }
 
    case DELETE:
       break;
@@ -439,23 +458,48 @@ void CDManager::loadDatabase () {
 
    try {
       // Load data from record table
-      Database::store ("SELECT r.name, i.name, year, g.genre "
-		       "FROM Records r, Interprets i, Genres g "
-		       "WHERE r.interpret = i.id AND r.genre = g.id");
+      Database::store ("SELECT r.id, r.name, i.name, year, g.genre FROM "
+		       "Records r, Interprets i, Genres g "
+		       "WHERE r.interpret = i.id AND r.genre = g.id "
+		       "ORDER BY i.name, r.name");
       TRACE8 ("CDManager::loadDatabase () - Found " << Database::resultSize ()
 	      << " records");
 
       if (cRecords = Database::resultSize ()) {
+	 Glib::ustring artist;
+	 HInterpret hArtist (new Interpret);
+	 Gtk::TreeRow lastRowArtist;
+
 	 while (Database::hasData ()) {
-	    Gtk::TreeModel::Row row = *(mRecords->append ());
-	    row[colRecords.name] = Database::getResultColumnAsString (0);
+	    // Create new interpret, if it has changed
+	    artist = Glib::locale_to_utf8 (Database::getResultColumnAsString (2));
+	    if (hArtist->name != artist) {
+	       lastRowArtist = *mRecords->append ();
+	       hArtist.define ();
+	       lastRowArtist[colRecords.name] = hArtist->name = artist;
+	       lastRowArtist[colRecords.entry] = new HInterpret (hArtist);
+	    }
+
+	    // Fill and store record entry from DB-values
+	    Record* newRec (new Record);
+	    newRec->id = Database::getResultColumnAsUInt (0);
+	    newRec->name = Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
+	    newRec->year = Database::getResultColumnAsUInt (3);
+
+	    Gtk::TreeModel::Row row (*(mRecords->append (lastRowArtist.children ())));
+	    newRec->name = row[colRecords.name] =
+	       Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
+	    if (newRec->year)
+	       row[colRecords.year] = Database::getResultColumnAsString (3);
+
+	    newRec->genre = row[colRecords.genre] = 
+	       Glib::locale_to_utf8 (Database::getResultColumnAsString (4));
+	    row[colRecords.entry] = new HRecord (newRec);
 	    Database::getNextResultRow ();
-	 } // end-while
-	 Gtk::TreeModel::iterator i (mRecords->children ().begin()); Check3 (i);
-	 records.get_selection ()->select (i);
+	 } // end-while has records
+	 Check3 (mRecords->children ().begin());
+	 records.get_selection ()->select (mRecords->children ().begin());
       }
-      else
-	 enableEdit (false);
    }
    catch (std::exception& err) {
       Glib::ustring msg (_("Can't query available records!\n\nReason: %1"));
@@ -463,6 +507,41 @@ void CDManager::loadDatabase () {
       Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
       dlg.run ();
    }
+
+   try {
+      // Load data from movies table
+      Database::store ("SELECT m.id, m.name, m.director, year, g.genre "
+		       "FROM Movies m, Genres g WHERE m.genre = g.id");
+      TRACE8 ("CDManager::loadDatabase () - Found " << Database::resultSize ()
+	      << " movies");
+
+      if (cMovies = Database::resultSize ()) {
+	 while (Database::hasData ()) {
+	    Database::getNextResultRow ();
+	 } // end-while
+      }
+   }
+   catch (std::exception& err) {
+      Glib::ustring msg (_("Can't query available movies!\n\nReason: %1"));
+      msg.replace (msg.find ("%1"), 2, err.what ());
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
+
+   Check3 ((nb.get_current_page () >= 0) || (nb.get_current_page () < 2));
+   enableEdit (nb.get_current_page () ? cMovies : cRecords);
+}
+
+//-----------------------------------------------------------------------------
+/// Checks if a row in the record treeview can be selected
+/// \param model: Model of record treeview
+/// \param path: Enty which is about to be selected
+/// \returns bool: True if enty can be selected
+//-----------------------------------------------------------------------------
+bool CDManager::canSelect (const Glib::RefPtr<Gtk::TreeModel>& model,
+			   const Gtk::TreeModel::Path& path, bool) {
+  const Gtk::TreeModel::iterator iter (model->get_iter (path));
+  return iter->children ().empty (); // only allow leaf nodes to be selected
 }
 
 /// Exports the stored information to HTML documents

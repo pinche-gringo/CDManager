@@ -1,11 +1,11 @@
-//$Id: MovieList.cpp,v 1.4 2004/11/26 04:06:55 markus Exp $
+//$Id: MovieList.cpp,v 1.5 2004/11/27 04:49:56 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -30,8 +30,6 @@
 #include <cerrno>
 #include <cstdlib>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/StatusObj.h>
@@ -51,6 +49,7 @@
 MovieList::MovieList (const std::map<unsigned int, Glib::ustring>& genres)
    : OwnerObjectList (genres) {
    TRACE9 ("MovieList::MovieList (const std::map<unsigned int, Glib::ustring>&)");
+   init ();
 }
 
 //-----------------------------------------------------------------------------

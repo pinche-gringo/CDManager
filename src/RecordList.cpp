@@ -1,11 +1,11 @@
-//$Id: RecordList.cpp,v 1.7 2004/11/26 04:06:29 markus Exp $
+//$Id: RecordList.cpp,v 1.8 2004/11/27 04:49:56 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -49,6 +49,7 @@
 RecordList::RecordList (const std::map<unsigned int, Glib::ustring>& genres)
    : OwnerObjectList (genres) {
    TRACE9 ("RecordList::RecordList (const std::map<unsigned int, Glib::ustring>&)");
+   init ();
 }
 
 //-----------------------------------------------------------------------------

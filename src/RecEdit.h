@@ -1,7 +1,7 @@
 #ifndef RECEDIT_H
 #define RECEDIT_H
 
-//$Id: RecEdit.h,v 1.1 2004/10/18 05:44:41 markus Exp $
+//$Id: RecEdit.h,v 1.2 2004/10/18 15:09:30 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,6 +18,8 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 
+#include <gtkmm/liststore.h>
+
 #include "Record.h"
 
 #include <XGP/XDialog.h>
@@ -26,6 +28,7 @@ namespace Gtk {
    class Table;
    class Entry;
    class ComboBox;
+   class TreeView;
    class SpinButton;
 }
 
@@ -52,9 +55,31 @@ class RecordEdit : public XGP::XDialog {
    Gtk::Entry*      txtRecord;
    Gtk::SpinButton* spinYear;
    Gtk::ComboBox*   optArtist;
-   Gtk::ComboBox*   optGenre;
+   Gtk::TreeView*   optGenre;
 
    HRecord hRecord;
+
+   class ArtistColumns : public Gtk::TreeModel::ColumnRecord {
+    public:
+      ArtistColumns () {
+	 add (colID); add (colName); }
+                                                                                
+      Gtk::TreeModelColumn<int> colID;
+      Gtk::TreeModelColumn<Glib::ustring> colName;
+   };
+   ArtistColumns colArtists;
+   Glib::RefPtr<Gtk::ListStore> mArtists;
+
+   class GenreColumns : public Gtk::TreeModel::ColumnRecord {
+    public:
+      GenreColumns () {
+	 add (colID); add (colName); }
+                                                                                
+      Gtk::TreeModelColumn<int> colID;
+      Gtk::TreeModelColumn<Glib::ustring> colName;
+   };
+   GenreColumns colGenres;
+   Glib::RefPtr<Gtk::ListStore> mGenres;
 };
 
 #endif

@@ -1,11 +1,11 @@
-//$Id: RecEdit.cpp,v 1.1 2004/10/18 05:44:41 markus Exp $
+//$Id: RecEdit.cpp,v 1.2 2004/10/18 15:09:30 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : RecordEdit
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 17.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -30,10 +30,13 @@
 #include <gtkmm/label.h>
 #include <gtkmm/table.h>
 #include <gtkmm/entry.h>
+#include <gtkmm/combobox.h>
+#include <gtkmm/treeview.h>
 #include <gtkmm/spinbutton.h>
 #include <gtkmm/adjustment.h>
-#include <gtkmm/combobox.h>
+#include <gtkmm/messagedialog.h>
 
+#include "DB.h"
 #include "RecEdit.h"
 
 
@@ -44,7 +47,9 @@ RecordEdit::RecordEdit (HRecord record)
    : XGP::XDialog (OKCANCEL), pClient (manage (new Gtk::Table (4, 3, false))),
      txtRecord (manage (new class Gtk::Entry ())),
      optArtist (manage (new Gtk::ComboBox ())),
-     optGenre (manage (new Gtk::ComboBox ())), hRecord (record) {
+     optGenre (manage (new Gtk::TreeView ())), hRecord (record),
+     mArtists (Gtk::ListStore::create (colArtists)),
+     mGenres (Gtk::ListStore::create (colGenres)) {
    set_title (_("Edit Record"));
 
    Gtk::Label* lblRecord (manage (new Gtk::Label (_("_Record name:"), true)));
@@ -52,12 +57,10 @@ RecordEdit::RecordEdit (HRecord record)
    Gtk::Label* lblYear (manage (new Gtk::Label (_("_Year"), true)));
    Gtk::Adjustment* spinYear_adj (manage (new Gtk::Adjustment (2000.0, 1900.0, 3000.0, 1.0, 10.0, 4.0)));
    spinYear = manage (new Gtk::SpinButton (*spinYear_adj, 1, 4));
-   Gtk::Label* lblGenre (manage (new Gtk::Label (_("_Genre:"), true)));
 			 
    lblRecord->set_justify (Gtk::JUSTIFY_LEFT);
    lblArtist->set_justify (Gtk::JUSTIFY_LEFT);
    lblYear->set_justify (Gtk::JUSTIFY_LEFT);
-   lblGenre->set_justify (Gtk::JUSTIFY_LEFT);
    spinYear->set_flags (Gtk::CAN_FOCUS);
    spinYear->set_update_policy (Gtk::UPDATE_ALWAYS);
    spinYear->set_numeric (true);
@@ -65,22 +68,26 @@ RecordEdit::RecordEdit (HRecord record)
    spinYear->set_wrap (true);
    txtRecord->set_flags (Gtk::CAN_FOCUS);
    txtRecord->grab_focus ();
+
    optArtist->set_flags (Gtk::CAN_FOCUS);
    optGenre->set_flags (Gtk::CAN_FOCUS);
+   optArtist->set_model (mArtists);
+   optGenre->set_model (mGenres);
+
+   optGenre->append_column ("_Genre", colGenres.colName);
+   optGenre->get_selection ()->set_mode (Gtk::SELECTION_EXTENDED);
 
    lblRecord->set_mnemonic_widget (*txtRecord);
    lblArtist->set_mnemonic_widget (*optArtist);
    lblYear->set_mnemonic_widget (*spinYear);
-   lblGenre->set_mnemonic_widget (*optGenre);
 
    pClient->attach (*lblRecord, 0, 1, 0, 1, Gtk::FILL, Gtk::SHRINK, 5, 5);
    pClient->attach (*lblArtist, 0, 1, 1, 2, Gtk::FILL, Gtk::SHRINK, 5, 5);
    pClient->attach (*lblYear, 0, 1, 2, 3, Gtk::FILL, Gtk::SHRINK, 5, 5);
-   pClient->attach (*spinYear, 1, 2, 2, 3, Gtk::SHRINK, Gtk::SHRINK, 5, 5); 
+   pClient->attach (*spinYear, 1, 2, 2, 3, Gtk::FILL, Gtk::SHRINK, 5, 5); 
    pClient->attach (*txtRecord, 1, 3, 0, 1, Gtk::EXPAND | Gtk::FILL, Gtk::SHRINK, 5, 5);
-   pClient->attach (*lblGenre, 0, 1, 3, 4, Gtk::FILL, Gtk::SHRINK, 5, 5);
    pClient->attach (*optArtist, 1, 3, 1, 2, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND, 5, 5);
-   pClient->attach (*optGenre, 1, 3, 3, 4, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND, 5, 5);
+   pClient->attach (*optGenre, 0, 3, 3, 4, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND, 5, 5);
 
    fillGenres ();
    fillInterprets ();
@@ -117,11 +124,56 @@ void RecordEdit::okEvent () {
 /// Fills the genre option-menu
 //-----------------------------------------------------------------------------
 void RecordEdit::fillGenres () {
+   try {
+      Database::store ("SELECT id, genre FROM Genres");
+
+      while (Database::hasData ()) {
+	 // Fill and store artist entry from DB-values
+	 Gtk::TreeModel::Row row = *(mGenres->append ());
+	 unsigned int id (Database::getResultColumnAsUInt (0));
+	 row[colGenres.colID] = id;
+	 row[colGenres.colName] =
+	    Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
+
+	 if (hRecord.isDefined () && (hRecord->id & id))
+	    optGenre->get_selection ()->select (row);
+
+	 Database::getNextResultRow ();
+      } // end-while
+   }
+   catch (std::exception& err) {
+      Glib::ustring msg (_("Can't query available genres!\n\nReason: %1"));
+      msg.replace (msg.find ("%1"), 2, err.what ());
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
 }
 
 //-----------------------------------------------------------------------------
 /// Fills the genre option-menu
 //-----------------------------------------------------------------------------
 void RecordEdit::fillInterprets () {
-   
+   try {
+      Database::store ("SELECT id, name FROM Interprets");
+
+      while (Database::hasData ()) {
+	 // Fill and store artist entry from DB-values
+	 Gtk::TreeModel::Row row = *(mArtists->append ());
+	 unsigned int id (Database::getResultColumnAsUInt (0));
+	 row[colArtists.colID] = id;
+	 row[colArtists.colName] =
+	    Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
+
+	 if (hRecord.isDefined () && (hRecord->id == id))
+	    optArtist->set_active (row);
+
+	 Database::getNextResultRow ();
+      } // end-while
+   }
+   catch (std::exception& err) {
+      Glib::ustring msg (_("Can't query available interprets!\n\nReason: %1"));
+      msg.replace (msg.find ("%1"), 2, err.what ());
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
 }

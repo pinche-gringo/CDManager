@@ -1,11 +1,11 @@
-//$Id: SongList.cpp,v 1.11 2004/12/07 03:37:05 markus Rel $
+//$Id: SongList.cpp,v 1.12 2004/12/22 17:00:08 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.11 $
+//REVISION    : $Revision: 1.12 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (A) 2004
@@ -87,6 +87,8 @@ SongList::SongList (const std::map<unsigned int, Glib::ustring>& genres)
 			  sigc::mem_fun (*this, &SongList::sortByName));
 
    set_search_column (colSongs.colName);
+}
+
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------

@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.1\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2005-01-03 13:20-0400\n"
-"PO-Revision-Date: 2005-01-03 13:42-0400\n"
+"POT-Creation-Date: 2005-01-07 00:24-0400\n"
+"PO-Revision-Date: 2005-01-07 00:30-0400\n"
 "Last-Translator: Markus Schwab <g17m0@lycos.com>\n"
 "Language-Team: German <g17m0@lycos.com>\n"
 "MIME-Version: 1.0\n"
@@ -168,7 +168,7 @@ msgstr "Abgemeldet!"
 msgid "Select file(s) to import"
 msgstr "Wähle Datei(en) zum Importieren"
 
-#: src/CDManager.cpp:515 src/Writer.cpp:172
+#: src/CDManager.cpp:515 src/Writer.cpp:176
 msgid ""
 "Can't create file `%1'!\n"
 "\n"
@@ -362,7 +362,7 @@ msgstr ""
 msgid "Type"
 msgstr "Typ"
 
-#: src/MovieList.cpp:75
+#: src/MovieList.cpp:75 src/Writer.cpp:248
 msgid "Language(s)"
 msgstr "Sprache(n)"
 
@@ -402,7 +402,8 @@ msgstr "Name"
 msgid "Duration"
 msgstr "Dauer"
 
-#: src/SongList.cpp:75 src/OOList.cpp:94 src/Writer.cpp:355 src/Writer.cpp:661
+#: src/SongList.cpp:75 src/OOList.cpp:94 src/Writer.cpp:246 src/Writer.cpp:380
+#: src/Writer.cpp:687
 msgid "Genre"
 msgstr ""
 
@@ -414,7 +415,7 @@ msgstr "Das Lied '%1' existiert bereits!"
 msgid "Unknown genre!"
 msgstr "Unbekanntes Genre!"
 
-#: src/OOList.cpp:74 src/Writer.cpp:347 src/Writer.cpp:655
+#: src/OOList.cpp:74 src/Writer.cpp:245 src/Writer.cpp:372 src/Writer.cpp:681
 msgid "Year"
 msgstr "Jahr"
 
@@ -486,11 +487,23 @@ msgstr "Italienisch"
 msgid "Portugese"
 msgstr "Portugiesisch"
 
-#: src/Writer.cpp:246
+#: src/Writer.cpp:242
 msgid "Movies (by %1)"
 msgstr "Filme (sortiert nach %1)"
 
-#: src/Writer.cpp:247 src/Writer.cpp:565
+#: src/Writer.cpp:243 src/Writer.cpp:287
+msgid "Director"
+msgstr "Regisseur"
+
+#: src/Writer.cpp:244 src/Writer.cpp:364 src/Writer.cpp:675
+msgid "Name"
+msgstr ""
+
+#: src/Writer.cpp:247 src/Writer.cpp:388
+msgid "Media"
+msgstr ""
+
+#: src/Writer.cpp:271 src/Writer.cpp:591
 msgid ""
 "Error reading header file `%1'!\n"
 "\n"
@@ -500,27 +513,15 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/Writer.cpp:263
-msgid "Director"
-msgstr "Regisseur"
-
-#: src/Writer.cpp:339 src/Writer.cpp:649
-msgid "Name"
-msgstr ""
-
-#: src/Writer.cpp:363
-msgid "Media"
-msgstr ""
-
-#: src/Writer.cpp:414
+#: src/Writer.cpp:439
 msgid "Language"
 msgstr "Sprache"
 
-#: src/Writer.cpp:564
+#: src/Writer.cpp:590
 msgid "Records (by %1)"
 msgstr "Alben (sortiert nach %1)"
 
-#: src/Writer.cpp:579
+#: src/Writer.cpp:605
 msgid "Interpret"
 msgstr ""
 
@@ -573,3 +574,27 @@ msgid ""
 msgstr ""
 "Autor: Markus Schwab; E-Mail: g17m0@lycoscom\n"
 "Vertrieben unter den Bedingungen der GNU General Public License"
+
+#: src/Settings.cpp:51
+msgid "Preferences"
+msgstr "Einstellungen"
+
+#: src/Settings.cpp:54
+msgid "Output _directory:"
+msgstr "_Ausabeverzeichnis:"
+
+#: src/Settings.cpp:54
+msgid "_Header for movies:"
+msgstr "_Headerdatei für Filme:"
+
+#: src/Settings.cpp:55
+msgid "_Footer for movies:"
+msgstr "_Fußdatei für Filme:"
+
+#: src/Settings.cpp:55
+msgid "Header for _records:"
+msgstr "H_eaderdatei für Platten:"
+
+#: src/Settings.cpp:56
+msgid "Foo_ter for records:"
+msgstr "F_ußdatei für Platten:"

@@ -1,4 +1,4 @@
-//$Id: RendererList.cpp,v 1.1 2004/11/06 18:38:02 markus Rel $
+//$Id: RendererList.cpp,v 1.2 2004/12/13 02:35:14 markus Rel $
 
 /* gtkmm example Copyright (C) 2002 gtkmm development team
  *
@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-// Everything in this file is combined from the GTKMM exampe for custom
+// Everything in this file is combined from the GTKMM example for custom
 // cellrenderers
 
 
@@ -87,7 +87,7 @@ struct PopupColumns : public Gtk::TreeModel::ColumnRecord
   PopupColumns() { add(item); }
 };
 
-const PopupColumns& popup_columns()
+static const PopupColumns& popup_columns ()
 {
   static const PopupColumns columns;
   return columns;
@@ -242,7 +242,8 @@ bool PopupEntry::on_entry_key_press_event(GdkEventKey* event)
 }
 
 
-bool grab_on_window(const Glib::RefPtr<Gdk::Window>& window, guint32 activate_time)
+static bool grab_on_window (const Glib::RefPtr<Gdk::Window>& window,
+			    guint32 activate_time)
 {
   if(window->pointer_grab(true,
         Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK,

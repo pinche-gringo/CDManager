@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.7 2004/12/07 03:35:22 markus Exp $
+//$Id: OOList.cpp,v 1.8 2004/12/13 02:34:03 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (A) 2004
@@ -92,7 +92,7 @@ void OwnerObjectList::init (const OwnerObjectColumns& cols) {
    Gtk::TreeViewColumn* const column (new Gtk::TreeViewColumn
 				      (_("Genre"), *Gtk::manage (renderer)));
    append_column (*Gtk::manage (column));
-   column->add_attribute (renderer->property_text(), cols.genre);
+   column->add_attribute (renderer->property_text (), cols.genre);
    column->set_sort_column (cols.genre.index ());
    column->set_resizable ();
 

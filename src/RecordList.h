@@ -1,7 +1,7 @@
 #ifndef RECORDLIST_H
 #define RECORDLIST_H
 
-//$Id: RecordList.h,v 1.7 2004/11/29 19:03:24 markus Rel $
+//$Id: RecordList.h,v 1.8 2004/12/07 03:36:00 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -56,6 +56,8 @@ class RecordList : public OwnerObjectList {
  private:
    RecordList (const RecordList& other);
    const RecordList& operator= (const RecordList& other);
+
+   OwnerObjectColumns colOwnerObjects;
 };
 
 

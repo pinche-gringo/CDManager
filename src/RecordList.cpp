@@ -1,14 +1,14 @@
-//$Id: RecordList.cpp,v 1.11 2004/12/04 04:06:01 markus Exp $
+//$Id: RecordList.cpp,v 1.12 2004/12/07 03:36:00 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.11 $
+//REVISION    : $Revision: 1.12 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
-//COPYRIGHT   : Anticopyright (A) 2004
+//COPYRIGHT   : Copyright (A) 2004
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -32,9 +32,6 @@
 
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
-#include <YGP/StatusObj.h>
-
-#include <XGP/MessageDlg.h>
 
 #include <XGP/XValue.h>
 
@@ -45,11 +42,13 @@
 
 //-----------------------------------------------------------------------------
 /// Default constructor
+/// \param genres: Genres which should be displayed in the 3rd column
 //-----------------------------------------------------------------------------
 RecordList::RecordList (const std::map<unsigned int, Glib::ustring>& genres)
    : OwnerObjectList (genres) {
    TRACE9 ("RecordList::RecordList (const std::map<unsigned int, Glib::ustring>&)");
-   init ();
+   mOwnerObjects = Gtk::TreeStore::create (colOwnerObjects);
+   init (colOwnerObjects);
 }
 
 //-----------------------------------------------------------------------------

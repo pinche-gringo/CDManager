@@ -1,7 +1,7 @@
 #ifndef SONGLIST_H
 #define SONGLIST_H
 
-//$Id: SongList.h,v 1.1 2004/11/01 23:58:20 markus Exp $
+//$Id: SongList.h,v 1.2 2004/11/02 20:36:58 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -30,13 +30,14 @@ class SongColumns : public Gtk::TreeModel::ColumnRecord {
  public:
    SongColumns () {
       add (entry); add (colTrack); add (colName); add (colDuration);
-      add (colGenre); }
+      add (colGenre); add (changed); }
 
    Gtk::TreeModelColumn<HSong>         entry;
-   Gtk::TreeModelColumn<unsigned int>  colTrack;
+   Gtk::TreeModelColumn<YGP::ANumeric> colTrack;
    Gtk::TreeModelColumn<Glib::ustring> colName;
-   Gtk::TreeModelColumn<Glib::ustring> colDuration;
+   Gtk::TreeModelColumn<YGP::ATime>    colDuration;
    Gtk::TreeModelColumn<Glib::ustring> colGenre;
+   Gtk::TreeModelColumn<bool>          changed;
 };
 
 
@@ -51,8 +52,8 @@ class SongList : public Gtk::TreeView {
    void clear () { mSongs->clear (); }
 
  protected:   
-   int sort (const Gtk::TreeModel::iterator& a,
-	     const Gtk::TreeModel::iterator& b, unsigned int entry);
+   void valueChanged (const Glib::ustring& path, const Glib::ustring& value,
+		      unsigned int column);
 
  private:
    SongList (const SongList& other);

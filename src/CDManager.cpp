@@ -1,10 +1,10 @@
-//$Id: CDManager.cpp,v 1.20 2004/11/17 20:39:56 markus Exp $
+//$Id: CDManager.cpp,v 1.21 2004/11/24 21:54:10 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //BUGS        :
-//REVISION    : $Revision: 1.20 $
+//REVISION    : $Revision: 1.21 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -42,11 +42,30 @@
 #include "Settings.h"
 #include "DB.h"
 #include "Song.h"
+#include "Movie.h"
 #include "Record.h"
+#include "Director.h"
 #include "Interpret.h"
 
 
 // Defines
+
+// Macro to define a callback to handle changing an entity (record, movie, ...)
+#define storeObject(store, type, obj) \
+   if (store.find (obj) == store.end ()) {\
+   H##type obj (H##type::cast (entity));\
+	   << (entity.isDefined () ? entity->getId () : -1UL) << '/'\
+	   << (entity.isDefined () ? entity->getName ().c_str () : "Undefined"));\
+	   << (entity.isDefined () ? entity->id : -1UL) << '/'\
+	   << (entity.isDefined () ? entity->name.c_str () : "Undefined"));\
+   storeObject (store, type, entity);\
+}
+   if (store.find (entity) == store.end ()) {\
+      store[entity] = new type (*entity);\
+      apMenus[SAVE]->set_sensitive (true);\
+   }\
+const unsigned int CDManager::WIDTH (800);
+const unsigned int CDManager::HEIGHT (600);
 
 const char* const CDManager::DBNAME ("CDMedia");
 
@@ -235,11 +254,10 @@ XGP::XApplication::MenuEntry CDManager::menuItems[] = {
     { _("New _Interpret"),  _("<ctl>N"),       NEW_ARTIST,   ITEM },
     { _("_New Record"),     _("<ctl><alt>N"),  NEW_RECORD,   ITEM },
     { _("New _Song"),       _("<ctl><shft>N"), NEW_SONG,     ITEM },
-    { "",                   "",                0  ,          SEPARATOR },
     { _("New _Director") ,  _("<ctl>N"),       NEW_DIRECTOR, ITEM },
     { _("_New Movie") ,     _("<ctl><alt>N"),  NEW_MOVIE,    ITEM },
     { "",                   "",                0  ,          SEPARATOR },
-    { _("_Delete"),         _("Delete"),       DELETE,       ITEM }
+    { _("_Delete"),         _("<ctl>Delete"),  DELETE,       ITEM }
 };
 
 /// Defaultconstructor; all widget are created
@@ -269,6 +287,8 @@ CDManager::CDManager ()
    cds.show ();
    nb.append_page (movies, _("_Movies"), true);
    movies.show ();
+   nb.popup_enable ();
+   songs.get_selection ()->set_mode (Gtk::SELECTION_EXTENDED);
    songs.signalChanged.connect (mem_fun (*this, &CDManager::songChanged));
    scrlSongs.set_shadow_type (Gtk::SHADOW_ETCHED_IN);
    scrlRecords.set_shadow_type (Gtk::SHADOW_ETCHED_IN);
@@ -289,6 +309,10 @@ CDManager::CDManager ()
    records.signalRecordGenreChanged.connect
    movies.signalOwnerChanged.connect (mem_fun (*this, &CDManager::directorChanged));
    movies.signalObjectChanged.connect (mem_fun (*this, &CDManager::movieChanged));
+   movies.signalDirectorChanged.connect (mem_fun (*this, &CDManager::directorChanged));
+   movies.signalMovieChanged.connect (mem_fun (*this, &CDManager::movieChanged));
+   movies.signalMovieGenreChanged.connect (mem_fun (*this, &CDManager::movieGenreChanged));
+   sel->set_mode (Gtk::SELECTION_EXTENDED);
    Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
    recordSel->set_mode (Gtk::SELECTION_EXTENDED);
    recordSel->signal_changed ().connect
@@ -520,8 +544,7 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 
 	    Database::getNextResultRow ();
 	 }
-	 records.updateGenres ();
-	 songs.updateGenres ();
+	 movies.updateGenres ();
       }
 
       if (Interpret::ignore.empty ()) {
@@ -588,7 +611,7 @@ void CDManager::loadDatabase () {
    unsigned long int cRecords (0), cMovies (0);
    try {
       Database::store ("SELECT i.id, c.name, c.born, c.died FROM Interprets i,"
-		       " Celibrities c WHERE c.id = i.id");
+		       " Celebrities c WHERE c.id = i.id");
 
       HInterpret hArtist;
       while (Database::hasData ()) {
@@ -660,7 +683,7 @@ void CDManager::loadDatabase () {
 
       // Load data from movies table
       Database::store ("SELECT d.id, c.name, c.born, c.died FROM Directors d, "
-		       "Celibrities c WHERE c.id = d.id");
+		       "Celebrities c WHERE c.id = d.id");
 
       HDirector hDirector;
       while (Database::hasData ()) {
@@ -738,7 +761,7 @@ void CDManager::loadDatabase () {
    tmp.replace (tmp.find ("%1"), 2, YGP::ANumeric::toString (cRecords));
    msg.replace (msg.find ("%1"), 2, tmp);
 
-   tmp = _("(from %1 artist(s)");
+   tmp = _("(from %1 artist(s))");
    tmp.replace (tmp.find ("%1"), 2, YGP::ANumeric::toString (artists.size ()));
    msg.replace (msg.find ("%2"), 2, tmp);
 
@@ -827,54 +850,43 @@ void CDManager::loadSongs (const HRecord& record) {
 }
 
 //-----------------------------------------------------------------------------
+/// \param song: Handle to changed song
 //-----------------------------------------------------------------------------
 defineChangeObject(Song, song, changedSongs)
 
-void CDManager::songChanged (const HSong& song) {
-   TRACE9 ("CDManager::songChanged (const HSong& song) - "
-	   << (song.isDefined () ? song->id : -1UL) << '/'
-	   << (song.isDefined () ? song->name.c_str () : "Undefined"));
+defineChangeEntity(Song, song, changedSongs)
 // void CDManager::artistChanged (const HInterpret& artist)
-   if (changedSongs.find (song) == changedSongs.end ()) {
-      changedSongs[song] = new Song (*song);
-      apMenus[SAVE]->set_sensitive (true);
-   }
-}
+/// Callback when changing an artist
+/// \param entity: Handle to changed artist
+//-----------------------------------------------------------------------------
+defineChangeObject(Interpret, artist, changedInterprets)
+
+defineChangeEntity(Interpret, artist, changedInterprets)
 // void CDManager::recordChanged (const HRecord& record)
 /// Callback when changing a record
-/// Callback when an interpret is being changed
-/// \param song: Handle to changed interpret
+/// \param entity: Handle to changed record
+//-----------------------------------------------------------------------------
+defineChangeEntity(Record, record, changedRecords)
 
-void CDManager::artistChanged (const HInterpret& artist) {
-   TRACE9 ("CDManager::artistChanged (const HInterpret& artist) - "
-	   << (artist.isDefined () ? artist->id : -1UL) << '/'
-	   << (artist.isDefined () ? artist->name.c_str () : "Undefined"));
+//-----------------------------------------------------------------------------
 // void CDManager::directorChanged (const HDirector& director)
-   if (changedInterprets.find (artist) == changedInterprets.end ()) {
-      changedInterprets[artist] = new Interpret (*artist);
-      apMenus[SAVE]->set_sensitive (true);
-   }
-}
+/// Callback when changing the director of a movie
+/// \param director: Handle to changed director
+//-----------------------------------------------------------------------------
+defineChangeObject(Director, director, changedDirectors)
+
+defineChangeEntity(Director, director, changedDirectors)
 // void CDManager::movieChanged (const HMovie& movie)
 /// Callback when changing a movie
-/// Callback when a record is being changed
-/// \param record: Handle to changed record
+/// \param movie: Handle to changed movie
+//-----------------------------------------------------------------------------
+defineChangeEntity(Movie, movie, changedMovies)
 
-void CDManager::recordChanged (const HRecord& record) {
-   TRACE9 ("CDManager::recordChanged (const HInterpret& record) - "
-	   << (record.isDefined () ? record->id : -1UL) << '/'
-	   << (record.isDefined () ? record->name.c_str () : "Undefined"));
-   Check1 (record.isDefined ());
-
-   if (changedRecords.find (record) == changedRecords.end ()) {
-      changedRecords[record] = new Record (*record);
-      apMenus[SAVE]->set_sensitive (true);
-   }
-}
+//-----------------------------------------------------------------------------
 /// Callback (additional to recordChanged) when the genre of a record is being
 /// changed
 /// \param record: Handle to changed record
-///  changed
+//-----------------------------------------------------------------------------
 void CDManager::recordGenreChanged (const HEntity& record) {
    Check1 (record.isDefined ());
 void CDManager::recordGenreChanged (const HRecord& record) {
@@ -896,6 +908,19 @@ void CDManager::recordGenreChanged (const HRecord& record) {
 //-----------------------------------------------------------------------------
 /// Escapes the quotes in values for the database
 /// \param value: Value to escape
+/// Callback (additional to movieChanged) when the genre of a movie is being
+/// changed
+/// \param movie: Handle to changed movie
+//-----------------------------------------------------------------------------
+void CDManager::movieGenreChanged (const HMovie& movie) {
+   TRACE9 ("CDManager::movieGenreChanged (const HMovie& movie) - "
+	   << (movie.isDefined () ? movie->id : -1UL) << '/'
+	   << (movie.isDefined () ? movie->name.c_str () : "Undefined"));
+   Check1 (movie.isDefined ());
+}
+
+
+//-----------------------------------------------------------------------------
 /// Removes deleed entries from the database
 //-----------------------------------------------------------------------------
 void CDManager::removeDeletedEntries () {
@@ -964,14 +989,16 @@ void CDManager::writeChangedEntries () {
 	 Check3 (artist.isDefined ());
 	 try {
 	    std::stringstream query;
-	    query << (artist->id ? "UPDATE Interprets" : "INSERT into Interprets")
+	    query << (artist->id ? "UPDATE Celebrities" : "INSERT into Celebrities")
 		  << " SET name=\"" << artist->name << '"';
 	    if (artist->id)
 	       query << " WHERE id=" << artist->id;
 	    Database::store (query.str ().c_str ());
 
-	    if (!artist->id)
+	    if (!artist->id) {
 	       artist->id = Database::getIDOfInsert ();
+	       Database::store ("INSERT into Interprets set id=LAST_INSERT_ID()");
+	    }
 	 }
 	 catch (std::exception& err) {
 	    Glib::ustring msg (_("Can't write interpret `%1'!\n\nReason: %2"));
@@ -1041,6 +1068,61 @@ void CDManager::writeChangedEntries () {
 
 	 changedSongs.erase (changedSongs.begin ());
       } // endwhile
+
+      while (changedDirectors.size ()) {
+	 HDirector director (changedDirectors.begin ()->first);
+	 Check3 (director.isDefined ());
+	 try {
+	    std::stringstream query;
+	    query << (director->id ? "UPDATE Celebrities" : "INSERT into Celebrities")
+		  << " SET name=\"" << director->name << '"';
+	    if (director->id)
+	       query << " WHERE id=" << director->id;
+	    Database::store (query.str ().c_str ());
+
+	    if (!director->id) {
+	       director->id = Database::getIDOfInsert ();
+	       Database::store ("INSERT into Directors set id=LAST_INSERT_ID()");
+	    }
+	 }
+	 catch (std::exception& err) {
+	    Glib::ustring msg (_("Can't write director `%1'!\n\nReason: %2"));
+	    msg.replace (msg.find ("%1"), 2, director->name);
+	    msg.replace (msg.find ("%2"), 2, err.what ());
+	    throw (msg);
+	 }
+
+	 changedDirectors.erase (changedDirectors.begin ());
+      } // endwhile
+
+      while (changedMovies.size ()) {
+	 HMovie movie (changedMovies.begin ()->first); Check3 (movie.isDefined ());
+	 try {
+	    std::stringstream query;
+	    query << (movie->id ? "UPDATE Movies" : "INSERT into Movies")
+		  << " SET name=\"" << movie->name << "\", genre=" << movie->genre;
+	    if (movie->year.isDefined ())
+	       query << ", year=" << movie->year;
+	    if (relMovies.isRelated (movie)) {
+	       HDirector director (relMovies.getParent (movie)); Check3 (director.isDefined ());
+	       query << ", director=" << director->id;
+	    }
+	    if (movie->id)
+	       query << " WHERE id=" << movie->id;
+	    Database::store (query.str ().c_str ());
+
+	    if (!movie->id)
+	       movie->id = Database::getIDOfInsert ();
+	 }
+	 catch (std::exception& err) {
+	    Glib::ustring msg (_("Can't write movie `%1'!\n\nReason: %2"));
+	    msg.replace (msg.find ("%1"), 2, movie->name);
+	    msg.replace (msg.find ("%2"), 2, err.what ());
+	    throw (msg);
+	 }
+
+	 changedMovies.erase (changedMovies.begin ());
+      }
    }
    catch (Glib::ustring& msg) {
       Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
@@ -1146,6 +1228,31 @@ void CDManager::deleteSelectedSongs () {
    apMenus[SAVE]->set_sensitive (true);
 }
 
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
+   TRACE9 ("CDManager::pageSwitched (GtkNotebookPage*, guint) - " << iPage);
+   Check1 (iPage < 2);
+
+   static Gtk::UIManager::ui_merge_id idMrg (-1U);
+   if (idMrg != -1U)
+
+      apMenus[NEW_DIRECTOR]->show ();
+      apMenus[NEW_MOVIE]->show ();
+					   _("New _Director")),
+      apMenus[NEW_ARTIST]->hide ();
+      apMenus[NEW_RECORD]->hide ();
+      apMenus[NEW_SONG]->hide ();
+      ui += ("<menuitem action='NInterpret'/><menuitem action='NRecord'/>"
+	     "<menuitem action='NSong'/>");
+      apMenus[NEW_DIRECTOR]->hide ();
+      apMenus[NEW_MOVIE]->hide ();
+   idMrg = mgrUI->add_ui_from_string (ui);
+      apMenus[NEW_ARTIST]->show ();
+      apMenus[NEW_RECORD]->show ();
+      apMenus[NEW_SONG]->show ();
+
+//-----------------------------------------------------------------------------
 /// Exports the stored information to HTML documents
 //-----------------------------------------------------------------------------
 /// \param argv: Array with pointer to parameter

@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.6 2004/10/29 01:36:36 markus Exp $
+//$Id: CDManager.h,v 1.7 2004/10/30 14:47:03 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -91,6 +91,7 @@ class CDManager : public XGP::XApplication {
    virtual const char* getHelpfile ();
    void recordSelected ();
    void editRecord (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*);
+   void recordChanged (HRecord& hRecord);
 
    bool login (const Glib::ustring& user, const Glib::ustring& pwd);
    void loadDatabase ();

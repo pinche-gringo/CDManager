@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.7 2004/10/29 01:36:36 markus Exp $
+//$Id: CDManager.cpp,v 1.8 2004/10/30 14:47:03 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
-//TODO        : 
+//TODO        : Free handles in record listbox
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -342,7 +342,7 @@ void CDManager::command (int menu) {
 /// Saves the DB
    case NEW: {
       HRecord hRec;
-      RecordEdit::create (hRec);
+      TRecordEdit<CDManager>::create (*this, &CDManager::recordChanged, hRec);
       break; }
 
    case EDIT: {
@@ -571,8 +571,7 @@ void CDManager::loadDatabase () {
    }
 
    Check3 ((nb.get_current_page () >= 0) || (nb.get_current_page () < 2));
-   enableEdit (nb.get_current_page () ? cMovies : cRecords);
-
+   enableEdit (false);
    status.pop ();
 }
 
@@ -613,6 +612,7 @@ void CDManager::recordSelected () {
 	   i != relSongs.getObjects (hRecord).end (); ++i)
 	 addSong (*i);
       enableEdit (NONE_SELECTED);
+  enableEdit (list.size ());
 //-----------------------------------------------------------------------------
 /// Callback after selecting a movie
 /// \param row: Selected row
@@ -642,7 +642,8 @@ void CDManager::editRecord (const Gtk::TreeModel::Path& path, Gtk::TreeViewColum
 	 HRecord rec (getRecordAtPos (iter)); Check3 (rec.isDefined ());
 	 if (!relSongs.isRelated (rec))
 	    loadSongs (rec);
-	 RecordEdit::create (rec);
+
+	 TRecordEdit<CDManager>::create (*this, &CDManager::recordChanged, rec);
       }
    }
 }
@@ -695,6 +696,44 @@ HRecord& CDManager::getRecordAtPos (const Gtk::TreeIter& i) const {
    TRACE7 ("CDManager::getRecordAtPos (const Gtk::TreeIter&) - Selected record: " <<
 	   (*(HRecord*)phRec)->id << '/' << (*(HRecord*)phRec)->name);
    return *(HRecord*)phRec;
+}
+
+//-----------------------------------------------------------------------------
+/// Callback after editing a record
+/// \param hRecord: Edited record
+//-----------------------------------------------------------------------------
+void CDManager::recordChanged (HRecord& hRecord) {
+   Check1 (hRecord.isDefined ());
+
+   TRACE3 ("CDManager::recordChanged (int, HRecord&) - Changed record: "
+	   << hRecord->name);
+   Gtk::TreeModel::iterator line;
+   Gtk::TreeModel::iterator i (mRecords->children ().begin ());
+   for (; i != mRecords->children ().end (); ++i) {
+      Check1 (typeid (*((*i)[colRecords.entry])) == typeid (HInterpret));
+
+      for (line = i->children ().begin ();
+	   line != i->children ().end (); ++line) {
+	 HRecord hListRecord (getRecordAtPos (line));
+	 if (hListRecord == hRecord)
+	    break;
+      }
+      if (line != i->children ().end ())
+	 break;
+   }
+   if (i == mRecords->children ().end ()) {
+      line = mRecords->append ();
+      
+      line = line->append ();
+   }
+
+   (*line)[colRecords.name] = hRecord->name;
+   (*line)[colRecords.genre] = hRecord->genre;
+   if (hRecord->year) {
+      std::ostringstream ostr;
+      ostr << hRecord->year;
+      (*line)[colRecords.year] = ostr.str ();
+   }
 }
 
 /// Exports the stored information to HTML documents

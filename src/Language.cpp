@@ -1,11 +1,11 @@
-//$Id: Language.cpp,v 1.5 2005/01/13 19:19:09 markus Rel $
+//$Id: Language.cpp,v 1.6 2005/01/31 05:15:01 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Language
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 6.12.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -91,17 +91,17 @@ Language& Language::operator= (const Language& other) {
 //-----------------------------------------------------------------------------
 void Language::init (bool loadFlags) {
    Glib::RefPtr<Gdk::Pixbuf> null;
-   languages["de"] = Language (N_("German"), Glib::locale_to_utf8 ("Deutsch"),
+   languages["de"] = Language (_("German"), Glib::locale_to_utf8 ("Deutsch"),
 			       loadFlags ? loadFlag (DATADIR "de.png") : null);
-   languages["en"] = Language (N_("English"), Glib::locale_to_utf8 ("English"),
+   languages["en"] = Language (_("English"), Glib::locale_to_utf8 ("English"),
 			       loadFlags ? loadFlag (DATADIR "en.png") : null);
-   languages["es"] = Language (N_("Spanish"), Glib::locale_to_utf8 ("Español"),
+   languages["es"] = Language (_("Spanish"), Glib::locale_to_utf8 ("Español"),
 			       loadFlags ? loadFlag (DATADIR "es.png") : null);
-   languages["fr"] = Language (N_("French"), Glib::locale_to_utf8 ("Français"),
+   languages["fr"] = Language (_("French"), Glib::locale_to_utf8 ("Français"),
 			       loadFlags ? loadFlag (DATADIR "fr.png") : null);
-   languages["it"] = Language (N_("Italian"), Glib::locale_to_utf8 ("Italiano"),
+   languages["it"] = Language (_("Italian"), Glib::locale_to_utf8 ("Italiano"),
 			       loadFlags ? loadFlag (DATADIR "it.png") : null);
-   languages["pt"] = Language (N_("Portugese"), Glib::locale_to_utf8 ("Português"),
+   languages["pt"] = Language (_("Portugese"), Glib::locale_to_utf8 ("Português"),
 			       loadFlags ? loadFlag (DATADIR "pt.png") : null);
 }
 

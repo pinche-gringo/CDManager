@@ -1,11 +1,11 @@
-//$Id: CDWriter.cpp,v 1.7 2005/01/14 02:44:35 markus Exp $
+//$Id: CDWriter.cpp,v 1.8 2005/01/18 20:07:45 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDWriter
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -82,7 +82,7 @@ CDWriter::~CDWriter () {
 /// Displays the help
 //-----------------------------------------------------------------------------
 void CDWriter::showHelp () const {
-   std::cout << _("<SHORT DESCRIPTION>\n\nUsage: ") << PACKAGE_NAME
+   std::cout << _("Utitily to write HTML documents from data received\n\nUsage: ") << PACKAGE_NAME
              << _(" [OPTIONS] [LANGUAGE-ID]\n\n")
 	     << "  -d, --outputDir ..... " << _("Directory to export data to\n")
 	     << "  -r, --recHeader ..... " << _("File to use as header for records\n")

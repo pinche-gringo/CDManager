@@ -6,20 +6,20 @@ CREATE TABLE MGenres
      genre	VARCHAR(64)	NOT NULL,
      PRIMARY KEY (id));
 
-DROP TABLE Celibrities;
-CREATE TABLE Celibrities
+DROP TABLE Celebrities;
+CREATE TABLE Celebrities
     (name	VARCHAR (64)	NOT NULL,
      id		BIGINT UNSIGNED	NOT NULL AUTO_INCREMENT,
-     born	DATE            NOT NULL DEFAULT 0,
-     died	DATE            NOT NULL DEFAULT 0,
+     born	YEAR            NOT NULL DEFAULT 0,
+     died	YEAR            NOT NULL DEFAULT 0,
      PRIMARY KEY (id));
-CREATE INDEX names ON Celibrities (name);
+CREATE INDEX names ON Celebrities (name);
 
 DROP TABLE Directors;
 CREATE TABLE Directors
     (id		BIGINT UNSIGNED	NOT NULL,
      PRIMARY KEY (id),
-     FOREIGN KEY (celibrity_id) REFERENCES Celibrities(id) ON DELETE CASCADE);
+     FOREIGN KEY (celebrity_id) REFERENCES Celebrities(id) ON DELETE CASCADE);
 
 DROP TABLE Movies;
 CREATE TABLE Movies
@@ -28,6 +28,7 @@ CREATE TABLE Movies
      year	YEAR            NOT NULL DEFAULT 0,
      director	BIGINT UNSIGNED NOT NULL DEFAULT 0,
      genre      BIGINT UNSIGNED NOT NULL DEFAULT 0,
+     type       INT UNSIGNED    NOT NULL DEFAULT 0,
      PRIMARY KEY (id),
      FOREIGN KEY (genre_id) REFERENCES MGenres(id) ON DELETE SET NULL,
      FOREIGN KEY (director_id) REFERENCES Directors(id) ON DELETE SET NULL);
@@ -37,7 +38,7 @@ DROP TABLE Actors;
 CREATE TABLE Actors
     (id		BIGINT UNSIGNED	NOT NULL,
      PRIMARY KEY (id),
-     FOREIGN KEY (celibrity_id) REFERENCES Celibrities(id) ON DELETE CASCADE);
+     FOREIGN KEY (celebrity_id) REFERENCES Celebrities(id) ON DELETE CASCADE);
 
 DROP TABLE ActorsInMovies;
 CREATE TABLE ActorsInMovies
@@ -56,7 +57,7 @@ DROP TABLE Interprets;
 CREATE TABLE Interprets
     (id		BIGINT UNSIGNED	NOT NULL,
      PRIMARY KEY (id),
-     FOREIGN KEY (celibrity_id) REFERENCES Celibrities(id) ON DELETE CASCADE);
+     FOREIGN KEY (celebrity_id) REFERENCES Celebrities(id) ON DELETE CASCADE);
 
 DROP TABLE Records;
 CREATE TABLE Records

@@ -1,11 +1,11 @@
-//$Id: Words.cpp,v 1.2 2004/12/04 04:06:21 markus Exp $
+//$Id: Words.cpp,v 1.3 2004/12/05 17:06:47 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Celebrity
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -71,7 +71,7 @@ Glib::ustring Words::getWord (const Glib::ustring& text) {
    unsigned int i (-1U);
    while (++i < text.size ())
       if (isspace (text[i]) || (text[i] == '-'))
-      if (!isalnum (text[i]))
+	  break;
 
    TRACE9 ("Words::getWord (const Glib::ustring&) - '" << text.substr (0, i) << '\'');
    return text.substr (0, i);

@@ -1,11 +1,11 @@
-//$Id: RecEdit.cpp,v 1.4 2004/10/27 03:45:14 markus Exp $
+//$Id: RecEdit.cpp,v 1.5 2004/10/28 19:11:52 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : RecordEdit
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 17.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -27,12 +27,14 @@
 
 #include <cdmgr-cfg.h>
 
+#include <vector>
+#include <sstream>
+
 #include <gtkmm/label.h>
 #include <gtkmm/table.h>
 #include <gtkmm/entry.h>
 #include <gtkmm/combobox.h>
 #include <gtkmm/treeview.h>
-#include <gtkmm/spinbutton.h>
 #include <gtkmm/adjustment.h>
 #include <gtkmm/messagedialog.h>
 
@@ -54,7 +56,7 @@
 //-----------------------------------------------------------------------------
 RecordEdit::RecordEdit (HRecord record)
    : XGP::XDialog (OKCANCEL), pClient (manage (new Gtk::Table (5, 3, false))),
-     txtRecord (manage (new class Gtk::Entry ())),
+     txtRecord (NULL),
      optArtist (manage (new Gtk::ComboBox ())),
      optGenre (manage (new Gtk::ComboBox ())),
      lstSongs (manage (new Gtk::TreeView ())),
@@ -64,12 +66,20 @@ RecordEdit::RecordEdit (HRecord record)
      mSongs (Gtk::ListStore::create (colSongs)) {
    set_title (_("Edit Record"));
 
+   if (!hRecord.isDefined ())
+      hRecord.define ();
+
+   txtRecord = manage (new XGP::XAttributeEntry<Glib::ustring> (hRecord->name));
+
    Gtk::Label* lblRecord (manage (new Gtk::Label (_("_Record name:"), true)));
    Gtk::Label* lblArtist (manage (new Gtk::Label (_("_Artist:"), true)));
    Gtk::Label* lblYear (manage (new Gtk::Label (_("_Year:"), true)));
    Gtk::Label* lblGenre (manage (new Gtk::Label (_("_Genre:"), true)));
    Gtk::Adjustment* spinYear_adj (manage (new Gtk::Adjustment (2000.0, 1900.0, 3000.0, 1.0, 10.0, 4.0)));
-   spinYear = manage (new Gtk::SpinButton (*spinYear_adj, 1, 4));
+   spinYear = manage (new XGP::XAttributeEntry<unsigned int, Gtk::SpinButton> (hRecord->year));
+
+   spinYear->set_adjustment (*spinYear_adj);
+   spinYear->set_increments (1.0, 10.0);
 			 
    lblRecord->set_justify (Gtk::JUSTIFY_LEFT);
    lblArtist->set_justify (Gtk::JUSTIFY_LEFT);
@@ -154,11 +164,76 @@ RecordEdit::~RecordEdit () {
 /// Handling of the OK button; closes the dialog with commiting data
 //-----------------------------------------------------------------------------
 void RecordEdit::okEvent () {
-   if (hRecord.isDefined ())
+   if (!hRecord.isDefined ()) {
       hRecord.define ();
+      hRecord->id = 0;
+   }
 
-   hRecord->name = txtRecord->get_text ();
-   hRecord->year = spinYear->get_value_as_int ();
+   std::stringstream update;
+   if (txtRecord->hasChanged ()) {
+      txtRecord->commit ();
+      update << "name=\"" << Glib::locale_from_utf8 (hRecord->name) << "\" ";
+   }
+
+   if (hRecord->year != (unsigned int)spinYear->get_value_as_int ()) {
+      hRecord->year = spinYear->get_value_as_int ();
+      if (update.str ().size ())
+	 update << ", ";
+      update << "year=" << hRecord->year << ' ';
+   }
+
+   Check3 (optGenre->get_active ());
+   Check3 (*optGenre->get_active ());
+   Glib::ustring genre ((*optGenre->get_active ())[colGenres.colName]);
+   if (hRecord->genre != genre) {
+      if (update.str ().size ())
+	 update << ", ";
+      update << "genre=\"" << (*optGenre->get_active ())[colGenres.colID] << "\" ";
+   }
+
+   YGP::Relation1_N<HInterpret, HRecord>* rel;
+   Check3 (YGP::RelationManager::getRelation ("records"));
+   Check3 (typeid (*YGP::RelationManager::getRelation ("records"))
+	   == typeid (YGP::Relation1_N<HInterpret, HRecord>));
+
+   rel = (dynamic_cast<YGP::Relation1_N<HInterpret, HRecord>*>
+	  (YGP::RelationManager::getRelation ("records")));
+   Check3 (rel);
+
+   HInterpret hArtist (rel->getParent (hRecord));
+   Check3 (hArtist.isDefined ());
+   TRACE5 ("RecordEdit::okEvent () - Artist: "
+	   << (hArtist.isDefined () ? hArtist->name.c_str () : "None"));
+
+   Check3 (optArtist->get_active ());
+   Check3 (*optArtist->get_active ());
+   unsigned long int idArtist ((*optArtist->get_active ())[colArtists.colID]);
+   if (hArtist->id != idArtist) {
+      hArtist->name = (*optArtist->get_active ())[colArtists.colName];
+      hArtist->id = idArtist;
+      if (update.str ().size ())
+	 update << ", ";
+      update << "interpret=\"" << hArtist->id << "\" ";
+   }
+
+   if (update.str ().size ()) {
+      try {
+	 std::stringstream query;
+	 if (hRecord->id)
+	    query << "UPDATE Records SET " << update.str () << "WHERE id="
+		  << hRecord->id;
+	 else
+	    query << "INSERT into Records SET " << update;
+	 Database::store (query.str ().c_str ());
+
+      }
+      catch (std::exception& err) {
+	 Glib::ustring msg (_("Can't actualize database!\n\nReason: %1"));
+	 msg.replace (msg.find ("%1"), 2, err.what ());
+	 Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+	 dlg.run ();
+      }
+   }
 }
 
 

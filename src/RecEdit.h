@@ -1,7 +1,7 @@
 #ifndef RECEDIT_H
 #define RECEDIT_H
 
-//$Id: RecEdit.h,v 1.4 2004/10/27 03:45:14 markus Exp $
+//$Id: RecEdit.h,v 1.5 2004/10/28 19:11:52 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,13 +26,14 @@
 #include "Record.h"
 
 #include <XGP/XDialog.h>
+#include <XGP/XAttrEntry.h>
+
 
 namespace Gtk {
    class Table;
    class Entry;
    class ComboBox;
    class TreeView;
-   class SpinButton;
 }
 
 
@@ -59,8 +60,8 @@ class RecordEdit : public XGP::XDialog {
 
    Gtk::Table* pClient;
 
-   Gtk::Entry*      txtRecord;
-   Gtk::SpinButton* spinYear;
+   XGP::XAttributeEntry<Glib::ustring>*                 txtRecord;
+   XGP::XAttributeEntry<unsigned int, Gtk::SpinButton>* spinYear;
    Gtk::ComboBox*   optArtist;
    Gtk::ComboBox*   optGenre;
    Gtk::TreeView*   lstSongs;
@@ -72,8 +73,8 @@ class RecordEdit : public XGP::XDialog {
       ArtistColumns () {
 	 add (colID); add (colName); }
 
-      Gtk::TreeModelColumn<int>           colID;
-      Gtk::TreeModelColumn<Glib::ustring> colName;
+      Gtk::TreeModelColumn<unsigned long int> colID;
+      Gtk::TreeModelColumn<Glib::ustring>     colName;
    };
    ArtistColumns colArtists;
    Glib::RefPtr<Gtk::ListStore> mArtists;
@@ -83,8 +84,8 @@ class RecordEdit : public XGP::XDialog {
       GenreColumns () {
 	 add (colID); add (colName); }
 
-      Gtk::TreeModelColumn<int>           colID;
-      Gtk::TreeModelColumn<Glib::ustring> colName;
+      Gtk::TreeModelColumn<unsigned long int> colID;
+      Gtk::TreeModelColumn<Glib::ustring>     colName;
    };
    GenreColumns colGenres;
    Glib::RefPtr<Gtk::ListStore> mGenres;

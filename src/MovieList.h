@@ -1,7 +1,7 @@
 #ifndef MOVIELIST_H
 #define MOVIELIST_H
 
-//$Id: MovieList.h,v 1.7 2004/12/09 03:19:46 markus Exp $
+//$Id: MovieList.h,v 1.8 2004/12/11 22:55:05 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -36,8 +36,9 @@ class CellRendererList;
 class MovieColumns : public OwnerObjectColumns {
  public:
    MovieColumns () : OwnerObjectColumns () {
-      add (type); add (lang1); add (lang2); add (lang3); add (lang4); add (lang5);
-      add (sub1); add (sub2); add (sub3); add (sub4); add (sub5); add (sub6); }
+      add (type); add (lang1); add (lang2); add (lang3); add (lang4);
+      add (lang5); add (langs); add (sub1); add (sub2); add (sub3); add (sub4);
+      add (sub5); add (sub6); }
 
    Gtk::TreeModelColumn<Glib::ustring>              type;
    Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > lang1;
@@ -45,6 +46,7 @@ class MovieColumns : public OwnerObjectColumns {
    Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > lang3;
    Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > lang4;
    Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > lang5;
+   Gtk::TreeModelColumn<unsigned int>               langs;
    Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > sub1;
    Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > sub2;
    Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > sub3;
@@ -88,7 +90,7 @@ class MovieList : public OwnerObjectList {
    MovieList (const MovieList& other);
    const MovieList& operator= (const MovieList& other);
 
-   MovieColumns colMovies;
+   MovieColumns    colMovies;
 };
 
 

@@ -1,11 +1,11 @@
-//$Id: Genres.cpp,v 1.2 2005/01/29 21:28:52 markus Exp $
+//$Id: Genres.cpp,v 1.3 2005/01/29 22:30:15 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : libCDMgr
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 13.01.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -29,7 +29,10 @@
 
 #include <string>
 
+#include <glibmm/convert.h>
+
 #include <YGP/Check.h>
+#include <YGP/Trace.h>
 #include <YGP/INIFile.h>
 #include <YGP/Tokenize.h>
 
@@ -60,6 +63,7 @@ void Genres::loadFromFile (const char* file, Genres& records, Genres& movies,
       do {
 	 search = name + std::string (1, '.') + extension;
 
+	 TRACE9 ("Genres::loadFromFile (...) - Trying " << search);
 	 if (!::stat (search.c_str (), &sfile) && (sfile.st_mode & S_IFREG))
 	    break;
 
@@ -70,6 +74,7 @@ void Genres::loadFromFile (const char* file, Genres& records, Genres& movies,
       } while (extension.size ());
 
       if (extension.size ()) {
+	 TRACE1 ("Genres::loadFromFile (...) - Using " << search);
 	 name = search;
 	 break;
       }
@@ -84,4 +89,13 @@ void Genres::loadFromFile (const char* file, Genres& records, Genres& movies,
    _inifile_.addSection (lstRecords);
 
    _inifile_.read ();
+
+   // Convert the strings to UTF8
+   for (std::map<unsigned int, Glib::ustring>::iterator r (records.begin ());
+	r != records.end (); ++r)
+      r->second = Glib::locale_to_utf8 (r->second);
+
+   for (std::map<unsigned int, Glib::ustring>::iterator m (movies.begin ());
+	m != movies.end (); ++m)
+      m->second = Glib::locale_to_utf8 (m->second);
 }

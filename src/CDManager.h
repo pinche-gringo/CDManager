@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.20 2004/11/26 04:07:23 markus Exp $
+//$Id: CDManager.h,v 1.21 2004/11/27 04:20:11 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -77,6 +77,8 @@ class CDManager : public XGP::XApplication {
    void enableEdit (SELECTED selected);
    bool login (const Glib::ustring& user, const Glib::ustring& pwd);
    void loadDatabase ();
+   void loadRecords ();
+   void loadMovies ();
    void enableMenus (bool enable);
    void loadSongs (const HRecord& record);
 
@@ -113,7 +115,6 @@ class CDManager : public XGP::XApplication {
    YGP::Relation1_N<HRecord, HSong>      relSongs;
 
    Gtk::Notebook  nb;
-   Gtk::HPaned    cds;
 
    SongList                     songs;
    MovieList                    movies;
@@ -132,6 +133,8 @@ class CDManager : public XGP::XApplication {
    std::map<HInterpret, HInterpret> changedInterprets;
    std::map<HMovie, HMovie>         changedMovies;
    std::map<HDirector, HDirector>   changedDirectors;
+
+   unsigned int loadedPages;
 };
 
 #endif

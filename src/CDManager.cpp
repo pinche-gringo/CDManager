@@ -1,10 +1,10 @@
-//$Id: CDManager.cpp,v 1.23 2004/11/26 04:07:23 markus Exp $
+//$Id: CDManager.cpp,v 1.24 2004/11/27 04:20:11 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //BUGS        :
-//REVISION    : $Revision: 1.23 $
+//REVISION    : $Revision: 1.24 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -284,7 +284,7 @@ XGP::XApplication::MenuEntry CDManager::menuItems[] = {
 CDManager::CDManager ()
      movies (movieGenres), records (recGenres), loadedPages (-1U),
      relRecords ("records"), relSongs ("songs"), songs (genres), movies (mgenres),
-     records (genres) {
+     records (genres), loadedPages (-1U) {
    Language::init ();
 
 
@@ -314,7 +314,9 @@ CDManager::CDManager ()
    TRACE9 ("CDManager::CDManager () - Add NB");
    Gtk::HPaned* cds (new Gtk::HPaned);
 
-   nb.append_page (cds, _("_Records"), true);
+   nb.append_page (*manage (cds), _("_Records"), true);
+   nb.append_page (*manage (scrlMovies), _("_Movies"), true);
+   nb.signal_switch_page ().connect (mem_fun (*this, &CDManager::pageSwitched));
 
    songs.get_selection ()->set_mode (Gtk::SELECTION_EXTENDED);
    songs.signalChanged.connect (mem_fun (*this, &CDManager::songChanged));
@@ -333,9 +335,9 @@ CDManager::CDManager ()
    recordSel->signal_changed ().connect
       (mem_fun (*this, &CDManager::recordSelected));
    cds->add1 (*manage (scrlRecords));
-   cds.set_position ((WIDTH - 20) >> 1);
-   cds.add1 (*manage (scrlRecords));
-   cds.add2 (*manage (scrlSongs));
+   cds->add2 (*manage (scrlSongs));
+
+   status.push (_("Connect to a database ..."));
 
    apMenus[SAVE]->set_sensitive (false);
 
@@ -530,6 +532,7 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 
    enableMenus (true);
 
+   loadedPages = 0;
    Glib::signal_idle ().connect
       (bind_return (mem_fun (*this, &CDManager::loadDatabase), false));
 
@@ -589,8 +592,7 @@ void CDManager::enableMenus (bool enable) {
    apMenus[EXPORT]->set_sensitive (enable);
    apMenus[IMPORT_MP3]->set_sensitive (enable);
 
-   cds.set_sensitive (enable);
-   movies.set_sensitive (enable);
+   apMenus[LOGIN]->set_sensitive (enable = !enable);
    apMenus[SAVE]->set_sensitive (enable);
 }
 
@@ -619,12 +621,28 @@ void CDManager::loadDatabase () {
    status.push (_("Reading database ..."));
 
    if (nb.get_current_page ()) {
-   movies.clear ();
-   records.clear ();
       loadMovies ();
-   std::vector<HInterpret> artists;
-   unsigned long int cRecords (0), cMovies (0);
+   if (nb.get_current_page ())
+   }
+   else
+   }
+
+   enableEdit (NONE_SELECTED);
+//-----------------------------------------------------------------------------
+/// Callback after selecting a record
+/// \param row: Selected row
+/// Loads the records from the database
+///
+/// According to the available information the pages of the notebook
+/// are created.
+//-----------------------------------------------------------------------------
+void CDManager::loadRecords () {
+   TRACE9 ("CDManager::loadRecords ()");
    try {
+      records.clear ();
+
+      std::vector<HInterpret> artists;
+      unsigned long int cRecords (0);
       Database::store ("SELECT i.id, c.name, c.born, c.died FROM Interprets i,"
 		       " Celebrities c WHERE c.id = i.id");
 
@@ -691,6 +709,21 @@ void CDManager::loadDatabase () {
 	 } // end-for all artists
 	 records.expand_all ();
       } // end-if database contains records
+
+      loadedPages |= 1;
+
+      records.grab_focus ();
+
+      Glib::ustring msg (_("%1 %2"));
+      Glib::ustring tmp (_("Loaded %1 records"));
+      tmp.replace (tmp.find ("%1"), 2, YGP::ANumeric::toString (cRecords));
+      msg.replace (msg.find ("%1"), 2, tmp);
+
+      tmp = _("(from %1 artist(s))");
+      tmp.replace (tmp.find ("%1"), 2, YGP::ANumeric::toString (artists.size ()));
+      msg.replace (msg.find ("%2"), 2, tmp);
+      status.pop ();
+      status.push (msg);
    }
    catch (std::exception& err) {
       Glib::ustring msg (_("Can't query available records!\n\nReason: %1"));
@@ -698,9 +731,20 @@ void CDManager::loadDatabase () {
       Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
       dlg.run ();
    }
+}
 
+//-----------------------------------------------------------------------------
+/// Loads the movies from the database
+///
+/// According to the available information the pages of the notebook
+/// are created.
+//-----------------------------------------------------------------------------
+void CDManager::loadMovies () {
+   TRACE9 ("CDManager::loadMovies ()");
    try {
-      std::vector<HInterpret> directors;
+      movies.clear ();
+      std::vector<HDirector> directors;
+      unsigned int cMovies (0);
 
       // Load data from movies table
       Database::store ("SELECT d.id, c.name, c.born, c.died FROM Directors d, "
@@ -717,8 +761,6 @@ void CDManager::loadDatabase () {
 	 hDirector->id = Database::getResultColumnAsUInt (0);
 	 hDirector->name = Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
 
-	 TRACE9 ("Born: " << Database::getResultColumnAsString (2));
-	 TRACE9 ("Died: " << Database::getResultColumnAsString (3));
 	 std::string tmp (Database::getResultColumnAsString (2));
 	 if (tmp != "0000")
 	    hDirector->born = tmp;
@@ -775,6 +817,15 @@ void CDManager::loadDatabase () {
       } // end-if database contains records
 
       movies.expand_all ();
+
+      movies.grab_focus ();
+
+      Glib::ustring msg (_("Loaded %1 movies"));
+      msg.replace (msg.find ("%1"), 2, YGP::ANumeric::toString (cMovies));
+      status.pop ();
+      status.push (msg);
+
+      loadedPages |= 2;
    }
    catch (std::exception& err) {
       Glib::ustring msg (_("Can't query available movies!\n\nReason: %1"));
@@ -782,26 +833,6 @@ void CDManager::loadDatabase () {
       Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
       dlg.run ();
    }
-
-   Check3 ((nb.get_current_page () >= 0) || (nb.get_current_page () < 2));
-   if (nb.get_current_page () == 0)
-      records.grab_focus ();
-   enableEdit (NONE_SELECTED);
-
-   Glib::ustring msg (_("%1 %2 %3"));
-   Glib::ustring tmp (_("Loaded %1 records"));
-   tmp.replace (tmp.find ("%1"), 2, YGP::ANumeric::toString (cRecords));
-   msg.replace (msg.find ("%1"), 2, tmp);
-
-   tmp = _("(from %1 artist(s))");
-   tmp.replace (tmp.find ("%1"), 2, YGP::ANumeric::toString (artists.size ()));
-   msg.replace (msg.find ("%2"), 2, tmp);
-
-   tmp = _("and %1 movie(s)");
-   tmp.replace (tmp.find ("%1"), 2, YGP::ANumeric::toString (cMovies));
-   msg.replace (msg.find ("%3"), 2, tmp);
-   status.pop ();
-   status.push (msg);
 }
 
 //-----------------------------------------------------------------------------
@@ -1279,6 +1310,9 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
       apMenus[NEW_ARTIST]->show ();
       apMenus[NEW_RECORD]->show ();
       apMenus[NEW_SONG]->show ();
+
+      loadDatabase ();
+}
 
 //-----------------------------------------------------------------------------
 /// Exports the stored information to HTML documents

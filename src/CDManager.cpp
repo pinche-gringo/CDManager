@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.45 2005/01/29 19:54:46 markus Exp $
+//$Id: CDManager.cpp,v 1.46 2005/01/31 05:11:59 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.45 $
+//REVISION    : $Revision: 1.46 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -35,6 +35,7 @@
 #include <gtkmm/box.h>
 #include <gtkmm/stock.h>
 #include <gtkmm/label.h>
+#include <gtkmm/radioaction.h>
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/scrolledwindow.h>
 
@@ -62,7 +63,7 @@
 #define storeObject(store, type, obj) \
    if (store.find (obj) == store.end ()) {\
       store[obj] = new type (*obj);\
-      apMenus[SAVE]->set_sensitive (true);\
+      apMenus[SAVE]->set_sensitive ();\
    }
 
 // Macro to define a callback to handle changing an entity (record, movie, ...)
@@ -273,7 +274,7 @@ CDManager::CDManager (Options& options)
      relRecords ("records"), relSongs ("songs"), songs (recGenres),
      movies (movieGenres), records (recGenres), loadedPages (-1U),
      opt (options) {
-   TRACE9 ("CDManager::CDManager ()");
+   TRACE9 ("CDManager::CDManager (Options&)");
 
    Language::init ();
 
@@ -303,31 +304,31 @@ CDManager::CDManager (Options& options)
 		     "  </menu>");
 
    grpAction->add (Gtk::Action::create ("CD", _("_CD")));
-   grpAction->add (Gtk::Action::create ("Login", _("_Login")),
+   grpAction->add (apMenus[LOGIN] = Gtk::Action::create ("Login", _("_Login")),
 		   Gtk::AccelKey ("<ctl>L"),
 		   mem_fun (*this, &CDManager::showLogin));
-   grpAction->add (Gtk::Action::create ("SaveDB", Gtk::Stock::SAVE),
+   grpAction->add (apMenus[SAVE] = Gtk::Action::create ("SaveDB", Gtk::Stock::SAVE),
 		   mem_fun (*this, &CDManager::save));
-   grpAction->add (Gtk::Action::create ("Logout", _("Log_out")),
+   grpAction->add (apMenus[LOGOUT] = Gtk::Action::create ("Logout", _("Log_out")),
 		   Gtk::AccelKey ("<ctl>O"),
 		   mem_fun (*this, &CDManager::logout));
-   grpAction->add (Gtk::Action::create ("Export", _("_Export to HTML")),
+   grpAction->add (apMenus[EXPORT] = Gtk::Action::create ("Export", _("_Export to HTML")),
 		   Gtk::AccelKey ("<ctl>E"),
-		   mem_fun (*this, &CDManager::exportData));
-   grpAction->add (Gtk::Action::create ("Import", _("_Import from MP3-info ...")),
+		   mem_fun (*this, &CDManager::exportToHTML));
+   grpAction->add (apMenus[IMPORT_MP3] = Gtk::Action::create ("Import", _("_Import from MP3-info ...")),
 		   Gtk::AccelKey ("<ctl>I"),
 		   mem_fun (*this, &CDManager::importFromMP3));
    grpAction->add (Gtk::Action::create ("FQuit", Gtk::Stock::QUIT),
 		   mem_fun (*this, &CDManager::hide));
-   grpAction->add (Gtk::Action::create ("Edit", _("_Edit")));
-   grpAction->add (Gtk::Action::create ("Delete", Gtk::Stock::DELETE,_("_Delete")),
+   grpAction->add (apMenus[MEDIT] = Gtk::Action::create ("Edit", _("_Edit")));
+   grpAction->add (apMenus[DELETE] = Gtk::Action::create ("Delete", Gtk::Stock::DELETE,_("_Delete")),
 		   Gtk::AccelKey (_("<ctl>Delete")),
 		   mem_fun (*this, &CDManager::deleteSelection));
    grpAction->add (Gtk::Action::create ("Options", _("_Options")));
    grpAction->add (Gtk::Action::create ("Prefs", Gtk::Stock::PREFERENCES),
 		   Gtk::AccelKey (_("F9")),
 		   mem_fun (*this, &CDManager::editPreferences));
-   grpAction->add (Gtk::Action::create ("SavePrefs", _("_Save preferences")),
+   grpAction->add (apMenus[SAVE_PREFS] = Gtk::Action::create ("SavePrefs", _("_Save preferences")),
 		   Gtk::AccelKey (_("<ctl>F9")),
 		   mem_fun (*this, &CDManager::savePreferences));
 
@@ -337,16 +338,7 @@ CDManager::CDManager (Options& options)
    add_accel_group (mgrUI->get_accel_group ());
    mgrUI->add_ui_from_string (ui);
 
-   apMenus[LOGIN]  = mgrUI->get_widget("/Menu/CD/Login"); Check3 (apMenus[LOGIN]);
-   apMenus[SAVE]   = mgrUI->get_widget("/Menu/CD/SaveDB"); Check3 (apMenus[SAVE]);
-   apMenus[LOGOUT] = mgrUI->get_widget("/Menu/CD/Logout"); Check3 (apMenus[LOGOUT]);
-
-   apMenus[EXPORT]     = mgrUI->get_widget("/Menu/CD/Export"); Check3 (apMenus[EXPORT]);
-   apMenus[IMPORT_MP3] = mgrUI->get_widget("/Menu/CD/Import"); Check3 (apMenus[IMPORT_MP3]);
-
-   apMenus[MEDIT]        = mgrUI->get_widget("/Menu/Edit"); Check3 (apMenus[MEDIT]);
-   apMenus[DELETE]       = mgrUI->get_widget("/Menu/Edit/Delete"); Check3 (apMenus[DELETE]);
-
+   Check3 (mgrUI->get_widget("/Menu/Help"));
    ((Gtk::MenuItem*)(mgrUI->get_widget("/Menu/Help")))->set_right_justified ();
 
    enableMenus (false);
@@ -369,7 +361,7 @@ CDManager::CDManager (Options& options)
    scrlMovies->set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
    scrlRecords->set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
 
-   TRACE9 ("CDManager::CDManager () - Add NB");
+   TRACE9 ("CDManager::CDManager (Options&) - Add NB");
    Gtk::HPaned* cds (new Gtk::HPaned);
 
    nb.append_page (*manage (cds), _("_Records"), true);
@@ -401,7 +393,7 @@ CDManager::CDManager (Options& options)
 
    apMenus[SAVE]->set_sensitive (false);
 
-   TRACE9 ("CDManager::CDManager () - Show");
+   TRACE9 ("CDManager::CDManager (Options&) - Show");
    show_all_children ();
    show ();
 
@@ -560,6 +552,7 @@ void CDManager::enableMenus (bool enable) {
    apMenus[MEDIT]->set_sensitive (enable);
    apMenus[EXPORT]->set_sensitive (enable);
    apMenus[IMPORT_MP3]->set_sensitive (enable);
+   apMenus[SAVE_PREFS]->set_sensitive (enable);
 
    nb.set_sensitive (enable);
 
@@ -742,54 +735,63 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 
    Glib::RefPtr<Gtk::ActionGroup> grpAction (Gtk::ActionGroup::create ());
    if (iPage) {
-      ui += "<menuitem action='NDirector'/><menuitem action='NMovie'/>";
+      if (!(loadedPages & (1 << iPage)))
+	 loadDatabase ();
 
-      grpAction->add (Gtk::Action::create ("NDirector", Gtk::Stock::NEW,
-					   _("New _Director")),
+      ui += ("<menuitem action='NDirector'/><menuitem action='NMovie'/>"
+	     "<separator/><menu action='Lang'><menuitem action='Orig'/>");
+
+      grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NDirector", Gtk::Stock::NEW,
+							   _("New _Director")),
 		      Gtk::AccelKey (_("<ctl>N")),
 		      mem_fun (*this, &CDManager::newDirector));
-      grpAction->add (Gtk::Action::create ("NMovie", _("_New Movie")),
+      grpAction->add (apMenus[NEW2] = Gtk::Action::create ("NMovie", _("_New Movie")),
 		      Gtk::AccelKey (_("<ctl><alt>N")),
 		      mem_fun (*this, &CDManager::newMovie));
+      apMenus[NEW3].clear ();
+
+      Gtk::RadioButtonGroup grpLang;
+      grpAction->add (Gtk::Action::create ("Lang", _("_Language")));
+      grpAction->add (Gtk::RadioAction::create (grpLang, "Orig", _("Original name")),
+		      bind (mem_fun (*this, &CDManager::changeLanguage), ""));
+
+      for (std::map<std::string, Language>::const_iterator i (Language::begin ());
+	   i != Language::end (); ++i) {
+	 TRACE9 ("CDManager::CDManager (Options&) - Adding language " << i->first);
+	 ui += "<menuitem action='" + i->first + "'/>";
+
+	 Glib::RefPtr<Gtk::RadioAction> act
+	    (Gtk::RadioAction::create (grpLang, i->first, i->second.getInternational ()));
+	 TRACE1 ("Langs: " << i->first << " - " << Movie::currLang);
+	 grpAction->add (act, bind (mem_fun (*this, &CDManager::changeLanguage), i->first));
+	 if (i->first == Movie::currLang)
+	    act->set_active ();
+      }
+      ui += "</menu>";
+
+      movieSelected ();
    }
    else {
       ui += ("<menuitem action='NInterpret'/><menuitem action='NRecord'/>"
 	     "<menuitem action='NSong'/>");
 
-      grpAction->add (Gtk::Action::create ("NInterpret", Gtk::Stock::NEW,
-					   _("New _Interpret")),
+      grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NInterpret", Gtk::Stock::NEW,
+							   _("New _Interpret")),
 		      Gtk::AccelKey (_("<ctl>N")),
 		      mem_fun (*this, &CDManager::newInterpret));
-      grpAction->add (Gtk::Action::create ("NRecord", _("_New Record")),
+      grpAction->add (apMenus[NEW2] = Gtk::Action::create ("NRecord", _("_New Record")),
 		      Gtk::AccelKey (_("<ctl><alt>N")),
 		      mem_fun (*this, &CDManager::newRecord));
-      grpAction->add (Gtk::Action::create ("NSong", _("New _Song")),
+      grpAction->add (apMenus[NEW3] = Gtk::Action::create ("NSong", _("New _Song")),
 		      Gtk::AccelKey (_("<ctl><shft>N")),
 		      mem_fun (*this, &CDManager::newSong));
+
+      recordSelected ();
    }
    ui += "</placeholder></menu></menubar>";
 
    mgrUI->insert_action_group (grpAction);
    idMrg = mgrUI->add_ui_from_string (ui);
-
-   if (iPage) {
-      apMenus[NEW1] = mgrUI->get_widget ("/Menu/Edit/List/NDirector");
-      apMenus[NEW2] = mgrUI->get_widget ("/Menu/Edit/List/NMovie");
-      apMenus[NEW3] = NULL;
-
-      movieSelected ();
-   }
-   else {
-      apMenus[NEW1] = mgrUI->get_widget ("/Menu/Edit/List/NInterpret");
-      apMenus[NEW2] = mgrUI->get_widget ("/Menu/Edit/List/NRecord");
-      apMenus[NEW3] = mgrUI->get_widget ("/Menu/Edit/List/NSong"); Check3 (apMenus[NEW3]);
-
-      recordSelected ();
-   }
-   Check3 (apMenus[NEW1]); Check3 (apMenus[NEW2]);
-
-   if (!(loadedPages & (1 << iPage)))
-      loadDatabase ();
 }
 
 //-----------------------------------------------------------------------------
@@ -827,9 +829,12 @@ void CDManager::exportData () throw (Glib::ustring) {
 
    YGP::Tokenize langs (LANGUAGES);
    std::string lang;
+   std::string tmpLang (Movie::currLang);
    while ((lang = langs.getNextNode (' ')).size ()) {
-      TRACE1 ("CDManager::exportData (const Options&, std::map&, std::vector&) - Lang: "
-	      << lang);
+      TRACE1 ("CDManager::exportData (const Options&, std::map&, std::vector&) - Lang: " << lang);
+      if (!loadedLangs[lang])
+	 loadMovies (lang);
+
       setenv ("LANGUAGE", lang.c_str (), true);
       int pipes[2];
       const char* args[] = { "CDWriter", "--outputDir", opt.getDirOutput ().c_str (),
@@ -849,6 +854,7 @@ void CDManager::exportData () throw (Glib::ustring) {
       }
 
       // Write movie-information
+      Movie::currLang = lang;
       for (std::vector<HDirector>::const_iterator i (directors.begin ());
 	   i != directors.end (); ++i)
 	 if (relMovies.isRelated (*i)) {
@@ -864,6 +870,7 @@ void CDManager::exportData () throw (Glib::ustring) {
 	    TRACE9 ("CDManager::export () - Writing: " << output.str ());
 	    ::write (pipes[1], output.str ().data (), output.str ().size ());
 	 }
+      Movie::currLang = tmpLang;
 
       // Write record-information
       for (std::vector<HInterpret>::const_iterator i (artists.begin ());
@@ -1061,4 +1068,25 @@ Gtk::TreeIter CDManager::addSong (HSong& song) {
    songs.get_selection ()->select (p);
    songChanged (song);
    return p;
+}
+
+//-----------------------------------------------------------------------------
+/// Changes the language in which the movies are displayed
+/// \param lang: Lanuage in which the movies should be displayed
+//-----------------------------------------------------------------------------
+void CDManager::changeLanguage (const std::string& lang) {
+   Check3 (lang.empty () || (lang.size () == 2));
+
+   static bool ignore (false);                  // Ignore de-selecting an entry
+   ignore = !ignore;
+   TRACE1 ("CDManager::changeLanguage (const std::string&) - " << lang << ": "
+	   << (ignore ? "True" : "False"));
+   if (ignore)
+      return;
+
+   Movie::currLang = lang;
+   if ((lang.size () == 2) && !loadedLangs[lang])
+      loadMovies (lang);
+
+   movies.update (lang);
 }

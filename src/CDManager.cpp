@@ -1,10 +1,10 @@
-//$Id: CDManager.cpp,v 1.16 2004/11/12 03:57:39 markus Exp $
+//$Id: CDManager.cpp,v 1.17 2004/11/14 21:25:01 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //BUGS        :
-//REVISION    : $Revision: 1.16 $
+//REVISION    : $Revision: 1.17 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -231,9 +231,10 @@ XGP::XApplication::MenuEntry CDManager::menuItems[] = {
     { "",                   "",                0  ,        SEPARATOR },
     { _("E_xit"),           _("<ctl>Q"),       EXIT,       ITEM },
     { _("_Edit"),           _("<alt>E"),       MEDIT,      BRANCH },
-    { _("_New Interpret"),  _("<ctl>N"),       NEW_ARTIST, ITEM },
-    { _("_New Song"),       _("<ctl><shft>N"), NEW_SONG,   ITEM },
-    { _("_Delete"),         _("<delete>"),     DELETE,     ITEM }
+    { _("New _Interpret"),  _("<ctl>N"),       NEW_ARTIST, ITEM },
+    { _("_New Record"),     _("<ctl><alt>N"),  NEW_RECORD, ITEM },
+    { _("New _Song"),       _("<ctl><shft>N"), NEW_SONG,   ITEM },
+    { _("_Delete"),         _("Delete"),     DELETE,     ITEM }
 };
 
 /// Defaultconstructor; all widget are created
@@ -279,6 +280,8 @@ CDManager::CDManager ()
    records.signalObjectChanged.connect (mem_fun (*this, &CDManager::recordChanged));
    records.signalArtistChanged.connect (mem_fun (*this, &CDManager::artistChanged));
    records.signalRecordChanged.connect (mem_fun (*this, &CDManager::recordChanged));
+   records.signalRecordGenreChanged.connect
+   movies.signalOwnerChanged.connect (mem_fun (*this, &CDManager::directorChanged));
    movies.signalObjectChanged.connect (mem_fun (*this, &CDManager::movieChanged));
    Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
    recordSel->set_mode (Gtk::SELECTION_EXTENDED);
@@ -337,6 +340,9 @@ void CDManager::command (int menu) {
       break;
 /// Saves the DB
    case NEW_ARTIST:
+      break;
+
+   case NEW_RECORD:
       break;
 
    case NEW_SONG:
@@ -584,10 +590,7 @@ void CDManager::recordSelected () {
    songs.clear ();
    Check3 (records.get_selection ());
    Gtk::TreeSelection::ListHandle_Path list
-   TRACE9 ("CDManager::recordSelected () - 2");
-
       (records.get_selection ()->get_selected_rows ());
-   TRACE9 ("CDManager::recordSelected () - 3");
    TRACE9 ("CDManager::recordSelected () - Size: " << list.size ());
    if (list.size ()) {
       Gtk::TreeIter i (records.get_model ()->get_iter (*list.begin ())); Check3 (i);
@@ -596,7 +599,7 @@ void CDManager::recordSelected () {
 	 HRecord hRecord (records.getRecordAt (i)); Check3 (hRecord.isDefined ());
       if (i->children ().empty ()) {
 	 HRecord hRecord (records.getRecordAt (i));
-	 if (!relSongs.isRelated (hRecord))
+	 if (!hRecord->songsLoaded)
 	 // Add related songs to the listbox
 	 if (relSongs.isRelated (hRecord))
 	    for (std::vector<HSong>::iterator i (relSongs.getObjects (hRecord).begin ());
@@ -633,11 +636,15 @@ void CDManager::loadSongs (const HRecord& record) {
 	 if (time != "00:00:00")
 	    song->duration = time;
 	 song->genre = Database::getResultColumnAsUInt (3);
-	 song->track = Database::getResultColumnAsUInt (4);
+	 unsigned int track (Database::getResultColumnAsUInt (4));
+	 if (track)
+	    song->track = track;
 
 	 relSongs.relate (record, song);
 	 Database::getNextResultRow ();
       } // end-while
+
+      record->songsLoaded = true;
    }
    catch (std::exception& err) {
       Glib::ustring msg (_("Can't query the songs for record %1!\n\nReason: %2"));
@@ -698,13 +705,14 @@ void CDManager::artistChanged (const HInterpret& artist) {
 }
 // void CDManager::movieChanged (const HMovie& movie)
 /// Callback when changing a movie
-/// Callback when a song is being changed
-/// \param song: Handle to changed song
+/// Callback when a record is being changed
+/// \param record: Handle to changed record
 
 void CDManager::recordChanged (const HRecord& record) {
    TRACE9 ("CDManager::recordChanged (const HInterpret& record) - "
 	   << (record.isDefined () ? record->id : -1UL) << '/'
 	   << (record.isDefined () ? record->name.c_str () : "Undefined"));
+   Check1 (record.isDefined ());
 
    if (changedRecords.find (record) == changedRecords.end ()) {
       changedRecords[record] = new Record (*record);
@@ -713,6 +721,29 @@ void CDManager::recordChanged (const HRecord& record) {
 }
 /// Callback (additional to recordChanged) when the genre of a record is being
 /// changed
+/// \param record: Handle to changed record
+///  changed
+void CDManager::recordGenreChanged (const HEntity& record) {
+   Check1 (record.isDefined ());
+void CDManager::recordGenreChanged (const HRecord& record) {
+	   << (rec.isDefined () ? rec->getName ().c_str () : "Undefined"));
+	   << (record.isDefined () ? record->id : -1UL) << '/'
+	   << (record.isDefined () ? record->name.c_str () : "Undefined"));
+   Check1 (record.isDefined ());
+      for (std::vector<HSong>::iterator i (relSongs.getObjects (rec).begin ());
+   if (relSongs.isRelated (record)) {
+      for (std::vector<HSong>::iterator i (relSongs.getObjects (record).begin ());
+	   i != relSongs.getObjects (record).end (); ++i)
+	 if (!(*i)->genre) {
+	    (*i)->genre = record->genre;
+
+      recordSelected ();
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Escapes the quotes in values for the database
+/// \param value: Value to escape
 /// Removes deleed entries from the database
 //-----------------------------------------------------------------------------
 void CDManager::removeDeletedEntries () {
@@ -886,8 +917,7 @@ void CDManager::deleteSelectedRecords () {
       }
       else                                  // A record is going to be deleted
 	 deleteRecord (iter);
-      }
-
+   }
    apMenus[SAVE]->set_sensitive (true);
 }
 
@@ -933,6 +963,22 @@ void CDManager::deleteRecord (const Gtk::TreeIter& record) {
 //-----------------------------------------------------------------------------
 void CDManager::deleteSelectedSongs () {
    TRACE9 ("CDManager::deleteSelectedSongs ()");
+
+   Glib::RefPtr<Gtk::TreeSelection> selection (songs.get_selection ());
+   while (selection->get_selected_rows ().size ()) {
+      Gtk::TreeSelection::ListHandle_Path list (selection->get_selected_rows ());
+      Check3 (list.size ());
+      Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
+
+      Gtk::TreeIter iter (songs.get_model ()->get_iter (*i)); Check3 (iter);
+      HSong song (songs.getEntryAt (iter)); Check3 (song.isDefined ());
+      Check3 (relSongs.isRelated (song));
+      HRecord record (relSongs.getParent (song));
+
+      relSongs.unrelate (record, song);
+      deletedSongs.push_back (song);
+      songs.getModel ()->erase (iter);
+   }
 
    apMenus[SAVE]->set_sensitive (true);
 }

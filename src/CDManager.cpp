@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.8 2004/10/30 14:47:03 markus Rel $
+//$Id: CDManager.cpp,v 1.9 2004/10/30 17:51:43 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : Free handles in record listbox
 //BUGS        :
-//REVISION    : $Revision: 1.8 $
+//REVISION    : $Revision: 1.9 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -32,8 +32,6 @@
 #include <gtkmm/label.h>
 #include <gtkmm/messagedialog.h>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Process.h>
 #include <YGP/Tokenize.h>
 #include <XGP/XFileDlg.h>
@@ -342,7 +340,8 @@ void CDManager::command (int menu) {
 /// Saves the DB
    case NEW: {
       HRecord hRec;
-      TRecordEdit<CDManager>::create (*this, &CDManager::recordChanged, hRec);
+      TRecordEdit<CDManager>::create (*this, &CDManager::recordChanged, hRec,
+				      artists, genres);
       break; }
 
    case EDIT: {
@@ -455,6 +454,37 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 
    Glib::signal_idle ().connect
       (bind_return (mem_fun (*this, &CDManager::loadDatabase), false));
+
+   try {
+      if (genres.empty ()) {
+	 Database::store ("SELECT id, genre FROM Genres");
+
+	 while (Database::hasData ()) {
+	    // Fill and store artist entry from DB-values
+	    genres[Database::getResultColumnAsUInt (0)] =
+	       Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
+
+	    Database::getNextResultRow ();
+	 }
+      }
+
+      if (Interpret::ignore.empty ()) {
+	 Database::store ("SELECT word FROM Words");
+
+	 while (Database::hasData ()) {
+	    // Fill and store artist entry from DB-values
+	    Interpret::ignore.push_back
+	       (Glib::locale_to_utf8 (Database::getResultColumnAsString (0)));
+	    Database::getNextResultRow ();
+	 }
+      }
+   }
+   catch (std::exception& err) {
+      Glib::ustring msg (_("Can't query needed information!\n\nReason: %1"));
+      msg.replace (msg.find ("%1"), 2, err.what ());
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
    return true;
 //-----------------------------------------------------------------------------
 /// Enables or disables the menus according to the status of the program
@@ -491,56 +521,69 @@ void CDManager::loadDatabase () {
 
    if (nb.get_current_page ()) {
    mRecords->clear ();
+   artists.clear ();
       loadMovies ();
    unsigned long int cRecords (0), cMovies (0);
 
    try {
-      // Load data from record table
-      Database::store ("SELECT r.id, r.name, i.name, i.id, year, g.genre FROM "
-		       "Records r, Interprets i, Genres g "
-		       "WHERE r.interpret = i.id AND r.genre = g.id "
-		       "ORDER BY i.name, r.name");
-      TRACE8 ("CDManager::loadDatabase () - Found " << Database::resultSize ()
-	      << " records");
+      Database::store ("SELECT id, name, born, died FROM Interprets");
 
-      if (cRecords = Database::resultSize ()) {
-	 Glib::ustring artist;
-	 HInterpret hArtist (new Interpret);
-	 Gtk::TreeRow lastRowArtist;
+      HInterpret hArtist;
+      while (Database::hasData ()) {
+	 TRACE5 ("CDManager::laodDatabase () - Adding Artist "
+		 << Database::getResultColumnAsUInt (0) << '/'
+		 << Database::getResultColumnAsString (1));
 
-	 while (Database::hasData ()) {
-	    // Create new interpret, if it has changed
-	    artist = Glib::locale_to_utf8 (Database::getResultColumnAsString (2));
-	    if (hArtist->name != artist) {
-	       lastRowArtist = *mRecords->append ();
-	       hArtist.define ();
-	       lastRowArtist[colRecords.name] = hArtist->name = artist;
-	       lastRowArtist[colRecords.entry] = new HInterpret (hArtist);
-	       hArtist->id = Database::getResultColumnAsUInt (3);
-	    }
+	 // Fill and store artist entry from DB-values
+	 hArtist.define ();
+	 hArtist->id = Database::getResultColumnAsUInt (0);
+	 hArtist->name = Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
+	 artists.push_back (hArtist);
 
-	    // Fill and store record entry from DB-values
-	    HRecord newRec (new Record);
-	    newRec->id = Database::getResultColumnAsUInt (0);
-	    newRec->name = Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
-	    newRec->year = Database::getResultColumnAsUInt (4);
-
-	    relRecords.relate (hArtist, newRec);
-
-	    Gtk::TreeModel::Row row (*(mRecords->append (lastRowArtist.children ())));
-	    newRec->name = row[colRecords.name] =
-	       Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
-	    if (newRec->year)
-	       row[colRecords.year] = Database::getResultColumnAsString (4);
-
-	    newRec->genre = row[colRecords.genre] = 
-	       Glib::locale_to_utf8 (Database::getResultColumnAsString (5));
-	    row[colRecords.entry] = new HRecord (newRec);
-	    Database::getNextResultRow ();
-	 } // end-while has records
-	 Check3 (mRecords->children ().begin());
-	 records.get_selection ()->select (mRecords->children ().begin());
+	 Database::getNextResultRow ();
       }
+      std::sort (artists.begin (), artists.end (), &Interpret::compByName);
+
+      for (std::vector<HInterpret>::iterator i (artists.begin ());
+	   i != artists.end (); ++i) {
+	 // Load data from record table
+	 std::ostringstream ostr;
+	 
+	 ostr << "SELECT id, name, year, genre FROM Records WHERE interpret="
+	      << (*i)->id;
+	 Database::store (ostr.str ().c_str ());
+	 TRACE8 ("CDManager::loadDatabase () - Found " << Database::resultSize ()
+		 << " records");
+
+	 if (cRecords = Database::resultSize ()) {
+	    Gtk::TreeModel::Row lastRowArtist (*mRecords->append ());
+	    lastRowArtist[colRecords.name] = (*i)->name;
+	    lastRowArtist[colRecords.entry] = new HInterpret (*i);
+
+	    while (Database::hasData ()) {
+	       // Fill and store record entry from DB-values
+	       HRecord newRec (new Record);
+	       newRec->id = Database::getResultColumnAsUInt (0);
+	       newRec->year = Database::getResultColumnAsUInt (2);
+
+	       relRecords.relate (*i, newRec);
+
+	       Gtk::TreeModel::Row row (*(mRecords->append (lastRowArtist.children ())));
+	       row[colRecords.entry] = new HRecord (newRec);
+	       newRec->name = row[colRecords.name] =
+		  Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
+	       if (newRec->year)
+		  row[colRecords.year] = Database::getResultColumnAsString (2);
+
+	       newRec->genre = Database::getResultColumnAsUInt (3);
+	       row[colRecords.genre] = genres[newRec->genre];
+	       Database::getNextResultRow ();
+	    } // end-while has records
+	 } // end-if () {
+      }
+
+      if (mRecords->children ().begin())
+	 records.get_selection ()->select (mRecords->children ().begin());
       records.expand_all ();
    }
    catch (std::exception& err) {
@@ -643,7 +686,8 @@ void CDManager::editRecord (const Gtk::TreeModel::Path& path, Gtk::TreeViewColum
 	 if (!relSongs.isRelated (rec))
 	    loadSongs (rec);
 
-	 TRecordEdit<CDManager>::create (*this, &CDManager::recordChanged, rec);
+	 TRecordEdit<CDManager>::create (*this, &CDManager::recordChanged, rec,
+					 artists, genres);
       }
    }
 }
@@ -690,6 +734,7 @@ void CDManager::loadSongs (const HRecord& record) {
 /// \returns HRecord: Handle of the selected line
 //-----------------------------------------------------------------------------
 HRecord& CDManager::getRecordAtPos (const Gtk::TreeIter& i) const {
+   Check1 ((*i)[colRecords.entry] != NULL);
    Check1 (typeid (*((*i)[colRecords.entry])) == typeid (HRecord));
    YGP::IHandle* phRec ((**i)[colRecords.entry]);
    Check1 (typeid (*phRec) == typeid (HRecord));
@@ -724,11 +769,11 @@ void CDManager::recordChanged (HRecord& hRecord) {
    if (i == mRecords->children ().end ()) {
       line = mRecords->append ();
       
-      line = line->append ();
+      line = mRecords->append (line->children ());
    }
 
    (*line)[colRecords.name] = hRecord->name;
-   (*line)[colRecords.genre] = hRecord->genre;
+   (*line)[colRecords.genre] = genres[hRecord->genre];
    if (hRecord->year) {
       std::ostringstream ostr;
       ostr << hRecord->year;

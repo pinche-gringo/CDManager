@@ -1,7 +1,7 @@
 #ifndef RECEDIT_H
 #define RECEDIT_H
 
-//$Id: RecEdit.h,v 1.6 2004/10/30 14:47:56 markus Rel $
+//$Id: RecEdit.h,v 1.7 2004/10/30 17:51:43 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,11 +19,13 @@
 
 
 #include <map>
+#include <vector>
 
 #include <gtkmm/liststore.h>
 
 #include "Song.h"
 #include "Record.h"
+#include "Interpret.h"
 
 #include <XGP/XDialog.h>
 #include <XGP/XAttrEntry.h>
@@ -39,11 +41,13 @@ namespace Gtk {
 
 class RecordEdit : public XGP::XDialog {
  public:
-   RecordEdit (HRecord record);
+   RecordEdit (HRecord record, std::vector<HInterpret>& artists,
+	       const std::map<unsigned int, Glib::ustring> genres);
    virtual ~RecordEdit ();
 
-   static RecordEdit* create (HRecord record) {
-      RecordEdit* dlg (new RecordEdit (record));
+   static RecordEdit* create (HRecord record, std::vector<HInterpret>& artists,
+			      const std::map<unsigned int, Glib::ustring> genres) {
+      RecordEdit* dlg (new RecordEdit (record, artists, genres));
       dlg->signal_response ().connect (mem_fun (*dlg, &RecordEdit::free));
       return dlg;
    }
@@ -104,7 +108,8 @@ class RecordEdit : public XGP::XDialog {
    SongColumns colSongs;
    Glib::RefPtr<Gtk::ListStore> mSongs;
 
-   std::map<unsigned int, Glib::ustring> genres;
+   std::vector<HInterpret>&                     artists;
+   const std::map<unsigned int, Glib::ustring>& genres;
 };
 
 
@@ -113,12 +118,18 @@ class TRecordEdit : public RecordEdit {
  public:
    typedef void (T::*PCALLBACK) (HRecord& hRecord);
 
-   TRecordEdit (T& parent, PCALLBACK callback, HRecord record)
-      : RecordEdit (record), obj (parent), pCallback (callback) { }
+   TRecordEdit (T& parent, PCALLBACK callback, HRecord record,
+		std::vector<HInterpret>& artists,
+		const std::map<unsigned int, Glib::ustring> genres)
+      : RecordEdit (record, artists, genres), obj (parent),
+	pCallback (callback) { }
    virtual ~TRecordEdit () { }
 
-   static TRecordEdit* create (T& parent, PCALLBACK callback, HRecord record) {
-      TRecordEdit* dlg (new TRecordEdit<T> (parent, callback, record));
+   static TRecordEdit* create (T& parent, PCALLBACK callback, HRecord record,
+			       std::vector<HInterpret>& artists,
+			       const std::map<unsigned int, Glib::ustring> genres) {
+      TRecordEdit* dlg (new TRecordEdit<T> (parent, callback, record,
+					    artists, genres));
       dlg->signal_response ().connect (mem_fun (*dlg, &TRecordEdit<T>::free));
       return dlg;
    }

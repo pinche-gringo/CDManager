@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.7 2004/10/30 14:47:03 markus Rel $
+//$Id: CDManager.h,v 1.8 2004/10/30 17:51:43 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,6 +17,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+
+#include <map>
+#include <vector>
 
 #include <gtkmm/table.h>
 #include <gtkmm/notebook.h>
@@ -101,7 +104,6 @@ class CDManager : public XGP::XApplication {
    void loadSongs (const HRecord& record);
 
    HRecord& getRecordAtPos (const Gtk::TreeIter& i) const;
-
    bool canSelect (const Glib::RefPtr<Gtk::TreeModel>& model,
 		   const Gtk::TreeModel::Path& path, bool);
 
@@ -132,6 +134,9 @@ class CDManager : public XGP::XApplication {
 
    Gtk::Table     movies;
    Gtk::Statusbar status;
+
+   std::vector<HInterpret>               artists;
+   std::map<unsigned int, Glib::ustring> genres;
 };
 
 #endif

@@ -1,11 +1,11 @@
-//$Id: RecEdit.cpp,v 1.6 2004/10/30 14:47:37 markus Rel $
+//$Id: RecEdit.cpp,v 1.7 2004/10/30 17:51:43 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : RecordEdit
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 17.10.2004
 //COPYRIGHT   : Anticopyright (A) 2004
@@ -54,7 +54,8 @@
 //-----------------------------------------------------------------------------
 /// (Default-)Constructor
 //-----------------------------------------------------------------------------
-RecordEdit::RecordEdit (HRecord record)
+RecordEdit::RecordEdit (HRecord record, std::vector<HInterpret>& artists,
+			const std::map<unsigned int, Glib::ustring> genres)
    : XGP::XDialog (OKCANCEL),
      hRecord (record),
      pClient (manage (new Gtk::Table (5, 3, false))),
@@ -64,8 +65,11 @@ RecordEdit::RecordEdit (HRecord record)
      lstSongs (manage (new Gtk::TreeView ())),
      mArtists (Gtk::ListStore::create (colArtists)),
      mGenres (Gtk::ListStore::create (colGenres)),
-     mSongs (Gtk::ListStore::create (colSongs)) {
+     mSongs (Gtk::ListStore::create (colSongs)),
+     artists (artists),
+     genres (genres) {
    set_title (_("Edit Record"));
+   Check3 (genres.size ());
 
    if (!hRecord.isDefined ())
       hRecord.define ();
@@ -145,9 +149,14 @@ RecordEdit::RecordEdit (HRecord record)
 	 newSong[colSongs.entry] = *i;
 	 newSong[colSongs.colName] = (*i)->name;
 	 newSong[colSongs.colDuration] = (*i)->duration.toString ();
-	 newSong[colSongs.colGenre] = genres[(*i)->genre];
-      }
-   }
+
+	 std::map<unsigned int, Glib::ustring>::const_iterator g
+	    (genres.find ((*i)->genre));
+	 if (g == genres.end ())
+	    g = genres.begin ();
+	 newSong[colSongs.colGenre] = g->second;
+      } // end-for all songs
+   } // end-if
 
    get_vbox ()->pack_start (*pClient, false, false, 5);
    show_all_children ();
@@ -183,7 +192,7 @@ void RecordEdit::okEvent () {
 
    Check3 (optGenre->get_active ());
    Check3 (*optGenre->get_active ());
-   Glib::ustring genre ((*optGenre->get_active ())[colGenres.colName]);
+   unsigned int genre ((*optGenre->get_active ())[colGenres.colID]);
    if (hRecord->genre != genre) {
       if (update.str ().size ())
 	 update << ", ";
@@ -243,37 +252,25 @@ void RecordEdit::okEvent () {
 /// Fills the genre listbox
 //-----------------------------------------------------------------------------
 void RecordEdit::fillGenres () {
-   try {
-      Database::store ("SELECT id, genre FROM Genres");
+   TRACE9 ("RecordEdit::fillGenres () - Genres: " << genres.size ());
 
-      while (Database::hasData ()) {
-	 // Fill and store artist entry from DB-values
+   for (std::map<unsigned int, Glib::ustring>::const_iterator i (genres.begin ());
+	i != genres.end (); ++i) {
+      // Fill and store artist genre entry
 	 Gtk::TreeModel::Row row = *(mGenres->append ());
-	 unsigned int id (Database::getResultColumnAsUInt (0));
-	 row[colGenres.colID] = id;
-	 Glib::ustring genre
-	    (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
-	 row[colGenres.colName] = genre;
+	 row[colGenres.colID] = i->first;
+	 row[colGenres.colName] = i->second;
 
-	 if (hRecord.isDefined () && (hRecord->genre == genre))
+	 if (hRecord.isDefined () && (hRecord->genre == i->first))
 	    optGenre->set_active (row);
-
-	 genres[id] = genre;
-	 Database::getNextResultRow ();
-      } // end-while
-   }
-   catch (std::exception& err) {
-      Glib::ustring msg (_("Can't query available genres!\n\nReason: %1"));
-      msg.replace (msg.find ("%1"), 2, err.what ());
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.run ();
-   }
+   } // end-for
 }
 
 //-----------------------------------------------------------------------------
 /// Fills the artist combobox
 //-----------------------------------------------------------------------------
 void RecordEdit::fillInterprets () {
+   // Find artist to record
    YGP::Relation1_N<HInterpret, HRecord>* rel;
    HInterpret hArtist;
    if (hRecord.isDefined ()) {
@@ -294,30 +291,18 @@ void RecordEdit::fillInterprets () {
 	      << (hArtist.isDefined () ? hArtist->name.c_str () : "None"));
    }
 
-   try {
-      Database::store ("SELECT id, name FROM Interprets");
+   for (std::vector<HInterpret>::const_iterator i (artists.begin ());
+	i != artists.end (); ++i) {
+      Check3 (i->isDefined ());
+      TRACE5 ("RecordEdit::fillInterprets () - Adding Artist "
+	      << (*i)->id << '/' << (*i)->name);
 
-      while (Database::hasData ()) {
-	 // Fill and store artist entry from DB-values
-	 Gtk::TreeModel::Row row = *(mArtists->append ());
-	 unsigned int id (Database::getResultColumnAsUInt (0));
-	 row[colArtists.colID] = id;
-	 row[colArtists.colName] =
-	    Glib::locale_to_utf8 (Database::getResultColumnAsString (1));
+      // Fill and store artist entry
+      Gtk::TreeModel::Row row = *(mArtists->append ());
+      row[colArtists.colID] = (*i)->id;
+      row[colArtists.colName] = (*i)->name;
 
-	 TRACE5 ("RecordEdit::fillInterprets () - Adding Artist "
-		 << id << '/' << Database::getResultColumnAsString (1));
-
-	 if (hArtist.isDefined () && (hArtist->id == id))
-	    optArtist->set_active (row);
-
-	 Database::getNextResultRow ();
-      } // end-while
-   }
-   catch (std::exception& err) {
-      Glib::ustring msg (_("Can't query available interprets!\n\nReason: %1"));
-      msg.replace (msg.find ("%1"), 2, err.what ());
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.run ();
-   }
+      if (hArtist.isDefined () && (hArtist->id == (*i)->id))
+	 optArtist->set_active (row);
+   } // end-for
 }

@@ -1,7 +1,7 @@
 #ifndef WRITER_H
 #define WRITER_H
 
-//$Id: Writer.h,v 1.2 2004/12/04 04:06:44 markus Exp $
+//$Id: Writer.h,v 1.3 2004/12/05 03:30:00 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,12 +21,16 @@
 #include <map>
 #include <string>
 
-#include <Movie.h>
-#include <Director.h>
+#include "Movie.h"
+#include "Record.h"
+#include "Director.h"
+#include "Interpret.h"
 
 #include <YGP/TableWriter.h>
 
 
+/**Class to write movies as HTML-tables
+ */
 class MovieWriter : public YGP::HTMLWriter {
  public:
    MovieWriter (const std::string& format,
@@ -46,6 +50,33 @@ class MovieWriter : public YGP::HTMLWriter {
 
    HMovie    hMovie;
    HDirector hDirector;
+
+   bool oddLine;
+   std::map<unsigned int, Glib::ustring> genres;
+};
+
+
+/**Class to write records as HTML-tables
+ */
+class RecordWriter : public YGP::HTMLWriter {
+ public:
+   RecordWriter (const std::string& format,
+		 std::map<unsigned int, Glib::ustring> genres)
+      : YGP::HTMLWriter (format), oddLine (true), genres (genres) { }
+   virtual ~RecordWriter ();
+
+   void writeRecord    (const HRecord& record, const HInterpret& interpret, std::ostream& out);
+   void writeInterpret (const HInterpret& interpret, std::ostream& out);
+
+ protected:
+   virtual std::string getSubstitute (const char ctrl, bool extend = false) const;
+
+ private:
+   RecordWriter (const RecordWriter& other);
+   const RecordWriter& operator= (const RecordWriter& other);
+
+   HRecord    hRecord;
+   HInterpret hInterpret;
 
    bool oddLine;
    std::map<unsigned int, Glib::ustring> genres;

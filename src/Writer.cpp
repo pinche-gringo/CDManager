@@ -1,11 +1,11 @@
-//$Id: Writer.cpp,v 1.2 2004/12/03 06:06:27 markus Exp $
+//$Id: Writer.cpp,v 1.3 2004/12/05 03:30:00 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Writer
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 27.11.2004
 //COPYRIGHT   : Copyright (C) 2004
@@ -109,6 +109,88 @@ void MovieWriter::writeDirector (const HDirector& director, std::ostream& out) {
    out << "<tr><td>&nbsp;</td></tr>\n"
        << "<tr><td colspan=\"3\" class=\"owner\">" << hDirector->getName () << "</td></tr>\n";
    hDirector.undefine ();
+
+   oddLine = true;
+}
+
+//-----------------------------------------------------------------------------
+/// Destructor
+//-----------------------------------------------------------------------------
+RecordWriter::~RecordWriter () {
+}
+
+
+//-----------------------------------------------------------------------------
+/// Substitution of column values
+/// \param ctrl: Control character to subsitute
+/// \param extend: Flag, if extended substitution is wanted
+/// \returns std::string: Substituted string
+//-----------------------------------------------------------------------------
+std::string RecordWriter::getSubstitute (const char ctrl, bool extend) const {
+   if (hRecord.isDefined ()) {
+      Check2 (hInterpret.isDefined ());
+
+      switch (ctrl) {
+      case 'n':
+	 return hRecord->getName ();
+	 break;
+
+      case 'y':
+	 return hRecord->getYear ().toString ();
+
+      case 'g':
+	 Check3 (genres.find (hRecord->getGenre ()) != genres.end ());
+	 return genres.find (hRecord->getGenre ())->second;
+
+      case 'd':
+	 return hInterpret->getName ();
+      } // endswitch
+   }
+   else {
+      Check2 (hInterpret.isDefined ());
+      Check3 (!hRecord.isDefined ());
+
+      if (ctrl == 'n')
+	 return hInterpret->getName ();
+      return "";
+   }
+   return std::string (1, ctrl);
+}
+
+//-----------------------------------------------------------------------------
+/// Writes a record into the table
+/// \param record: Record to write
+/// \param interpret: Interpret of record
+/// \param out: Stream to write to
+//-----------------------------------------------------------------------------
+void RecordWriter::writeRecord (const HRecord& record, const HInterpret& interpret,
+			      std::ostream& out) {
+   Check2 (!hRecord.isDefined ()); Check2 (!hInterpret.isDefined ());
+   hRecord = record;
+   hInterpret = interpret;
+
+   std::string value;
+   out << "<tr class=\"" << (oddLine ? "odd" : "even") << "\">";
+   oddLine = !oddLine;
+   while (!((value = getNextNode ()).empty ()))
+      out << "<td>" << value << "</td>";
+   out << "</tr>\n";
+
+   hRecord.undefine ();
+   hInterpret.undefine ();
+}
+
+//-----------------------------------------------------------------------------
+/// Writes a interpret into the table
+/// \param interpret: Interpret to write
+/// \param out: Stream to write to
+//-----------------------------------------------------------------------------
+void RecordWriter::writeInterpret (const HInterpret& interpret, std::ostream& out) {
+   Check2 (!hRecord.isDefined ()); Check2 (!hInterpret.isDefined ());
+   hInterpret = interpret;
+   out << "<tr><td>&nbsp;</td></tr>\n"
+       << "<tr><td colspan=\"3\" class=\"owner\">" << hInterpret->getName () << "</td></tr>\n";
+   hInterpret.undefine ();
 
    oddLine = true;
 }

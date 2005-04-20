@@ -4,26 +4,27 @@ lib_LTLIBRARIES=libCDMgr.la
 
 bin_PROGRAMS=CDManager CDWriter
 
+AM_CPPFLAGS = @INCLUDES@ -I../Common @DEPS_CFLAGS@ -Wall
+
 libCDMgr_la_SOURCES=Options.h Movie.cpp Movie.h Celebrity.cpp		\
-		    Celebrity.h CDType.cpp CDType.h Language.cpp	\
-		    Language.h Words.cpp Words.h Record.cpp Record.h	\
-		    DB.cpp DB.h Interpret.h Genres.cpp Genres.h
+		    Celebrity.h CDType.cpp CDType.h  Words.cpp Words.h	\
+	            Record.cpp Record.h Interpret.h		\
+		    Genres.cpp Genres.h
+libCDMgr_la_LIBADD=@DEPS_LIBS@
 
 CDManager_SOURCES=Settings.cpp Settings.h CDAppl.cpp CDAppl.h		\
 		  LangDlg.cpp LangDlg.h OOList.cpp OOList.h		\
 		  MovieList.cpp MovieList.h RecordList.cpp		\
 		  RecordList.h RendererList.cpp RendererList.h		\
 		  SongList.cpp SongList.h Song.h LangImg.cpp LangImg.h	\
-		  CDManagerDB.cpp CDManager.h CDManagerDel.cpp		\
+		  WordDlg.cpp WordDlg.h Language.cpp Language.h	DB.cpp 	\
+		  DB.h CDManagerDB.cpp CDManager.h CDManagerDel.cpp	\
 		  CDManager.cpp
+CDManager_CPPFLAGS=@INCLUDES@ -I../Common @DEPS_CFLAGS@ @XGP_CFLAGS@ -DUSE_LANGUAGEPIXMAPS -Wall
+CDManager_LDFLAGS=-lCDMgr @DEPS_LIBS@ @XGP_LIBS@ @LTLIBINTL@ @MYSQLLIBS@
 
-INCLUDES = @INCLUDES@ -I../Common @DEPS_CFLAGS@
-
-CDManager_LDFLAGS=-lCDMgr @DEPS_LIBS@ @LTLIBINTL@
-DEFS = @DEFS@ -Wall
-
-CDWriter_SOURCES=CDWriter.cpp CDWriter.h Writer.cpp Writer.h
-
+CDWriter_SOURCES=CDWriter.cpp CDWriter.h Writer.cpp Writer.h \
+		 Language.cpp Language.h
 CDWriter_LDFLAGS=-lCDMgr @DEPS_LIBS@ @LTLIBINTL@
 
 Options.meta: Options.h

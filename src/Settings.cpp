@@ -1,11 +1,11 @@
-//$Id: Settings.cpp,v 1.4 2005/01/18 20:08:18 markus Rel $
+//$Id: Settings.cpp,v 1.5 2005/04/20 05:44:43 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Settings
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 23.12.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -32,6 +32,7 @@
 #include <gtkmm/notebook.h>
 
 #include "Words.h"
+#include "WordDlg.h"
 #include "Options.h"
 #include "Options.meta"
 
@@ -54,7 +55,7 @@ Settings::Settings (Options& options)
      txtOutput (options.dirOutput), hdrMovie (options.mHeader),
      ftrMovie (options.mFooter), hdrRecord (options.rHeader),
      ftrRecord (options.rFooter),
-     wordDialog (Words::makeDialog ()) {
+     wordDialog (WordDialog::makeDialog ()) {
    Check3 (instance == NULL);
    instance =  this;
 
@@ -102,7 +103,7 @@ void Settings::okEvent () {
    for (unsigned int i (0); i < (sizeof (fields) / sizeof (*fields)); ++i)
       (this->*fields[i]).commit ();
 
-   Words::commitDialogData (wordDialog);
+   WordDialog::commitDialogData (wordDialog);
 }
 
 //-----------------------------------------------------------------------------

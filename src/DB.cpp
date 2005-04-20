@@ -1,11 +1,11 @@
-//$Id: DB.cpp,v 1.4 2005/01/18 03:56:56 markus Rel $
+//$Id: DB.cpp,v 1.5 2005/04/20 05:43:50 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Database
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 16.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -27,20 +27,17 @@
 
 #include <cdmgr-cfg.h>
 
-#ifdef HAVE_LIBMYSQLPP
-#  include <mysql++.hh>
-#else
-#  error No supported database detected!
-#endif
-
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 
 #include "DB.h"
 
-static Connection       con (use_exceptions);
-static Result           result;
-static Result::iterator i;
+#if defined HAVE_LIBMYSQLPP
+#  include <mysql++.h>
+
+static mysqlpp::Connection       con (mysqlpp::use_exceptions);
+static mysqlpp::Result           result;
+static mysqlpp::Result::iterator i;
 
 
 void Database::connect (const char* db, const char* user, const char* pwd) throw (std::exception&) {
@@ -53,9 +50,9 @@ void Database::close () throw (std::exception&) {
    con.close ();
 }
 
-void Database::store (const char* query) throw (std::exception&) {
-   TRACE1 ("Database::store (const char*) - " << query);
-   Query q (con.query ());
+void Database::execute (const char* query) throw (std::exception&) {
+   TRACE1 ("Database::execute (const char*) - " << query);
+   mysqlpp::Query q (con.query ());
    result = q.store (query);
    i = result.begin ();
 }
@@ -96,3 +93,84 @@ int Database::getResultColumnAsInt (unsigned int column) {
 long Database::getIDOfInsert () {
    return con.insert_id ();
 }
+
+#elif defined HAVE_LIBMYSQL
+#  include <cstdlib>
+
+#  include <mysql.h>
+
+
+static MYSQL* mysql (NULL);
+static MYSQL_RES* result (NULL);
+static MYSQL_ROW row (NULL);
+
+
+void Database::connect (const char* db, const char* user, const char* pwd) throw (std::exception&) {
+   TRACE9 ("Database::connect (const char* (3x) - " << db << " from " << user);
+   Check2 (!mysql);
+   mysql = mysql_init (NULL);
+   if (!mysql_real_connect (mysql, NULL, user, pwd, db, 0, NULL, 0))
+      throw std::runtime_error (mysql_error (mysql));
+}
+
+void Database::close () throw (std::exception&) {
+   TRACE9 ("Database::close ()");
+   mysql_close (mysql);
+}
+
+void Database::execute (const char* query) throw (std::exception&) {
+   TRACE1 ("Database::execute (const char*) - " << query);
+   if (mysql_query (mysql, query))
+      throw std::runtime_error (mysql_error (mysql));
+
+   if ((result = mysql_store_result (mysql)) != NULL)
+      row = mysql_fetch_row (result);
+   else
+      if (mysql_errno (mysql))
+	 throw std::runtime_error (mysql_error (mysql));
+}
+
+unsigned int Database::resultSize () {
+   TRACE9 ("Database::resultSize () - " << mysql_num_rows (result));
+   return mysql_num_rows (result);
+}
+
+bool Database::hasData () {
+   TRACE9 ("Database::hasData () - " << (row ? "Yes" : "No"));
+   return row;
+}
+
+void Database::getNextResultRow () {
+   TRACE9 ("Database::getNextResultRow ()");
+   row = mysql_fetch_row (result);
+}
+
+std::string Database::getResultColumnAsString (unsigned int column) {
+   TRACE9 ("Database::getResultColumnAsString (unsigned int) - " << column);
+   Check2 (result); Check2 (row);
+   Check1 (column < mysql_num_fields (result));
+   return row[column];
+}
+
+unsigned int Database::getResultColumnAsUInt (unsigned int column) {
+   TRACE9 ("Database::getResultColumnAsUInt (unsigned int) - " << column);
+   TRACE9 ("Database::getResultColumnAsUInt (unsigned int) - " << row[column]);
+   Check2 (result); Check2 (row);
+   Check1 (column < mysql_num_fields (result));
+   return strtoul (row[column], NULL, 10);
+}
+
+int Database::getResultColumnAsInt (unsigned int column) {
+   TRACE9 ("Database::getResultColumnAsInt (unsigned int) - " << column);
+   Check2 (result); Check2 (row);
+   Check1 (column < mysql_num_fields (result));
+   return strtol (row[column], NULL, 10);
+}
+
+long Database::getIDOfInsert () {
+   return mysql_insert_id (mysql);
+}
+
+#else
+#  error No supported database detected!
+#endif

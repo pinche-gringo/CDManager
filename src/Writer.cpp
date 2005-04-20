@@ -1,11 +1,11 @@
-//$Id: Writer.cpp,v 1.9 2005/01/14 02:45:29 markus Rel $
+//$Id: Writer.cpp,v 1.10 2005/04/20 05:44:18 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Writer
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.9 $
+//REVISION    : $Revision: 1.10 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 27.11.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -32,8 +32,6 @@
 #include <sstream>
 
 #include <glibmm/convert.h>
-
-#include <gtkmm/messagedialog.h>
 
 #include <YGP/File.h>
 #include <YGP/Check.h>

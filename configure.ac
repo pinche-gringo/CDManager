@@ -1,8 +1,8 @@
-dnl $Id: configure.ac,v 1.8 2005/01/31 05:17:36 markus Exp $
+dnl $Id: configure.ac,v 1.9 2005/04/20 21:04:41 markus Exp $
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.52)
-AC_REVISION($Revision: 1.8 $)
+AC_REVISION($Revision: 1.9 $)
 AC_INIT(CDManager, 0.7.00, [g17m0@lycos.com], CDManager)
 
 RELEASE=${PACKAGE_VERSION%.*}
@@ -31,10 +31,9 @@ AC_DEFINE_UNQUOTED(CATALOGS, "$ALL_LINGUAS", [Translations])
 
 dnl Checks for libraries.
 AC_CHECK_LIB(stdc++, main)
-AC_CHECK_LIB(mysqlpp, main)
 
-PKG_CHECK_MODULES(DEPS, gtkmm-2.4 >= 2.4.0 gthread-2.0 > 2.2.0
-                  YGP >= 0.7.00 XGP >= 0.7.01)
+PKG_CHECK_MODULES(DEPS, glibmm-2.4 >= 2.4.0 YGP >= 0.7.00)
+PKG_CHECK_MODULES(XGP, gtkmm-2.4 >= 2.4.0 gthread-2.0 > 2.2.0 XGP >= 0.7.01)
 AC_SUBST(DEPS_CFLAGS)
 AC_SUBST(DEPS_LIBS)
 
@@ -48,7 +47,7 @@ AC_ARG_WITH(mysql,
     [MYSQL_lib_check=$withval/lib/mysql $with_mysql/lib
      MYSQL_inc_check=$withval/include/mysql],
     [MYSQL_lib_check="/usr/local/mysql/lib/mysql /usr/local/lib/mysql /opt/mysql/lib/mysql /usr/lib/mysql /usr/local/mysql/lib /usr/local/lib /opt/mysql/lib /usr/lib"
-MYSQL_inc_check="/usr/local/mysql/include/mysql /usr/local/include/mysql /opt/mysql/include/mysql /usr/include/mysql"])
+     MYSQL_inc_check="/usr/local/mysql/include/mysql /usr/local/include/mysql /opt/mysql/include/mysql /usr/include/mysql"])
 
 AC_ARG_WITH(mysql-lib,
     AC_HELP_STRING([--with-mysql-lib=PATH],
@@ -72,7 +71,7 @@ for m in $MYSQL_lib_check; do
 done
 
 if test -z "$MYSQL_libdir"; then
-    AC_MSG_ERROR([Didn't find the mysql library dir in '$MYSQL_dir_check'])
+    AC_MSG_ERROR([Didn't find the MySQL library dir in '$MYSQL_dir_check'])
 fi
 
 case "$MYSQL_libdir" in
@@ -84,7 +83,7 @@ AC_MSG_RESULT([$MYSQL_libdir])
 
 case "$MYSQL_libdir" in
   /usr/lib) ;;
-  *) LDFLAGS="$LDFLAGS -L${MYSQL_libdir}" ;;
+  *) MYSQLLIBS="-L${MYSQL_libdir}" ;;
 esac
 
 AC_MSG_CHECKING([for MySQL include directory])
@@ -98,14 +97,16 @@ for m in $MYSQL_inc_check; do
 done
 
 if test -z "$MYSQL_incdir"; then
-    AC_MSG_ERROR([Didn't find the mysql include dir in '$MYSQL_inc_check'])
+    AC_MSG_ERROR([Didn't find the MySQL include dir in '$MYSQL_inc_check'])
 fi
 
 case "$MYSQL_incdir" in
-  /* ) ;;
+  /* ) INCLUDES="$INCLUDES -I$MYSQL_incdir" ;;
   * )  AC_MSG_ERROR([The MySQL include directory ($MYSQL_incdir) must be an absolute path.]) ;;
 esac
 AC_MSG_RESULT([$MYSQL_incdir])
+AC_DEFINE_UNQUOTED(HAVE_LIBMYSQL, "1", [Define to 1, if libmysql is installed])
+MYSQLLIBS="$MYSQLLIBS -lmysqlclient"
 
 #
 # Location of MySQL++ installation
@@ -116,15 +117,15 @@ AC_ARG_WITH(mysqlpp,
     [MYSQLPP_lib_check=$withval/mysql++ $withval/lib
      MYSQLPP_inc_check=$withval/mysql++],
     [MYSQLPP_lib_check="/usr/local/mysql++/lib/mysql++ /usr/local/lib/mysql++ /opt/mysql++/lib/mysql++ /usr/lib/mysql++ /usr/local/mysql++/lib /usr/local/lib /opt/mysql++/lib /usr/lib"
-MYSQLPP_inc_check="/usr/local/mysql/include/mysql++ /usr/local/include/mysql++ /opt/mysql/include/mysql++ /usr/include/mysql++"])
+     MYSQLPP_inc_check="/usr/local/mysql/include/mysql++ /usr/local/include/mysql++ /opt/mysql/include/mysql++ /usr/include/mysql++"])
 
 AC_ARG_WITH(mysqlpp-lib,
-    AC_HELP_STRING([--with-mysql++-lib=PATH],
+    AC_HELP_STRING([--with-mysqlpp-lib=PATH],
 	           [directory path of MySQL++ library installation]),
     [MYSQLPP_lib_check=$withval])
 
 AC_ARG_WITH(mysqlpp-include,
-    AC_HELP_STRING([--with-mysql++-include=PATH],
+    AC_HELP_STRING([--with-mysqlpp-include=PATH],
                    [directory path of MySQL++ header installation]),
     [MYSQLPP_inc_check=$withval])
 
@@ -139,20 +140,20 @@ for m in $MYSQLPP_lib_check; do
 done
 
 if test -z "$MYSQLPP_libdir"; then
-    AC_MSG_ERROR([Didn't find the mysql++ library dir in '$MYSQLPP_dir_check'])
+    if test -n "$MYSQLPP_dir_check"; then
+	AC_MSG_WARN([Didn't find the MySQL++ library dir in '$MYSQLPP_dir_check'])
+    fi
+    MYSQLPP_libdir=no
 fi
 
 case "$MYSQLPP_libdir" in
-  /* ) ;;
+  /usr/lib) ;;
+  no ) ;;
+  /* ) MYSQLLIBS="$MYSQLLIBS -L${MYSQLPP_libdir}  -lmysqlpp" ;;
   * )  AC_MSG_ERROR([The MySQL++ library directory ($MYSQLPP_libdir) must be an absolute path.]) ;;
 esac
 
 AC_MSG_RESULT([$MYSQLPP_libdir])
-
-case "$MYSQLPP_libdir" in
-  /usr/lib) ;;
-  *) LDFLAGS="$LDFLAGS -L${MYSQLPP_libdir}" ;;
-esac
 
 AC_MSG_CHECKING([for MySQL++ include directory])
 MYSQLPP_incdir=
@@ -165,17 +166,26 @@ for m in $MYSQLPP_inc_check; do
 done
 
 if test -z "$MYSQLPP_incdir"; then
-    AC_MSG_ERROR([Didn't find the mysql++ include dir in '$MYSQLPP_inc_check'])
+    if test -n "$MYSQLPP_inc_check"; then
+        AC_MSG_WARN([Didn't find the MySQL++ include dir in '$MYSQLPP_inc_check'])
+    fi
+    MYSQLPP_incdir=no
 fi
 
 case "$MYSQLPP_incdir" in
-  /* ) ;;
-  * )  AC_MSG_ERROR([The MySQL++ include directory ($MYSQLPP_incdir) must be an absolute path.]) ;;
+  /* ) INCLUDES="$INCLUDES -I$MYSQLPP_incdir" ;;
+  no) ;;
+  * ) AC_MSG_ERROR([The MySQL++ include directory ($MYSQLPP_incdir) must be an absolute path.]) ;;
 esac
 AC_MSG_RESULT([$MYSQLPP_incdir])
 
-INCLUDES="$INCLUDES -I$MYSQLPP_incdir -I$MYSQL_incdir"
+if test -d "$MYSQLPP_incdir" -a -d "$MYSQLPP_libdir"; then
+   MYSQLLIBS="$MYSQLLIBS -lmysqlpp"
+   AC_DEFINE_UNQUOTED(HAVE_LIBMYSQLPP, "1", [Define to 1, if libmysql is installed])
+fi
+
 AC_SUBST(INCLUDES)
+AC_SUBST(MYSQLLIBS)
 
 
 dnl Checks for header files.
@@ -211,7 +221,7 @@ dnl Settings for autoheader
 AH_TOP([#ifndef CDMANAGER_CFG_H
 #define CDMANAGER_CFG_H
 
-//$Id: configure.ac,v 1.8 2005/01/31 05:17:36 markus Exp $
+//$Id: configure.ac,v 1.9 2005/04/20 21:04:41 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

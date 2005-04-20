@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.49 2005/02/19 03:04:09 markus Exp $
+//$Id: CDManager.cpp,v 1.50 2005/04/20 06:08:58 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
-//TODO        : - Display icon to change movie-language in statusbar
+//TODO        : - Ask before quitting, when DB is not saved
 //BUGS        :
-//REVISION    : $Revision: 1.49 $
+//REVISION    : $Revision: 1.50 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -28,6 +28,8 @@
 
 #include <cerrno>
 #include <cstdlib>
+
+#include <unistd.h>
 
 #include <fstream>
 #include <sstream>
@@ -310,18 +312,18 @@ CDManager::CDManager (Options& options)
 
    grpAction->add (Gtk::Action::create ("CD", _("_CD")));
    grpAction->add (apMenus[LOGIN] = Gtk::Action::create ("Login", _("_Login")),
-		   Gtk::AccelKey ("<ctl>L"),
+		   Gtk::AccelKey (_("<ctl>L")),
 		   mem_fun (*this, &CDManager::showLogin));
    grpAction->add (apMenus[SAVE] = Gtk::Action::create ("SaveDB", Gtk::Stock::SAVE),
 		   mem_fun (*this, &CDManager::save));
    grpAction->add (apMenus[LOGOUT] = Gtk::Action::create ("Logout", _("Log_out")),
-		   Gtk::AccelKey ("<ctl>O"),
+		   Gtk::AccelKey (_("<ctl>O")),
 		   mem_fun (*this, &CDManager::logout));
    grpAction->add (apMenus[EXPORT] = Gtk::Action::create ("Export", _("_Export to HTML")),
-		   Gtk::AccelKey ("<ctl>E"),
+		   Gtk::AccelKey (_("<ctl>E")),
 		   mem_fun (*this, &CDManager::exportToHTML));
    grpAction->add (apMenus[IMPORT_MP3] = Gtk::Action::create ("Import", _("_Import from MP3-info ...")),
-		   Gtk::AccelKey ("<ctl>I"),
+		   Gtk::AccelKey (_("<ctl>I")),
 		   mem_fun (*this, &CDManager::importFromMP3));
    grpAction->add (Gtk::Action::create ("FQuit", Gtk::Stock::QUIT),
 		   mem_fun (*this, &CDManager::hide));
@@ -469,6 +471,7 @@ void CDManager::newRecord () {
 
    HRecord record;
    record.define ();
+   record->setSongsLoaded ();
    addRecord (p, record);
 }
 
@@ -890,14 +893,16 @@ void CDManager::exportData () throw (Glib::ustring) {
 			     "--movieHeader", opt.getMHeader ().c_str (),
 			     "--movieFooter", opt.getMFooter ().c_str (),
 			     lang.c_str (), NULL };
+      pid_t pid (-1);
       try {
 	 pipe (pipes);
-	 YGP::Process::execIOConnected ("CDWriter", args, pipes);
+	 pid = YGP::Process::execIOConnected ("CDWriter", args, pipes);
       }
       catch (std::string& e) {
 	 Gtk::MessageDialog dlg (Glib::locale_to_utf8 (e), Gtk::MESSAGE_ERROR);
 	 dlg.set_title (_("Export Error!"));
 	 dlg.run ();
+	 continue;
       }
 
       // Write movie-information
@@ -942,7 +947,7 @@ void CDManager::exportData () throw (Glib::ustring) {
       int cRead;
       while ((cRead = ::read (pipes[0], output, sizeof (output))) != -1) {
 	 allOut.append (output, cRead);
-	 if ((unsigned int)cRead < sizeof (output))
+	 if (!cRead)
 	    break;
       }
       if (allOut.size ()) {
@@ -953,6 +958,9 @@ void CDManager::exportData () throw (Glib::ustring) {
 
       close (pipes[0]);
       status.pop ();
+
+      Check3 (pid != -1);
+      YGP::Process::waitForProcess (pid);
    }
    setenv ("LANGUAGE", oldLang.c_str (), true);
 }
@@ -967,7 +975,7 @@ void CDManager::parseMP3Info (const std::string& file) {
 
    std::ifstream stream (file.c_str ());
    Glib::ustring artist, record, song;
-   unsigned int track;
+   unsigned int track (0);
    if (stream && parseMP3Info (stream, artist, record, song, track)) {
       TRACE9 ("CDManager::parseMP3Info (const std::string&) - " << artist
 	      << '/' << record << '/' << song << '/' << track);
@@ -988,6 +996,7 @@ void CDManager::parseMP3Info (const std::string& file) {
       if (r == i->children ().end ()) {
 	 TRACE9 ("CDManager::parseMP3Info (const std::string&) - Adding rec " << record);
 	 rec.define ();
+	 rec->setSongsLoaded ();
 	 rec->setName (record);
 	 addRecord (i, rec);
       }
@@ -1002,7 +1011,8 @@ void CDManager::parseMP3Info (const std::string& file) {
 	 TRACE9 ("CDManager::parseMP3Info (const std::string&) - Adding song " << song);
 	 hSong.define ();
 	 hSong->setName (song);
-	 hSong->setTrack (track);
+	 if (track)
+	    hSong->setTrack (track);
 	 addSong (hSong);
       }
       else {
@@ -1041,8 +1051,7 @@ bool CDManager::parseMP3Info (std::istream& stream, Glib::ustring& artist,
       song = Glib::locale_to_utf8 (stripString (value, 3, 29));
       artist = Glib::locale_to_utf8 (stripString (value, 33, 29));
       record = Glib::locale_to_utf8 (stripString (value, 63, 29));
-      if (value[0x7d] != 0x20)
-	 track = value[0x7e];
+      track = (value[0x7d] != 0x20) ? value[0x7e] : 0;
       return true;
    }
    return false;

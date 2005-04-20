@@ -1,7 +1,7 @@
 #ifndef WORDS_H
 #define WORDS_H
 
-//$Id: Words.h,v 1.3 2005/01/18 03:56:49 markus Rel $
+//$Id: Words.h,v 1.4 2005/04/20 05:43:09 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,11 +23,6 @@
 #include <glibmm/ustring.h>
 
 
-namespace Gtk {
-   class Widget;
-}
-
-
 /**Class to store some words
  */
 class Words {
@@ -45,9 +40,6 @@ class Words {
 
    static Glib::ustring removeArticle (const Glib::ustring& name);
    static Glib::ustring removeNames (const Glib::ustring& name);
-
-   static Gtk::Widget* makeDialog ();
-   static void commitDialogData (Gtk::Widget* dialog);
 
    static std::vector<Glib::ustring>::const_iterator namesEnd () { return names.end (); }
    static std::vector<Glib::ustring>::const_iterator namesBegin () { return names.begin (); }

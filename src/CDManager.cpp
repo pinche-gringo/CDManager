@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.50 2005/04/20 06:08:58 markus Exp $
+//$Id: CDManager.cpp,v 1.51 2005/04/21 20:57:43 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : - Ask before quitting, when DB is not saved
 //BUGS        :
-//REVISION    : $Revision: 1.50 $
+//REVISION    : $Revision: 1.51 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -322,9 +322,9 @@ CDManager::CDManager (Options& options)
    grpAction->add (apMenus[EXPORT] = Gtk::Action::create ("Export", _("_Export to HTML")),
 		   Gtk::AccelKey (_("<ctl>E")),
 		   mem_fun (*this, &CDManager::exportToHTML));
-   grpAction->add (apMenus[IMPORT_MP3] = Gtk::Action::create ("Import", _("_Import from MP3-info ...")),
+   grpAction->add (apMenus[IMPORT_MP3] = Gtk::Action::create ("Import", _("_Import from file-info ...")),
 		   Gtk::AccelKey (_("<ctl>I")),
-		   mem_fun (*this, &CDManager::importFromMP3));
+		   mem_fun (*this, &CDManager::importFromFileInfo));
    grpAction->add (Gtk::Action::create ("FQuit", Gtk::Stock::QUIT),
 		   mem_fun (*this, &CDManager::hide));
    grpAction->add (apMenus[MEDIT] = Gtk::Action::create ("Edit", _("_Edit")));
@@ -431,11 +431,11 @@ void CDManager::save () {
 }
 
 //-----------------------------------------------------------------------------
-/// Saves the DB
+/// Imports information from audio file (e.g. MP3-ID3 tag or OGG-commentheader)
 //-----------------------------------------------------------------------------
-void CDManager::importFromMP3 () {
+void CDManager::importFromFileInfo () {
    XGP::TFileDialog<CDManager>::create (_("Select file(s) to import"), *this,
-					&CDManager::parseMP3Info,
+					&CDManager::parseFileInfo,
 					Gtk::FILE_CHOOSER_ACTION_OPEN,
 					XGP::IFileDialog::MUST_EXIST
 					| XGP::IFileDialog::MULTIPLE);
@@ -969,21 +969,33 @@ void CDManager::exportData () throw (Glib::ustring) {
 /// Reads the ID3 information from a MP3 file
 /// \param file: Name of file to analzye
 //-----------------------------------------------------------------------------
-void CDManager::parseMP3Info (const std::string& file) {
-   TRACE9 ("CDManager::parseMP3Info (const std::string&) - " << file);
+void CDManager::parseFileInfo (const std::string& file) {
+   TRACE9 ("CDManager::parseFileInfo (const std::string&) - " << file);
    Check2 (file.size ());
 
    std::ifstream stream (file.c_str ());
    Glib::ustring artist, record, song;
    unsigned int track (0);
-   if (stream && parseMP3Info (stream, artist, record, song, track)) {
-      TRACE9 ("CDManager::parseMP3Info (const std::string&) - " << artist
+   if (!stream) {
+      Glib::ustring err (_("Can't open file `%1'!\n\nReason: %2"));
+      err.replace (err.find ("%1"), 2, file);
+      err.replace (err.find ("%2"), 2, strerror (errno));
+      Gtk::MessageDialog (err).run ();
+      return;
+   }
+
+   TRACE1 ("CDManager::parseFileInfo (const std::string&) - Type: " << file.substr (file.size () - 4));
+   if (((file.substr (file.size () - 4) == ".mp3")
+	&& parseMP3Info (stream, artist, record, song, track))
+       || ((file.substr (file.size () - 4) == ".ogg")
+	   && parseOGGCommentHeader (stream, artist, record, song, track))) {
+      TRACE9 ("CDManager::parseFileInfo (const std::string&) - " << artist
 	      << '/' << record << '/' << song << '/' << track);
 
       HInterpret group;
       Gtk::TreeIter i (records.getOwner (artist));
       if (i == records.getModel ()->children ().end ()) {
-	 TRACE9 ("CDManager::parseMP3Info (const std::string&) - Adding band " << artist);
+	 TRACE9 ("CDManager::parseFileInfo (const std::string&) - Adding band " << artist);
 	 group.define ();
 	 group->setName (artist);
 	 i = addArtist (group);
@@ -994,7 +1006,7 @@ void CDManager::parseMP3Info (const std::string& file) {
       HRecord rec;
       Gtk::TreeIter r (records.getObject (i, record));
       if (r == i->children ().end ()) {
-	 TRACE9 ("CDManager::parseMP3Info (const std::string&) - Adding rec " << record);
+	 TRACE9 ("CDManager::parseFileInfo (const std::string&) - Adding rec " << record);
 	 rec.define ();
 	 rec->setSongsLoaded ();
 	 rec->setName (record);
@@ -1008,7 +1020,7 @@ void CDManager::parseMP3Info (const std::string& file) {
       HSong hSong;
       Gtk::TreeIter s (songs.getSong (song));
       if (s == songs.getModel ()->children ().end ()) {
-	 TRACE9 ("CDManager::parseMP3Info (const std::string&) - Adding song " << song);
+	 TRACE9 ("CDManager::parseFileInfo (const std::string&) - Adding song " << song);
 	 hSong.define ();
 	 hSong->setName (song);
 	 if (track)
@@ -1045,9 +1057,9 @@ bool CDManager::parseMP3Info (std::istream& stream, Glib::ustring& artist,
    std::string value;
 
    std::getline (stream, value, '\xff');
-   TRACE9 ("CDManager::parseMP3Info (std::stream&, 3x Glib::ustring&, unsigned&) - Found: "
+   TRACE9 ("CDManager::parseMP3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Found: "
 	   << value << "; Length: " << value.size ());
-   if ((value[0] == 'T') && (value[1] == 'A') && (value[2] == 'G')) {
+   if ((value.size () > 3) && (value[0] == 'T') && (value[1] == 'A') && (value[2] == 'G')) {
       song = Glib::locale_to_utf8 (stripString (value, 3, 29));
       artist = Glib::locale_to_utf8 (stripString (value, 33, 29));
       record = Glib::locale_to_utf8 (stripString (value, 63, 29));
@@ -1055,6 +1067,74 @@ bool CDManager::parseMP3Info (std::istream& stream, Glib::ustring& artist,
       return true;
    }
    return false;
+}
+
+//-----------------------------------------------------------------------------
+/// Reads the OGG comment header from an OGG vorbis encoded file
+/// \param stream: OGG-file to analyze
+/// \param artist: Found artist
+/// \param record: Found record name
+/// \param song: Found song
+/// \param track: Tracknumber
+/// \returns bool: True, if comment header has been found
+//-----------------------------------------------------------------------------
+bool CDManager::parseOGGCommentHeader (std::istream& stream, Glib::ustring& artist,
+				       Glib::ustring& record, Glib::ustring& song,
+				       unsigned int& track) {
+   char buffer[512];
+   stream.read (buffer, 4);
+   if ((*buffer != 'O') && (buffer[1] != 'g') && (buffer[2] != 'g') && (buffer[3] != 'S'))
+      return false;
+
+   stream.seekg (0x69, std::ios::cur);
+   unsigned int len (0);
+   stream.read ((char*)&len, 4);                // Read the vendorstring-length
+   TRACE9 ("CDManager::parseOGGCommentHeader (std::istream&, 3x Glib::ustring&, unsigned&) - Length: " << len);
+   stream.seekg (len, std::ios::cur);
+
+   unsigned int cComments (0);
+   stream.read ((char*)&cComments, 4);               // Read number of comments
+   TRACE9 ("CDManager::parseOGGCommentHeader (std::istream&, 3x Glib::ustring&, unsigned&) - Comments: " << cComments);
+   if (!cComments)
+      return false;
+
+   std::string key;
+   Glib::ustring *value (NULL);
+   do {
+      stream.read ((char*)&len, 4);                  // Read the comment-length
+      TRACE9 ("CDManager::parseOGGCommentHeader (std::stream&, 3x Glib::ustring&, unsigned&) - Commentlen: " << len);
+
+      std::getline (stream, key, '=');
+      len -= key.size () + 1;
+
+      if (key == "TITLE")
+	 value = &song;
+      else if (key == "ALBUM")
+	 value = &record;
+      else if (key == "ARTIST")
+	 value = &artist;
+      else if (key == "TRACKNUMBER") {
+	 Check2 (len < sizeof (buffer));
+	 stream.read (buffer, len);
+	 track = strtoul (buffer, NULL, 10);
+	 value = NULL;
+	 len = 0;
+      }
+      else
+	 value = NULL;
+
+      if (value) {
+	 unsigned int read (0);
+	 do {
+	    read = stream.readsome (buffer, (len > sizeof (buffer)) ? sizeof (buffer) : len);
+	    len -= read;
+	    value->append (buffer, read);
+ 	 } while (len);
+      }
+      else
+	 stream.seekg (len, std::ios::cur);
+   } while (--cComments);  // end-do while comments
+   return true;
 }
 
 //-----------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.35 2005/02/19 03:04:22 markus Exp $
+//$Id: CDManager.h,v 1.36 2005/04/21 20:57:43 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@ class CDManager : public XGP::XApplication {
    void showLogin ();
    void logout ();
    void exportToHTML ();
-   void importFromMP3 ();
+   void importFromFileInfo ();
    void newInterpret ();
    void newRecord ();
    void newSong ();
@@ -124,10 +124,12 @@ class CDManager : public XGP::XApplication {
    static Glib::ustring escapeDBValue (const Glib::ustring& value);
 
    std::string stripString (const std::string& value, unsigned int pos, unsigned int len);
+   void parseFileInfo (const std::string& file);
    bool parseMP3Info (std::istream& stream, Glib::ustring& artist,
-		      Glib::ustring& record, Glib::ustring& song,
-		      unsigned int& track);
-   void parseMP3Info (const std::string& file);
+		      Glib::ustring& record, Glib::ustring& song, unsigned int& track);
+   bool parseOGGCommentHeader (std::istream& stream, Glib::ustring& artist,
+			       Glib::ustring& record, Glib::ustring& song,
+			       unsigned int& track);
 
    static const char* xpmProgram[];
    static const char* xpmAuthor[];

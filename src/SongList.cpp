@@ -1,11 +1,11 @@
-//$Id: SongList.cpp,v 1.13 2005/01/18 03:56:57 markus Rel $
+//$Id: SongList.cpp,v 1.14 2005/04/21 05:09:01 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.13 $
+//REVISION    : $Revision: 1.14 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -27,6 +27,10 @@
 
 #include <cdmgr-cfg.h>
 
+#include <gtkmm/cellrenderercombo.h>
+
+#include <YGP/Check.h>
+#include <YGP/Trace.h>
 #include <YGP/StatusObj.h>
 
 #include <XGP/XValue.h>
@@ -35,7 +39,6 @@
 #include "Words.h"
 
 #include "SongList.h"
-#include "RendererList.h"
 
 
 //-----------------------------------------------------------------------------
@@ -44,7 +47,8 @@
 SongList::SongList (const std::map<unsigned int, Glib::ustring>& genres)
    : genres (genres), mSongs (Gtk::ListStore::create (colSongs))
      , mSongGenres (Gtk::ListStore::create (colSongGenres)) {
-   : genres (genres), mSongs (Gtk::ListStore::create (colSongs)) {
+   TRACE9 ("SongList::SongList (const std::map<unsigned int, Glib::ustring>&)");
+
    set_model (mSongs);
 
    append_column (_("Track"), colSongs.colTrack);
@@ -69,15 +73,18 @@ SongList::SongList (const std::map<unsigned int, Glib::ustring>& genres)
 
    Gtk::TreeViewColumn* const column (new Gtk::TreeViewColumn (_("Genre")));
    Gtk::CellRendererCombo* const renderer (new Gtk::CellRendererCombo);
-   CellRendererList*    const renderer (new CellRendererList ());
-   renderer->property_editable () = true;
-   Gtk::TreeViewColumn* const column   (new Gtk::TreeViewColumn
-					(_("Genre"), *Gtk::manage (renderer)));
+   column->pack_start (*manage (renderer));
+   append_column (*Gtk::manage (column));
+
    column->set_sort_column (4);
-   column->add_attribute (renderer->property_text(), colSongs.colGenre);
    column->set_resizable ();
    column->add_attribute (renderer->property_text (), colSongs.colGenre);
 
+   renderer->property_text_column () = 0;
+   renderer->property_model () = mSongGenres;
+   renderer->property_editable () = true;
+
+   renderer->signal_edited ().connect
       (bind (mem_fun (*this, &SongList::valueChanged), 3));
 
    mSongs->set_sort_column (colSongs.colTrack, Gtk::SORT_ASCENDING);
@@ -105,7 +112,7 @@ SongList::~SongList () {
 Gtk::TreeModel::iterator SongList::append (HSong& song) {
    TRACE3 ("SongList::append (HSong&) - " << (song.isDefined () ? song->getName ().c_str () : "None"));
    Check1 (song.isDefined ());
-   TRACE3 ("SongList::append (HSong&) - " << (song.isDefined () ? song->name.c_str () : "None"));
+
    Gtk::TreeModel::Row newSong (*mSongs->append ());
    newSong[colSongs.entry] = song;
    newSong[colSongs.colTrack] = song->getTrack ();
@@ -238,14 +245,12 @@ void SongList::updateGenres () {
 
    mSongGenres->clear ();
    for (std::map<unsigned int, Glib::ustring>::const_iterator g (genres.begin ());
-   Check3 (get_column_cell_renderer (3));
-   Gtk::CellRenderer* r (get_column_cell_renderer (3)); Check3 (r);
-   Check3 (typeid (*r) == typeid (CellRendererList));
-   CellRendererList* renderer (dynamic_cast<CellRendererList*> (r));
-
+	g != genres.end (); ++g) {
       Gtk::TreeModel::Row newGenre (*mSongGenres->append ());
-	g != genres.end (); ++g)
-      renderer->append_list_item (g->second);
+      newGenre[colSongGenres.genre] = (g->second);
+   }
+}
+
 //-----------------------------------------------------------------------------
 /// Returns an iterator to the song having the passed value as name
 /// \param name: Name of song

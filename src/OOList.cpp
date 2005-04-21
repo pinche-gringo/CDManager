@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.12 2005/02/18 22:24:40 markus Exp $
+//$Id: OOList.cpp,v 1.13 2005/04/21 05:36:08 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.12 $
+//REVISION    : $Revision: 1.13 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -30,6 +30,8 @@
 #include <cerrno>
 #include <cstdlib>
 
+#include <gtkmm/cellrenderercombo.h>
+
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/CRegExp.h>
@@ -39,8 +41,6 @@
 
 #include <XGP/XValue.h>
 
-#include "RendererList.h"
-
 #include "OOList.h"
 
 
@@ -49,7 +49,8 @@
 /// \param genres: Genres which should be displayed in the 3rd column
 //-----------------------------------------------------------------------------
 OwnerObjectList::OwnerObjectList (const std::map<unsigned int, Glib::ustring>& genres)
-   : genres (genres), colOwnerObjects (NULL) {
+   : genres (genres), colOwnerObjects (NULL)
+     , mGenres (Gtk::ListStore::create (colGenres)) {
    TRACE9 ("OwnerObjectList::OwnerObjectList (const std::map<unsigned int, Glib::ustring>&)");
 }
 
@@ -88,7 +89,9 @@ void OwnerObjectList::init (const OwnerObjectColumns& cols) {
 	 (bind (mem_fun (*this, &OwnerObjectList::valueChanged), i));
    }
 
-   CellRendererList* const renderer (new CellRendererList ());
+   Gtk::CellRendererCombo* const renderer (new Gtk::CellRendererCombo ());
+   renderer->property_text_column () = 0;
+   renderer->property_model () = mGenres;
    renderer->property_editable () = true;
    Gtk::TreeViewColumn* const column (new Gtk::TreeViewColumn
 				      (_("Genre"), *Gtk::manage (renderer)));
@@ -253,14 +256,12 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 void OwnerObjectList::updateGenres () {
    TRACE9 ("OwnerObjectList::updateGenres () - Genres: " << genres.size ());
 
-   Check3 (get_column_cell_renderer (2));
-   Gtk::CellRenderer* r (get_column_cell_renderer (2)); Check3 (r);
-   Check3 (typeid (*r) == typeid (CellRendererList));
-   CellRendererList* renderer (dynamic_cast<CellRendererList*> (r));
-
+   mGenres->clear ();
    for (std::map<unsigned int, Glib::ustring>::const_iterator g (genres.begin ());
-	g != genres.end (); ++g)
-      renderer->append_list_item (g->second);
+	g != genres.end (); ++g) {
+      Gtk::TreeModel::Row newGenre (*mGenres->append ());
+      newGenre[colGenres.genre] = (g->second);
+   }
 }
 
 //-----------------------------------------------------------------------------

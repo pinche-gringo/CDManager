@@ -1,11 +1,11 @@
-//$Id: MovieList.cpp,v 1.17 2005/02/18 22:24:13 markus Exp $
+//$Id: MovieList.cpp,v 1.18 2005/04/21 05:36:08 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.17 $
+//REVISION    : $Revision: 1.18 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -30,6 +30,8 @@
 #include <cerrno>
 #include <cstdlib>
 
+#include <gtkmm/cellrenderercombo.h>
+
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ANumeric.h>
@@ -41,7 +43,6 @@
 
 #include "CDType.h"
 #include "LangDlg.h"
-#include "RendererList.h"
 
 #include "MovieList.h"
 
@@ -51,13 +52,16 @@
 /// \param genres: Genres which should be displayed in the 3rd column
 //-----------------------------------------------------------------------------
 MovieList::MovieList (const std::map<unsigned int, Glib::ustring>& genres)
-   : OwnerObjectList (genres) {
+   : OwnerObjectList (genres)
+     , mTypes (Gtk::ListStore::create (colTypes)) {
    TRACE9 ("MovieList::MovieList (const std::map<unsigned int, Glib::ustring>&)");
    mOwnerObjects = Gtk::TreeStore::create (colMovies);
    init (colMovies);
 
    // Add column "Type"
-   CellRendererList* renderer (new CellRendererList ());
+   Gtk::CellRendererCombo* renderer (new Gtk::CellRendererCombo ());
+   renderer->property_text_column () = 0;
+   renderer->property_model () = mTypes;
    renderer->property_editable () = true;
    Gtk::TreeViewColumn* column (new Gtk::TreeViewColumn
 				(_("Type"), *Gtk::manage (renderer)));
@@ -69,8 +73,10 @@ MovieList::MovieList (const std::map<unsigned int, Glib::ustring>& genres)
       (bind (mem_fun (*this, &MovieList::valueChanged), 0));
 
    CDType& type (CDType::getInstance ());
-   for (CDType::const_iterator t (type.begin ()); t != type.end (); ++t)
-      renderer->append_list_item (t->second);
+   for (CDType::const_iterator t (type.begin ()); t != type.end (); ++t) {
+      Gtk::TreeModel::Row newType (*mTypes->append ());
+      newType[colTypes.type] = (t->second);
+   }
 
    // Add column "Languages"
    column = new Gtk::TreeViewColumn (_("Language(s)"));

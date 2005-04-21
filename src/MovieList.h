@@ -1,7 +1,7 @@
 #ifndef MOVIELIST_H
 #define MOVIELIST_H
 
-//$Id: MovieList.h,v 1.11 2005/02/18 22:24:13 markus Exp $
+//$Id: MovieList.h,v 1.12 2005/04/21 05:36:08 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 
 
 #include <gtkmm/treeview.h>
-#include <gtkmm/treestore.h>
+#include <gtkmm/liststore.h>
 
 #include "Movie.h"
 #include "Director.h"
@@ -29,6 +29,15 @@
 
 class CellRendererList;
 
+
+/**Class describing the columns in the CDType-model
+ */
+class TypeColumns : public Gtk::TreeModel::ColumnRecord {
+ public:
+   TypeColumns () { add (type); }
+
+   Gtk::TreeModelColumn<Glib::ustring> type;
+};
 
 
 /**Class for the columns in the movie list
@@ -96,7 +105,10 @@ class MovieList : public OwnerObjectList {
    MovieList (const MovieList& other);
    const MovieList& operator= (const MovieList& other);
 
-   MovieColumns    colMovies;
+   TypeColumns  colTypes;
+   MovieColumns colMovies;
+
+   Glib::RefPtr<Gtk::ListStore> mTypes;
 };
 
 

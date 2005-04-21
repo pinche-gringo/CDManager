@@ -1,11 +1,11 @@
-//$Id: RecordList.cpp,v 1.13 2005/01/18 03:56:57 markus Rel $
+//$Id: RecordList.cpp,v 1.14 2005/04/21 05:41:08 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.13 $
+//REVISION    : $Revision: 1.14 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -34,8 +34,6 @@
 #include <YGP/Trace.h>
 
 #include <XGP/XValue.h>
-
-#include "RendererList.h"
 
 #include "RecordList.h"
 

@@ -1,7 +1,7 @@
 #ifndef RECORDLIST_H
 #define RECORDLIST_H
 
-//$Id: RecordList.h,v 1.8 2004/12/07 03:36:00 markus Rel $
+//$Id: RecordList.h,v 1.9 2005/04/21 05:41:08 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 
 
 #include <gtkmm/treeview.h>
-#include <gtkmm/treestore.h>
 
 #include "Record.h"
 #include "Interpret.h"

@@ -1,11 +1,11 @@
-//$Id: CDWriter.cpp,v 1.12 2005/01/29 22:29:10 markus Exp $
+//$Id: CDWriter.cpp,v 1.13 2005/04/21 00:05:21 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDWriter
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.12 $
+//REVISION    : $Revision: 1.13 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -205,7 +205,8 @@ void CDWriter::writeHeader (const char* lang, const char* format,
 int CDWriter::perform (int argc, const char** argv) {
    TRACE9 ("CDWriter::perform (int, const char**) - " << argc);
    if (argc != 1) {
-      std::cerr << name () << _("-error: Need language id as parameter");
+      std::cerr << name () << _("-error: Need language id as parameter\n"
+				"(This program is designed to be called by the CDManager-application)\n");
       return - 1;
    }
 
@@ -365,7 +366,6 @@ int CDWriter::perform (int argc, const char** argv) {
    writeHeader (argv[0], "[a-n-y-g]", fileRec, false, "Records");
 
    movieWriter.printStart (fileMovie, "");
-   recWriter.printStart (fileRec, "");
    for (std::vector<HDirector>::reverse_iterator i (directors.rbegin ());
 	i != directors.rend (); ++i)
       if (relMovies.isRelated (*i)) {
@@ -510,11 +510,10 @@ int CDWriter::perform (int argc, const char** argv) {
 
    fileMovie << "<div class=\"header\">|";
    for (std::map<std::string, Language>::const_iterator l (Language::begin ());
-	l != Language::end (); ++l) {
+	l != Language::end (); ++l)
       fileMovie << " <a href=\"#" << l->first << "\"><img src=\"images/" << l->first
 		<< ".png\" alt=\"" << l->first << " \"> "
-		<< _(l->second.getInternational ().c_str ()) << "</a> |";
-   }
+		<< l->second.getInternational () << "</a> |";
    fileMovie << "</div>";
 
    MovieWriter langWriter ("%l|%n|%d||%y|%g|%t", movieGenres);
@@ -524,8 +523,8 @@ int CDWriter::perform (int argc, const char** argv) {
 
    for (std::map<std::string, Language>::const_iterator l (Language::begin ());
 	l != Language::end (); ++l) {
-      fileMovie << "<tr><td colspan=\"6\"><div class=\"header\"><a name=\"" << l->first << "\">\n<br><h2>"
-		<< _(l->second.getInternational ().c_str ()) << "</div></h2></td></tr>";
+      fileMovie << "<tr><td colspan=\"6\"><div class=\"header\"><a name=\"" << l->first << "\">\n<br></a><h2>"
+		<< l->second.getInternational () << "</h2></div></td></tr>";
 
       fileMovie << "<tr><td>";
       writeHeader (argv[0], "[=]![n]![d]![y]![g]![m]", fileMovie, false);
@@ -646,7 +645,7 @@ int main (int argc, const char* argv[]) {
    CDWriter::initI18n (PACKAGE, LOCALEDIR);
    CDWriter appl (argc, argv);
 
-   Language::init (false);
+   Language::init ();
 
    try {
       return appl.run ();

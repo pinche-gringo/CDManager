@@ -12,14 +12,13 @@ libCDMgr_la_SOURCES=Options.h Movie.cpp Movie.h Celebrity.cpp		\
 		    Genres.cpp Genres.h
 libCDMgr_la_LIBADD=@DEPS_LIBS@
 
-CDManager_SOURCES=Settings.cpp Settings.h CDAppl.cpp CDAppl.h		\
-		  LangDlg.cpp LangDlg.h OOList.cpp OOList.h		\
-		  MovieList.cpp MovieList.h RecordList.cpp		\
-		  RecordList.h RendererList.cpp RendererList.h		\
-		  SongList.cpp SongList.h Song.h LangImg.cpp LangImg.h	\
-		  WordDlg.cpp WordDlg.h Language.cpp Language.h	DB.cpp 	\
-		  DB.h CDManagerDB.cpp CDManager.h CDManagerDel.cpp	\
-		  CDManager.cpp
+CDManager_SOURCES=Settings.cpp Settings.h CDAppl.cpp CDAppl.h LangDlg.cpp \
+		  LangDlg.h OOList.cpp OOList.h MovieList.cpp MovieList.h \
+		  RecordList.cpp RecordList.h SongList.cpp SongList.h	  \
+		  Song.h LangImg.cpp LangImg.h WordDlg.cpp WordDlg.h	  \
+		  Language.cpp Language.h DB.cpp DB.h CDManagerDB.cpp	  \
+		  CDManager.h CDManagerDel.cpp CDManager.cpp
+
 CDManager_CPPFLAGS=@INCLUDES@ -I../Common @DEPS_CFLAGS@ @XGP_CFLAGS@ -DUSE_LANGUAGEPIXMAPS -Wall
 CDManager_LDFLAGS=-lCDMgr @DEPS_LIBS@ @XGP_LIBS@ @LTLIBINTL@ @MYSQLLIBS@
 

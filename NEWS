@@ -1,3 +1,15 @@
+Overview of changes in version 0.7.00:
+
+  - Importing also comments from OGG-vorbis encoded files
+  - Implemented deleting movies
+  - Translating genres
+  - Movies can be stored with original and language-specific names
+  - Can be compiled with mysql- or mysql++-library
+  - Removed CDWriter's and libCDMgr's dependency to libXGP/GTK(MM)
+  - Fixed HTML-errors in generated pages
+  - Using Gtk::CellRendererCombo instead of custom CellRendererList
+
+
 Overview of changes in version 0.6.00:
 
   - Export to HTML generates documents in various languages
@@ -10,6 +22,7 @@ Overview of changes in version 0.6.00:
   - The words to ignore for the comparison can be changed in the settings
   - Explained setting up the database and the input-files in the README
 
+
 Overview of changes in version 0.5.00:
 
   - Export to HTML improved
@@ -17,6 +30,7 @@ Overview of changes in version 0.5.00:
   - Importing records from files (reading ID3 info)
   - Movies handle type of media and languages
   - Names can now contain quotes
+
 
 Overview of changes in version 0.4.00:
 
@@ -27,14 +41,17 @@ Overview of changes in version 0.4.00:
   - Pages are loaded, when needed
   - Generating web-pages out of stored info
 
+
 Overview of changes in version 0.3.00:
 
   - Changing genre of a record sets undefined genres of the songs
   - New records can be added
 
+
 Overview of changes in version 0.2.00:
 
   - The lists can be sorted and edited (hence RecordEdit removed)
+
 
 Overview of changes in version 0.1.00:
 

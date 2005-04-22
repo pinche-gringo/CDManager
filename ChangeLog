@@ -1,3 +1,170 @@
+2005-04-22  Markus Schwab  <g17m0@lycos.com>
+
+	* ChangeLog, NEWS: Overview of changes in V0.7.00 added
+
+	* po/de.po, po/en.po, po/es.po:
+	  Added messages from importing OGG-vorbis encoded files
+
+	* src/CDAppl.cpp: Don't convert translations to UTF-8
+
+	* configure.ac: Needing GTK+/GTKMM 2.6
+
+	* src/LangDlg.cpp: Fixed restricting result to a number of languages
+
+2005-04-21  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDManager.cpp, src/CDManager.h:
+	  Importing also from OGG comment header
+
+	* src/RecordList.cpp, src/RecordList.h: Removed unneeded includes
+
+	* src/RendererList.cpp, src/RendererList.h: Removed
+
+	* src/Makefile.am: Removed RendererList
+
+	* src/MovieList.cpp, src/MovieList.h, src/OOList.cpp, src/OOList.h:
+	  Using Gtk::CellRendererCombo instead of custom CellRendererList
+
+	* src/SongList.cpp, src/SongList.h:
+	  Using Gtk::CellRendererCombo instead of custom CellRenderList
+
+	* src/CDWriter.cpp:
+	  Don't translate language-names (are already translated); Fixed generated HTML
+
+2005-04-20  Markus Schwab  <g17m0@lycos.com>
+
+	* po/POTFILES.in: Added CDManager{DB,Del} and WordDlg; Removed Words
+
+	* configure.ac:
+	  libmysql++ is now optional; separate checks for libYGP and libXGP/GTK(MM)
+
+	* src/Makefile.am:
+	  CDWriter and libCDMgr only needs libYGP and libglib(mm); not libXGP or GTK(MM)
+
+	* src/Language.cpp, src/Language.h:
+	  Can be compiled to use language-flags or not
+
+	* src/CDManager.cpp:
+	  Fixed importing songs from MP3-info (setting tracknr, don't read twice)
+
+	* src/CDManagerDB.cpp: Renamed all Database::store to Database::execute
+
+	* src/Settings.cpp: Using WordDialog instead of Word-methods
+
+	* src/Writer.cpp: Removed including unused gtkmm/messagedialog
+
+	* src/DB.cpp: Implemented functionality for plain libmysql
+
+	* src/DB.h: Renamed store to execute
+
+	* src/Words.cpp, src/Words.h: Moved WordDialog to own file
+
+	* src/WordDlg.cpp, src/WordDlg.h: New file.
+
+2005-02-19  Markus Schwab  <g17m0@lycos.com>
+
+	* src/Makefile.am: Added LanguageImg
+
+	* src/CDManager.h, src/CDManager.cpp:
+	  Implemented changing language of movies from statusbar
+
+	* src/LangImg.cpp: New file.
+
+2005-02-18  Markus Schwab  <g17m0@lycos.com>
+
+	* src/LangImg.h: New file.
+
+	* src/OOList.cpp: Emitting signals only, when assigning was OK
+
+	* src/MovieList.cpp, src/MovieList.h:
+	  Emitting (additional) signal, when the movie-name has been changed
+
+	* src/Movie.h:
+	  Setting name without specified language first sets default name
+
+	* src/LangDlg.cpp: Removed including gtkmm/image.h
+
+	* src/CDManagerDB.cpp: Fixed storing translated movie-names
+
+	* src/CDManager.cpp:
+	  Fixed storing movies; 1st draft with language-icon in statusbar
+
+	* src/CDManager.h: Storing changed movie names
+
+2005-02-11  Markus Schwab  <g17m0@lycos.com>
+
+	* data/Makefile.am: Added in.png
+
+	* data/in.png: New file.
+
+	* src/CDManager.cpp:
+	  Displaying Language-menu in menubar; Showing status while exporting
+
+2005-01-31  Markus Schwab  <g17m0@lycos.com>
+
+	* configure.ac: Version to 0.7.00; Needing libXGP 0.7.01
+
+	* README: Mentioning Genres.dat for various languages
+
+	* src/MovieList.cpp, src/MovieList.h:
+	  Added update-method to change name of movies for certain language
+
+	* src/Movie.cpp, src/Movie.h: Handling movie-names in various languages
+
+	* src/Language.cpp:
+	  Actualy translating language-names (not just marking them for translation)
+
+	* src/CDManagerDel.cpp:
+	  When deleting new objects delete them also from changed-arrays
+
+	* src/CDManagerDB.cpp: Handling movie-names in various languages
+
+	* src/CDManager.h: Changing languages of movies
+
+	* src/CDManager.cpp:
+	  Added language-menu to movie page; Changing languages of movies; Fixes
+
+	* src/CDAppl.cpp: Reading also Movies-section from INI-file
+
+2005-01-29  Markus Schwab  <g17m0@lycos.com>
+
+	* src/Genres.cpp: Converting the strings to UTF8
+
+	* src/CDWriter.cpp:
+	  Clearing variable into which the header/footer is read
+
+	* src/CDManagerDB.cpp, src/CDWriter.cpp, src/Genres.cpp, src/Genres.h:
+	  Reading language-specific genres
+
+	* data/Makefile.am: Added language-specific Genres.dat files
+
+	* data/Genres.dat.de, data/Genres.dat.es: New file.
+
+	* src/CDManager.cpp, src/CDManager.h:
+	  Added icons to menus; Fixed enabling menus when switching NB-page
+
+	* src/MovieList.cpp: Fixed trap when de-selecting line
+
+	* src/CDManager.cpp, src/CDManager.h:
+	  Actualizing Edit-menu depending on selected page
+
+2005-01-25  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDManager.cpp:
+	  Using Gtk::UIManager for menus; Separated into 3 parts
+
+	* src/CDManager.h: Using Gtk::UIManager for menus
+
+	* src/Makefile.am: Added CDManagerDB and CDManagerDel
+
+	* src/CDAppl.cpp: Initializing I18n
+
+	* src/CDManagerDB.cpp, src/CDManagerDel.cpp: New file.
+
+2005-01-20  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDType.cpp, src/CDType.h: New file.
+
 2005-01-20  Markus Schwab  <markus@markus.linuxnet.ve>
 
 	* ChangeLog, NEWS: Overview of changes in V0.6.00 added
@@ -499,33 +666,6 @@
 
 2004-11-11  Markus Schwab  <markus@markus.linuxnet.ve>
 
-	* ChangeLog: Overview of changes in V0.2.00 added
-
-	* SQL/populateDB.sql: Some more words to ignore added
-
-	* SQL/createFillScript: Initializing genre and year
-
-	* SQL/createDB.sql:
-	  Most columns are not NULL; ids are also unsigned; added foreign keys
-
-	* NEWS: Overview of changes in V0.2.00 added
-
-	* README: Requiremnt mysql++ added
-
-	* configure.ac: Version to 0.2.00
-
-	* src/SongList.cpp, src/SongList.h: Removing unused include files
-
-	* src/RecordList.cpp, src/RecordList.h:
-	  Storing also interpret in enty-column; Using YGP::AYear to store year
-
-	* src/Interpret.h, src/Record.h, src/Song.h: Added copy constructor
-
-	* src/CDManager.cpp, src/CDManager.h:
-	  Addd callbacks after chaning records/interprets; Storing those changes in th eDB
-
-2004-11-11  Markus Schwab  <markus@markus.linuxnet.ve>
-
 	* NEWS, ChangeLog: Overview of changes in V0.2.00 added
 
 	* SQL/populateDB.sql: Some more words to ignore added
@@ -547,7 +687,7 @@
 	* src/Interpret.h, src/Record.h, src/Song.h: Added copy constructor
 
 	* src/CDManager.cpp, src/CDManager.h:
-	  Addd callbacks after chaning records/interprets; Storing those changes in th eDB
+	  Add callbacks after chaning records/interprets; Storing those changes in th eDB
 
 2004-11-07  Markus Schwab  <g17m0@lycos.com>
 

@@ -1,11 +1,11 @@
-//$Id: LangDlg.cpp,v 1.4 2005/02/18 22:22:52 markus Exp $
+//$Id: LangDlg.cpp,v 1.5 2005/04/22 01:11:48 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Language
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 11.12.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -215,13 +215,13 @@ void LanguageDialog::okEvent () {
    if (list.size ()) {
       Gtk::TreeSelection::ListHandle_Path::const_iterator i (list.begin ());
       translations = (*modelList->get_iter (*i++))[colLang.id];
-      for (unsigned int c (0); (i != list.end ()) && (c < maxLangs); ++i) {
+      for (unsigned int c (0); (i != list.end ()) && (++c < maxLangs); ++i) {
 	 translations.append (1, ',');
 	 translations += (*modelList->get_iter (*i))[colLang.id];
       }
 
       if (main.size ())
-	 main.append (1, ',');
+	 main += ',';
       main += translations;
    }
 

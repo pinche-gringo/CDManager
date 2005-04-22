@@ -1,11 +1,11 @@
-//$Id: CDAppl.cpp,v 1.7 2005/01/31 05:11:08 markus Exp $
+//$Id: CDAppl.cpp,v 1.8 2005/04/22 15:56:46 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Application
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.12.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -25,9 +25,8 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 
+#define DONT_CONVERT
 #include <cdmgr-cfg.h>
-
-#include <glibmm/convert.h>
 
 #include <YGP/INIFile.h>
 

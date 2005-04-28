@@ -1,11 +1,11 @@
-//$Id: DB.cpp,v 1.5 2005/04/20 05:43:50 markus Rel $
+//$Id: DB.cpp,v 1.6 2005/04/28 19:36:59 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Database
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 16.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -123,6 +123,9 @@ void Database::execute (const char* query) throw (std::exception&) {
    if (mysql_query (mysql, query))
       throw std::runtime_error (mysql_error (mysql));
 
+   if (!result)
+      mysql_free_result (result);
+
    if ((result = mysql_store_result (mysql)) != NULL)
       row = mysql_fetch_row (result);
    else
@@ -143,6 +146,10 @@ bool Database::hasData () {
 void Database::getNextResultRow () {
    TRACE9 ("Database::getNextResultRow ()");
    row = mysql_fetch_row (result);
+   if (!row) {
+      mysql_free_result (result);
+      result = NULL;
+   }
 }
 
 std::string Database::getResultColumnAsString (unsigned int column) {

@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.51 2005/04/21 20:57:43 markus Rel $
+//$Id: CDManager.cpp,v 1.52 2005/04/28 19:38:27 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : - Ask before quitting, when DB is not saved
 //BUGS        :
-//REVISION    : $Revision: 1.51 $
+//REVISION    : $Revision: 1.52 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -743,6 +743,44 @@ Glib::ustring CDManager::escapeDBValue (const Glib::ustring& value) {
 }
 
 //-----------------------------------------------------------------------------
+/// Adds the menu-entries for the language-menu to the passed string
+/// \param menu: String, where to add the language-entries to
+/// \param grpAction: Actiongroup to use
+//-----------------------------------------------------------------------------
+void CDManager::addLanguageMenus (Glib::ustring& menu, Glib::RefPtr<Gtk::ActionGroup> grpAction) {
+   TRACE9 ("CDManager::addLanguageMenus (Glib::ustring&)");
+
+   menu += "<menuitem action='Orig'/>";
+
+   Gtk::RadioButtonGroup grpLang;
+   grpAction->add (Gtk::RadioAction::create (grpLang, "Orig", _("_Original name")),
+		   Gtk::AccelKey ("<ctl>0"),
+		   bind (mem_fun (*this, &CDManager::changeLanguage), ""));
+
+   char accel[6];
+   strcpy (accel, "<ctl>1");
+   for (std::map<std::string, Language>::const_iterator i (Language::begin ());
+	i != Language::end (); ++i) {
+      TRACE9 ("CDManager::CDManager (Options&) - Adding language " << i->first);
+      menu += "<menuitem action='" + i->first + "'/>";
+
+      Glib::RefPtr<Gtk::RadioAction> act
+	 (Gtk::RadioAction::create (grpLang, i->first, i->second.getInternational ()));
+
+      if (accel[5] <= '9') {
+	 grpAction->add (act, Gtk::AccelKey (accel),
+			 bind (mem_fun (*this, &CDManager::changeLanguage), i->first));
+	 ++accel[5];
+      }
+      else
+	 grpAction->add (act, bind (mem_fun (*this, &CDManager::changeLanguage), i->first));
+
+      if (i->first == Movie::currLang)
+	 act->set_active ();
+   }
+}
+
+//-----------------------------------------------------------------------------
 /// Callback when switching the notebook pages
 /// \param iPage: Index of the newly selected page
 //-----------------------------------------------------------------------------
@@ -772,7 +810,7 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
       status.pack_end (*pageData.img, Gtk::PACK_SHRINK, 5);
 
       ui += ("<menuitem action='NDirector'/><menuitem action='NMovie'/>"
-	     "</placeholder></menu><placeholder name='Lang'><menu action='Lang'><menuitem action='Orig'/>");
+	     "</placeholder></menu><placeholder name='Lang'><menu action='Lang'>");
 
       grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NDirector", Gtk::Stock::NEW,
 							   _("New _Director")),
@@ -783,35 +821,9 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 		      mem_fun (*this, &CDManager::newMovie));
       apMenus[NEW3].clear ();
 
-      Gtk::RadioButtonGroup grpLang;
       grpAction->add (Gtk::Action::create ("Lang", _("_Language")));
-      grpAction->add (Gtk::RadioAction::create (grpLang, "Orig", _("_Original name")),
-		      Gtk::AccelKey ("<ctl>0"),
-		      bind (mem_fun (*this, &CDManager::changeLanguage), ""));
-
-      char accel[6];
-      strcpy (accel, "<ctl>1");
-      for (std::map<std::string, Language>::const_iterator i (Language::begin ());
-	   i != Language::end (); ++i) {
-	 TRACE9 ("CDManager::CDManager (Options&) - Adding language " << i->first);
-	 ui += "<menuitem action='" + i->first + "'/>";
-
-	 Glib::RefPtr<Gtk::RadioAction> act
-	    (Gtk::RadioAction::create (grpLang, i->first, i->second.getInternational ()));
-
-	 if (accel[5] <= '9') {
-	    grpAction->add (act, Gtk::AccelKey (accel),
-			    bind (mem_fun (*this, &CDManager::changeLanguage), i->first));
-	    ++accel[5];
-	 }
-	 else
-           grpAction->add (act, bind (mem_fun (*this, &CDManager::changeLanguage), i->first));
-
-	 if (i->first == Movie::currLang)
-	    act->set_active ();
-      }
+      addLanguageMenus (ui, grpAction);
       ui += "</menu></placeholder></menubar>";
-
       movieSelected ();
    }
    else {
@@ -1246,11 +1258,15 @@ void CDManager::setLanguage (const std::string& lang) {
 void CDManager::selectLanguage () {
    TRACE9 ("CDManager::selectLanguage ()");
 
-   std::string lang (Movie::currLang);
-   LanguageDialog dlg (lang, 1, false);
-   dlg.set_title (_("Choose language"));
-   dlg.run ();
+   Glib::RefPtr<Gtk::UIManager> mgrUI (Gtk::UIManager::create ());
+   Glib::RefPtr<Gtk::ActionGroup> grpAction (Gtk::ActionGroup::create ());
+   Glib::ustring ui ("<ui><popup name='PopupLang'>");
+   addLanguageMenus (ui, grpAction);
+   ui += "</popup></ui>";
 
-   if (lang != Movie::currLang)
-      setLanguage (lang);
+   mgrUI->insert_action_group (grpAction);
+   mgrUI->add_ui_from_string (ui);
+
+   Gtk::Menu* popup (dynamic_cast<Gtk::Menu*> (mgrUI->get_widget ("/PopupLang")));
+   popup->popup (0, gtk_get_current_event_time ());
 }

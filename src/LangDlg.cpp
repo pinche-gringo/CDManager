@@ -1,11 +1,11 @@
-//$Id: LangDlg.cpp,v 1.5 2005/04/22 01:11:48 markus Rel $
+//$Id: LangDlg.cpp,v 1.6 2005/04/28 19:37:51 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Language
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 11.12.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -160,7 +160,8 @@ LanguageDialog::LanguageDialog (std::string& languages, unsigned int maxLangs,
    }
 
    // Listbox to select further languages
-   listLang->get_selection ()->set_mode (Gtk::SELECTION_EXTENDED);
+   if (maxLangs > 1)
+      listLang->get_selection ()->set_mode (Gtk::SELECTION_EXTENDED);
    Gtk::TreeViewColumn* column (new Gtk::TreeViewColumn (_("Translations")));
    column->pack_start (colLang.flag, false);
    column->pack_start (colLang.name);
@@ -184,6 +185,7 @@ LanguageDialog::LanguageDialog (std::string& languages, unsigned int maxLangs,
    else
       if (showMainLang)
 	 listLang->set_sensitive (false);
+
    if (showMainLang) {
       mainLang->set_active (modelMain->getLine (tmp));
       main = tmp;

@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.52 2005/04/28 19:38:27 markus Exp $
+//$Id: CDManager.cpp,v 1.53 2005/05/06 22:06:31 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : - Ask before quitting, when DB is not saved
 //BUGS        :
-//REVISION    : $Revision: 1.52 $
+//REVISION    : $Revision: 1.53 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -442,7 +442,7 @@ void CDManager::importFromFileInfo () {
 }
 
 //-----------------------------------------------------------------------------
-/// Edits dthe preferences
+/// Edits the preferences
 //-----------------------------------------------------------------------------
 void CDManager::editPreferences () {
    Settings::create (get_window (), opt);
@@ -1114,10 +1114,10 @@ bool CDManager::parseOGGCommentHeader (std::istream& stream, Glib::ustring& arti
    Glib::ustring *value (NULL);
    do {
       stream.read ((char*)&len, 4);                  // Read the comment-length
-      TRACE9 ("CDManager::parseOGGCommentHeader (std::stream&, 3x Glib::ustring&, unsigned&) - Commentlen: " << len);
 
       std::getline (stream, key, '=');
       len -= key.size () + 1;
+      TRACE9 ("CDManager::parseOGGCommentHeader (std::stream&, 3x Glib::ustring&, unsigned&) - Key: " << key);
 
       if (key == "TITLE")
 	 value = &song;
@@ -1138,9 +1138,10 @@ bool CDManager::parseOGGCommentHeader (std::istream& stream, Glib::ustring& arti
       if (value) {
 	 unsigned int read (0);
 	 do {
-	    read = stream.readsome (buffer, (len > sizeof (buffer)) ? sizeof (buffer) : len);
+	    read = stream.readsome (buffer, (len > sizeof (buffer)) ? sizeof (buffer) - 1 : len);
 	    len -= read;
-	    value->append (buffer, read);
+	    buffer[read] = '\0';
+	    value->append (buffer);
  	 } while (len);
       }
       else

@@ -1,11 +1,11 @@
-//$Id: Settings.cpp,v 1.5 2005/04/20 05:44:43 markus Rel $
+//$Id: Settings.cpp,v 1.6 2005/05/14 23:32:20 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Settings
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 23.12.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -77,8 +77,6 @@ Settings::Settings (Options& options)
       pagExport.attach (*lbl, 0, 1, i, i + 1, Gtk::FILL, Gtk::FILL, 5);
       pagExport.attach (this->*fields[i], 1, 2, i, i + 1, Gtk::FILL | Gtk::EXPAND, Gtk::FILL, 5);
    }
-
-   pagExport.show ();
 
    nb.append_page (pagExport, _("_Export"), true);
    nb.append_page (*manage (wordDialog), _("Reserved _words"), true);

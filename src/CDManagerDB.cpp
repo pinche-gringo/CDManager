@@ -1,11 +1,11 @@
-//$Id: CDManagerDB.cpp,v 1.5 2005/04/20 06:02:18 markus Rel $
+//$Id: CDManagerDB.cpp,v 1.6 2005/05/14 23:31:34 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        : - Updating movies can delete the translated names
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.1.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -171,7 +171,7 @@ void CDManager::loadRecords () {
 			 "Records ORDER BY interpret, year");
       TRACE8 ("CDManager::loadRecords () - Records: " << Database::resultSize ());
 
-      if (cRecords = Database::resultSize ()) {
+      if ((cRecords = Database::resultSize ())) {
 	 std::map<unsigned int, std::vector<HRecord> > aRecords;
 
 	 HRecord newRec;
@@ -322,7 +322,7 @@ void CDManager::loadMovies () {
       TRACE8 ("CDManager::loadMovies () - Found " << Database::resultSize ()
 	      << " movies");
 
-      if (cMovies = Database::resultSize ()) {
+      if ((cMovies = Database::resultSize ())) {
 	 std::map<unsigned int, std::vector<HMovie> > aMovies;
 
 	 HMovie movie;

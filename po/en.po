@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.6\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2005-04-22 11:49-0400\n"
+"POT-Creation-Date: 2005-05-21 15:15-0400\n"
 "PO-Revision-Date: 2005-04-22 11:53-0400\n"
 "Last-Translator: Markus Schwab <g17m0@lycos.com>\n"
 "Language-Team: English <g17m0@lycos.com>\n"
@@ -116,67 +116,63 @@ msgstr ""
 msgid "Reading database ..."
 msgstr ""
 
-#: src/CDManager.cpp:778
-msgid "New _Director"
-msgstr ""
-
-#: src/CDManager.cpp:779 src/CDManager.cpp:823
-msgid "<ctl>N"
-msgstr ""
-
-#: src/CDManager.cpp:781
-msgid "_New Movie"
-msgstr ""
-
-#: src/CDManager.cpp:782 src/CDManager.cpp:826
-msgid "<ctl><alt>N"
-msgstr ""
-
-#: src/CDManager.cpp:787
-msgid "_Language"
-msgstr ""
-
-#: src/CDManager.cpp:788
+#: src/CDManager.cpp:766
 msgid "_Original name"
 msgstr ""
 
-#: src/CDManager.cpp:822
-msgid "New _Interpret"
+#: src/CDManager.cpp:826
+msgid "New _Director"
 msgstr ""
 
-#: src/CDManager.cpp:825
-msgid "_New Record"
-msgstr ""
-
-#: src/CDManager.cpp:828
-msgid "New _Song"
+#: src/CDManager.cpp:827 src/CDManager.cpp:845
+msgid "<ctl>N"
 msgstr ""
 
 #: src/CDManager.cpp:829
+msgid "_New Movie"
+msgstr ""
+
+#: src/CDManager.cpp:830 src/CDManager.cpp:848
+msgid "<ctl><alt>N"
+msgstr ""
+
+#: src/CDManager.cpp:834
+msgid "_Language"
+msgstr ""
+
+#: src/CDManager.cpp:844
+msgid "New _Interpret"
+msgstr ""
+
+#: src/CDManager.cpp:847
+msgid "_New Record"
+msgstr ""
+
+#: src/CDManager.cpp:850
+msgid "New _Song"
+msgstr ""
+
+#: src/CDManager.cpp:851
 msgid "<ctl><shft>N"
 msgstr ""
 
-#: src/CDManager.cpp:878
+#: src/CDManager.cpp:900
 msgid "Exporting (language %1) ..."
 msgstr ""
 
-#: src/CDManager.cpp:903
+#: src/CDManager.cpp:925
 msgid "Export Error!"
 msgstr ""
 
-#: src/CDManager.cpp:955
+#: src/CDManager.cpp:977
 msgid "Export Warning!"
 msgstr ""
 
-#: src/CDManager.cpp:980
+#: src/CDManager.cpp:1002
 msgid ""
 "Can't open file `%1'!\n"
 "\n"
 "Reason: %2"
-msgstr ""
-
-#: src/CDManager.cpp:1251
-msgid "Choose language"
 msgstr ""
 
 #: src/CDManagerDB.cpp:65
@@ -356,7 +352,7 @@ msgstr ""
 msgid "Unknown type of media!"
 msgstr ""
 
-#: src/MovieList.cpp:253 src/SongList.cpp:193 src/OOList.cpp:245
+#: src/MovieList.cpp:253 src/SongList.cpp:193 src/OOList.cpp:246
 msgid "Invalid value!"
 msgstr ""
 
@@ -389,7 +385,7 @@ msgstr ""
 msgid "Song `%1' already exists!"
 msgstr ""
 
-#: src/SongList.cpp:185 src/OOList.cpp:196
+#: src/SongList.cpp:185 src/OOList.cpp:197
 msgid "Unknown genre!"
 msgstr ""
 
@@ -398,7 +394,7 @@ msgstr ""
 msgid "Year"
 msgstr ""
 
-#: src/OOList.cpp:174 src/OOList.cpp:209
+#: src/OOList.cpp:174 src/OOList.cpp:210
 msgid "Entry `%1' already exists!"
 msgstr ""
 
@@ -438,7 +434,7 @@ msgstr ""
 msgid "_Language: "
 msgstr ""
 
-#: src/LangDlg.cpp:164
+#: src/LangDlg.cpp:165
 msgid "Translations"
 msgstr ""
 
@@ -466,48 +462,48 @@ msgstr ""
 msgid "Portugese"
 msgstr ""
 
-#: src/CDAppl.cpp:57
+#: src/CDAppl.cpp:56
 msgid ""
 "Utility to manage CDs\n"
 "\n"
 "Usage:"
 msgstr ""
 
-#: src/CDAppl.cpp:58
+#: src/CDAppl.cpp:57
 msgid ""
 " [OPTIONS]\n"
 "\n"
 msgstr ""
 
-#: src/CDAppl.cpp:59
+#: src/CDAppl.cpp:58
 msgid "[FILE] Use file as INI file\n"
 msgstr ""
 
-#: src/CDAppl.cpp:60 src/CDWriter.cpp:89
+#: src/CDAppl.cpp:59 src/CDWriter.cpp:89
 msgid "Output version information and exit\n"
 msgstr ""
 
-#: src/CDAppl.cpp:61 src/CDWriter.cpp:90
+#: src/CDAppl.cpp:60 src/CDWriter.cpp:90
 msgid ""
 "Displays this help and exit\n"
 "\n"
 msgstr ""
 
-#: src/CDAppl.cpp:62
+#: src/CDAppl.cpp:61
 msgid ""
 "The INI file can have the following entries:\n"
 "\n"
 msgstr ""
 
-#: src/CDAppl.cpp:88
+#: src/CDAppl.cpp:87
 msgid "-warning: No file specified! Ignoring option `f'\n"
 msgstr ""
 
-#: src/CDAppl.cpp:145 src/CDWriter.cpp:555
+#: src/CDAppl.cpp:144 src/CDWriter.cpp:555
 msgid "Compiled on"
 msgstr ""
 
-#: src/CDAppl.cpp:147
+#: src/CDAppl.cpp:146
 msgid ""
 "Copyright (C) 2004, 2005 Markus Schwab; e-mail: g17m0@lycos.com\n"
 "Distributed under the terms of the GNU General Public License"
@@ -539,11 +535,11 @@ msgstr ""
 msgid "Foo_ter for records:"
 msgstr ""
 
-#: src/Settings.cpp:83
+#: src/Settings.cpp:81
 msgid "_Export"
 msgstr ""
 
-#: src/Settings.cpp:84
+#: src/Settings.cpp:82
 msgid "Reserved _words"
 msgstr ""
 

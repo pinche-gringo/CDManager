@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.53 2005/05/06 22:06:31 markus Exp $
+//$Id: CDManager.cpp,v 1.54 2005/05/21 18:59:08 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        : - Ask before quitting, when DB is not saved
 //BUGS        :
-//REVISION    : $Revision: 1.53 $
+//REVISION    : $Revision: 1.54 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -701,14 +701,24 @@ void CDManager::recordGenreChanged (const HEntity& record) {
 	   << (rec.isDefined () ? rec->getName ().c_str () : "Undefined"));
 
    if (relSongs.isRelated (rec)) {
-      for (std::vector<HSong>::iterator i (relSongs.getObjects (rec).begin ());
-	   i != relSongs.getObjects (rec).end (); ++i)
-	 if (!(*i)->getGenre ()) {
-	    (*i)->setGenre (rec->getGenre ());
-	    songChanged (*i);
-	 }
+      unsigned int genre (rec->getGenre ());
 
-      recordSelected ();
+      Glib::RefPtr<Gtk::TreeModel> model (songs.get_model ());
+      Gtk::TreeSelection::ListHandle_Path list (songs.get_selection ()
+						->get_selected_rows ());
+      if (list.size ()) {
+	 Gtk::TreeIter iter;
+	 for (Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
+	      i != list.end (); ++i) {
+	    iter = model->get_iter (*i);
+	    songs.setGenre (iter, genre);
+	 }
+      }
+      else {
+	 Gtk::TreeModel::Children list (model->children ()); Check3 (list.size ());
+	 for (Gtk::TreeIter i (list.begin ()); i != list.end (); ++i)
+	    songs.setGenre (i, genre);
+      }
    }
 }
 

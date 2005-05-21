@@ -1,11 +1,11 @@
-//$Id: SongList.cpp,v 1.14 2005/04/21 05:09:01 markus Rel $
+//$Id: SongList.cpp,v 1.15 2005/05/21 18:58:26 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.14 $
+//REVISION    : $Revision: 1.15 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -280,4 +280,27 @@ Gtk::TreeModel::iterator SongList::getSong (const YGP::ANumeric& track) {
 	 return i;
    }
    return mSongs->children ().end ();
+}
+
+//-----------------------------------------------------------------------------
+/// Sets the genre of a song in the entity (if not already set) and the list
+/// \param iter: Iterator to song to change
+/// \param genre: Genre to set
+//-----------------------------------------------------------------------------
+void SongList::setGenre (Gtk::TreeIter& iter, unsigned int genre) {
+   TRACE9 ("SongList::setGenre (Gtk::TreeIter&, unsigned int) - " << genre);
+   Check1 (iter);
+   HSong song (getEntryAt (iter)); Check2 (song.isDefined ());
+   TRACE9 ("SongList::setGenre (Gtk::TreeIter&, unsigned int) - Genre: " << song->getGenre ());
+   if (!song->getGenre ()) {
+      TRACE9 ("SongList::setGenre (Gtk::TreeIter&, unsigned int) - Changing " << song->getName ());
+      song->setGenre (genre);
+      signalChanged.emit (song);
+
+      std::map<unsigned int, Glib::ustring>::const_iterator g
+	 (genres.find (song->getGenre ()));
+      if (g == genres.end ())
+	 g = genres.begin ();
+      (*iter)[colSongs.colGenre] = g->second;
+   }
 }

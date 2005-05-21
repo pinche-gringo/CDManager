@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.13 2005/04/21 05:36:08 markus Rel $
+//$Id: OOList.cpp,v 1.14 2005/05/21 18:56:30 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.13 $
+//REVISION    : $Revision: 1.14 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -185,15 +185,16 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 	    break;
 
 	 case 2: {
-	    for (std::map<unsigned int, Glib::ustring>::const_iterator g (genres.begin ());
-		 g != genres.end (); ++g)
+	    std::map<unsigned int, Glib::ustring>::const_iterator g (genres.begin ());
+	    for (; g != genres.end (); ++g)
 	       if (g->second == value) {
 		  setGenre (object, g->first);
 		  row[colOwnerObjects->genre] = value;
 		  signalObjectGenreChanged.emit (object);
-		  return;
+		  break;
 	       }
-	    throw (std::invalid_argument (_("Unknown genre!")));
+	    if (g == genres.end ())
+	       throw (std::invalid_argument (_("Unknown genre!")));
 	    break; }
 	 } // endswitch
 

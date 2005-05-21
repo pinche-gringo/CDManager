@@ -1,3 +1,46 @@
+2005-05-21  Markus Schwab  <g17m0@lycos.com>
+
+	* ChangeLog, NEWS: Changes of V0.7.01 added
+
+	* po/de.po, po/en.po, po/es.po: Added entry for language-menu
+
+	* src/CDManager.cpp:
+	  Changing record-genre respects the selection (of the songs)
+
+	* src/SongList.cpp, src/SongList.h: Added method to change the genre
+
+	* src/Song.h: Formatting changed
+
+	* src/OOList.cpp: Changing genre also emits object-changed signal
+
+2005-05-14  Markus Schwab  <g17m0@lycos.com>
+
+	* configure.ac: Version to 0.7.01
+
+	* src/CDType.cpp, src/Record.cpp: Changed copyright
+
+	* src/Settings.cpp:
+	  Removed explicit showing of export-page (happens automatically)
+
+	* src/CDManager.h: Added addLangaugeMenus()
+
+	* src/CDManagerDB.cpp: Removed warnings when compiling with GCC 4
+
+2005-05-06  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDManager.cpp:
+	  Workaround for Glib::ustring-trap when assigning from a known-length buffer
+
+2005-04-28  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDManager.cpp:
+	  Clicking movie-language icon shows popup-menu and not a dialogue
+
+	* src/LangDlg.cpp:
+	  Only enabling extended selection, if more than one enty can be returned
+
+	* src/DB.cpp: Freeing results found (libmysql)
+
 2005-04-22  Markus Schwab  <g17m0@lycos.com>
 
 	* ChangeLog, NEWS: Overview of changes in V0.7.00 added

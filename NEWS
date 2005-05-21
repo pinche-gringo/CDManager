@@ -1,3 +1,12 @@
+Overview of changes in version 0.7.01:
+
+  - If language-dialog only returns one language, disable extended selection
+  - Show popup-menu, if language-icon is clicked upon (not a dialogue)
+  - Freeing DB-results (if using libmysql)
+  - Fixed trap importing OGG-files
+  - Changing record-genre respects selection of songs
+
+
 Overview of changes in version 0.7.00:
 
   - Importing also comments from OGG-vorbis encoded files
@@ -50,7 +59,7 @@ Overview of changes in version 0.3.00:
 
 Overview of changes in version 0.2.00:
 
-  - The lists can be sorted and edited (hence RecordEdit removed)
+  - The lists can be sorted and edited (hence removed the record-edit dialogue)
 
 
 Overview of changes in version 0.1.00:

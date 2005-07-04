@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.54 2005/05/21 18:59:08 markus Rel $
+//$Id: CDManager.cpp,v 1.55 2005/07/04 16:49:12 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
-//TODO        : - Ask before quitting, when DB is not saved
+//TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.54 $
+//REVISION    : $Revision: 1.55 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -488,7 +488,7 @@ void CDManager::newSong () {
 /// Adds a new direcotor to the list
 //-----------------------------------------------------------------------------
 void CDManager::newDirector () {
-   Glib::RefPtr<Gtk::TreeSelection> movieSel (movies.get_selection ());
+   TRACE5 ("void CDManager::newDirector ()");
    HDirector director;
    director.define ();
    directors.push_back (director);
@@ -502,16 +502,19 @@ void CDManager::newDirector () {
 /// Adds a new movie to the first selected director
 //-----------------------------------------------------------------------------
 void CDManager::newMovie () {
-   Glib::RefPtr<Gtk::TreeSelection> movieSel (movies.get_selection ());
-   Gtk::TreeSelection::ListHandle_Path list (movieSel->get_selected_rows ());
-   Check3 (list.size ());
-   Glib::RefPtr<Gtk::TreeStore> model (movies.getModel ());
+   TRACE5 ("void CDManager::newMovie ()");
+
+   Glib::RefPtr<Gtk::TreeSelection> movieSel (movies.get_selection ()); Check3 (movieSel);
+   Gtk::TreeSelection::ListHandle_Path list (movieSel->get_selected_rows ()); Check3 (list.size ());
+   Glib::RefPtr<Gtk::TreeStore> model (movies.getModel ()); Check3 (model);
    Gtk::TreeIter p (model->get_iter (*list.begin ())); Check3 (p);
    if ((*p)->parent ())
       p = ((*p)->parent ());
+   TRACE9 ("void CDManager::newMovie () - Founding director " << movies.getDirectorAt (p)->getName ());
 
    HMovie movie;
    movie.define ();
+   TRACE9 ("void CDManager::newMovie () - Movie defined ");
    Gtk::TreeIter i (movies.append (movie, *p));
    movies.expand_row (model->get_path (p), false);
    movies.selectRow (i);
@@ -894,7 +897,11 @@ void CDManager::exportData () throw (Glib::ustring) {
    YGP::Tokenize langs (LANGUAGES);
    std::string lang;
    std::string tmpLang (Movie::currLang);
-   std::string oldLang (getenv ("LANGUAGE"));
+   const char* envLang (getenv ("LANGUAGE"));
+   std::string oldLang;
+   if (envLang)
+      oldLang = envLang;
+
    while ((lang = langs.getNextNode (' ')).size ()) {
       TRACE1 ("CDManager::exportData () - Lang: " << lang);
       Glib::ustring stat (_("Exporting (language %1) ..."));

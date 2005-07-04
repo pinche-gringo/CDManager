@@ -1,11 +1,11 @@
-//$Id: Movie.cpp,v 1.8 2005/01/31 05:15:27 markus Rel $
+//$Id: Movie.cpp,v 1.9 2005/07/04 16:50:53 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movie
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.8 $
+//REVISION    : $Revision: 1.9 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 29.11.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -122,4 +122,18 @@ bool Movie::compByGenre (const HMovie& a, const HMovie& b) {
 bool Movie::compByMedia (const HMovie& a, const HMovie& b) {
    Check1 (a.isDefined ()); Check1 (b.isDefined ());
    return a->type < b->type;
+}
+
+//-----------------------------------------------------------------------------
+/// Gets the name of the movie for the specified language. If such a name does
+/// not exist, use the international one (and if this is also not 
+/// \param a: First movie
+/// \param b: Second movie
+/// \returns bool: True, if a->type < b->type
+//-----------------------------------------------------------------------------
+Glib::ustring Movie::getName (const std::string& lang) const {
+   std::map<std::string, Glib::ustring>::const_iterator i (name.find (lang));
+   return (((i != name.end ()) ? i->second
+	    : ((i = name.find ("")) != name.end ()
+	       ? i->second : "")));
 }

@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.55 2005/07/04 16:49:12 markus Exp $
+//$Id: CDManager.cpp,v 1.56 2005/07/08 21:50:38 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.55 $
+//REVISION    : $Revision: 1.56 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -326,7 +326,7 @@ CDManager::CDManager (Options& options)
 		   Gtk::AccelKey (_("<ctl>I")),
 		   mem_fun (*this, &CDManager::importFromFileInfo));
    grpAction->add (Gtk::Action::create ("FQuit", Gtk::Stock::QUIT),
-		   mem_fun (*this, &CDManager::hide));
+		   mem_fun (*this, &CDManager::exit));
    grpAction->add (apMenus[MEDIT] = Gtk::Action::create ("Edit", _("_Edit")));
    grpAction->add (apMenus[DELETE] = Gtk::Action::create ("Delete", Gtk::Stock::DELETE,_("_Delete")),
 		   Gtk::AccelKey (_("<ctl>Delete")),
@@ -1287,4 +1287,33 @@ void CDManager::selectLanguage () {
 
    Gtk::Menu* popup (dynamic_cast<Gtk::Menu*> (mgrUI->get_widget ("/PopupLang")));
    popup->popup (0, gtk_get_current_event_time ());
+}
+
+//-----------------------------------------------------------------------------
+/// Checks if the DB has been change and asks if it should be safed, before
+/// hiding (closing) the main window
+/// \param ev: Event
+//-----------------------------------------------------------------------------
+void CDManager::exit () {
+   on_delete_event (NULL);
+   hide ();
+}
+
+//-----------------------------------------------------------------------------
+/// Checks if the DB has been change and asks if it should be safed, before
+/// hiding (closing) the main window
+/// \param ev: Event
+//-----------------------------------------------------------------------------
+bool CDManager::on_delete_event (GdkEventAny* ev) {
+   if (changedInterprets.size () || changedRecords.size () || changedSongs.size ()
+       || changedDirectors.size () || changedMovies.size ()
+       || deletedInterprets.size () || deletedRecords.size () || deletedSongs.size ()
+       || deletedDirectors.size () || deletedMovies.size ()) {
+      Gtk::MessageDialog dlg (_("The data has been modified! Save those changes?"),
+			      false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO);
+      dlg.set_title (PACKAGE);
+      if (dlg.run () == Gtk::RESPONSE_YES)
+	 save ();
+   }
+   return XApplication::on_delete_event (ev);
 }

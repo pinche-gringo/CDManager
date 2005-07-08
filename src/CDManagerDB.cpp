@@ -1,11 +1,11 @@
-//$Id: CDManagerDB.cpp,v 1.6 2005/05/14 23:31:34 markus Rel $
+//$Id: CDManagerDB.cpp,v 1.7 2005/07/08 21:50:38 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        : - Updating movies can delete the translated names
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.1.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -123,9 +123,11 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 }
 
 //-----------------------------------------------------------------------------
-/// Logout from the DB
+/// Logout from the DB; give an opportunity to save changes
 //-----------------------------------------------------------------------------
 void CDManager::logout () {
+   on_delete_event (NULL);
+
    Database::close ();
    enableMenus (false);
    status.pop ();

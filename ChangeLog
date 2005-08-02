@@ -1,3 +1,43 @@
+2005-08-02  g17m0@lycos.com  <markus@markus>
+
+	* ChangeLog, NEWS: Changes of V0.7.10 added
+
+	* configure.ac: Version to 0.7.10
+
+	* src/Writer.cpp: Names are written as UTF-8
+
+	* src/Language.h: Removed national version of the languages
+
+	* src/Language.cpp:
+	  Removed national version of the languages; Improved readability
+
+	* src/Genres.cpp: Files are read as UTF-8
+
+	* src/CDWriter.cpp, src/CDWriter.h:
+	  Created files have utf8 as extension
+
+	* src/CDManagerDB.cpp: Store values in DB as UTF-8
+
+	* src/CDManager.cpp: moved escapeDBValue to CDManagerDB.cpp
+
+	* data/Genres.dat.es: Changed to UTF-8; Changed names
+
+	* data/Genres.dat.de, data/Movies.head, data/Records.head:
+	  Changed to UTF-8
+
+2005-07-08  g17m0@lycos.com  <markus@markus>
+
+	* src/CDManager.cpp, src/CDManager.h, src/CDManagerDB.cpp:
+	  Asking to save unsaved chagnes to the DB
+
+2005-07-04  g17m0@lycos.com  <markus@markus>
+
+	* src/Movie.cpp, src/Movie.h:
+	  Method getName checks if international name is available
+
+	* src/CDManager.cpp:
+	  Fixed trap when LANGUAGE is not in environment; traces added
+
 2005-05-21  Markus Schwab  <g17m0@lycos.com>
 
 	* ChangeLog, NEWS: Changes of V0.7.01 added

@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.56 2005/07/08 21:50:38 markus Exp $
+//$Id: CDManager.cpp,v 1.57 2005/08/02 01:52:17 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.56 $
+//REVISION    : $Revision: 1.57 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -409,8 +409,7 @@ CDManager::CDManager (Options& options)
 #ifdef TEST
    login ("cdmgr", "");
 #else
-   XGP::TLoginDialog<CDManager>::create (_("Database login"), *this,
-					 &CDManager::login)->setCurrentUser ();
+   showLogin ();
 #endif
 }
 
@@ -737,22 +736,6 @@ void CDManager::movieNameChanged (const HMovie& movie) {
 
    changedMovieNames[movie] += std::string (1, ',');
    changedMovieNames[movie] += Movie::currLang;
-}
-
-//-----------------------------------------------------------------------------
-/// Escapes the quotes in values for the database
-/// \param value: Value to escape
-/// \returns Glib::ustring: Escaped text
-//-----------------------------------------------------------------------------
-Glib::ustring CDManager::escapeDBValue (const Glib::ustring& value) {
-   unsigned int pos (0);
-   Glib::ustring rc (value);
-   while ((pos = rc.find ('"', pos)) != std::string::npos) {
-      rc.replace (pos, 1, "\\\"");
-      pos += 2;
-   }
-   TRACE9 ("CDManager::escapeDBValue (const Glib::ustring&) - Escaped: " << rc);
-   return rc;
 }
 
 //-----------------------------------------------------------------------------

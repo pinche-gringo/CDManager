@@ -1,9 +1,9 @@
-dnl $Id: configure.ac,v 1.11 2005/05/14 23:33:02 markus Rel $
+dnl $Id: configure.ac,v 1.12 2005/08/02 02:03:40 markus Rel $
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.52)
-AC_REVISION($Revision: 1.11 $)
-AC_INIT(CDManager, 0.7.01, [g17m0@lycos.com], CDManager)
+AC_REVISION($Revision: 1.12 $)
+AC_INIT(CDManager, 0.7.10, [g17m0@lycos.com], CDManager)
 
 RELEASE=${PACKAGE_VERSION%.*}
 AC_DEFINE_UNQUOTED(PRG_RELEASE, "$RELEASE", [Define to the release of the program])
@@ -219,7 +219,7 @@ dnl Settings for autoheader
 AH_TOP([#ifndef CDMANAGER_CFG_H
 #define CDMANAGER_CFG_H
 
-//$Id: configure.ac,v 1.11 2005/05/14 23:33:02 markus Rel $
+//$Id: configure.ac,v 1.12 2005/08/02 02:03:40 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

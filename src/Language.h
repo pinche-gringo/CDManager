@@ -1,7 +1,7 @@
 #ifndef LANGUAGE_H
 #define LANGUAGE_H
 
-//$Id: Language.h,v 1.5 2005/04/20 21:02:54 markus Rel $
+//$Id: Language.h,v 1.6 2005/08/02 01:55:49 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -35,7 +35,6 @@ struct Language {
  public:
    static void init ();
 
-   static Glib::ustring findNational (const std::string& lang) throw (std::out_of_range);
    static Glib::ustring findInternational (const std::string& lang) throw (std::out_of_range);
    static const Language& findLanguage (const std::string& lang) throw (std::out_of_range);
    static bool exists (const std::string& lang);
@@ -43,7 +42,6 @@ struct Language {
    static Glib::RefPtr<Gdk::Pixbuf> findFlag (const std::string& lang) throw (std::out_of_range);
 #endif
 
-   Glib::ustring getNational () const { return nameNational; }
    Glib::ustring getInternational () const { return nameInternational; }
 #ifdef USE_LANGUAGEPIXMAPS
    const Glib::RefPtr<Gdk::Pixbuf> getFlag () const {return flag; }
@@ -51,7 +49,7 @@ struct Language {
 
    Language ();
    Language (const Language& other);
-   Language (const Glib::ustring& internat, const Glib::ustring& national
+   Language (const Glib::ustring& internat
 #ifdef USE_LANGUAGEPIXMAPS
 	     , const Glib::RefPtr<Gdk::Pixbuf>& image
 #endif
@@ -71,7 +69,6 @@ struct Language {
 #endif
 
  private:
-   Glib::ustring nameNational;
    Glib::ustring nameInternational;
 #ifdef USE_LANGUAGEPIXMAPS
    Glib::RefPtr<Gdk::Pixbuf> flag;

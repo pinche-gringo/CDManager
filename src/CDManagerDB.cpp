@@ -1,11 +1,11 @@
-//$Id: CDManagerDB.cpp,v 1.7 2005/07/08 21:50:38 markus Exp $
+//$Id: CDManagerDB.cpp,v 1.8 2005/08/02 01:53:06 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
-//BUGS        : - Updating movies can delete the translated names
-//REVISION    : $Revision: 1.7 $
+//BUGS        :
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.1.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -69,6 +69,7 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
       dlg.run ();
       return false;
    }
+   TRACE9 ("CDManager::login (const Glib::ustring&, const Glib::ustring&) - Logged in");
 
    enableMenus (true);
 
@@ -98,8 +99,7 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 
 	 while (Database::hasData ()) {
 	    // Fill and store artist entry from DB-values
-	    Words::addName2Ignore
-	       (Glib::locale_to_utf8 (Database::getResultColumnAsString (0)));
+	    Words::addName2Ignore (Database::getResultColumnAsString (0));
 	    Database::getNextResultRow ();
 	 }
 
@@ -107,8 +107,7 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 
 	 while (Database::hasData ()) {
 	    // Fill and store artist entry from DB-values
-	    Words::addArticle
-	       (Glib::locale_to_utf8 (Database::getResultColumnAsString (0)));
+	    Words::addArticle (Database::getResultColumnAsString (0));
 	    Database::getNextResultRow ();
 	 }
       }
@@ -156,7 +155,7 @@ void CDManager::loadRecords () {
 	 // Fill and store artist entry from DB-values
 	 hArtist.define ();
 	 hArtist->setId (Database::getResultColumnAsUInt (0));
-	 hArtist->setName (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
+	 hArtist->setName (Database::getResultColumnAsString (1));
 	 std::string tmp (Database::getResultColumnAsString (2));
 	 if (tmp != "0000")
 	    hArtist->setBorn (tmp);
@@ -185,8 +184,7 @@ void CDManager::loadRecords () {
 
 	    newRec.define ();
 	    newRec->setId (Database::getResultColumnAsUInt (0));
-	    newRec->setName
-	       (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
+	    newRec->setName (Database::getResultColumnAsString (1));
 	    if (Database::getResultColumnAsUInt (3))
 	       newRec->setYear (Database::getResultColumnAsUInt (3));
 	    newRec->setGenre (Database::getResultColumnAsUInt (4));
@@ -256,7 +254,7 @@ void CDManager::loadMovies (const std::string& lang) {
 		 m != movies.end (); ++m) {
 	       Check3 (m->isDefined ());
 	       if ((*m)->getId () == id) {
-		  (*m)->setName (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)), lang);
+		  (*m)->setName (Database::getResultColumnAsString (1), lang);
 		  d = directors.end () - 1;
 		  break;
 	       }
@@ -296,7 +294,7 @@ void CDManager::loadMovies () {
 	 // Fill and store artist entry from DB-values
 	 try {
 	    hDirector.define ();
-	    hDirector->setName (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
+	    hDirector->setName (Database::getResultColumnAsString (1));
 	    hDirector->setId (Database::getResultColumnAsUInt (0));
 
 	    std::string tmp (Database::getResultColumnAsString (2));
@@ -336,8 +334,7 @@ void CDManager::loadMovies () {
 
 	    try {
 	       movie.define ();
-	       movie->setName
-		  (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)), "");
+	       movie->setName (Database::getResultColumnAsString (1), "");
 	       movie->setId (Database::getResultColumnAsUInt (0));
 	       if (Database::getResultColumnAsUInt (3))
 		  movie->setYear (Database::getResultColumnAsUInt (3));
@@ -417,7 +414,7 @@ void CDManager::loadSongs (const HRecord& record) {
       while (Database::hasData ()) {
 	 song.define ();
 	 song->setId (Database::getResultColumnAsUInt (0));
-	 song->setName (Glib::locale_to_utf8 (Database::getResultColumnAsString (1)));
+	 song->setName (Database::getResultColumnAsString (1));
 	 std::string time (Database::getResultColumnAsString (2));
 	 if (time != "00:00:00")
 	    song->setDuration (time);
@@ -656,7 +653,7 @@ void CDManager::savePreferences () {
       for (std::vector<Glib::ustring>::const_iterator w (Words::namesBegin ());
 	   w != Words::namesEnd (); ++w) {
 	 std::string ins ("INSERT INTO Words VALUES ('%1')");
-	 ins.replace (ins.find ("%1"), 2, Glib::locale_from_utf8 (*w));
+	 ins.replace (ins.find ("%1"), 2, *w);
 
 	 Database::execute (ins.c_str ());
       }
@@ -667,7 +664,7 @@ void CDManager::savePreferences () {
       for (std::vector<Glib::ustring>::const_iterator a (Words::articlesBegin ());
 	   a != Words::articlesEnd (); ++a) {
 	 std::string ins ("INSERT INTO Articles VALUES ('%1')");
-	 ins.replace (ins.find ("%1"), 2, Glib::locale_from_utf8 (*a));
+	 ins.replace (ins.find ("%1"), 2, *a);
 
 	 Database::execute (ins.c_str ());
       }
@@ -775,4 +772,20 @@ void CDManager::removeDeletedEntries () {
       Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
       dlg.run ();
    }
+}
+
+//-----------------------------------------------------------------------------
+/// Escapes the quotes in values for the database
+/// \param value: Value to escape
+/// \returns Glib::ustring: Escaped text
+//-----------------------------------------------------------------------------
+Glib::ustring CDManager::escapeDBValue (const Glib::ustring& value) {
+   unsigned int pos (0);
+   Glib::ustring rc (value);
+   while ((pos = rc.find ('"', pos)) != Glib::ustring::npos) {
+      rc.replace (pos, 1, "\\\"");
+      pos += 2;
+   }
+   TRACE9 ("CDManager::escapeDBValue (const Glib::ustring&) - Escaped: " << rc);
+   return rc;
 }

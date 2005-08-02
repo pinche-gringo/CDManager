@@ -1,11 +1,11 @@
-//$Id: Genres.cpp,v 1.3 2005/01/29 22:30:15 markus Rel $
+//$Id: Genres.cpp,v 1.4 2005/08/02 01:55:04 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : libCDMgr
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 13.01.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -89,13 +89,4 @@ void Genres::loadFromFile (const char* file, Genres& records, Genres& movies,
    _inifile_.addSection (lstRecords);
 
    _inifile_.read ();
-
-   // Convert the strings to UTF8
-   for (std::map<unsigned int, Glib::ustring>::iterator r (records.begin ());
-	r != records.end (); ++r)
-      r->second = Glib::locale_to_utf8 (r->second);
-
-   for (std::map<unsigned int, Glib::ustring>::iterator m (movies.begin ());
-	m != movies.end (); ++m)
-      m->second = Glib::locale_to_utf8 (m->second);
 }

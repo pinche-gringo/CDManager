@@ -5,7 +5,7 @@
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.4.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -132,7 +132,7 @@ WordDialog::WordDialog ()
 
    // Fill listboxes
    TRACE3 ("WordDialog::WordDialog () - Words: " << Words::cNames ()
-	   << "; Articles: " << cArticles ());
+	   << "; Articles: " << Words::cArticles ());
    Words::forEachName (0U, Words::cNames (), *this, &WordDialog::appendWord);
    Words::forEachArticle (0, Words::cArticles (), *this, &WordDialog::appendArticle);
 
@@ -159,10 +159,10 @@ void WordDialog::entryChanged (unsigned int which) {
    unsigned int starts[] = { 0, Words::_keys->maxEntries - Words::_keys->cArticles };
    unsigned int ends[] = { Words::cNames (),  Words::_keys->maxEntries };
    Check1 (which < 2);
-   Check3 ((sizeof (fields) / sizeof (*fields)) < which);
-   Check3 ((sizeof (buttons) / sizeof (*buttons)) < which);
-   Check3 ((sizeof (starts) / sizeof (*starts)) < which);
-   Check3 ((sizeof (ends) / sizeof (*ends)) < which);
+   Check3 ((sizeof (fields) / sizeof (*fields)) > which);
+   Check3 ((sizeof (buttons) / sizeof (*buttons)) > which);
+   Check3 ((sizeof (starts) / sizeof (*starts)) > which);
+   Check3 ((sizeof (ends) / sizeof (*ends)) > which);
 
    bool unique (false);
    if (fields[which]->get_text_length ()
@@ -181,8 +181,8 @@ void WordDialog::entrySelected (unsigned int which) {
    Gtk::TreeView* lists[] = { &lstNames, &lstArticles };
    Gtk::Button* buttons[] = { &deleteName, &deleteArticle };
    Check1 (which < 2);
-   Check3 ((sizeof (lists) / sizeof (*lists)) < which);
-   Check3 ((sizeof (buttons) / sizeof (*buttons)) < which);
+   Check3 ((sizeof (lists) / sizeof (*lists)) > which);
+   Check3 ((sizeof (buttons) / sizeof (*buttons)) > which);
 
    buttons[which]->set_sensitive
       (lists[which]->get_selection ()->get_selected_rows ().size ());
@@ -229,10 +229,10 @@ void WordDialog::onAdd (unsigned int which) {
    Gtk::Button* buttons[] = { &addName, &addArticle };
    Gtk::TreeView* lists[] = { &lstNames, &lstArticles };
    Glib::RefPtr<Gtk::ListStore> models[] = { names, articles };
-   Check3 ((sizeof (fields) / sizeof (*fields)) < which);
-   Check3 ((sizeof (buttons) / sizeof (*buttons)) < which);
-   Check3 ((sizeof (models) / sizeof (*models)) < which);
-   Check3 ((sizeof (lists) / sizeof (*lists)) < which);
+   Check3 ((sizeof (fields) / sizeof (*fields)) > which);
+   Check3 ((sizeof (buttons) / sizeof (*buttons)) > which);
+   Check3 ((sizeof (models) / sizeof (*models)) > which);
+   Check3 ((sizeof (lists) / sizeof (*lists)) > which);
 
    Check2 (fields[which]->get_text_length ());
    buttons[which]->set_sensitive (false);
@@ -241,6 +241,8 @@ void WordDialog::onAdd (unsigned int which) {
    Glib::RefPtr<Gtk::TreeSelection> sel (lists[which]->get_selection ());
    sel->unselect_all ();
    sel->select (row);
+
+   fields[which]->set_text ("");
 }
 
 //-----------------------------------------------------------------------------
@@ -252,8 +254,8 @@ void WordDialog::onDelete (unsigned int which) {
    Gtk::TreeView* lists[] = { &lstNames, &lstArticles };
    Glib::RefPtr<Gtk::ListStore> models[] = { names, articles };
    Check1 (which < 2);
-   Check3 ((sizeof (lists) / sizeof (*lists)) < which);
-   Check3 ((sizeof (models) / sizeof (*models)) < which);
+   Check3 ((sizeof (lists) / sizeof (*lists)) > which);
+   Check3 ((sizeof (models) / sizeof (*models)) > which);
 
    Glib::RefPtr<Gtk::TreeSelection> selection (lists[which]->get_selection ());
    while (selection->get_selected_rows ().size ()) {

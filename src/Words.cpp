@@ -1,11 +1,11 @@
-//$Id: Words.cpp,v 1.9 2005/09/05 17:52:30 markus Exp $
+//$Id: Words.cpp,v 1.10 2005/09/05 22:40:46 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Words
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.9 $
+//REVISION    : $Revision: 1.10 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -34,8 +34,6 @@
 #include <cstring>
 #include <algorithm>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Trace.h>
 #include <YGP/Check.h>
 
@@ -180,9 +178,7 @@ void Words::addName2Ignore (const Glib::ustring& word, unsigned int pos) {
 	 if (strcmp (_keys->aValues[pos - 1], word.c_str ()) < 0) {
 	    if (pos < _keys->cNames) {
 	       Check2 (_keys->aValues[pos]);
-	       if (strcmp (_keys->aValues[pos], word.c_str ()) > 0)
-		  moveValues (pos, _keys->cNames, pos + 1);
-	       else
+	       if (strcmp (_keys->aValues[pos], word.c_str ()) <= 0)
 		  pos = POS_UNKNOWN;
 	    }
 	 }
@@ -195,11 +191,13 @@ void Words::addName2Ignore (const Glib::ustring& word, unsigned int pos) {
    if (pos == POS_UNKNOWN)
       if (_keys->cNames) {
 	 TRACE9 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Search: " << word);
-	 if ((pos = binarySearch (0, _keys->cNames - 1, word.c_str ())) < _keys->cNames)
-	    moveValues (pos, _keys->cNames - 1, pos + 1);
+	 pos = binarySearch (0, _keys->cNames - 1, word.c_str ());
       }
       else
 	 pos = 0;
+
+   if (pos < _keys->cNames)
+      moveValues (pos, _keys->cNames, pos + 1);
 
    TRACE3 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Insert into " << pos);
    _keys->aValues[pos] = _keys->endValues;
@@ -214,6 +212,49 @@ void Words::addName2Ignore (const Glib::ustring& word, unsigned int pos) {
 /// \param pos: Hint of position, where to insert
 //-----------------------------------------------------------------------------
 void Words::addArticle (const Glib::ustring& word, unsigned int pos) {
+   TRACE9 ("Words::addArticle (const Glib::ustring&, unsigned int) - " << word << " to " << _keys->cArticles);
+   Check2 (_keys);
+
+   // Try to respect the hint
+   if (pos != POS_UNKNOWN) {
+      pos = ((pos > _keys->cArticles) ? _keys->maxEntries - 1
+	     : _keys->maxEntries - _keys->cArticles + pos);
+
+      TRACE9 ("Words::addArticle (const Glib::ustring&, unsigned int) - Checking pos " << pos);
+      if (_keys->cArticles) {
+	 Check2 (_keys->aValues[pos]);
+	 TRACE9 ("Words::addArticle (const Glib::ustring&, unsigned int) - Comp: " << strcmp (_keys->aValues[pos], word.c_str ()));
+	 if (strcmp (_keys->aValues[pos], word.c_str ()) < 0) {
+	    if (pos < (_keys->maxEntries - 1)) {
+	       Check2 (_keys->aValues[pos + 1]);
+	       if (strcmp (_keys->aValues[pos + 1], word.c_str ()) <= 0)
+		  pos = POS_UNKNOWN;
+	    }
+	 }
+	 else
+	    pos = POS_UNKNOWN;
+      }
+   }
+
+   // Hint didn't work or wasn't passed: Search for position to insert
+   if (pos == POS_UNKNOWN)
+      if (_keys->cArticles) {
+	 TRACE9 ("Words::addArticles (const Glib::ustring&, unsigned int) - Search: " << word);
+	 pos = binarySearch (_keys->maxEntries - _keys->cArticles,
+			     _keys->maxEntries - 1, word.c_str ());
+      }
+      else
+	 pos = 0;
+
+   if (pos >= (_keys->maxEntries - _keys->cArticles))
+      moveValues (_keys->maxEntries - _keys->cArticles, pos,
+		  _keys->maxEntries - _keys->cArticles - 1);
+
+   TRACE3 ("Words::addArticle (const Glib::ustring&, unsigned int) - Insert into " << pos);
+   _keys->aValues[pos] = _keys->endValues;
+   memcpy (_keys->endValues, word.c_str (), word.bytes ());
+   _keys->endValues += word.bytes () + 1;
+   _keys->cArticles++;
 }
 
 //-----------------------------------------------------------------------------
@@ -227,7 +268,7 @@ Glib::ustring Words::removeArticle (const Glib::ustring& name) {
 
    Glib::ustring word (getWord (name));
    if (word.size () != name.size ()
-       && containsWord (0, _keys->cArticles, word)) {
+       && containsWord (_keys->maxEntries - _keys->cArticles, _keys->maxEntries - 1, word)) {
       unsigned int pos (word.size ());
       while (!isalnum (name[pos]))
 	 ++pos;

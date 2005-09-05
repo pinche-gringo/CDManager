@@ -1,7 +1,7 @@
 #ifndef WORDS_H
 #define WORDS_H
 
-//$Id: Words.h,v 1.4 2005/04/20 05:43:09 markus Rel $
+//$Id: Words.h,v 1.5 2005/09/05 04:08:03 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,44 +23,67 @@
 #include <glibmm/ustring.h>
 
 
-/**Class to store some words
+/**Class to store some words. These words are stored in a shared memory
+ * segment.
  */
 class Words {
    friend class WordDialog;
 
  public:
-   static unsigned int cArticles () { return articles.size (); }
-   static unsigned int cNames () { return names.size (); }
-   static void addName2Ignore (const Glib::ustring& word) {
-      names.push_back (word); }
-   static void addArticle (const Glib::ustring& word) {
-      articles.push_back (word); }
-   static void sortNames ();
-   static void sortArticles ();
+   /// \name Management methods
+   //@{
+   static void create (unsigned int words = 1000) throw (Glib::ustring);
+   static void access (unsigned int key) throw (Glib::ustring);
+   static void destroy ();
+   //@}
+
+   static unsigned int cArticles () { return _keys->cArticles; }
+   static unsigned int cNames () { return _keys->cNames; }
+
+   enum { POS_END = -2U, POS_UNKNOWN = -1U };
+   static void addName2Ignore (const Glib::ustring& word, unsigned int pos = POS_UNKNOWN);
+   static void addArticle (const Glib::ustring& word, unsigned int pos = POS_UNKNOWN);
 
    static Glib::ustring removeArticle (const Glib::ustring& name);
    static Glib::ustring removeNames (const Glib::ustring& name);
 
-   static std::vector<Glib::ustring>::const_iterator namesEnd () { return names.end (); }
-   static std::vector<Glib::ustring>::const_iterator namesBegin () { return names.begin (); }
-   static std::vector<Glib::ustring>::const_iterator articlesEnd () { return articles.end (); }
-   static std::vector<Glib::ustring>::const_iterator articlesBegin () { return articles.begin (); }
+   /// Call a callback for each specified name
+   template <class T>
+   static void forEachName (unsigned int start, unsigned int end, T& obj,
+			    void (T::* cb) (const char*)) {
+      for (unsigned int i (start); i < end; ++i)
+	 (obj.*cb) (_keys->aValues[i]);
+   }
+   /// Call a callback for each specified article
+   template <class T>
+   static void forEachArticle (unsigned int start, unsigned int end, T& obj,
+			       void (T::* cb) (const char*)) {
+      for (unsigned int i (start); i < end; ++i)
+	 (obj.*cb) (_keys->aValues[_keys->maxEntries - _keys->cArticles + i]);
+   }
 
  private:
    //Prohibited manager functions
-   Words ();
    ~Words ();
    Words (const Words&);
    Words& operator= (const Words&);
 
-   static bool containsWord (const std::vector<Glib::ustring>& list,
-			     const Glib::ustring& word);
+   static void moveValues (unsigned int start, unsigned int end, unsigned int target);
+   static unsigned int binarySearch (unsigned int start, unsigned int end, const char* word);
 
-   static Glib::ustring getWord (const Glib::ustring& name);
-   static bool compare (const Glib::ustring& w1, const Glib::ustring& w2);
+   static Glib::ustring Words::getWord (const Glib::ustring& text);
+   static bool containsWord (unsigned int start, unsigned int end, const Glib::ustring& word);
 
-   static std::vector<Glib::ustring> articles;
-   static std::vector<Glib::ustring> names;
+   typedef struct {
+      char*        values;
+      unsigned int cNames;
+      unsigned int cArticles;
+      unsigned int maxEntries;
+      char*        endValues;
+      char*        aValues[];
+   } keys;
+
+   static keys* _keys;
 };
 
 #endif

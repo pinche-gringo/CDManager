@@ -1,11 +1,11 @@
-//$Id: Words.cpp,v 1.8 2005/09/05 04:08:03 markus Exp $
+//$Id: Words.cpp,v 1.9 2005/09/05 17:52:30 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Words
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.8 $
+//REVISION    : $Revision: 1.9 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -121,9 +121,10 @@ void Words::destroy () {
 /// \pre start <= end
 //-----------------------------------------------------------------------------
 void Words::moveValues (unsigned int start, unsigned int end, unsigned int target) {
-   TRACE9 ("Words::moveValues (3x unsigned int start) - [" << start << '/' << end << "] -> " << target);
+   TRACE9 ("Words::moveValues (3x unsigned int start) - [" << start << '-' << end
+	   << "] -> " << target << "; Bytes: " << (end - start + 1) * sizeof (char*));
    Check2 (start <= end);
-   memcpy (_keys->values + target, _keys->values + start, (end - start + 1) * sizeof (char*));
+   memcpy (_keys->aValues + target, _keys->aValues + start, (end - start + 1) * sizeof (char*));
 }
 
 //-----------------------------------------------------------------------------
@@ -145,15 +146,17 @@ unsigned int Words::binarySearch (unsigned int start, unsigned int end,
 
    while ((end - start) > 0 ) {
       middle = start + ((end - start) >> 1);
+      Check2 (_keys->aValues[start]); Check2 (_keys->aValues[end]); Check2 (_keys->aValues[middle]);
       Check3 (strcmp (_keys->aValues[start], _keys->aValues[middle]) <= 0);
       Check3 (strcmp (_keys->aValues[end], _keys->aValues[middle]) >= 0);
 
-      if (strcmp (word, _keys->aValues[middle]) > 0)
-	 start = middle + 1;
-      else
+      if (strcmp (word, _keys->aValues[middle]) < 0)
 	 end = middle;
+      else
+	 start = middle + 1;
    }
-   return middle;
+   TRACE9 ("Words::binarySearch (2x unsigned int, const char*) - " << _keys->aValues[start]);
+   return start;
 }
 
 //-----------------------------------------------------------------------------
@@ -172,13 +175,16 @@ void Words::addName2Ignore (const Glib::ustring& word, unsigned int pos) {
 
       TRACE9 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Checking pos " << pos);
       if (_keys->cNames) {
+	 Check2 (_keys->aValues[pos - 1]);
 	 TRACE9 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Comp: " << strcmp (_keys->aValues[pos - 1], word.c_str ()));
 	 if (strcmp (_keys->aValues[pos - 1], word.c_str ()) < 0) {
-	    if (pos < _keys->cNames)
+	    if (pos < _keys->cNames) {
+	       Check2 (_keys->aValues[pos]);
 	       if (strcmp (_keys->aValues[pos], word.c_str ()) > 0)
 		  moveValues (pos, _keys->cNames, pos + 1);
 	       else
 		  pos = POS_UNKNOWN;
+	    }
 	 }
 	 else
 	    pos = POS_UNKNOWN;
@@ -190,7 +196,7 @@ void Words::addName2Ignore (const Glib::ustring& word, unsigned int pos) {
       if (_keys->cNames) {
 	 TRACE9 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Search: " << word);
 	 if ((pos = binarySearch (0, _keys->cNames - 1, word.c_str ())) < _keys->cNames)
-	    moveValues (pos, _keys->cNames, pos + 1);
+	    moveValues (pos, _keys->cNames - 1, pos + 1);
       }
       else
 	 pos = 0;
@@ -245,7 +251,7 @@ Glib::ustring Words::removeNames (const Glib::ustring& name) {
    Glib::ustring work (name);
    Glib::ustring word (getWord (work));
    while ((word.size () != name.size ())
-	  && containsWord (0, _keys->cNames, word)) {
+	  && containsWord (0, _keys->cNames - 1, word)) {
       unsigned int pos (word.size ());
       while (!isalnum (name[pos]))
 	 ++pos;

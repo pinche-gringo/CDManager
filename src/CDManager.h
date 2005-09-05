@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.38 2005/07/08 21:50:38 markus Rel $
+//$Id: CDManager.h,v 1.39 2005/09/05 04:08:46 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -79,6 +79,8 @@ class CDManager : public XGP::XApplication {
    void deleteSelection ();
    void editPreferences ();
    void savePreferences ();
+   void storeWord (const char* word);
+   void storeArticle (const char* article);
 
    void selectLanguage ();
    void setLanguage (const std::string& lang);

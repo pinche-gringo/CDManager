@@ -5,7 +5,7 @@
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.4.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -131,15 +131,10 @@ WordDialog::WordDialog ()
       (bind (mem_fun (*this, &WordDialog::entryChanged), 1));
 
    // Fill listboxes
-   TRACE3 ("WordDialog::WordDialog () - Words: " << Words::names.size ()
-	   << "; Articles: " << Words::articles.size ());
-   for (std::vector<Glib::ustring>::const_iterator w (Words::names.begin ());
-	w != Words::names.end (); ++w)
-      appendWord (names, *w);
-
-   for (std::vector<Glib::ustring>::const_iterator a (Words::articles.begin ());
-	a != Words::articles.end (); ++a)
-      appendWord (articles, *a);
+   TRACE3 ("WordDialog::WordDialog () - Words: " << Words::cNames ()
+	   << "; Articles: " << cArticles ());
+   Words::forEachName (0U, Words::cNames (), *this, &WordDialog::appendWord);
+   Words::forEachArticle (0, Words::cArticles (), *this, &WordDialog::appendArticle);
 
    names->set_sort_column (colWords.word, Gtk::SORT_ASCENDING);
    articles->set_sort_column (colWords.word, Gtk::SORT_ASCENDING);
@@ -161,15 +156,17 @@ void WordDialog::entryChanged (unsigned int which) {
    TRACE8 ("WordDialog::entryChanged (unsigned int) - " << which);
    Gtk::Entry* fields[] = { &txtName, &txtArticle };
    Gtk::Button* buttons[] = { &addName, &addArticle };
-   std::vector<Glib::ustring>* vectors[] = { &Words::names, &Words::articles };
+   unsigned int starts[] = { 0, Words::_keys->maxEntries - Words::_keys->cArticles };
+   unsigned int ends[] = { Words::cNames (),  Words::_keys->maxEntries };
    Check1 (which < 2);
    Check3 ((sizeof (fields) / sizeof (*fields)) < which);
    Check3 ((sizeof (buttons) / sizeof (*buttons)) < which);
-   Check3 ((sizeof (vectors) / sizeof (*vectors)) < which);
+   Check3 ((sizeof (starts) / sizeof (*starts)) < which);
+   Check3 ((sizeof (ends) / sizeof (*ends)) < which);
 
    bool unique (false);
    if (fields[which]->get_text_length ()
-       && !Words::containsWord (*vectors[which], fields[which]->get_text ()))
+       && !Words::containsWord (starts[which], ends[which], fields[which]->get_text ()))
       unique = true;
    buttons[which]->set_sensitive (unique);
 }
@@ -195,13 +192,31 @@ void WordDialog::entrySelected (unsigned int which) {
 /// Appends a line to the passed model
 /// \param model: Model to append line to
 /// \param value: Value to append
+/// \returns Gtk::TreeModel::Row: Appended row
 //-----------------------------------------------------------------------------
-Gtk::TreeModel::Row WordDialog::appendWord (Glib::RefPtr<Gtk::ListStore>& list,
-					    const Glib::ustring& value) {
-   TRACE8 ("WordDialog::appendWord (Glib::RefPtr<Gtk::ListStore>&, const Glib::ustring&) - " << value);
+Gtk::TreeModel::Row WordDialog::append (Glib::RefPtr<Gtk::ListStore>& list, const Glib::ustring& value) {
+   TRACE8 ("WordDialog::append (Glib::RefPtr<Gtk::ListStore>&, const Glib::ustring&) - " << value);
    Gtk::TreeModel::Row row (*list->append ());
    row[colWords.word] = value;
    return row;
+}
+
+//-----------------------------------------------------------------------------
+/// Appends a line to the names
+/// \param value: Value to append
+//-----------------------------------------------------------------------------
+void WordDialog::appendWord (const char* value) {
+   TRACE8 ("WordDialog::appendWord (const char*) - " << value);
+   append (names, value);
+}
+
+//-----------------------------------------------------------------------------
+/// Appends a line to the articles
+/// \param value: Value to append
+//-----------------------------------------------------------------------------
+void WordDialog::appendArticle (const char* value) {
+   TRACE8 ("WordDialog::appendArticle (const char*) - " << value);
+   append (articles, value);
 }
 
 //-----------------------------------------------------------------------------
@@ -221,7 +236,7 @@ void WordDialog::onAdd (unsigned int which) {
 
    Check2 (fields[which]->get_text_length ());
    buttons[which]->set_sensitive (false);
-   Gtk::TreeModel::Row row (appendWord (models[which], fields[which]->get_text ()));
+   Gtk::TreeModel::Row row (append (models[which], fields[which]->get_text ()));
    lists[which]->scroll_to_row (models[which]->get_path (row), 0.8);
    Glib::RefPtr<Gtk::TreeSelection> sel (lists[which]->get_selection ());
    sel->unselect_all ();
@@ -257,65 +272,21 @@ void WordDialog::onDelete (unsigned int which) {
 void WordDialog::commit () {
    TRACE9 ("WordDialog::commit ()");
    Glib::RefPtr<Gtk::ListStore> models[] = { names, articles };
-   std::vector<Glib::ustring>* vectors[] = { &Words::names, &Words::articles };
+   void (*fnInsert[]) (const Glib::ustring& word, unsigned int pos)  =
+      { &Words::addName2Ignore, &Words::addArticle };
    Check3 ((sizeof (models) / sizeof (*models))
-	   == (sizeof (vectors) / sizeof (*vectors)));
+	   == (sizeof (fnInsert) / sizeof (*fnInsert)));
+
+   Check2 (Words::_keys);
+   Words::_keys->cArticles = Words::_keys->cNames = 0;
 
    Glib::ustring value;
-   for (unsigned int i (0); i < (sizeof (models) / sizeof (*models)); ++i) {
-      // Search for lines existing in the original, but not in the list and
-      // delete them
-      Gtk::TreeNodeChildren lines (models[i]->children ());
-      for (unsigned int j (0); j < vectors[i]->size ();) {
-	 value = vectors[i]->at (j);
-	 unsigned int first (0);
-	 unsigned int last (lines.size ());
-	 unsigned int middle;
-	 TRACE7 ("WordDialog::commit () - Searching for " << value);
-	 Glib::ustring line;
-
-	 while ((last - first) > 0 ) {
-	    middle = first + ((last - first) >> 1);
-	    line = (*lines[middle])[colWords.word];
-	    TRACE9 ("WordDialog::commit () - Comparing " << value << " with " << line);
-	    if (line < value)
-	       first = middle + 1;
-	    else
-	       last = middle;
-	 }
-	 if ((first >= lines.size ())
-	     || ((line = (*lines[first])[colWords.word]), (line != value))) {
-	    TRACE3 ("WordDialog::commit () - Erasing " << vectors[i]->at (j));
-	    vectors[i]->erase (vectors[i]->begin () + j);
-	 }
-	 else
-	    ++j;
-      }
-
-      // Search for lines existing in the list, but not in the original and
-      // add them
+   for (unsigned int i (0); i < (sizeof (models) / sizeof (*models)); ++i)
       for (Gtk::TreeModel::const_iterator l (models[i]->children ().begin ());
 	   l != models[i]->children ().end (); ++l) {
 	 value = (*l)[colWords.word];
-	 std::vector<Glib::ustring>::iterator p
-	    (upper_bound (vectors[i]->begin (), vectors[i]->end (), value));
-	 if ((p == vectors[i]->begin ()) || (value != p[-1])) {
-	    TRACE3 ("WordDialog::commit () - Adding " << value);
-	    vectors[i]->insert (p, value);
-	 }
+	 fnInsert[i] (value, Words::POS_END);
       }
-   }
-}
-
-//-----------------------------------------------------------------------------
-/// Returns a window allowing to manipulate words and articles.
-/// \returns Gtk::Widget: A table holding controls to manipulate the words
-/// \remarks The returned window must be freed
-//-----------------------------------------------------------------------------
-Gtk::Widget* WordDialog::makeDialog () {
-   TRACE9 ("Words::makeDialog ()");
-
-   return new WordDialog ();
 }
 
 //-----------------------------------------------------------------------------

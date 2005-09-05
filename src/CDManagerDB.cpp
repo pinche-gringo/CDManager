@@ -1,11 +1,11 @@
-//$Id: CDManagerDB.cpp,v 1.8 2005/08/02 01:53:06 markus Rel $
+//$Id: CDManagerDB.cpp,v 1.9 2005/09/05 04:08:46 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.8 $
+//REVISION    : $Revision: 1.9 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.1.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -94,12 +94,13 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 	 movies.updateGenres ();
       }
 
+      Words::create ();
       if (!Words::cArticles ()) {
 	 Database::execute ("SELECT word FROM Words");
 
 	 while (Database::hasData ()) {
 	    // Fill and store artist entry from DB-values
-	    Words::addName2Ignore (Database::getResultColumnAsString (0));
+	    Words::addName2Ignore (Database::getResultColumnAsString (0), Words::POS_END);
 	    Database::getNextResultRow ();
 	 }
 
@@ -107,7 +108,7 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 
 	 while (Database::hasData ()) {
 	    // Fill and store artist entry from DB-values
-	    Words::addArticle (Database::getResultColumnAsString (0));
+	    Words::addArticle (Database::getResultColumnAsString (0), Words::POS_END);
 	    Database::getNextResultRow ();
 	 }
       }
@@ -126,7 +127,7 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 //-----------------------------------------------------------------------------
 void CDManager::logout () {
    on_delete_event (NULL);
-
+   Words::destroy ();
    Database::close ();
    enableMenus (false);
    status.pop ();
@@ -629,6 +630,28 @@ void CDManager::writeChangedEntries () {
 }
 
 //-----------------------------------------------------------------------------
+/// Stores one name into the database
+/// \param word: Word to store
+//-----------------------------------------------------------------------------
+void CDManager::storeWord (const char* word) {
+   std::string ins ("INSERT INTO Words VALUES ('%1')");
+   ins.replace (ins.find ("%1"), 2, word);
+
+   Database::execute (ins.c_str ());
+}
+
+//-----------------------------------------------------------------------------
+/// Stores one artice into the database
+/// \param article: Article to store
+//-----------------------------------------------------------------------------
+void CDManager::storeArticle (const char* article) {
+   std::string ins ("INSERT INTO Articles VALUES ('%1')");
+   ins.replace (ins.find ("%1"), 2, article);
+
+   Database::execute (ins.c_str ());
+}
+
+//-----------------------------------------------------------------------------
 /// Edits dthe preferences
 //-----------------------------------------------------------------------------
 void CDManager::savePreferences () {
@@ -650,24 +673,12 @@ void CDManager::savePreferences () {
    try {
       Database::execute ("START TRANSACTION");
       Database::execute ("DELETE FROM Words");
-      for (std::vector<Glib::ustring>::const_iterator w (Words::namesBegin ());
-	   w != Words::namesEnd (); ++w) {
-	 std::string ins ("INSERT INTO Words VALUES ('%1')");
-	 ins.replace (ins.find ("%1"), 2, *w);
-
-	 Database::execute (ins.c_str ());
-      }
+      Words::forEachName (0, Words::cNames (), *this, &CDManager::storeWord);
       Database::execute ("COMMIT");
 
       Database::execute ("START TRANSACTION");
       Database::execute ("DELETE FROM Articles");
-      for (std::vector<Glib::ustring>::const_iterator a (Words::articlesBegin ());
-	   a != Words::articlesEnd (); ++a) {
-	 std::string ins ("INSERT INTO Articles VALUES ('%1')");
-	 ins.replace (ins.find ("%1"), 2, *a);
-
-	 Database::execute (ins.c_str ());
-      }
+      Words::forEachArticle (0, Words::cArticles (), *this, &CDManager::storeArticle);
       Database::execute ("COMMIT");
    }
    catch (std::exception& e) {

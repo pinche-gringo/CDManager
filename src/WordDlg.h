@@ -1,7 +1,7 @@
 #ifndef WORDDLG_H
 #define WORDDLG_H
 
-//$Id: WordDlg.h,v 1.1 2005/04/20 05:42:39 markus Rel $
+//$Id: WordDlg.h,v 1.2 2005/09/05 04:08:46 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ namespace Gtk {
  */
 class WordDialog : public Gtk::Table {
  public:
-   static Gtk::Widget* makeDialog ();
+   static Gtk::Widget* makeDialog () { return new WordDialog (); }
    static void commitDialogData (Gtk::Widget* dialog);
 
  protected:
@@ -49,8 +49,9 @@ class WordDialog : public Gtk::Table {
       Gtk::TreeModelColumn<Glib::ustring> word;
    };
 
-   Gtk::TreeModel::Row appendWord (Glib::RefPtr<Gtk::ListStore>& list,
-				   const Glib::ustring& value);
+   void appendWord (const char* value);
+   void appendArticle (const char* value);
+   Gtk::TreeModel::Row append (Glib::RefPtr<Gtk::ListStore>& list, const Glib::ustring& value);
    void entryChanged (unsigned int which);
    void entrySelected (unsigned int which);
    void onAdd (unsigned int which);

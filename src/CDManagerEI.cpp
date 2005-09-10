@@ -1,11 +1,11 @@
-//$Id: CDManagerEI.cpp,v 1.1 2005/09/05 04:08:31 markus Exp $
+//$Id: CDManagerEI.cpp,v 1.2 2005/09/10 21:36:55 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManagerEI
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.8.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -32,8 +32,6 @@
 #include <fstream>
 #include <sstream>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/File.h>
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
@@ -41,6 +39,8 @@
 #include <YGP/Process.h>
 
 #include <gtkmm/messagedialog.h>
+
+#include "Words.h"
 
 #include "CDManager.h"
 
@@ -99,13 +99,17 @@ void CDManager::exportData () throw (Glib::ustring) {
 	 loadMovies (lang);
 
       setenv ("LANGUAGE", lang.c_str (), true);
+
+      std::ostringstream memKey;
+      memKey << Words::getMemoryKey () << std::ends;
+
       int pipes[2];
       const char* args[] = { "CDWriter", "--outputDir", opt.getDirOutput ().c_str (),
 			     "--recHeader", opt.getRHeader ().c_str (),
 			     "--recFooter", opt.getRFooter ().c_str (),
 			     "--movieHeader", opt.getMHeader ().c_str (),
 			     "--movieFooter", opt.getMFooter ().c_str (),
-			     lang.c_str (), NULL };
+			     lang.c_str (), memKey.str ().c_str (), NULL };
       pid_t pid (-1);
       try {
 	 pipe (pipes);

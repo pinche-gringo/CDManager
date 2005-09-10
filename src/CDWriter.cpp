@@ -1,11 +1,11 @@
-//$Id: CDWriter.cpp,v 1.14 2005/08/02 01:54:43 markus Rel $
+//$Id: CDWriter.cpp,v 1.15 2005/09/10 21:35:40 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDWriter
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.14 $
+//REVISION    : $Revision: 1.15 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -38,6 +38,7 @@
 #include <glibmm/ustring.h>
 #include <glibmm/convert.h>
 
+
 #include <YGP/File.h>
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
@@ -46,11 +47,13 @@
 #include <YGP/Relation.h>
 
 #include "DB.h"
+#include "Words.h"
 #include "Movie.h"
 #include "Genres.h"
 #include "Writer.h"
 #include "Record.h"
 #include "Director.h"
+
 
 #include "CDWriter.h"
 #include "Options.meta"
@@ -204,11 +207,21 @@ void CDWriter::writeHeader (const char* lang, const char* format,
 //-----------------------------------------------------------------------------
 int CDWriter::perform (int argc, const char** argv) {
    TRACE9 ("CDWriter::perform (int, const char**) - " << argc);
-   if (argc != 1) {
-      std::cerr << name () << _("-error: Need language id as parameter\n"
+   if (argc != 2) {
+      std::cerr << name () << _("-error: Need language id and memory-key as parameters\n"
 				"(This program is designed to be called by the CDManager-application)\n");
       return - 1;
    }
+
+   try {
+      Words::access (atoi (argv[1]));
+   }
+   catch (Glib::ustring& e) {
+      std::cerr << name () << _("-error: Can't access reserved words! ") << e << '\n';
+      return -2;
+   }
+
+   Movie::currLang = *argv;
 
    Genres movieGenres, recGenres;
    Genres::loadFromFile (DATADIR "Genres.dat", recGenres, movieGenres, argv[0]);
@@ -452,18 +465,18 @@ try {
 
       if (aOutputs[i].type) {
 	 RecordWriter writer (aOutputs[i].format, recGenres);
+	 HInterpret interpret;
 	 for (std::vector<HRecord>::const_iterator m (records.begin ());
 	      m != records.end (); ++m) {
-	    HInterpret interpret;
 	    interpret = relRecords.getParent (*m); Check3 (interpret.isDefined ());
 	    writer.writeRecord (*m, interpret, fileMovie);
 	 }
       }
       else {
+	 HDirector director;
 	 MovieWriter movieWriter (aOutputs[i].format, movieGenres);
 	 for (std::vector<HMovie>::const_iterator m (movies.begin ());
 	      m != movies.end (); ++m) {
-	    HDirector director;
 	    director = relMovies.getParent (*m); Check3 (director.isDefined ());
 	    movieWriter.writeMovie (*m, director, fileMovie);
 	 }
@@ -547,6 +560,7 @@ try {
 
    langWriter.printEnd (fileMovie);
    fileMovie << htmlData[1].target;
+   Words::destroy ();
    return 0;
 }
 

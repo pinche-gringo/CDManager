@@ -1,11 +1,11 @@
-//$Id: Words.cpp,v 1.10 2005/09/05 22:40:46 markus Exp $
+//$Id: Words.cpp,v 1.11 2005/09/10 21:36:07 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Words
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.10 $
+//REVISION    : $Revision: 1.11 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -42,6 +42,7 @@
 
 static const unsigned int PAGE_SIZE (4096);
 
+int Words::_key (-1);
 Words::keys* Words::_keys (NULL);
 
 
@@ -53,29 +54,27 @@ Words::keys* Words::_keys (NULL);
 ///    processes
 //-----------------------------------------------------------------------------
 void Words::create (unsigned int words) throw (Glib::ustring) {
-   TRACE9 ("Words::create (unsigned int) - " << words);
+   TRACE8 ("Words::create (unsigned int) - " << words);
    if (_keys)
       return;
 
-   unsigned int key (-1U);
    unsigned int size (PAGE_SIZE);
    if ((sizeof (keys) + (sizeof (char*) * words)) > size)
       size = ((sizeof (char*) * words) + PAGE_SIZE + sizeof (keys)) & ~(PAGE_SIZE - 1);
 
-   if (((key = shmget (IPC_PRIVATE, size, IPC_CREAT | IPC_EXCL | 0600)) == -1U)
-       || ((_keys = (keys*)(shmat (key, 0, 0))) == (keys*)-1)
+   if (((_key = shmget (IPC_PRIVATE, size, IPC_CREAT | IPC_EXCL | 0600)) == -1)
+       || ((_keys = (keys*)(shmat (_key, 0, 0))) == (keys*)-1)
        || ((_keys->values = NULL),
-	   ((key = shmget (IPC_PRIVATE, size << 1, IPC_CREAT | IPC_EXCL | 0600)) == -1U))
-       || ((_keys->values = (char*)(shmat (key, 0, 0))) == (char*)-1)) {
-      Glib::ustring error (_("Error allocating shared memory!\n\nReason: %1"));
-      error.replace (error.find ("%1"), 2, strerror (errno));
+	   ((_keys->valuesKey = shmget (IPC_PRIVATE, size << 1, IPC_CREAT | IPC_EXCL | 0600)) == -1))
+       || ((_keys->values = (char*)(shmat (_keys->valuesKey, 0, 0))) == (char*)-1)) {
       destroy ();
-      throw (error);
+      throw (Glib::ustring (strerror (errno)));
    }
 
    _keys->cNames = _keys->cArticles = 0;
    _keys->endValues = _keys->values;
    _keys->maxEntries = (size - sizeof (keys)) / sizeof (char*);
+   TRACE1 ("Words::create (unsigned int) - Key: " << _key);
 }
 
 //-----------------------------------------------------------------------------
@@ -85,29 +84,31 @@ void Words::create (unsigned int words) throw (Glib::ustring) {
 /// \throw Glib::ustring: Describing text in case of error
 //-----------------------------------------------------------------------------
 void Words::access (unsigned int key) throw (Glib::ustring) {
-   TRACE9 ("Words::access (unsigned int)");
+   TRACE8 ("Words::access (unsigned int) - " << key);
    if (_keys)
       return;
 
    if (((_keys = (keys*)(shmat (key, 0, 0))) == (keys*)-1)
        || ((_keys->values = NULL),
-	   ((_keys->values = (char*)(shmat (key, 0, 0))) == (char*)-1))) {
-      Glib::ustring error (_("Error accessing shared memory!\n\nReason: %1"));
-      error.replace (error.find ("%1"), 2, strerror (errno));
+	   ((_keys->values = (char*)(shmat (_keys->valuesKey, 0, 0))) == (char*)-1))) {
       destroy ();
-      throw (error);
+      throw (Glib::ustring (strerror (errno)));
    }
+   TRACE9 ("Words::access (unsigned int) - Articles: " << _keys->cArticles << "; Names: "
+	   << _keys->cNames << ": " << *_keys->values);
 }
 
 //-----------------------------------------------------------------------------
 /// Frees the used shared memory
 //-----------------------------------------------------------------------------
 void Words::destroy () {
-   if (_keys->values)
-      shmdt (_keys->values);
-   if (_keys)
+   if (_keys && _keys != (keys*)-1) {
+      if (_keys->values && _keys->values != (char*)-1)
+	 shmdt (_keys->values);
       shmdt (_keys);
+   }
    _keys = NULL;
+   _key = -1;
 }
 
 
@@ -122,7 +123,7 @@ void Words::moveValues (unsigned int start, unsigned int end, unsigned int targe
    TRACE9 ("Words::moveValues (3x unsigned int start) - [" << start << '-' << end
 	   << "] -> " << target << "; Bytes: " << (end - start + 1) * sizeof (char*));
    Check2 (start <= end);
-   memcpy (_keys->aValues + target, _keys->aValues + start, (end - start + 1) * sizeof (char*));
+   memcpy (_keys->aOffsets + target, _keys->aOffsets + start, (end - start + 1) * sizeof (char*));
 }
 
 //-----------------------------------------------------------------------------
@@ -134,8 +135,7 @@ void Words::moveValues (unsigned int start, unsigned int end, unsigned int targe
 /// \pre start <= end
 /// \requires There must be at least one element in the array
 //-----------------------------------------------------------------------------
-unsigned int Words::binarySearch (unsigned int start, unsigned int end,
-				  const char* word) {
+unsigned int Words::binarySearch (unsigned int start, unsigned int end, const char* word) {
    Check2 (_keys);
    Check2 (start <= end);
    Check2 (end < _keys->maxEntries);
@@ -144,16 +144,15 @@ unsigned int Words::binarySearch (unsigned int start, unsigned int end,
 
    while ((end - start) > 0 ) {
       middle = start + ((end - start) >> 1);
-      Check2 (_keys->aValues[start]); Check2 (_keys->aValues[end]); Check2 (_keys->aValues[middle]);
-      Check3 (strcmp (_keys->aValues[start], _keys->aValues[middle]) <= 0);
-      Check3 (strcmp (_keys->aValues[end], _keys->aValues[middle]) >= 0);
+      Check3 (strcmp (_keys->values + _keys->aOffsets[start], _keys->values + _keys->aOffsets[middle]) <= 0);
+      Check3 (strcmp (_keys->values + _keys->aOffsets[end], _keys->values + _keys->aOffsets[middle]) >= 0);
 
-      if (strcmp (word, _keys->aValues[middle]) < 0)
+      if (strcmp (word, _keys->values + _keys->aOffsets[middle]) < 0)
 	 end = middle;
       else
 	 start = middle + 1;
    }
-   TRACE9 ("Words::binarySearch (2x unsigned int, const char*) - " << _keys->aValues[start]);
+   TRACE9 ("Words::binarySearch (2x unsigned int, const char*) - " << _keys->values + _keys->aOffsets[start]);
    return start;
 }
 
@@ -163,7 +162,7 @@ unsigned int Words::binarySearch (unsigned int start, unsigned int end,
 /// \param pos: Hint of position, where to insert
 //-----------------------------------------------------------------------------
 void Words::addName2Ignore (const Glib::ustring& word, unsigned int pos) {
-   TRACE9 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - " << word << " to " << _keys->cNames);
+   TRACE2 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - " << word << " to " << _keys->cNames);
    Check2 (_keys);
 
    // Try to respect the hint
@@ -173,12 +172,10 @@ void Words::addName2Ignore (const Glib::ustring& word, unsigned int pos) {
 
       TRACE9 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Checking pos " << pos);
       if (_keys->cNames) {
-	 Check2 (_keys->aValues[pos - 1]);
-	 TRACE9 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Comp: " << strcmp (_keys->aValues[pos - 1], word.c_str ()));
-	 if (strcmp (_keys->aValues[pos - 1], word.c_str ()) < 0) {
+	 TRACE9 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Comp: " << strcmp (_keys->values + _keys->aOffsets[pos - 1], word.c_str ()));
+	 if (strcmp (_keys->values + _keys->aOffsets[pos - 1], word.c_str ()) < 0) {
 	    if (pos < _keys->cNames) {
-	       Check2 (_keys->aValues[pos]);
-	       if (strcmp (_keys->aValues[pos], word.c_str ()) <= 0)
+	       if (strcmp (_keys->values + _keys->aOffsets[pos], word.c_str ()) <= 0)
 		  pos = POS_UNKNOWN;
 	    }
 	 }
@@ -200,7 +197,7 @@ void Words::addName2Ignore (const Glib::ustring& word, unsigned int pos) {
       moveValues (pos, _keys->cNames, pos + 1);
 
    TRACE3 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Insert into " << pos);
-   _keys->aValues[pos] = _keys->endValues;
+   _keys->aOffsets[pos] = _keys->endValues - _keys->values;
    memcpy (_keys->endValues, word.c_str (), word.bytes ());
    _keys->endValues += word.bytes () + 1;
    _keys->cNames++;
@@ -212,7 +209,7 @@ void Words::addName2Ignore (const Glib::ustring& word, unsigned int pos) {
 /// \param pos: Hint of position, where to insert
 //-----------------------------------------------------------------------------
 void Words::addArticle (const Glib::ustring& word, unsigned int pos) {
-   TRACE9 ("Words::addArticle (const Glib::ustring&, unsigned int) - " << word << " to " << _keys->cArticles);
+   TRACE2 ("Words::addArticle (const Glib::ustring&, unsigned int) - " << word << " to " << _keys->cArticles);
    Check2 (_keys);
 
    // Try to respect the hint
@@ -222,12 +219,10 @@ void Words::addArticle (const Glib::ustring& word, unsigned int pos) {
 
       TRACE9 ("Words::addArticle (const Glib::ustring&, unsigned int) - Checking pos " << pos);
       if (_keys->cArticles) {
-	 Check2 (_keys->aValues[pos]);
-	 TRACE9 ("Words::addArticle (const Glib::ustring&, unsigned int) - Comp: " << strcmp (_keys->aValues[pos], word.c_str ()));
-	 if (strcmp (_keys->aValues[pos], word.c_str ()) < 0) {
+	 TRACE9 ("Words::addArticle (const Glib::ustring&, unsigned int) - Comp: " << strcmp (_keys->values + _keys->aOffsets[pos], word.c_str ()));
+	 if (strcmp (_keys->values + _keys->aOffsets[pos], word.c_str ()) < 0) {
 	    if (pos < (_keys->maxEntries - 1)) {
-	       Check2 (_keys->aValues[pos + 1]);
-	       if (strcmp (_keys->aValues[pos + 1], word.c_str ()) <= 0)
+	       if (strcmp (_keys->values + _keys->aOffsets[pos + 1], word.c_str ()) <= 0)
 		  pos = POS_UNKNOWN;
 	    }
 	 }
@@ -244,14 +239,14 @@ void Words::addArticle (const Glib::ustring& word, unsigned int pos) {
 			     _keys->maxEntries - 1, word.c_str ());
       }
       else
-	 pos = 0;
+	 pos = _keys->maxEntries - 1;
 
    if (pos >= (_keys->maxEntries - _keys->cArticles))
       moveValues (_keys->maxEntries - _keys->cArticles, pos,
 		  _keys->maxEntries - _keys->cArticles - 1);
 
    TRACE3 ("Words::addArticle (const Glib::ustring&, unsigned int) - Insert into " << pos);
-   _keys->aValues[pos] = _keys->endValues;
+   _keys->aOffsets[pos] = _keys->endValues - _keys->values;
    memcpy (_keys->endValues, word.c_str (), word.bytes ());
    _keys->endValues += word.bytes () + 1;
    _keys->cArticles++;
@@ -265,6 +260,7 @@ void Words::addArticle (const Glib::ustring& word, unsigned int pos) {
 Glib::ustring Words::removeArticle (const Glib::ustring& name) {
    TRACE9 ("Words::removeArticles (const Glib::ustring&) - " << name);
    Check2 (_keys);
+   Check2 (_keys != (keys*)-1);
 
    Glib::ustring word (getWord (name));
    if (word.size () != name.size ()
@@ -288,6 +284,7 @@ Glib::ustring Words::removeArticle (const Glib::ustring& name) {
 Glib::ustring Words::removeNames (const Glib::ustring& name) {
    TRACE9 ("Words::removeNames (const Glib::ustring&) - " << name);
    Check2 (_keys);
+   Check2 (_keys != (keys*)-1);
 
    Glib::ustring work (name);
    Glib::ustring word (getWord (work));
@@ -327,11 +324,15 @@ Glib::ustring Words::getWord (const Glib::ustring& text) {
 /// \returns bool: True, if the word exists
 //-----------------------------------------------------------------------------
 bool Words::containsWord (unsigned int start, unsigned int end, const Glib::ustring& word) {
+   TRACE9 ("Words::containsWord (2x unsigned int, const Glib::ustring& word) - [" << start << '-' << end << ']');
    Check2 (_keys);
    Check2 (end < _keys->maxEntries);
+   Check2 (start <= end);
+   TRACE9 ("Words::containsWord (2x unsigned int, const Glib::ustring& word) - " << _keys->values + _keys->aOffsets[start]);
+   TRACE9 ("Words::containsWord (2x unsigned int, const Glib::ustring& word) - " << _keys->values + _keys->aOffsets[end]);
    if (start < end) {
       unsigned int pos (binarySearch (start, end, word.c_str ()));
-      return ((pos != start) && (word == _keys->aValues[pos - 1]));
+      return ((pos != start) && (word == (_keys->values + _keys->aOffsets[pos - 1])));
    }
    else
       return false;

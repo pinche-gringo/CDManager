@@ -1,7 +1,7 @@
 #ifndef WORDS_H
 #define WORDS_H
 
-//$Id: Words.h,v 1.5 2005/09/05 04:08:03 markus Exp $
+//$Id: Words.h,v 1.6 2005/09/10 21:36:07 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -52,15 +52,17 @@ class Words {
    static void forEachName (unsigned int start, unsigned int end, T& obj,
 			    void (T::* cb) (const char*)) {
       for (unsigned int i (start); i < end; ++i)
-	 (obj.*cb) (_keys->aValues[i]);
+	 (obj.*cb) (_keys->values + _keys->aOffsets[i]);
    }
    /// Call a callback for each specified article
    template <class T>
    static void forEachArticle (unsigned int start, unsigned int end, T& obj,
 			       void (T::* cb) (const char*)) {
       for (unsigned int i (start); i < end; ++i)
-	 (obj.*cb) (_keys->aValues[_keys->maxEntries - _keys->cArticles + i]);
+	 (obj.*cb) (_keys->values + _keys->aOffsets[_keys->maxEntries - _keys->cArticles + i]);
    }
+
+   static int getMemoryKey () { return _key; }
 
  private:
    //Prohibited manager functions
@@ -75,15 +77,17 @@ class Words {
    static bool containsWord (unsigned int start, unsigned int end, const Glib::ustring& word);
 
    typedef struct {
-      char*        values;
-      unsigned int cNames;
-      unsigned int cArticles;
-      unsigned int maxEntries;
-      char*        endValues;
-      char*        aValues[];
+      char*          values;
+      int            valuesKey;
+      unsigned int   cNames;
+      unsigned int   cArticles;
+      unsigned int   maxEntries;
+      char*          endValues;
+      unsigned short aOffsets[];
    } keys;
 
    static keys* _keys;
+   static int   _key;
 };
 
 #endif

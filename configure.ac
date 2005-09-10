@@ -1,9 +1,9 @@
-dnl $Id: configure.ac,v 1.12 2005/08/02 02:03:40 markus Rel $
+dnl $Id: configure.ac,v 1.13 2005/09/10 22:01:26 markus Rel $
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.52)
-AC_REVISION($Revision: 1.12 $)
-AC_INIT(CDManager, 0.7.10, [g17m0@lycos.com], CDManager)
+AC_REVISION($Revision: 1.13 $)
+AC_INIT(CDManager, 0.7.20, [g17m0@lycos.com], CDManager)
 
 RELEASE=${PACKAGE_VERSION%.*}
 AC_DEFINE_UNQUOTED(PRG_RELEASE, "$RELEASE", [Define to the release of the program])
@@ -187,6 +187,7 @@ AC_SUBST(MYSQLLIBS)
 
 
 dnl Checks for header files.
+AC_CHECK_HEADERS([sys/shm.h],, AC_MSG_ERROR([needed header sys/shm.h not found!]))
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 
@@ -219,7 +220,7 @@ dnl Settings for autoheader
 AH_TOP([#ifndef CDMANAGER_CFG_H
 #define CDMANAGER_CFG_H
 
-//$Id: configure.ac,v 1.12 2005/08/02 02:03:40 markus Rel $
+//$Id: configure.ac,v 1.13 2005/09/10 22:01:26 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -240,6 +241,8 @@ AH_BOTTOM([#if defined (HAVE_GETTEXT) && defined (ENABLE_NLS)
 #  ifdef DONT_CONVERT
 #     define _(String)                        gettext (String)
 #  else
+#     include <glibmm/convert.h>
+
 #     define _(String)                        Glib::locale_to_utf8 (gettext (String))
 #  endif
 #  define N_(String)                          gettext_noop (String)

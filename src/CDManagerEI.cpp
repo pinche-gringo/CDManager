@@ -1,11 +1,11 @@
-//$Id: CDManagerEI.cpp,v 1.2 2005/09/10 21:36:55 markus Exp $
+//$Id: CDManagerEI.cpp,v 1.3 2005/09/25 01:40:36 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManagerEI
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.8.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -86,9 +86,10 @@ void CDManager::exportData () throw (Glib::ustring) {
    if (envLang)
       oldLang = envLang;
 
+   Glib::ustring statMsg (_("Exporting (language %1) ..."));
    while ((lang = langs.getNextNode (' ')).size ()) {
       TRACE1 ("CDManager::exportData () - Lang: " << lang);
-      Glib::ustring stat (_("Exporting (language %1) ..."));
+      Glib::ustring stat (statMsg);
       stat.replace (stat.find ("%1"), 2, Language::findInternational (lang));
       status.push (stat);
 

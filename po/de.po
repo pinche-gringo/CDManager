@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.1\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2005-09-10 17:54-0400\n"
+"POT-Creation-Date: 2005-09-24 21:38-0400\n"
 "PO-Revision-Date: 2005-05-21 15:16-0400\n"
 "Last-Translator: Markus Schwab <g17m0@lycos.com>\n"
 "Language-Team: German <g17m0@lycos.com>\n"
@@ -368,19 +368,19 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/CDManagerEI.cpp:91
+#: src/CDManagerEI.cpp:89
 msgid "Exporting (language %1) ..."
 msgstr "Exportiere (Sprache %1) ..."
 
-#: src/CDManagerEI.cpp:120
+#: src/CDManagerEI.cpp:121
 msgid "Export Error!"
 msgstr "Fehler beim Exportieren!"
 
-#: src/CDManagerEI.cpp:172
+#: src/CDManagerEI.cpp:173
 msgid "Export Warning!"
 msgstr "Warnung beim Exportieren!"
 
-#: src/CDManagerEI.cpp:197
+#: src/CDManagerEI.cpp:198
 msgid ""
 "Can't open file `%1'!\n"
 "\n"

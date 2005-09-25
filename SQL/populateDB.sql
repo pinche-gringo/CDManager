@@ -89,7 +89,6 @@ INSERT INTO Articles VALUES ("Der");
 INSERT INTO Articles VALUES ("Die");
 INSERT INTO Articles VALUES ("Ein");
 INSERT INTO Articles VALUES ("Eine");
-INSERT INTO Articles VALUES ("Einer");
 INSERT INTO Articles VALUES ("El");
 INSERT INTO Articles VALUES ("La");
 INSERT INTO Articles VALUES ("Las");

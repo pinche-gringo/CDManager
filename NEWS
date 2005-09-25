@@ -1,6 +1,11 @@
+Overview of changes in version 0.7.20:
+
+  - Sharing reserved words/articles with CDWriter
+
+
 Overview of changes in version 0.7.10:
 
-  - Asking to save changes when exitting/logging out
+  - Asking to save changes when exiting/logging out
   - Fixed trap when adding a new movie
   - Fixed trap when LANGUAGE environment variable is not set
   - Exporting UTF-8 encoded HTML-documents

@@ -1,4 +1,57 @@
-2005-08-02  g17m0@lycos.com  <markus@markus>
+2005-09-24  Markus Schwab  <g17m0@lycos.com>
+
+	* ChangeLog, NEWS: Changes of V0.7.20 added
+
+	* po/de.po, po/en.po, po/es.po: Actualized
+
+	* README: Added a description; improved setup
+
+	* INSTALL: Made libmysql++ optional
+
+	* Makefile.am: Added m4/ChangeLog
+
+	* src/CDManagerEI.cpp: Only translating 'Exporting'-message once
+
+	* SQL/populateDB.sql: Removed german article 'Einer'
+
+2005-09-24  gettextize  <bug-gnu-gettext@gnu.org>
+
+	* Makefile.am (ACLOCAL_AMFLAGS): New variable.
+	  (EXTRA_DIST): Add m4/ChangeLog.
+
+2005-09-10  Markus Schwab  <g17m0@lycos.com>
+
+	* configure.ac: Version to 0.7.20; Checking for shm.at
+
+	* po/POTFILES.in, po/de.po, po/en.po, po/es.po:
+	  Added CDManagerEI and Words
+
+	* src/CDManagerEI.cpp:
+	  Passing key of shared memory (holding reserved words) to CDWriter
+
+	* src/Words.cpp, src/Words.h:
+	  Storing only offsets of words (not pointer to them)
+
+	* src/CDWriter.cpp: Accessing reserved words (for sorting)
+
+2005-09-05  Markus Schwab  <g17m0@lycos.com>
+
+	* src/WordDlg.cpp: Clearing entry-field on add; Fixed checks
+
+	* src/Words.cpp: Implemented addArticle
+
+	* src/Words.cpp: Fixes; Added traces and checks
+
+	* src/CDManager.cpp, src/CDManager.h, src/CDManagerDB.cpp, src/WordDlg.cpp, src/WordDlg.h:
+	  Adapted to new Words interface
+
+	* src/CDManagerEI.cpp: New file.
+
+	* src/Makefile.am: Added CDManagerEI.cpp
+
+	* src/Words.cpp, src/Words.h: Storing data in shared memory
+
+2005-08-02  Markus Schwab  <g17m0@lycos.com>
 
 	* ChangeLog, NEWS: Changes of V0.7.10 added
 
@@ -25,12 +78,12 @@
 	* data/Genres.dat.de, data/Movies.head, data/Records.head:
 	  Changed to UTF-8
 
-2005-07-08  g17m0@lycos.com  <markus@markus>
+2005-07-08  Markus Schwab  <g17m0@lycos.com>
 
 	* src/CDManager.cpp, src/CDManager.h, src/CDManagerDB.cpp:
 	  Asking to save unsaved chagnes to the DB
 
-2005-07-04  g17m0@lycos.com  <markus@markus>
+2005-07-04  Markus Schwab  <g17m0@lycos.com>
 
 	* src/Movie.cpp, src/Movie.h:
 	  Method getName checks if international name is available

@@ -3,7 +3,7 @@ Prerequisites
 
 The following packages are needed
 
-  - The libmysql++ library, available from
+  - Optional: The libmysql++ library, available from
      http://www.mysql.com/download_mysql++.html.
   - My YGP library; also availabe as a Sourceforge project
     (http://libymp.sourceforge.net)

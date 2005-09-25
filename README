@@ -1,6 +1,6 @@
                        CDManager
 
-Utility to manage CDs (audio and video)
+Utility to manage CDs/DVDs (audio and video)
 Copyright (C) 2004, 2005 Markus Schwab <g17m0@lycos.com>
 -----------------------------------------------------------------------
 
@@ -8,6 +8,17 @@ The package is distributed under the GNU General Public License; in the hope
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
 warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 file COPYING for details.
+
+
+Description
+-----------
+
+The CDManager manages records and movies (stored on CD or DVD media). The
+managed information can be exported to HTML documents. The highlight of the
+program is likely its ability to store movies in different languages
+simultanously (e.g. the movie "Lock, Stock & two smoking barrels" with its
+german name "Bube, Dame, König, Gras" and its spanish name "Juegos, Trampas
+& dos armas").
 
 
 How to build the CDManager
@@ -24,15 +35,16 @@ How to build the CDManager
 Setting up the database
 -----------------------
 
-  MySQL should be already running. Consult your local documentation
-  how to setup and configure it.
+  MySQL should already be running. How to achive this is beyond the scope of
+  this document. Consult your local documentation how to setup, configure,
+  secure and run it.
 
   The database can be created by running
 
     make createDB
 
-  the SQL directory. You are prompted to enter the root password and
-  the database is created.
+  in the SQL/ directory. You are prompted to enter the (MySQL) root password
+  and the database is created.
 
   For security reasons I recommend to define a dedicated user to run
   the application. This is beyond the scope of this document; see the
@@ -50,7 +62,7 @@ Changing the genres of records/movies
   are used in the database to define its assigned genre.
 
   After changing the file it must be installed (by typing make install
-  in the data directory).
+  in the data/ directory).
 
   This file is also internationalized (e.g. there might exist various
   language specific versions of it, having the extension ".xx" with xx
@@ -71,14 +83,14 @@ Changing the sort order of the entries
   first names are. They can be added via the settings dialog (and are
   stored in the database).
 
-  The SQl directory contains a file (populateDB.sql) which pre-fills
+  The SQL/ directory contains a file (populateDB.sql) which pre-fills
   the database with english, german and spanish articles and a few
   first names. Load it into the database with
 
     make populateDB
 
-  in the SQL directory. Note that this needs a (MySQL) user called
-  cdmgr, for which password you are prompted.
+  in the SQL/ directory. Note that this needs a (MySQL) user called
+  cdmgr, for whose password you are prompted.
 
 
 Exporting the database to HTML documents
@@ -99,5 +111,5 @@ Exporting the database to HTML documents
 
   The generated HTML documents contains references to flags
   representing the languages. Those flags are stored in the data
-  directory (/usr/local/share/CDManager, see above) and are called
+  directory (/usr/local/share/CDManager, by default) and are called
   "xx.png" (with "xx" again the two-letter code for the language).

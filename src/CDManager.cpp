@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.58 2005/09/05 04:08:45 markus Rel $
+//$Id: CDManager.cpp,v 1.59 2005/10/04 16:22:02 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.58 $
+//REVISION    : $Revision: 1.59 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -61,7 +61,10 @@
    if (store.find (obj) == store.end ()) {\
       store[obj] = new type (*obj);\
       apMenus[SAVE]->set_sensitive ();\
-   }
+   }\
+   else\
+      undoEntities.erase (std::find (undoEntities.begin (), undoEntities.end (), obj));\
+   apMenus[UNDO]->set_sensitive ();
 
 // Macro to define a callback to handle changing an entity (record, movie, ...)
 #define defineChangeEntity(type, entity, store) \
@@ -73,6 +76,7 @@ void CDManager::entity##Changed (const HEntity& entity) {\
    Check1 (obj.isDefined ());\
 \
    storeObject (store, type, obj);\
+   undoEntities.push_back (entity);\
 }
 
 // Macro to define a callback to handle changing an entity (record, movie, ...)
@@ -84,6 +88,7 @@ void CDManager::entity##Changed (const H##type& entity) {\
    Check1 (entity.isDefined ());\
 \
    storeObject (store, type, entity);\
+   undoEntities.push_back (HEntity::cast (entity));\
 }
 
 const unsigned int CDManager::WIDTH (800);
@@ -268,9 +273,9 @@ const char* CDManager::xpmAuthor[] = {
 //-----------------------------------------------------------------------------
 CDManager::CDManager (Options& options)
    : XApplication (PACKAGE " V" PRG_RELEASE), relMovies ("movies"),
-     relRecords ("records"), relSongs ("songs"), songs (recGenres),
-     movies (movieGenres), records (recGenres), loadedPages (-1U),
-     opt (options) {
+     relActors ("actors"), relRecords ("records"), relSongs ("songs"),
+     records (recGenres), songs (recGenres), movies (movieGenres),
+     actors (movieGenres), loadedPages (-1U), opt (options) {
    TRACE9 ("CDManager::CDManager (Options&)");
 
    Language::init ();
@@ -291,6 +296,8 @@ CDManager::CDManager (Options& options)
 		     "    <menuitem action='FQuit'/>"
 		     "  </menu>"
 		     "  <menu action='Edit'>"
+		     "    <menuitem action='Undo'/>"
+		     "    <separator/>"
 		     "    <placeholder name='EditAction'/>"
 		     "    <separator/>"
 		     "    <menuitem action='Delete'/>"
@@ -319,7 +326,10 @@ CDManager::CDManager (Options& options)
    grpAction->add (Gtk::Action::create ("FQuit", Gtk::Stock::QUIT),
 		   mem_fun (*this, &CDManager::exit));
    grpAction->add (apMenus[MEDIT] = Gtk::Action::create ("Edit", _("_Edit")));
-   grpAction->add (apMenus[DELETE] = Gtk::Action::create ("Delete", Gtk::Stock::DELETE,_("_Delete")),
+   grpAction->add (apMenus[UNDO] = Gtk::Action::create ("Undo", Gtk::Stock::UNDO),
+		   Gtk::AccelKey (_("<ctl>Z")),
+		   mem_fun (*this, &CDManager::undo));
+   grpAction->add (apMenus[DELETE] = Gtk::Action::create ("Delete", Gtk::Stock::DELETE, _("_Delete")),
 		   Gtk::AccelKey (_("<ctl>Delete")),
 		   mem_fun (*this, &CDManager::deleteSelection));
    grpAction->add (Gtk::Action::create ("Options", _("_Options")));
@@ -345,25 +355,30 @@ CDManager::CDManager (Options& options)
    getClient ()->pack_start (nb, Gtk::PACK_EXPAND_WIDGET);
    getClient ()->pack_end (status, Gtk::PACK_SHRINK);
 
+   Gtk::ScrolledWindow* scrlRecords (new Gtk::ScrolledWindow);
    Gtk::ScrolledWindow* scrlSongs (new Gtk::ScrolledWindow);
    Gtk::ScrolledWindow* scrlMovies (new Gtk::ScrolledWindow);
-   Gtk::ScrolledWindow* scrlRecords (new Gtk::ScrolledWindow);
+   Gtk::ScrolledWindow* scrlActors (new Gtk::ScrolledWindow);
 
+   scrlRecords->set_shadow_type (Gtk::SHADOW_ETCHED_IN);
    scrlSongs->set_shadow_type (Gtk::SHADOW_ETCHED_IN);
    scrlMovies->set_shadow_type (Gtk::SHADOW_ETCHED_IN);
-   scrlRecords->set_shadow_type (Gtk::SHADOW_ETCHED_IN);
+   scrlActors->set_shadow_type (Gtk::SHADOW_ETCHED_IN);
+   scrlRecords->add (records);
    scrlSongs->add (songs);
    scrlMovies->add (movies);
-   scrlRecords->add (records);
+   scrlActors->add (actors);
+   scrlRecords->set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
    scrlSongs->set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
    scrlMovies->set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-   scrlRecords->set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+   scrlActors->set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
 
    TRACE9 ("CDManager::CDManager (Options&) - Add NB");
    Gtk::HPaned* cds (new Gtk::HPaned);
 
    nb.append_page (*manage (cds), _("_Records"), true);
    nb.append_page (*manage (scrlMovies), _("_Movies"), true);
+   nb.append_page (*manage (scrlActors), _("_Actors"), true);
    nb.signal_switch_page ().connect (mem_fun (*this, &CDManager::pageSwitched));
 
    songs.get_selection ()->set_mode (Gtk::SELECTION_EXTENDED);
@@ -396,7 +411,10 @@ CDManager::CDManager (Options& options)
    show_all_children ();
    show ();
 
+   CDManager::login ("cdmgr", "");
+#if 0
    showLogin ();
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -440,6 +458,15 @@ void CDManager::newInterpret () {
    HInterpret artist;
    artist.define ();
    addArtist (artist);
+}
+
+//-----------------------------------------------------------------------------
+/// Adds a new actor to the list
+//-----------------------------------------------------------------------------
+void CDManager::newActor () {
+   HActor actor;
+   actor.define ();
+   addActor (actor);
 }
 
 //-----------------------------------------------------------------------------
@@ -499,7 +526,6 @@ void CDManager::newMovie () {
 
    HMovie movie;
    movie.define ();
-   TRACE9 ("void CDManager::newMovie () - Movie defined ");
    Gtk::TreeIter i (movies.append (movie, *p));
    movies.expand_row (model->get_path (p), false);
    movies.selectRow (i);
@@ -556,7 +582,9 @@ void CDManager::enableMenus (bool enable) {
    nb.set_sensitive (enable);
 
    apMenus[LOGIN]->set_sensitive (enable = !enable);
-   apMenus[SAVE]->set_sensitive (enable);
+   apMenus[SAVE]->set_sensitive (false);
+
+   apMenus[UNDO]->set_sensitive (enable ? undoEntities.size () : false);
 }
 
 //-----------------------------------------------------------------------------
@@ -654,6 +682,13 @@ defineChangeObject(Song, song, changedSongs)
 /// \param entity: Handle to changed artist
 //-----------------------------------------------------------------------------
 defineChangeObject(Interpret, artist, changedInterprets)
+
+//-----------------------------------------------------------------------------
+// void CDManager::actorChanged (const HActor& actor)
+/// Callback when changing an actor
+/// \param entity: Handle to changed actor
+//-----------------------------------------------------------------------------
+defineChangeObject(Actor, actor, changedActors)
 
 //-----------------------------------------------------------------------------
 // void CDManager::recordChanged (const HRecord& record)
@@ -780,7 +815,8 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 		     "    <placeholder name='EditAction'>");
 
    Glib::RefPtr<Gtk::ActionGroup> grpAction (Gtk::ActionGroup::create ());
-   if (iPage) {
+   switch (iPage) {
+   case 1:
       if (!(loadedPages & (1 << iPage)))
 	 loadDatabase ();
 
@@ -805,12 +841,13 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 
       grpAction->add (Gtk::Action::create ("Lang", _("_Language")));
       addLanguageMenus (ui, grpAction);
-      ui += "</menu></placeholder></menubar>";
+      ui += "</menu></placeholder>";
       movieSelected ();
-   }
-   else {
+      break;
+
+   case 0:
       ui += ("<menuitem action='NInterpret'/><menuitem action='NRecord'/>"
-	     "<menuitem action='NSong'/></placeholder></menu></menubar>");
+	     "<menuitem action='NSong'/></placeholder></menu>");
 
       grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NInterpret", Gtk::Stock::NEW,
 							   _("New _Interpret")),
@@ -824,8 +861,19 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 		      mem_fun (*this, &CDManager::newSong));
 
       recordSelected ();
-   }
+      break;
 
+   case 2:
+      ui += "<menuitem action='NActor'/></placeholder></menu>";
+
+      grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NActor", Gtk::Stock::NEW,
+							   _("New _Actor")),
+		      Gtk::AccelKey (_("<ctl>N")),
+		      mem_fun (*this, &CDManager::newActor));
+      break;
+   } // end-switch
+
+   ui += "</menubar>";
    mgrUI->insert_action_group (grpAction);
    idPageMrg = mgrUI->add_ui_from_string (ui);
 }
@@ -836,12 +884,25 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 /// \returns Gtk::TreeIter: Iterator to new added artist
 //-----------------------------------------------------------------------------
 Gtk::TreeIter CDManager::addArtist (const HInterpret& artist) {
-   Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
    artists.push_back (artist);
 
    Gtk::TreeModel::iterator i (records.append (artist));
    records.selectRow (i);
    artistChanged (artist);
+   return i;
+}
+
+//-----------------------------------------------------------------------------
+/// Adds an actor to the actor listbox
+/// \param actor: Handle to the new actor
+/// \returns Gtk::TreeIter: Iterator to new added actor
+//-----------------------------------------------------------------------------
+Gtk::TreeIter CDManager::addActor (const HActor& actor) {
+   aActors.push_back (actor);
+
+   Gtk::TreeModel::iterator i (actors.append (actor));
+   actors.selectRow (i);
+   actorChanged (actor);
    return i;
 }
 
@@ -938,7 +999,6 @@ void CDManager::selectLanguage () {
 //-----------------------------------------------------------------------------
 /// Checks if the DB has been change and asks if it should be safed, before
 /// hiding (closing) the main window
-/// \param ev: Event
 //-----------------------------------------------------------------------------
 void CDManager::exit () {
    on_delete_event (NULL);
@@ -952,10 +1012,7 @@ void CDManager::exit () {
 /// \returns bool: True, if message has been processed
 //-----------------------------------------------------------------------------
 bool CDManager::on_delete_event (GdkEventAny* ev) {
-   if (changedInterprets.size () || changedRecords.size () || changedSongs.size ()
-       || changedDirectors.size () || changedMovies.size ()
-       || deletedInterprets.size () || deletedRecords.size () || deletedSongs.size ()
-       || deletedDirectors.size () || deletedMovies.size ()) {
+   if (undoEntities.size ()) {
       Gtk::MessageDialog dlg (_("The data has been modified! Save those changes?"),
 			      false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO);
       dlg.set_title (PACKAGE);

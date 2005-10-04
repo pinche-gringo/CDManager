@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.14 2005/05/21 18:56:30 markus Rel $
+//$Id: OOList.cpp,v 1.15 2005/10/04 22:48:02 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.14 $
+//REVISION    : $Revision: 1.15 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -75,7 +75,7 @@ void OwnerObjectList::init (const OwnerObjectColumns& cols) {
    append_column (_("Year"), cols.year);
 
    unsigned int index[] = { cols.name.index (), cols.year.index () };
-   for (unsigned int i (0); i < 2; ++i) {
+   for (unsigned int i (0); i < (sizeof (index) / sizeof (index[0])); ++i) {
       Gtk::TreeViewColumn* column (get_column (i));
       column->set_sort_column (index[i]);
       column->set_resizable ();
@@ -141,10 +141,7 @@ Gtk::TreeModel::Row OwnerObjectList::append (const HCelebrity& owner) {
    Check2 (colOwnerObjects);
 
    Gtk::TreeModel::Row newOwner (*mOwnerObjects->append ());
-   newOwner[colOwnerObjects->entry] = YGP::Handle<YGP::Entity>::cast (owner);
-   newOwner[colOwnerObjects->name] = owner->getName ();
-   newOwner[colOwnerObjects->year] = getLiveSpan (owner);
-
+   set (newOwner, YGP::Handle<YGP::Entity>::cast (owner));
    return newOwner;
 }
 
@@ -166,7 +163,9 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
    try {
       if (row.parent ()) {
 	 HEntity object (getObjectAt (row));
+	 std::map<unsigned int, Glib::ustring>::const_iterator g (genres.end ());
 
+	 // First check, if value is valid
 	 switch (column) {
 	 case 0: {
 	    Gtk::TreeModel::const_iterator i (getObject (row.parent (), value));
@@ -175,22 +174,11 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 	       e.replace (e.find ("%1"), 2, value);
 	       throw (std::runtime_error (e));
 	    }
-	    setName (object, value);
-	    row[colOwnerObjects->name] = value;
 	    break; }
 
-	 case 1:
-	    setYear (object, value);
-	    row[colOwnerObjects->year] = value;
-	    break;
-
 	 case 2: {
-	    std::map<unsigned int, Glib::ustring>::const_iterator g (genres.begin ());
-	    for (; g != genres.end (); ++g)
+	    for (g = genres.begin (); g != genres.end (); ++g)
 	       if (g->second == value) {
-		  setGenre (object, g->first);
-		  row[colOwnerObjects->genre] = value;
-		  signalObjectGenreChanged.emit (object);
 		  break;
 	       }
 	    if (g == genres.end ())
@@ -198,19 +186,45 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 	    break; }
 	 } // endswitch
 
-	 signalObjectChanged.emit (object);
+	 signalObjectChanged.emit (object);           // Signal changed entity
+
+	 // Set changes in list and object
+	 switch (column) {
+	 case 0:
+	    setName (object, value);
+	    row[colOwnerObjects->name] = value;
+	    break;
+
+	 case 1:
+	    setYear (object, value);
+	    row[colOwnerObjects->year] = value;
+	    break;
+
+	 case 2:
+	    Check3 (g != genres.end ());
+	    setGenre (object, g->first);
+	    row[colOwnerObjects->genre] = value;
+	    signalObjectGenreChanged.emit (object);
+	    break;
+	 } // end-switch
       } // endif object edited
       else {
 	 HCelebrity celeb (getCelebrityAt (row)); Check3 (celeb.isDefined ());
 
-	 switch (column) {
-	 case 0: {
+	 // Check if changes are valid
+	 if (!column) {
 	    Gtk::TreeModel::const_iterator i (getOwner (value));
 	    if ((i != row) && (i != mOwnerObjects->children ().end ())) {
 		  Glib::ustring e (_("Entry `%1' already exists!"));
 		  e.replace (e.find ("%1"), 2, value);
 		  throw (std::runtime_error (e));
 	    }
+	 }
+
+	 // Signal changes and update list and object
+	 signalOwnerChanged.emit (celeb);
+	 switch (column) {
+	 case 0: {
 	    celeb->setName (value);
 	    row[colOwnerObjects->name] = celeb->getName ();
 	    break; }
@@ -237,8 +251,6 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 	    row[colOwnerObjects->year] = getLiveSpan (celeb);
 	    break;
 	 } // end-switch
-
-	 signalOwnerChanged.emit (celeb);
       } // end-else director edited
    } // end-try
    catch (std::exception& e) {
@@ -248,6 +260,7 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
       XGP::MessageDlg* dlg (XGP::MessageDlg::create (obj));
       dlg->set_title (PACKAGE);
       dlg->get_window ()->set_transient_for (this->get_window ());
+      return;
    }
 }
 
@@ -472,6 +485,25 @@ Gtk::TreeModel::iterator OwnerObjectList::getOwner (const Glib::ustring& name) {
 }
 
 //-----------------------------------------------------------------------------
+/// Returns an iterator to the owner identified by the passed handle
+/// \param owner: Handle to owner
+/// \returns Gtk::TreeModel::iterator: Iterator to found entry or end ().
+//-----------------------------------------------------------------------------
+Gtk::TreeModel::iterator OwnerObjectList::getOwner (const HCelebrity& owner) {
+   Check2 (colOwnerObjects);
+   Check2 (owner.isDefined ());
+
+   HEntity obj (HEntity::cast (owner));
+   for (Gtk::TreeModel::const_iterator i (mOwnerObjects->children ().begin ());
+	i != mOwnerObjects->children ().end (); ++i) {
+      Gtk::TreeModel::Row actRow (*i);
+      if (obj == actRow[colOwnerObjects->entry])
+	 return i;
+   }
+   return mOwnerObjects->children ().end ();
+}
+
+//-----------------------------------------------------------------------------
 /// Returns an iterator to the children having the passed value as name
 /// \param parent: Parent row
 /// \param name: Name of entry
@@ -491,6 +523,44 @@ Gtk::TreeModel::iterator OwnerObjectList::getObject (const Gtk::TreeIter& parent
 }
 
 //-----------------------------------------------------------------------------
+/// Returns an iterator to the children identified by the passed object
+/// \param parent: Parent row
+/// \param object: Entry to find
+/// \returns Gtk::TreeModel::iterator: Iterator to found entry or end ().
+//-----------------------------------------------------------------------------
+Gtk::TreeModel::iterator OwnerObjectList::getObject (const Gtk::TreeIter& parent,
+						     const HEntity& object) {
+   Check2 (colOwnerObjects);
+
+   for (Gtk::TreeModel::const_iterator i (parent->children ().begin ());
+	i != parent->children ().end (); ++i) {
+      Gtk::TreeModel::Row actRow (*i);
+      if (object == actRow[colOwnerObjects->entry])
+	 return i;
+   }
+   return parent->children ().end ();
+}
+
+//-----------------------------------------------------------------------------
+/// Returns an iterator to the children identified by the passed object
+/// \param object: Entry to find
+/// \returns Gtk::TreeModel::iterator: Iterator to found entry or end ().
+//-----------------------------------------------------------------------------
+Gtk::TreeModel::iterator OwnerObjectList::getObject (const HEntity& object) {
+   Check2 (colOwnerObjects);
+
+   for (Gtk::TreeModel::const_iterator i (mOwnerObjects->children ().begin ());
+	i != mOwnerObjects->children ().end (); ++i)
+      for (Gtk::TreeModel::const_iterator j (i->children ().begin ());
+	   j != i->children ().end (); ++j) {
+	 Gtk::TreeModel::Row actRow (*j);
+	 if (object == actRow[colOwnerObjects->entry])
+	    return j;
+   }
+   return mOwnerObjects->children ().end ();
+}
+
+//-----------------------------------------------------------------------------
 /// Selects the passed row (as only one) and centers it
 /// \param i: Iterator to row to select
 //-----------------------------------------------------------------------------
@@ -499,4 +569,26 @@ void OwnerObjectList::selectRow (const Gtk::TreeModel::const_iterator& i) {
    sel->unselect_all ();
    sel->select (i);
    scroll_to_row (mOwnerObjects->get_path (i), 0.5);
+}
+
+//-----------------------------------------------------------------------------
+/// Updates the displayed movies, showing them in the passed language
+/// \param row: Row to update
+/// \param obj: Object, whose values to set
+//-----------------------------------------------------------------------------
+void OwnerObjectList::set (Gtk::TreeModel::Row& row, const HEntity& obj) {
+   row[colOwnerObjects->entry] = obj;
+   update (row);
+}
+
+//-----------------------------------------------------------------------------
+/// Updates the displayed movies, showing them in the passed language
+/// \param row: Row to update
+//-----------------------------------------------------------------------------
+void OwnerObjectList::update (Gtk::TreeModel::Row& row) {
+   if (!row->parent ()) {
+      HCelebrity owner (getCelebrityAt (row));
+      row[colOwnerObjects->name] = owner->getName ();
+      row[colOwnerObjects->year] = getLiveSpan (owner);
+   }
 }

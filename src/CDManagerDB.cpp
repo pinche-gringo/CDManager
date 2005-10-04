@@ -1,11 +1,11 @@
-//$Id: CDManagerDB.cpp,v 1.9 2005/09/05 04:08:46 markus Rel $
+//$Id: CDManagerDB.cpp,v 1.10 2005/10/04 16:20:12 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.9 $
+//REVISION    : $Revision: 1.10 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.1.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -473,6 +473,7 @@ void CDManager::writeChangedEntries () {
 	    throw (msg);
 	 }
 
+	 Check3 (changedInterprets.begin ()->second);
 	 changedInterprets.erase (changedInterprets.begin ());
       } // endwhile
 
@@ -503,6 +504,7 @@ void CDManager::writeChangedEntries () {
 	    throw (msg);
 	 }
 
+	 Check3 (changedRecords.begin ()->second);
 	 changedRecords.erase (changedRecords.begin ());
       } // endwhile
 
@@ -534,6 +536,7 @@ void CDManager::writeChangedEntries () {
 	    throw (msg);
 	 }
 
+	 Check3 (changedSongs.begin ()->second);
 	 changedSongs.erase (changedSongs.begin ());
       } // endwhile
 
@@ -565,6 +568,7 @@ void CDManager::writeChangedEntries () {
 	    throw (msg);
 	 }
 
+	 Check3 (changedDirectors.begin ()->second);
 	 changedDirectors.erase (changedDirectors.begin ());
       } // endwhile
 
@@ -620,6 +624,7 @@ void CDManager::writeChangedEntries () {
 	    throw (msg);
 	 }
 
+	 Check3 (changedMovies.begin ()->second);
 	 changedMovies.erase (changedMovies.begin ());
       }
    }
@@ -696,85 +701,90 @@ void CDManager::removeDeletedEntries () {
    try {
       while (deletedInterprets.size ()) {
 	 HInterpret artist (*deletedInterprets.begin ()); Check3 (artist.isDefined ());
-	 Check3 (artist->getId ());
-	 try {
-	    std::stringstream query;
-	    query << "DELETE FROM Interprets WHERE id=" << artist->getId ();
-	    Database::execute (query.str ().c_str ());
-	 }
-	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't delete interpret `%1'!\n\nReason: %2"));
-	    msg.replace (msg.find ("%1"), 2, artist->getName ());
-	    msg.replace (msg.find ("%2"), 2, err.what ());
-	    throw (msg);
+	 if (artist->getId ()) {
+	    try {
+	       std::stringstream query;
+	       query << "DELETE FROM Interprets WHERE id=" << artist->getId ();
+	       Database::execute (query.str ().c_str ());
+	    }
+	    catch (std::exception& err) {
+	       Glib::ustring msg (_("Can't delete interpret `%1'!\n\nReason: %2"));
+	       msg.replace (msg.find ("%1"), 2, artist->getName ());
+	       msg.replace (msg.find ("%2"), 2, err.what ());
+	       throw (msg);
+	    }
 	 }
 	 deletedInterprets.erase (deletedInterprets.begin ());
       } // endwhile
 
       while (deletedRecords.size ()) {
-	 HRecord record (*deletedRecords.begin ()); Check3 (record.isDefined ());
-	 Check3 (record->getId ());
-	 try {
-	    std::stringstream query;
-	    query << "DELETE FROM Records WHERE id=" << record->getId ();
-	    Database::execute (query.str ().c_str ());
-	 }
-	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't delete record `%1'!\n\nReason: %2"));
-	    msg.replace (msg.find ("%1"), 2, record->getName ());
-	    msg.replace (msg.find ("%2"), 2, err.what ());
-	    throw (msg);
+	 HRecord record (deletedRecords.begin ()->first); Check3 (record.isDefined ());
+	 if (record->getId ()) {
+	    try {
+	       std::stringstream query;
+	       query << "DELETE FROM Records WHERE id=" << record->getId ();
+	       Database::execute (query.str ().c_str ());
+	    }
+	    catch (std::exception& err) {
+	       Glib::ustring msg (_("Can't delete record `%1'!\n\nReason: %2"));
+	       msg.replace (msg.find ("%1"), 2, record->getName ());
+	       msg.replace (msg.find ("%2"), 2, err.what ());
+	       throw (msg);
+	    }
 	 }
 	 deletedRecords.erase (deletedRecords.begin ());
       } // endwhile
 
       while (deletedSongs.size ()) {
-	 HSong song (*deletedSongs.begin ()); Check3 (song.isDefined ());
-	 Check3 (song->getId ());
-	 try {
-	    std::stringstream query;
-	    query << "DELETE FROM Songs WHERE id=" << song->getId ();
-	    Database::execute (query.str ().c_str ());
-	 }
-	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't delete song `%1'!\n\nReason: %2"));
-	    msg.replace (msg.find ("%1"), 2, song->getName ());
-	    msg.replace (msg.find ("%2"), 2, err.what ());
-	    throw (msg);
+	 HSong song (deletedSongs.begin ()->first); Check3 (song.isDefined ());
+	 if (song->getId ()) {
+	    try {
+	       std::stringstream query;
+	       query << "DELETE FROM Songs WHERE id=" << song->getId ();
+	       Database::execute (query.str ().c_str ());
+	    }
+	    catch (std::exception& err) {
+	       Glib::ustring msg (_("Can't delete song `%1'!\n\nReason: %2"));
+	       msg.replace (msg.find ("%1"), 2, song->getName ());
+	       msg.replace (msg.find ("%2"), 2, err.what ());
+	       throw (msg);
+	    }
 	 }
 	 deletedSongs.erase (deletedSongs.begin ());
       } // end-while
 
       while (deletedDirectors.size ()) {
 	 HDirector director (*deletedDirectors.begin ()); Check3 (director.isDefined ());
-	 Check3 (director->getId ());
-	 try {
-	    std::stringstream query;
-	    query << "DELETE FROM Directors WHERE id=" << director->getId ();
-	    Database::execute (query.str ().c_str ());
-	 }
-	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't delete director `%1'!\n\nReason: %2"));
-	    msg.replace (msg.find ("%1"), 2, director->getName ());
-	    msg.replace (msg.find ("%2"), 2, err.what ());
-	    throw (msg);
+	 if (director->getId ()) {
+	    try {
+	       std::stringstream query;
+	       query << "DELETE FROM Directors WHERE id=" << director->getId ();
+	       Database::execute (query.str ().c_str ());
+	    }
+	    catch (std::exception& err) {
+	       Glib::ustring msg (_("Can't delete director `%1'!\n\nReason: %2"));
+	       msg.replace (msg.find ("%1"), 2, director->getName ());
+	       msg.replace (msg.find ("%2"), 2, err.what ());
+	       throw (msg);
+	    }
 	 }
 	 deletedDirectors.erase (deletedDirectors.begin ());
       } // endwhile
 
       while (deletedMovies.size ()) {
-	 HMovie movie (*deletedMovies.begin ()); Check3 (movie.isDefined ());
-	 Check3 (movie->getId ());
-	 try {
-	    std::stringstream query;
-	    query << "DELETE FROM Movies WHERE id=" << movie->getId ();
-	    Database::execute (query.str ().c_str ());
-	 }
-	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't delete movie `%1'!\n\nReason: %2"));
-	    msg.replace (msg.find ("%1"), 2, movie->getName ());
-	    msg.replace (msg.find ("%2"), 2, err.what ());
-	    throw (msg);
+	 HMovie movie (deletedMovies.begin ()->first); Check3 (movie.isDefined ());
+	 if (movie->getId ()) {
+	    try {
+	       std::stringstream query;
+	       query << "DELETE FROM Movies WHERE id=" << movie->getId ();
+	       Database::execute (query.str ().c_str ());
+	    }
+	    catch (std::exception& err) {
+	       Glib::ustring msg (_("Can't delete movie `%1'!\n\nReason: %2"));
+	       msg.replace (msg.find ("%1"), 2, movie->getName ());
+	       msg.replace (msg.find ("%2"), 2, err.what ());
+	       throw (msg);
+	    }
 	 }
 	 deletedMovies.erase (deletedMovies.begin ());
       } // endwhile

@@ -1,11 +1,11 @@
-//$Id: CDManagerDel.cpp,v 1.2 2005/01/31 05:14:11 markus Rel $
+//$Id: CDManagerDel.cpp,v 1.3 2005/10/04 16:19:06 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.1.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -38,15 +38,17 @@
 /// Deletes the current selection
 //-----------------------------------------------------------------------------
 void CDManager::deleteSelection () {
-   if (nb.get_current_page ()) {
+   switch(nb.get_current_page ()) {
+   case 1:
       deleteSelectedMovies ();
-   }
-   else {
+      break;
+
+   case 0:
       if (records.has_focus ())
 	 deleteSelectedRecords ();
       else if (songs.has_focus ())
 	 deleteSelectedSongs ();
-   }
+   } // end-switch
 }
 
 //-----------------------------------------------------------------------------
@@ -76,17 +78,20 @@ void CDManager::deleteSelectedRecords () {
 	    }
 	 else
 	    records.getModel ()->erase (iter);
+
+	 undoEntities.push_back (HEntity::cast (artist));
 	 // Though artist is already removed from the listbox, it still
 	 // has to be removed from the database
 	 if (artist->getId ())
 	    deletedInterprets.push_back (artist);
-	 else {
-	    Check3 (changedInterprets.find (artist) != changedInterprets.end ());
+
+	 std::map<HInterpret, HInterpret>::iterator iArtist (changedInterprets.find (artist));
+	 if (iArtist != changedInterprets.end ())
 	    changedInterprets.erase (changedInterprets.find (artist));
-	 }
       }
    }
-   apMenus[SAVE]->set_sensitive (true);
+   apMenus[SAVE]->set_sensitive ();
+   apMenus[UNDO]->set_sensitive ();
 }
 
 //-----------------------------------------------------------------------------
@@ -105,23 +110,24 @@ void CDManager::deleteRecord (const Gtk::TreeIter& record) {
    // Remove related songs
    TRACE3 ("CDManager::deleteRecord (const Gtk::TreeIter&) - Remove Songs");
    while (relSongs.isRelated (hRec)) {
-      std::vector<HSong>::iterator s
-	 (relSongs.getObjects (hRec).begin ());
+      std::vector<HSong>::iterator s (relSongs.getObjects (hRec).begin ());
+      undoEntities.push_back (HEntity::cast (*s));
+      deletedSongs[*s] = hRec;
       relSongs.unrelate (hRec, *s);
-      deletedSongs.push_back (*s);
    }
+   undoEntities.push_back (HEntity::cast (hRec));
+   deletedRecords[hRec] = hArtist;
    relRecords.unrelate (hArtist, hRec);
 
-   if (hRec->getId ())
-      deletedRecords.push_back (hRec);
-   else {
-      Check3 (changedRecords.find (hRec) != changedRecords.end ());
-      changedRecords.erase (changedRecords.find (hRec));
-   }
+   std::map<HRecord, HRecord>::iterator iRec (changedRecords.find (hRec));
+   if (iRec != changedRecords.end ())
+      changedRecords.erase (iRec);
 
    // Delete artist from listbox if it doesn't have any records
    Glib::RefPtr<Gtk::TreeStore> model (records.getModel ());
-   if (!relRecords.isRelated (hArtist)) {
+   if (relRecords.isRelated (hArtist))
+      model->erase (record);
+   else {
       TRACE9 ("CDManager::deleteRecord (const Gtk::TreeIter&) - Deleting artist "
 	      << hArtist->getName ());
 
@@ -129,8 +135,6 @@ void CDManager::deleteRecord (const Gtk::TreeIter& record) {
       model->erase (record);
       model->erase (parent);
    }
-   else
-      model->erase (record);
 }
 
 //-----------------------------------------------------------------------------
@@ -150,17 +154,18 @@ void CDManager::deleteSelectedSongs () {
       Check3 (relSongs.isRelated (song));
       HRecord record (relSongs.getParent (song));
 
+      undoEntities.push_back (HEntity::cast (song));
+      deletedSongs[song] = record;
       relSongs.unrelate (record, song);
-      if (song->getId ())
-	 deletedSongs.push_back (song);
-      else {
-	 Check3 (changedSongs.find (song) != changedSongs.end ());
+
+      std::map<HSong, HSong>::iterator iSong (changedSongs.find (song));
+      if (iSong != changedSongs.end ())
 	 changedSongs.erase (changedSongs.find (song));
-      }
       songs.getModel ()->erase (iter);
    }
 
-   apMenus[SAVE]->set_sensitive (true);
+   apMenus[UNDO]->set_sensitive ();
+   apMenus[SAVE]->set_sensitive ();
 }
 
 //-----------------------------------------------------------------------------
@@ -190,17 +195,20 @@ void CDManager::deleteSelectedMovies () {
 	    }
 	 else
 	    records.getModel ()->erase (iter);
+
+	 undoEntities.push_back (HEntity::cast (director));
 	 // Though director is already removed from the listbox, it still
 	 // has to be removed from the database
 	 if (director->getId ())
 	    deletedDirectors.push_back (director);
-	 else {
-	    Check3 (changedDirectors.find (director) != changedDirectors.end ());
+
+	 std::map<HDirector, HDirector>::iterator iDirector (changedDirectors.find (director));
+	 if (iDirector != changedDirectors.end ())
 	    changedDirectors.erase (changedDirectors.find (director));
-	 }
       }
    }
-   apMenus[SAVE]->set_sensitive (true);
+   apMenus[UNDO]->set_sensitive ();
+   apMenus[SAVE]->set_sensitive ();
 }
 
 //-----------------------------------------------------------------------------
@@ -216,24 +224,25 @@ void CDManager::deleteMovie (const Gtk::TreeIter& movie) {
    Check3 (relMovies.isRelated (hMovie));
    HDirector hDirector (relMovies.getParent (hMovie)); Check3 (hDirector.isDefined ());
 
+   undoEntities.push_back (HEntity::cast (hMovie));
+   deletedMovies[hMovie] = hDirector;
    relMovies.unrelate (hDirector, hMovie);
-   if (hMovie->getId ())
-      deletedMovies.push_back (hMovie);
-   else {
-      Check3 (changedMovies.find (hMovie) != changedMovies.end ());
+
+   std::map<HMovie, HMovie>::iterator iMovie (changedMovies.find (hMovie));
+   if (iMovie != changedMovies.end ())
       changedMovies.erase (changedMovies.find (hMovie));
-   }
 
    // Delete director from listbox if (s)he doesn't have any movies
    Glib::RefPtr<Gtk::TreeStore> model (movies.getModel ());
-   if (!relMovies.isRelated (hDirector)) {
+   if (relMovies.isRelated (hDirector))
+      model->erase (movie);
+   else {
       TRACE9 ("CDManager::deleteMovie (const Gtk::TreeIter&) - Deleting director "
 	      << hDirector->getName ());
+      undoEntities.push_back (HEntity::cast (hDirector));
 
       Gtk::TreeIter parent ((*movie)->parent ()); Check3 (parent);
       model->erase (movie);
       model->erase (parent);
    }
-   else
-      model->erase (movie);
 }

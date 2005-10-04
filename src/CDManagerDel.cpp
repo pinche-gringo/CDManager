@@ -1,11 +1,11 @@
-//$Id: CDManagerDel.cpp,v 1.3 2005/10/04 16:19:06 markus Exp $
+//$Id: CDManagerDel.cpp,v 1.4 2005/10/04 22:50:51 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.1.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -71,17 +71,15 @@ void CDManager::deleteSelectedRecords () {
 	 TRACE9 ("CDManager::deleteSelectedRecords () - Deleting " <<
 		 iter->children ().size () << " children");
 	 HInterpret artist (records.getInterpretAt (iter)); Check3 (artist.isDefined ());
-	 if (iter->children ().size ())
-	    while (iter->children ().size ()) {
-	       Gtk::TreeIter child (iter->children ().begin ());
-	       deleteRecord (child);
-	    }
-	 else
-	    records.getModel ()->erase (iter);
-
+	 while (iter->children ().size ()) {
+	    Gtk::TreeIter child (iter->children ().begin ());
+	    HRecord hRecord (records.getRecordAt (child));
+	    if (!hRecord->areSongsLoaded () && hRecord->getId ())
+	       loadSongs (hRecord);
+	    deleteRecord (child);
+	 }
 	 undoEntities.push_back (HEntity::cast (artist));
-	 // Though artist is already removed from the listbox, it still
-	 // has to be removed from the database
+	 records.getModel ()->erase (iter);
 	 if (artist->getId ())
 	    deletedInterprets.push_back (artist);
 
@@ -125,16 +123,7 @@ void CDManager::deleteRecord (const Gtk::TreeIter& record) {
 
    // Delete artist from listbox if it doesn't have any records
    Glib::RefPtr<Gtk::TreeStore> model (records.getModel ());
-   if (relRecords.isRelated (hArtist))
-      model->erase (record);
-   else {
-      TRACE9 ("CDManager::deleteRecord (const Gtk::TreeIter&) - Deleting artist "
-	      << hArtist->getName ());
-
-      Gtk::TreeIter parent ((*record)->parent ()); Check3 (parent);
-      model->erase (record);
-      model->erase (parent);
-   }
+   model->erase (record);
 }
 
 //-----------------------------------------------------------------------------
@@ -188,13 +177,11 @@ void CDManager::deleteSelectedMovies () {
 	 TRACE9 ("CDManager::deleteSelectedMovies () - Deleting " <<
 		 iter->children ().size () << " children");
 	 HDirector director (movies.getDirectorAt (iter)); Check3 (director.isDefined ());
-	 if (iter->children ().size ())
-	    while (iter->children ().size ()) {
-	       Gtk::TreeIter child (iter->children ().begin ());
-	       deleteMovie (child);
-	    }
-	 else
-	    records.getModel ()->erase (iter);
+	 while (iter->children ().size ()) {
+	    Gtk::TreeIter child (iter->children ().begin ());
+	    deleteMovie (child);
+	 }
+	 movies.getModel ()->erase (iter);
 
 	 undoEntities.push_back (HEntity::cast (director));
 	 // Though director is already removed from the listbox, it still
@@ -232,17 +219,6 @@ void CDManager::deleteMovie (const Gtk::TreeIter& movie) {
    if (iMovie != changedMovies.end ())
       changedMovies.erase (changedMovies.find (hMovie));
 
-   // Delete director from listbox if (s)he doesn't have any movies
    Glib::RefPtr<Gtk::TreeStore> model (movies.getModel ());
-   if (relMovies.isRelated (hDirector))
-      model->erase (movie);
-   else {
-      TRACE9 ("CDManager::deleteMovie (const Gtk::TreeIter&) - Deleting director "
-	      << hDirector->getName ());
-      undoEntities.push_back (HEntity::cast (hDirector));
-
-      Gtk::TreeIter parent ((*movie)->parent ()); Check3 (parent);
-      model->erase (movie);
-      model->erase (parent);
-   }
+   model->erase (movie);
 }

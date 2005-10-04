@@ -1,11 +1,11 @@
-//$Id: SongList.cpp,v 1.15 2005/05/21 18:58:26 markus Rel $
+//$Id: SongList.cpp,v 1.16 2005/10/04 16:23:12 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.15 $
+//REVISION    : $Revision: 1.16 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -115,15 +115,7 @@ Gtk::TreeModel::iterator SongList::append (HSong& song) {
 
    Gtk::TreeModel::Row newSong (*mSongs->append ());
    newSong[colSongs.entry] = song;
-   newSong[colSongs.colTrack] = song->getTrack ();
-   newSong[colSongs.colName] = song->getName ();
-   newSong[colSongs.colDuration] = song->getDuration ();
-
-   std::map<unsigned int, Glib::ustring>::const_iterator g
-      (genres.find (song->getGenre ()));
-   if (g == genres.end ())
-      g = genres.begin ();
-   newSong[colSongs.colGenre] = g->second;
+   update (newSong);
    return newSong;
 }
 
@@ -252,11 +244,26 @@ void SongList::updateGenres () {
 }
 
 //-----------------------------------------------------------------------------
+/// Returns an iterator to the song identified by the passed handle
+/// \param song: Handle of the song
+/// \returns Gtk::TreeModel::iterator: Iterator to found song or end ().
+//-----------------------------------------------------------------------------
+Gtk::TreeModel::iterator SongList::getSong (const HSong& song) const {
+   for (Gtk::TreeModel::const_iterator i (mSongs->children ().begin ());
+	i != mSongs->children ().end (); ++i) {
+      Gtk::TreeModel::Row actRow (*i);
+      if (song == actRow[colSongs.entry])
+	 return i;
+   }
+   return mSongs->children ().end ();
+}
+
+//-----------------------------------------------------------------------------
 /// Returns an iterator to the song having the passed value as name
 /// \param name: Name of song
 /// \returns Gtk::TreeModel::iterator: Iterator to found song or end ().
 //-----------------------------------------------------------------------------
-Gtk::TreeModel::iterator SongList::getSong (const Glib::ustring& name) {
+Gtk::TreeModel::iterator SongList::getSong (const Glib::ustring& name) const {
    for (Gtk::TreeModel::const_iterator i (mSongs->children ().begin ());
 	i != mSongs->children ().end (); ++i) {
       Gtk::TreeModel::Row actRow (*i);
@@ -271,7 +278,7 @@ Gtk::TreeModel::iterator SongList::getSong (const Glib::ustring& name) {
 /// \param track: Number of the song
 /// \returns Gtk::TreeModel::iterator: Iterator to found song or end ().
 //-----------------------------------------------------------------------------
-Gtk::TreeModel::iterator SongList::getSong (const YGP::ANumeric& track) {
+Gtk::TreeModel::iterator SongList::getSong (const YGP::ANumeric& track) const {
    for (Gtk::TreeModel::const_iterator i (mSongs->children ().begin ());
 	i != mSongs->children ().end (); ++i) {
       Gtk::TreeModel::Row actRow (*i);
@@ -303,4 +310,22 @@ void SongList::setGenre (Gtk::TreeIter& iter, unsigned int genre) {
 	 g = genres.begin ();
       (*iter)[colSongs.colGenre] = g->second;
    }
+}
+
+//-----------------------------------------------------------------------------
+/// Updates the displayed movies; actualizes the displayed values with the
+/// values stored in the object in the entity-column
+/// \param row: Row to update
+//-----------------------------------------------------------------------------
+void SongList::update (Gtk::TreeModel::Row& row) {
+   HSong song (row[colSongs.entry]);
+   row[colSongs.colTrack] = song->getTrack ();
+   row[colSongs.colName] = song->getName ();
+   row[colSongs.colDuration] = song->getDuration ();
+
+   std::map<unsigned int, Glib::ustring>::const_iterator g
+      (genres.find (song->getGenre ()));
+   if (g == genres.end ())
+      g = genres.begin ();
+   row[colSongs.colGenre] = g->second;
 }

@@ -1,11 +1,11 @@
-//$Id: RecordList.cpp,v 1.14 2005/04/21 05:41:08 markus Rel $
+//$Id: RecordList.cpp,v 1.15 2005/10/04 16:23:12 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.14 $
+//REVISION    : $Revision: 1.15 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -71,10 +71,7 @@ Gtk::TreeModel::Row RecordList::append (HRecord& record,
 
    HEntity obj (HEntity::cast (record));
    Gtk::TreeModel::Row newRecord (OwnerObjectList::append (obj, artist));
-   newRecord[colOwnerObjects.name] = record->getName ();
-   newRecord[colOwnerObjects.year] = record->getYear ().toString ();
-   changeGenre (newRecord, record->getGenre ());
-
+   update (newRecord);
    return newRecord;
 }
 
@@ -148,4 +145,19 @@ int RecordList::sortEntity (const Gtk::TreeModel::iterator& a,
 
    return ((aname < bname) ? -1 : (bname < aname) ? 1
 	   : ha->getName ().compare (hb->getName ()));
+}
+
+//-----------------------------------------------------------------------------
+/// Updates the displayed record; actualizes the displayed values with the
+/// values stored in the object in the entity-column
+/// \param row: Row to update
+//-----------------------------------------------------------------------------
+void RecordList::update (Gtk::TreeModel::Row& row) {
+   if (row->parent ()) {
+      HRecord record (getRecordAt (row));
+      row[colOwnerObjects.name] = record->getName ();
+      row[colOwnerObjects.year] = record->getYear ().toString ();
+      changeGenre (row, record->getGenre ());
+   }
+   OwnerObjectList::update (row);
 }

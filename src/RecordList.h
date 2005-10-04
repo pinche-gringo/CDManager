@@ -1,7 +1,7 @@
 #ifndef RECORDLIST_H
 #define RECORDLIST_H
 
-//$Id: RecordList.h,v 1.9 2005/04/21 05:41:08 markus Rel $
+//$Id: RecordList.h,v 1.10 2005/10/04 16:23:12 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -43,6 +43,8 @@ class RecordList : public OwnerObjectList {
    HRecord getRecordAt (const Gtk::TreeIter iterator) const;
    HInterpret getInterpretAt (const Gtk::TreeIter iterator) const {
       return getCelebrityAt (iterator); }
+
+   virtual void update (Gtk::TreeModel::Row& row);
 
  protected:
    virtual void setName (HEntity& object, const Glib::ustring& value);

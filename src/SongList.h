@@ -1,7 +1,7 @@
 #ifndef SONGLIST_H
 #define SONGLIST_H
 
-//$Id: SongList.h,v 1.10 2005/05/21 18:58:26 markus Rel $
+//$Id: SongList.h,v 1.11 2005/10/04 16:23:12 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -69,13 +69,16 @@ class SongList : public Gtk::TreeView {
       signalChanged.emit (row[colSongs.entry]); }
    void setGenre (Gtk::TreeIter& iter, unsigned int genre);
 
+   virtual void update (Gtk::TreeModel::Row& row);
+
    Glib::RefPtr<Gtk::ListStore> getModel () const { return mSongs; }
    HSong getEntryAt (const Gtk::TreeModel::iterator& row) const {
       Gtk::TreeModel::Row r (*row);
       return r[colSongs.entry];
    }
-   Gtk::TreeModel::iterator getSong (const YGP::ANumeric& track);
-   Gtk::TreeModel::iterator getSong (const Glib::ustring& name);
+   Gtk::TreeModel::iterator getSong (const HSong& song) const;
+   Gtk::TreeModel::iterator getSong (const YGP::ANumeric& track) const;
+   Gtk::TreeModel::iterator getSong (const Glib::ustring& name) const;
 
    sigc::signal<void, const HSong&> signalChanged;
 

@@ -1,11 +1,11 @@
-//$Id: MovieList.cpp,v 1.18 2005/04/21 05:36:08 markus Rel $
+//$Id: MovieList.cpp,v 1.19 2005/10/04 16:23:12 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.18 $
+//REVISION    : $Revision: 1.19 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -124,14 +124,7 @@ Gtk::TreeModel::Row MovieList::append (HMovie& movie,
 
    HEntity obj (HEntity::cast (movie));
    Gtk::TreeModel::Row newMovie (OwnerObjectList::append (obj, director));
-   newMovie[colMovies.name] = movie->getName ();
-   newMovie[colMovies.year] = movie->getYear ().toString ();
-   changeGenre (newMovie, movie->getGenre ());
-
-   newMovie[colMovies.type] = CDType::getInstance ()[movie->getType ()];
-
-   setLanguage (newMovie, movie->getLanguage ());
-   setTitles (newMovie, movie->getTitles ());
+   update (newMovie);
    return newMovie;
 }
 
@@ -222,7 +215,6 @@ void MovieList::valueChanged (const Glib::ustring& path,
    try {
       if (row.parent ()) {
 	 HMovie movie (getMovieAt (row));
-	 signalObjectChanged.emit (getObjectAt (row));
 	 switch (column) {
 	 case 0: {
 	    CDType& type (CDType::getInstance ());
@@ -246,6 +238,8 @@ void MovieList::valueChanged (const Glib::ustring& path,
 	 default:
 	    Check3 (0);
 	 } // end-switch
+
+	 signalObjectChanged.emit (getObjectAt (row));
       } // endif object edited
    } // end-try
    catch (std::exception& e) {
@@ -378,4 +372,24 @@ void MovieList::update (const std::string& lang) {
 	 (*m)[colOwnerObjects->name] = movie->getName (lang);
       }
    }
+}
+
+//-----------------------------------------------------------------------------
+/// Updates the displayed movies; actualizes the displayed values with the
+/// values stored in the object in the entity-column
+/// \param row: Row to update
+//-----------------------------------------------------------------------------
+void MovieList::update (Gtk::TreeModel::Row& row) {
+   if (row->parent ()) {
+      HMovie movie (getMovieAt (row));
+      row[colMovies.name] = movie->getName ();
+      row[colMovies.year] = movie->getYear ().toString ();
+      changeGenre (row, movie->getGenre ());
+
+      row[colMovies.type] = CDType::getInstance ()[movie->getType ()];
+
+      setLanguage (row, movie->getLanguage ());
+      setTitles (row, movie->getTitles ());
+   }
+   OwnerObjectList::update (row);
 }

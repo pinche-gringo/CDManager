@@ -1,11 +1,11 @@
-//$Id: Record.cpp,v 1.5 2005/10/04 16:21:07 markus Exp $
+//$Id: Record.cpp,v 1.6 2005/10/04 22:49:24 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Record
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 29.11.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -56,14 +56,11 @@ Record::Record (const Record& other)
 //-----------------------------------------------------------------------------
 Record& Record::operator= (const Record& other) {
    if (this != &other) {
-      if (!id)
-	 id = other.id;
-
+      id = other.id;
       name = other.name;
       year = other.year;
       genre = other.genre;
-      if (!songsLoaded)
-	 songsLoaded = other.songsLoaded;
+      songsLoaded = other.songsLoaded;
    }
    return *this;
 }

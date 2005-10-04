@@ -1,7 +1,7 @@
 #ifndef CELIBRITY_H
 #define CELIBRITY_H
 
-//$Id: Celebrity.h,v 1.9 2005/01/10 02:11:44 markus Rel $
+//$Id: Celebrity.h,v 1.10 2005/10/04 16:21:07 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -36,9 +36,10 @@ defineHndl(Celebrity);
 class Celebrity : public YGP::Entity {
  public:
    Celebrity ();
-   Celebrity (const Celebrity& other) : id (other.id), name (other.name),
-      born (other.born), died (other.died) { }
+   Celebrity (const Celebrity& other);
    virtual ~Celebrity ();
+
+   Celebrity& operator= (const Celebrity& other);
 
    static bool compByName (const HCelebrity& a, const HCelebrity& b);
    static Glib::ustring removeIgnored (const Glib::ustring& name);
@@ -63,9 +64,6 @@ class Celebrity : public YGP::Entity {
    Glib::ustring     name; // %attrib%; Name
    YGP::AYear        born; // %attrib%; Born
    YGP::AYear        died; // %attrib%; Died
-
-   //Prohibited manager functions
-   const Celebrity& operator= (const Celebrity& other);
 };
 
 #endif

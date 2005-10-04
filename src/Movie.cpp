@@ -1,11 +1,11 @@
-//$Id: Movie.cpp,v 1.9 2005/07/04 16:50:53 markus Rel $
+//$Id: Movie.cpp,v 1.10 2005/10/04 16:21:07 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movie
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.9 $
+//REVISION    : $Revision: 1.10 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 29.11.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -67,6 +67,26 @@ Movie::Movie (const Movie& other)
      titles (other.titles) {
  }
 
+
+//-----------------------------------------------------------------------------
+/// Assignment operator
+/// \param other: Object to assign
+/// \returns Movie&: Reference to self
+//-----------------------------------------------------------------------------
+Movie& Movie::operator= (const Movie& other) {
+   if (this != &other) {
+      if (!id)
+	 id = other.id;
+
+      name = other.name;
+      year = other.year;
+      genre = other.genre;
+      type = other.type;
+      lang = other.lang;
+      titles = other.titles;
+   }
+   return *this;
+}
 
 //-----------------------------------------------------------------------------
 /// Removes the leading articles of the names.

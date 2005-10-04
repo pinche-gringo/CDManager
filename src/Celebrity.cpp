@@ -1,11 +1,11 @@
-//$Id: Celebrity.cpp,v 1.6 2005/01/18 03:56:56 markus Rel $
+//$Id: Celebrity.cpp,v 1.7 2005/10/04 16:21:07 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Celebrity
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -38,6 +38,31 @@
 #include "Celebrity.h"
 #include "Celebrity.meta"
 
+
+//-----------------------------------------------------------------------------
+/// Copy constructor
+/// \param other: Object to clone
+//-----------------------------------------------------------------------------
+Celebrity::Celebrity (const Celebrity& other)
+   : id (other.id), name (other.name), born (other.born), died (other.died) {
+}
+
+
+//-----------------------------------------------------------------------------
+/// Assignment operator
+/// \param other: Object to assign
+/// \returns Celebrity&: Reference to self
+//-----------------------------------------------------------------------------
+Celebrity& Celebrity::operator= (const Celebrity& other) {
+   if (this != &other) {
+      if (!id)
+	 id = other.id;
+      name = other.name;
+      born = other.born;
+      died = other.died;
+   }
+   return *this;
+}
 
 //-----------------------------------------------------------------------------
 /// Removes the leading parts (articles, names) of a name.

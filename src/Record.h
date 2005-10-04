@@ -1,7 +1,7 @@
 #ifndef RECORD_H
 #define RECORD_H
 
-//$Id: Record.h,v 1.11 2005/01/10 02:11:44 markus Rel $
+//$Id: Record.h,v 1.12 2005/10/04 16:21:07 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -34,9 +34,10 @@ defineHndl(Record);
 class Record : public YGP::Entity {
  public:
    Record ();
-   Record (const Record& other) : id (other.id), name (other.name),
-      year (other.year), genre (other.genre), songsLoaded (other.songsLoaded) { }
+   Record (const Record& other);
    virtual ~Record ();
+
+   Record& operator= (const Record& other);
 
    unsigned long int getId () const {return id; }
    Glib::ustring     getName () const {return name; }
@@ -63,9 +64,6 @@ class Record : public YGP::Entity {
    YGP::AYear        year;           // %attrib%; Made
    unsigned int      genre;          // %attrib%; Genre; 0
    bool              songsLoaded;    // %attrib%; ; false
-
-   //Prohibited manager functions
-   const Record& operator= (const Record& other);
 };
 
 #endif

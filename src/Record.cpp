@@ -1,11 +1,11 @@
-//$Id: Record.cpp,v 1.4 2005/05/14 23:32:28 markus Rel $
+//$Id: Record.cpp,v 1.5 2005/10/04 16:21:07 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Record
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 29.11.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -38,6 +38,35 @@
 #include "Record.h"
 #include "Record.meta"
 
+
+//-----------------------------------------------------------------------------
+/// Copyconstructor
+/// \param other: Object to copy
+//-----------------------------------------------------------------------------
+Record::Record (const Record& other)
+   : id (other.id), name (other.name),
+     year (other.year), genre (other.genre), songsLoaded (other.songsLoaded) {
+ }
+
+
+//-----------------------------------------------------------------------------
+/// Assignment operator
+/// \param other: Object to assign
+/// \returns Record&: Reference to self
+//-----------------------------------------------------------------------------
+Record& Record::operator= (const Record& other) {
+   if (this != &other) {
+      if (!id)
+	 id = other.id;
+
+      name = other.name;
+      year = other.year;
+      genre = other.genre;
+      if (!songsLoaded)
+	 songsLoaded = other.songsLoaded;
+   }
+   return *this;
+}
 
 //-----------------------------------------------------------------------------
 /// Removes the leading articles of the names.

@@ -1,7 +1,7 @@
 #ifndef WRITER_H
 #define WRITER_H
 
-//$Id: Writer.h,v 1.8 2005/01/14 02:45:29 markus Rel $
+//$Id: Writer.h,v 1.9 2005/10/18 06:23:56 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,11 +33,11 @@
 
 /**Class to write movies as HTML-tables
  */
-class MovieWriter : public YGP::HTMLWriter {
+class MovieWriter : public YGP::TableWriter {
  public:
    MovieWriter (const std::string& format,
 		std::map<unsigned int, Glib::ustring> genres)
-      : YGP::HTMLWriter (format), oddLine (true), genres (genres) { }
+      : YGP::TableWriter (format, TBLW_HTML_PARAMS), oddLine (true), genres (genres) { }
    virtual ~MovieWriter ();
 
    void writeMovie    (const HMovie& movie, const HDirector& director, std::ostream& out);
@@ -62,11 +62,11 @@ class MovieWriter : public YGP::HTMLWriter {
 
 /**Class to write records as HTML-tables
  */
-class RecordWriter : public YGP::HTMLWriter {
+class RecordWriter : public YGP::TableWriter {
  public:
    RecordWriter (const std::string& format,
 		 std::map<unsigned int, Glib::ustring> genres)
-      : YGP::HTMLWriter (format), oddLine (true), genres (genres) { }
+      : YGP::TableWriter (format, TBLW_HTML_PARAMS), oddLine (true), genres (genres) { }
    virtual ~RecordWriter ();
 
    void writeRecord    (const HRecord& record, const HInterpret& interpret, std::ostream& out);

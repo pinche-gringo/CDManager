@@ -1,11 +1,11 @@
-//$Id: RelateMovie.cpp,v 1.1 2005/10/26 01:39:45 markus Exp $
+//$Id: RelateMovie.cpp,v 1.2 2005/10/26 20:42:19 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actor
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 2005-10-18
 //COPYRIGHT   : Copyright (C) 2005
@@ -50,7 +50,7 @@
 /// \param movies: Movies already connected with the actor
 /// \param allMovies: All available movies
 //-----------------------------------------------------------------------------
-RelateMovie::RelateMovie (const HActor& actor, std::vector<HMovie>& movies,
+RelateMovie::RelateMovie (const HActor& actor, const std::vector<HMovie>& movies,
 			  const Glib::RefPtr<Gtk::TreeStore> allMovies)
    : XGP::XDialog (OKCANCEL),
      mMovies (Gtk::ListStore::create (colMovies)),
@@ -59,8 +59,152 @@ RelateMovie::RelateMovie (const HActor& actor, std::vector<HMovie>& movies,
      removeMovies (*manage (new Gtk::Button)),
      lstMovies (*manage (new Gtk::TreeView)),
      lstAllMovies (*manage (new Gtk::TreeView)),
-     movies (movies) {
+     actor (actor) {
    TRACE9 ("RelateMovie::RelateMovie (const HActor&, const std::vector<HMovie>&, const Glib::RefPtr<Gtk::TreeStore>)");
+
+   for (std::vector<HMovie>::const_iterator i (movies.begin ()); i != movies.end (); ++i)
+      insertMovie (*i);
+
+   init ();
+}
+
+//-----------------------------------------------------------------------------
+/// Constructor
+/// \param actor: Actor whose movies should be displayed/changed
+/// \param movies: Movies already connected with the actor
+/// \param allMovies: All available movies
+//-----------------------------------------------------------------------------
+RelateMovie::RelateMovie (const HActor& actor, const Glib::RefPtr<Gtk::TreeStore> allMovies)
+   : XGP::XDialog (OKCANCEL),
+     mMovies (Gtk::ListStore::create (colMovies)),
+     availMovies (allMovies),
+     addMovies (*manage (new Gtk::Button)),
+     removeMovies (*manage (new Gtk::Button)),
+     lstMovies (*manage (new Gtk::TreeView)),
+     lstAllMovies (*manage (new Gtk::TreeView)),
+     actor (actor) {
+   TRACE9 ("RelateMovie::RelateMovie (const HActor&, const Glib::RefPtr<Gtk::TreeStore>)");
+   init ();
+}
+
+//-----------------------------------------------------------------------------
+/// Destructor
+//-----------------------------------------------------------------------------
+RelateMovie::~RelateMovie () {
+}
+
+//-----------------------------------------------------------------------------
+/// Handling of the OK button; closes the dialog with commiting data
+//-----------------------------------------------------------------------------
+void RelateMovie::okEvent () {
+   std::vector<HMovie> movies;
+   for (Gtk::TreeModel::const_iterator i (mMovies->children ().begin ());
+	i != mMovies->children ().end (); ++i)
+      movies.push_back ((*i)[colMovies.hMovie]);
+   signalRelateMovies.emit (actor, movies);
+}
+
+//-----------------------------------------------------------------------------
+/// Adds a movie to the ones starring the actor
+/// \param path: Path to movie to add
+//-----------------------------------------------------------------------------
+void RelateMovie::addMovie (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*) {
+   TRACE7 ("RelateMovie::addMovie (const Gtk::TreeModel::Path&, Gtk::TreeViewColumn*)");
+   Check3 (lstAllMovies.get_model ());
+
+   Gtk::TreeIter sel (availMovies->get_iter (path)); Check3 (sel);
+   if (sel->parent ()) {
+      HEntity entry ((*sel)[colAllMovies.entry]); Check3 (entry.isDefined ());
+      HMovie movie (HMovie::cast (entry)); Check3 (movie.isDefined ());
+      TRACE9 ("RelateMovie::addMovie (const Gtk::TreeModel::Path&, Gtk::TreeViewColumn*) - " << movie->getName ());
+      insertMovie (movie);
+   }
+   else {
+      for (Gtk::TreeIter i (sel->children ().begin ()); i != sel->children ().end (); ++i) {
+	 HEntity entry ((*i)[colAllMovies.entry]); Check3 (entry.isDefined ());
+	 HMovie movie (HMovie::cast (entry)); Check3 (movie.isDefined ());
+	 TRACE9 ("RelateMovie::addMovie (const Gtk::TreeModel::Path&, Gtk::TreeViewColumn*) - " << movie->getName ())
+	 insertMovie (movie);
+      }
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Adds a movie to the ones starring the actor
+/// \param path: Path to movie to add
+//-----------------------------------------------------------------------------
+void RelateMovie::removeMovie (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*) {
+   TRACE9 ("RelateMovie::removeMovie (const Gtk::TreeModel::Path&, Gtk::TreeViewColumn*)");
+
+   mMovies->erase (mMovies->get_iter (path));
+}
+
+//-----------------------------------------------------------------------------
+/// Adds the passed movie/director to the movie-list for the actor
+/// \param movie: Movie to add
+/// \param director: Director of the movie
+//-----------------------------------------------------------------------------
+void RelateMovie::insertMovie (const HMovie& movie) {
+   TRACE9 ("RelateMovie::insertMovie (const HMovie&) - " << (movie.isDefined () ? movie->getName ().c_str () : ""));
+   Check1 (movie.isDefined ());
+
+   // Check that movie does not exist
+   for (Gtk::TreeModel::const_iterator i (mMovies->children ().begin ());
+	i != mMovies->children ().end (); ++i)
+      if (movie == (*i)[colMovies.hMovie])
+	 return;
+
+   Gtk::TreeModel::Row newMovie (*mMovies->append ());
+   newMovie[colMovies.hMovie] = movie;
+   newMovie[colMovies.movie] = movie->getName ();
+}
+
+//-----------------------------------------------------------------------------
+/// Adds all selected movies
+//-----------------------------------------------------------------------------
+void RelateMovie::addSelected () {
+   TRACE9 ("RelateMovie::addSelected ()");
+
+   Glib::RefPtr<Gtk::TreeSelection> movieSel (lstAllMovies.get_selection ());
+   Gtk::TreeSelection::ListHandle_Path list (movieSel->get_selected_rows ());
+   for (Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
+	i != list.end (); ++i)
+      addMovie (*i, NULL);
+}
+
+//-----------------------------------------------------------------------------
+/// Remove all selected movies
+//-----------------------------------------------------------------------------
+void RelateMovie::removeSelected () {
+   TRACE9 ("RelateMovie::removeSelected ()");
+
+   Glib::RefPtr<Gtk::TreeSelection> movieSel (lstMovies.get_selection ());
+   Gtk::TreeSelection::ListHandle_Path list (movieSel->get_selected_rows ());
+   for (Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
+	i != list.end (); ++i)
+      removeMovie (*i, NULL);
+}
+
+//-----------------------------------------------------------------------------
+/// Callback after changing the movies-selection. Used to enable/disable the
+/// remove-button
+//-----------------------------------------------------------------------------
+void RelateMovie::moviesSelected () {
+   removeMovies.set_sensitive (lstMovies.get_selection ()->get_selected_rows ().size ());
+}
+
+//-----------------------------------------------------------------------------
+/// Callback after changing the allMovies-selection. Used to enable/disable the
+/// add-button
+//-----------------------------------------------------------------------------
+void RelateMovie::allMoviesSelected () {
+   addMovies.set_sensitive (lstAllMovies.get_selection ()->get_selected_rows ().size ());
+}
+
+//-----------------------------------------------------------------------------
+/// Inititalizes the class
+//-----------------------------------------------------------------------------
+void RelateMovie::init () {
    Check2 (actor.isDefined ());
    Glib::ustring title (_("Movies starring %1"));
    title.replace (title.find ("%1"), 2, actor->getName ());
@@ -81,7 +225,7 @@ RelateMovie::RelateMovie (const HActor& actor, std::vector<HMovie>& movies,
    scrlAllMovies.set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
 
    lstMovies.append_column (_("Movie"), colMovies.movie);
-   lstAllMovies.append_column (_("Director/Movie"), colAllMovies.name);
+   lstAllMovies.append_column (_("Available directors/movies"), colAllMovies.name);
 
    Glib::RefPtr<Gtk::TreeSelection> sel (lstMovies.get_selection ());
    sel->set_mode (Gtk::SELECTION_EXTENDED);
@@ -112,103 +256,6 @@ RelateMovie::RelateMovie (const HActor& actor, std::vector<HMovie>& movies,
    box.pack_start (scrlAllMovies, Gtk::PACK_EXPAND_WIDGET, 5);
    get_vbox ()->pack_start (box, Gtk::PACK_EXPAND_WIDGET);
 
-   for (std::vector<HMovie>::const_iterator i (movies.begin ()); i != movies.end (); ++i)
-      insertMovie (*i);
-
    show_all_children ();
    show ();
-}
-
-//-----------------------------------------------------------------------------
-/// Destructor
-//-----------------------------------------------------------------------------
-RelateMovie::~RelateMovie () {
-}
-
-//-----------------------------------------------------------------------------
-/// Handling of the OK button; closes the dialog with commiting data
-//-----------------------------------------------------------------------------
-void RelateMovie::okEvent () {
-}
-
-//-----------------------------------------------------------------------------
-/// Adds a movie to the ones starring the actor
-/// \param path: Path to movie to add
-//-----------------------------------------------------------------------------
-void RelateMovie::addMovie (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*) {
-   TRACE7 ("RelateMovie::addMovie (const Gtk::TreeModel::Path&, Gtk::TreeViewColumn*)");
-   Check3 (lstAllMovies.get_model ());
-
-   Gtk::TreeIter sel (lstAllMovies.get_model ()->get_iter (path)); Check3 (sel);
-   if (sel->parent ()) {
-      HEntity entry ((*sel)[colAllMovies.entry]); Check3 (entry.isDefined ());
-      HMovie movie (HMovie::cast (entry)); Check3 (movie.isDefined ());
-      TRACE9 ("RelateMovie::addMovie (const Gtk::TreeModel::Path&, Gtk::TreeViewColumn*) - " << movie->getName ());
-      insertMovie (movie);
-   }
-   else {
-      for (Gtk::TreeIter i (sel->children ().begin ()); i != sel->children ().end (); ++i) {
-	 HEntity entry ((*i)[colAllMovies.entry]); Check3 (entry.isDefined ());
-	 HMovie movie (HMovie::cast (entry)); Check3 (movie.isDefined ());
-	 TRACE9 ("RelateMovie::addMovie (const Gtk::TreeModel::Path&, Gtk::TreeViewColumn*) - " << movie->getName ())
-	 insertMovie (movie);
-      }
-   }
-}
-
-//-----------------------------------------------------------------------------
-/// Adds a movie to the ones starring the actor
-/// \param path: Path to movie to add
-//-----------------------------------------------------------------------------
-void RelateMovie::removeMovie (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*) {
-   TRACE9 ("RelateMovie::removeMovie (const Gtk::TreeModel::Path&, Gtk::TreeViewColumn*)");
-}
-
-//-----------------------------------------------------------------------------
-/// Adds the passed movie/director to the movie-list for the actor
-/// \param movie: Movie to add
-/// \param director: Director of the movie
-//-----------------------------------------------------------------------------
-void RelateMovie::insertMovie (const HMovie& movie) {
-   TRACE9 ("RelateMovie::insertMovie (const HMovie&) - " << (movie.isDefined () ? movie->getName ().c_str () : ""));
-   Check1 (movie.isDefined ());
-
-   Gtk::TreeModel::Row newMovie (*mMovies->append ());
-   newMovie[colMovies.hMovie] = movie;
-   newMovie[colMovies.movie] = movie->getName ();
-}
-
-//-----------------------------------------------------------------------------
-/// Adds all selected movies
-//-----------------------------------------------------------------------------
-void RelateMovie::addSelected () {
-   TRACE9 ("RelateMovie::addSelected ()");
-
-   Glib::RefPtr<Gtk::TreeSelection> movieSel (lstAllMovies.get_selection ());
-   Gtk::TreeSelection::ListHandle_Path list (movieSel->get_selected_rows ());
-   for (Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
-	i != list.end (); ++i)
-      addMovie (*i, NULL);
-}
-
-//-----------------------------------------------------------------------------
-/// Remove all selected movies
-//-----------------------------------------------------------------------------
-void RelateMovie::removeSelected () {
-}
-
-//-----------------------------------------------------------------------------
-/// Callback after changing the movies-selection. Used to enable/disable the
-/// remove-button
-//-----------------------------------------------------------------------------
-void RelateMovie::moviesSelected () {
-   removeMovies.set_sensitive (lstMovies.get_selection ()->get_selected_rows ().size ());
-}
-
-//-----------------------------------------------------------------------------
-/// Callback after changing the allMovies-selection. Used to enable/disable the
-/// add-button
-//-----------------------------------------------------------------------------
-void RelateMovie::allMoviesSelected () {
-   addMovies.set_sensitive (lstAllMovies.get_selection ()->get_selected_rows ().size ());
 }

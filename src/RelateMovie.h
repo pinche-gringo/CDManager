@@ -1,7 +1,7 @@
 #ifndef RELATEMOVIE_H
 #define RELATEMOVIE_H
 
-//$Id: RelateMovie.h,v 1.1 2005/10/26 01:39:45 markus Exp $
+//$Id: RelateMovie.h,v 1.2 2005/10/26 20:42:19 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -69,16 +69,26 @@ class RelateMovie : public XGP::XDialog {
  public:
    virtual ~RelateMovie ();
 
-   static RelateMovie* create (const HActor& actor, std::vector<HMovie>& movies,
+   static RelateMovie* create (const HActor& actor, const std::vector<HMovie>& movies,
 			       const Glib::RefPtr<Gtk::TreeStore> allMovies) {
       RelateMovie* dlg (new RelateMovie (actor, movies, allMovies));
       dlg->signal_response ().connect (mem_fun (*dlg, &RelateMovie::free));
       return dlg;
    }
+   static RelateMovie* create (const HActor& actor, const Glib::RefPtr<Gtk::TreeStore> allMovies) {
+      RelateMovie* dlg (new RelateMovie (actor, allMovies));
+      dlg->signal_response ().connect (mem_fun (*dlg, &RelateMovie::free));
+      return dlg;
+   }
+
+   sigc::signal<void, const HActor&, const std::vector<HMovie>&> signalRelateMovies;
 
  private:
-   RelateMovie (const HActor& actor, std::vector<HMovie>& movies,
+   RelateMovie (const HActor& actor, const Glib::RefPtr<Gtk::TreeStore> allMovies);
+   RelateMovie (const HActor& actor, const std::vector<HMovie>& movies,
 		const Glib::RefPtr<Gtk::TreeStore> allMovies);
+
+   void init ();
 
    //Prohibited manager functions
    RelateMovie ();
@@ -109,7 +119,7 @@ class RelateMovie : public XGP::XDialog {
    Gtk::TreeView& lstMovies;
    Gtk::TreeView& lstAllMovies;
 
-   std::vector<HMovie>& movies;
+   HActor actor;
 };
 
 #endif

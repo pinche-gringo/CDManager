@@ -1,11 +1,11 @@
-//$Id: Celebrity.cpp,v 1.7 2005/10/04 16:21:07 markus Exp $
+//$Id: Celebrity.cpp,v 1.8 2005/10/27 03:41:14 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Celebrity
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -87,7 +87,17 @@ Glib::ustring Celebrity::removeIgnored (const Glib::ustring& name) {
 //-----------------------------------------------------------------------------
 bool Celebrity::compByName (const HCelebrity& a, const HCelebrity& b) {
    Check1 (a.isDefined ()); Check1 (b.isDefined ());
-   Glib::ustring aname (removeIgnored (a->name));
-   Glib::ustring bname (removeIgnored (b->name));
-   return aname < bname;
+   int rc (removeIgnored (a->name).compare (removeIgnored (b->name)));
+   return rc ? (rc < 0) : (a->name < b->name);
+}
+
+//-----------------------------------------------------------------------------
+/// Sorts celibritys by their id
+/// \param a: First celibrity
+/// \param b: Second celibrity
+/// \returns bool: True, if a->name < b->name
+//-----------------------------------------------------------------------------
+bool Celebrity::compById (const HCelebrity& a, const HCelebrity& b) {
+   Check1 (a.isDefined ()); Check1 (b.isDefined ());
+   return a->getId () < b->getId ();
 }

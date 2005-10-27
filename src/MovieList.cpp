@@ -1,11 +1,11 @@
-//$Id: MovieList.cpp,v 1.19 2005/10/04 16:23:12 markus Exp $
+//$Id: MovieList.cpp,v 1.20 2005/10/27 21:53:10 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.19 $
+//REVISION    : $Revision: 1.20 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -191,11 +191,8 @@ int MovieList::sortEntity (const Gtk::TreeModel::iterator& a,
 			   const Gtk::TreeModel::iterator& b) {
    HMovie ha (getMovieAt (a));
    HMovie hb (getMovieAt (b));
-   Glib::ustring aname (Movie::removeIgnored (ha->getName ()));
-   Glib::ustring bname (Movie::removeIgnored (hb->getName ()));
-
-   return ((aname < bname) ? -1 : (bname < aname) ? 1
-	   : ha->getName ().compare (hb->getName ()));
+   int rc (Movie::removeIgnored (ha->getName ()).compare (Movie::removeIgnored (hb->getName ())));
+   return rc ? rc : (ha->getName () < hb->getName ());
 }
 
 //-----------------------------------------------------------------------------

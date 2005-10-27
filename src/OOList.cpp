@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.15 2005/10/04 22:48:02 markus Exp $
+//$Id: OOList.cpp,v 1.16 2005/10/27 21:53:10 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.15 $
+//REVISION    : $Revision: 1.16 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -296,6 +296,7 @@ HEntity OwnerObjectList::getObjectAt (const Gtk::TreeIter iter) const {
 /// \returns HCelebrity: Handle of the selected line
 //-----------------------------------------------------------------------------
 HCelebrity OwnerObjectList::getCelebrityAt (const Gtk::TreeIter iter) const {
+   TRACE9 ("GetCelibrity: " << (*iter)[colOwnerObjects->name]);
    Check2 (!(*iter)->parent ());
    Check2 (colOwnerObjects);
    HEntity hObj ((*iter)[colOwnerObjects->entry]); Check3 (hObj.isDefined ());
@@ -378,7 +379,8 @@ void OwnerObjectList::changeGenre (Gtk::TreeModel::Row& row, unsigned int value)
 //-----------------------------------------------------------------------------
 int OwnerObjectList::sortByName (const Gtk::TreeModel::iterator& a,
 				 const Gtk::TreeModel::iterator& b) {
-   if ((*a)->parent ())
+   Check2 (a->parent () == b->parent ());
+   if (a->parent ())
       return sortEntity (a, b);
    else
       return sortOwner (a, b);
@@ -392,9 +394,10 @@ int OwnerObjectList::sortByName (const Gtk::TreeModel::iterator& a,
 //-----------------------------------------------------------------------------
 int OwnerObjectList::sortByYear (const Gtk::TreeModel::iterator& a,
 				 const Gtk::TreeModel::iterator& b) {
-   if ((*a)->parent ()) {
+   Check2 (a->parent () == b->parent ());
+   if (a->parent ()) {
       Gtk::TreeRow ra (*a);
-      Gtk::TreeRow rb (*b); Check2 (rb->parent ());
+      Gtk::TreeRow rb (*b);
 
       Glib::ustring sa (ra[colOwnerObjects->year]);
       Glib::ustring sb (rb[colOwnerObjects->year]);
@@ -434,18 +437,14 @@ int OwnerObjectList::sortByGenre (const Gtk::TreeModel::iterator& a,
 //-----------------------------------------------------------------------------
 int OwnerObjectList::sortOwner (const Gtk::TreeModel::iterator& a,
 				const Gtk::TreeModel::iterator& b) {
+   Check2 (!a->parent ()); Check2 (!b->parent ());
    HCelebrity ha (getCelebrityAt (a)); Check3 (ha.isDefined ());
    HCelebrity hb (getCelebrityAt (b)); Check3 (hb.isDefined ());
 
-   Glib::ustring aname (Celebrity::removeIgnored (ha->getName ()));
-   Glib::ustring bname (Celebrity::removeIgnored (hb->getName ()));
+   TRACE9 ("OwnerObjectList::sortOwner (2x const Gtk::TreeModel::iterator&) - " << ha->getName () << "<->" << hb->getName ());
+   int rc (Celebrity::removeIgnored (ha->getName ()).compare (Celebrity::removeIgnored (hb->getName ())));
+   return rc ? rc : (ha->getName () < hb->getName ());
 
-   TRACE9 ("OwnerObjectList::sortOwner (2x const Gtk::TreeModel::iterator&) - "
-	   << aname << '/' << bname << '='
-	   << ((aname < bname) ? -1 : (bname < aname) ? 1
-	       : ha->getName ().compare (hb->getName ())));
-   return ((aname < bname) ? -1 : (bname < aname) ? 1
-	   : ha->getName ().compare (hb->getName ()));
 }
 
 //-----------------------------------------------------------------------------
@@ -456,6 +455,7 @@ int OwnerObjectList::sortOwner (const Gtk::TreeModel::iterator& a,
 //-----------------------------------------------------------------------------
 int OwnerObjectList::sortEntity (const Gtk::TreeModel::iterator& a,
 				 const Gtk::TreeModel::iterator& b) {
+   Check2 (a->parent ()); Check2 (b->parent ());
    Check2 (colOwnerObjects);
    Gtk::TreeRow ra (*a);
    Gtk::TreeRow rb (*b); Check2 (rb->parent ());

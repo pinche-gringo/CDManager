@@ -1,11 +1,11 @@
-//$Id: CDManagerDB.cpp,v 1.10 2005/10/04 16:20:12 markus Exp $
+//$Id: CDManagerDB.cpp,v 1.11 2005/10/27 21:49:44 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.10 $
+//REVISION    : $Revision: 1.11 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.1.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -47,6 +47,27 @@
 
 #include "CDManager.h"
 
+
+//-----------------------------------------------------------------------------
+/// Finds the movie with the passed id
+/// \param id: Id of movie to find
+/// \returns HMovie: Found movie (undefined, if not found)
+//-----------------------------------------------------------------------------
+HMovie CDManager::findMovie (unsigned int id) const {
+   for (std::vector<HDirector>::const_iterator d (directors.begin ());
+	d != directors.end (); ++d) {
+      Check3 (d->isDefined ());
+      const std::vector<HMovie>& movies (relMovies.getObjects (*d));
+
+      for (std::vector<HMovie>::const_iterator m (movies.begin ()); m != movies.end (); ++m) {
+	 Check3 (m->isDefined ());
+	 if ((*m)->getId () == id)
+	    return *m;
+	 }
+      }
+   HMovie m;
+   return m;
+}
 
 //-----------------------------------------------------------------------------
 /// Login to the database with the passed user/password pair
@@ -135,6 +156,51 @@ void CDManager::logout () {
 }
 
 //-----------------------------------------------------------------------------
+/// Loads the stored celebrities from the database
+/// \param target: Vector, in which to load the celebrities
+/// \param table: Database table from which to load them
+/// \param stat: Statusobject, in which to return the errors
+//-----------------------------------------------------------------------------
+void CDManager::loadCelebrities (std::vector<HCelebrity>& target, const std::string& table,
+				 YGP::StatusObject& stat) {
+   TRACE9 ("CDManager::loadCelebrities (std::vector<HCelebrity>&, const std::string&,\n\tYGP::StatusObject&) - " << table);
+
+   // Load data from movies table
+   std::string cmd ("SELECT c.id, c.name, c.born, c.died FROM Celebrities c, ");
+   cmd += table;
+   cmd += " x WHERE c.id = x.id";
+   Database::execute (cmd.c_str ());
+
+   HCelebrity hCeleb;
+   while (Database::hasData ()) {
+      TRACE5 ("CDManager::laodMovies () - Adding " << Database::getResultColumnAsUInt (0) << '/' << Database::getResultColumnAsString (1));
+
+      // Fill and store entry from DB-values
+      try {
+	 hCeleb.define ();
+	 hCeleb->setId (Database::getResultColumnAsUInt (0));
+	 hCeleb->setName (Database::getResultColumnAsString (1));
+
+	 std::string tmp (Database::getResultColumnAsString (2));
+	 if (tmp != "0000")
+	    hCeleb->setBorn (tmp);
+	 tmp = Database::getResultColumnAsString (3);
+	 if (tmp != "0000")
+	    hCeleb->setDied (tmp);
+      }
+      catch (std::exception& e) {
+	 Glib::ustring msg (_("Warning loading celebrity `%1': %2"));
+	 msg.replace (msg.find ("%1"), 2, hCeleb->getName ());
+	 msg.replace (msg.find ("%2"), 2, e.what ());
+	 stat.setMessage (YGP::StatusObject::WARNING, msg);
+      }
+      target.push_back (hCeleb);
+
+      Database::getNextResultRow ();
+   }
+}
+
+//-----------------------------------------------------------------------------
 /// Loads the records from the database
 ///
 /// According to the available information the pages of the notebook
@@ -144,29 +210,8 @@ void CDManager::loadRecords () {
    TRACE9 ("CDManager::loadRecords ()");
    try {
       unsigned long int cRecords (0);
-      Database::execute ("SELECT i.id, c.name, c.born, c.died FROM Interprets i,"
-			 " Celebrities c WHERE c.id = i.id");
-
-      HInterpret hArtist;
-      while (Database::hasData ()) {
-	 TRACE5 ("CDManager::loadRecords () - Adding Artist "
-		 << Database::getResultColumnAsUInt (0) << '/'
-		 << Database::getResultColumnAsString (1));
-
-	 // Fill and store artist entry from DB-values
-	 hArtist.define ();
-	 hArtist->setId (Database::getResultColumnAsUInt (0));
-	 hArtist->setName (Database::getResultColumnAsString (1));
-	 std::string tmp (Database::getResultColumnAsString (2));
-	 if (tmp != "0000")
-	    hArtist->setBorn (tmp);
-	 tmp = Database::getResultColumnAsString (3);
-	 if (tmp != "0000")
-	    hArtist->setDied (tmp);
-	 artists.push_back (hArtist);
-
-	 Database::getNextResultRow ();
-      }
+      YGP::StatusObject stat;
+      loadCelebrities (artists, "Interprets", stat);
       std::sort (artists.begin (), artists.end (), &Interpret::compByName);
 
       Database::execute ("SELECT id, name, interpret, year, genre FROM "
@@ -221,6 +266,11 @@ void CDManager::loadRecords () {
       msg += tmp;
       status.pop ();
       status.push (msg);
+
+      if (stat.getType () > YGP::StatusObject::UNDEFINED) {
+	 stat.generalize (_("Warnings loading movies"));
+	 XGP::MessageDlg::create (stat);
+      }
    }
    catch (std::exception& err) {
       Glib::ustring msg (_("Can't query available records!\n\nReason: %1"));
@@ -241,26 +291,11 @@ void CDManager::loadMovies (const std::string& lang) {
       Database::execute (cmd.c_str ());
 
       while (Database::hasData ()) {
-	 unsigned int id (Database::getResultColumnAsUInt (0));
-	 TRACE9 ("CDManager::loadMovies (const std::string&) - " << id << '/'
+	 TRACE9 ("CDManager::loadMovies (const std::string&) - " << Database::getResultColumnAsUInt (0) << '/'
 		 << Database::getResultColumnAsString (1));
 
-	 for (std::vector<HDirector>::const_iterator d (directors.begin ());
-	      d != directors.end (); ++d) {
-	    Check3 (d->isDefined ()); Check3 (relMovies.isRelated (*d));
-	    std::vector<HMovie>& movies (relMovies.getObjects (*d));
-	    Check3 (movies.size ()); Check3 (movies.begin ()->isDefined ());
-
-	    for (std::vector<HMovie>::iterator m (movies.begin ());
-		 m != movies.end (); ++m) {
-	       Check3 (m->isDefined ());
-	       if ((*m)->getId () == id) {
-		  (*m)->setName (Database::getResultColumnAsString (1), lang);
-		  d = directors.end () - 1;
-		  break;
-	       }
-	    }
-	 }
+	 HMovie movie (findMovie (Database::getResultColumnAsUInt (0))); Check3 (movie.isDefined ());
+	 movie->setName (Database::getResultColumnAsString (1), lang);
 	 Database::getNextResultRow ();
       }
       loadedLangs[lang] = true;
@@ -281,41 +316,8 @@ void CDManager::loadMovies () {
    try {
       unsigned int cMovies (0);
 
-      // Load data from movies table
-      Database::execute ("SELECT d.id, c.name, c.born, c.died FROM Directors d, "
-			 "Celebrities c WHERE c.id = d.id");
-
       YGP::StatusObject stat;
-      HDirector hDirector;
-      while (Database::hasData ()) {
-	 TRACE5 ("CDManager::laodMovies () - Adding Director "
-		 << Database::getResultColumnAsUInt (0) << '/'
-		 << Database::getResultColumnAsString (1));
-
-	 // Fill and store artist entry from DB-values
-	 try {
-	    hDirector.define ();
-	    hDirector->setName (Database::getResultColumnAsString (1));
-	    hDirector->setId (Database::getResultColumnAsUInt (0));
-
-	    std::string tmp (Database::getResultColumnAsString (2));
-	    if (tmp != "0000")
-	       hDirector->setBorn (tmp);
-	    tmp = Database::getResultColumnAsString (3);
-	    if (tmp != "0000")
-	       hDirector->setDied (tmp);
-	 }
-	 catch (std::exception& e) {
-	    Glib::ustring msg (_("Warning loading director `%1': %2"));
-	    msg.replace (msg.find ("%1"), 2, hDirector->getName ());
-	    msg.replace (msg.find ("%2"), 2, e.what ());
-	    stat.setMessage (YGP::StatusObject::WARNING, msg);
-	 }
-
-	 directors.push_back (hDirector);
-
-	 Database::getNextResultRow ();
-      }
+      loadCelebrities (directors, "Directors", stat);
       std::sort (directors.begin (), directors.end (), &Director::compByName);
 
       Database::execute ("SELECT id, name, director, year, genre, type, languages"
@@ -328,7 +330,7 @@ void CDManager::loadMovies () {
 
 	 HMovie movie;
 	 while (Database::hasData ()) {
-	    // Fill and store record entry from DB-values
+	    // Fill and store movie entry from DB-values
 	    TRACE8 ("CDManager::loadMovies () - Adding movie "
 		 << Database::getResultColumnAsUInt (0) << '/'
 		 << Database::getResultColumnAsString (1));
@@ -367,12 +369,11 @@ void CDManager::loadMovies () {
 		    m != iMovie->second.end (); ++m) {
 		  movies.append (*m, director);
 		  relMovies.relate (*i, *m);
-	       } // end-for all records for an artist
+	       } // end-for all movies for a director
 	       aMovies.erase (iMovie);
 	    } // end-if director has movies
 	 } // end-for all directors
-	 records.expand_all ();
-      } // end-if database contains records
+      } // end-if database contains movies
 
       movies.expand_all ();
 
@@ -434,6 +435,80 @@ void CDManager::loadSongs (const HRecord& record) {
       Glib::ustring msg (_("Can't query the songs for record %1!\n\nReason: %2"));
       msg.replace (msg.find ("%1"), 2, record->getName ());
       msg.replace (msg.find ("%2"), 2, err.what ());
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Loads the actors from the database
+///
+/// According to the available information the pages of the notebook
+/// are created.
+//-----------------------------------------------------------------------------
+void CDManager::loadActors () {
+   TRACE9 ("CDManager::loadActors ()");
+
+   try {
+      YGP::StatusObject stat;
+      std::vector<HActor> actrs;
+      loadCelebrities (actrs, "Actors", stat);
+
+      if (actrs.size ()) {
+	 std::sort (actrs.begin (), actrs.end (), &Actor::compById);
+
+	 Database::execute ("SELECT idActor, idMovie FROM ActorsInMovies ORDER BY idMovie");
+	 std::map<unsigned int, std::vector<HMovie> > aActors;
+	 if (Database::resultSize ()) {
+	    HMovie movie; movie.define ();
+	    while (Database::hasData ()) {
+	       unsigned int idMovie (Database::getResultColumnAsUInt (1));
+	       if (idMovie != movie->getId ())
+		  movie = findMovie (idMovie);
+
+	       Check3 (movie.isDefined ());
+	       Check3 (movie->getId ());
+	       aActors[Database::getResultColumnAsUInt (0)].push_back (movie);
+
+	       Database::getNextResultRow ();
+	    } // end-while actors for movies available
+	 } // endif actors for movies stored in the DB
+
+	 std::sort (actrs.begin (), actrs.end (), &Actor::compByName);
+	 for (std::vector<HActor>::const_iterator i (actrs.begin ()); i != actrs.end (); ++i) {
+	    Check3 (i->isDefined ());
+	    Gtk::TreeModel::Row actor (actors.append (*i));
+
+	    std::map<unsigned int, std::vector<HMovie> >::iterator iActor
+	       (aActors.find ((*i)->getId ()));
+	    if (iActor != aActors.end ()) {
+	       std::sort (iActor->second.begin (), iActor->second.end (), &Movie::compByName);
+	       for (std::vector<HMovie>::iterator m (iActor->second.begin ());
+		    m != iActor->second.end (); ++m) {
+		  actors.append (*m, actor);
+		  relActors.relate (*i, *m);
+	       } // end-for all movies for an actor
+	       aActors.erase (iActor);
+	    } // end-if director has actors for movies
+	 } // end-for all actors
+	 actors.expand_all ();
+      } // endif actors available
+
+      Glib::ustring msg (Glib::locale_to_utf8 (ngettext ("Loaded %1 actor", "Loaded %1 actors", actrs.size ())));
+      msg.replace (msg.find ("%1"), 2, YGP::ANumeric::toString (actrs.size ()));
+      status.pop ();
+      status.push (msg);
+
+      loadedPages |= 4;
+
+      if (stat.getType () > YGP::StatusObject::UNDEFINED) {
+	 stat.generalize (_("Warnings loading actors!"));
+	 XGP::MessageDlg::create (stat);
+      }
+   }
+   catch (std::exception& err) {
+      Glib::ustring msg (_("Can't query the actors1!\n\nReason: %1"));
+      msg.replace (msg.find ("%1"), 2, err.what ());
       Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
       dlg.run ();
    }
@@ -627,6 +702,71 @@ void CDManager::writeChangedEntries () {
 	 Check3 (changedMovies.begin ()->second);
 	 changedMovies.erase (changedMovies.begin ());
       }
+
+      while (changedActors.size ()) {
+	 HActor actor (changedActors.begin ()->first);
+	 Check3 (actor.isDefined ());
+	 try {
+	    std::stringstream query;
+	    std::string tmp (escapeDBValue (actor->getName ()));
+	    query << (actor->getId () ? "UPDATE Celebrities" : "INSERT INTO Celebrities")
+		  << " SET name=\"" << tmp
+		  << "\", born="
+		  << (actor->getBorn ().isDefined () ? actor->getBorn () : YGP::AYear (0))
+		  << ", died="
+		  << (actor->getDied ().isDefined () ? actor->getDied () : YGP::AYear (0));
+
+	    if (actor->getId ())
+	       query << " WHERE id=" << actor->getId ();
+	    Database::execute (query.str ().c_str ());
+
+	    if (!actor->getId ()) {
+	       actor->setId (Database::getIDOfInsert ());
+	       Database::execute ("INSERT INTO Actors set id=LAST_INSERT_ID()");
+	    }
+	 }
+	 catch (std::exception& err) {
+	    Glib::ustring msg (_("Can't write actor `%1'!\n\nReason: %2"));
+	    msg.replace (msg.find ("%1"), 2, actor->getName ());
+	    msg.replace (msg.find ("%2"), 2, err.what ());
+	    throw (msg);
+	 }
+
+	 Check3 (changedActors.begin ()->second);
+	 changedActors.erase (changedActors.begin ());
+      } // endwhile
+
+      while (changedRelMovies.size ()) {
+	 HActor actor (*changedRelMovies.begin ());
+	 Check3 (actor.isDefined ()); Check3 (relActor.isRelated (actor));
+
+	 try {
+	    Database::execute ("START TRANSACTION");
+
+	    std::stringstream del;
+	    del << "DELETE FROM ActorsInMovies WHERE idActor=" << actor->getId ();
+	    Database::execute (del.str ().c_str ());
+
+	    for (std::vector<HMovie>::const_iterator m (relActors.getObjects (actor).begin ());
+		 m != relActors.getObjects (actor).end (); ++m) {
+	       std::stringstream query;
+	       query << "INSERT INTO ActorsInMovies SET idActor=" << actor->getId ()
+		     << ", idMovie=" << (*m)->getId ();
+	       Database::execute (query.str ().c_str ());
+	    }
+	    Database::execute ("COMMIT");
+	 }
+	 catch (std::exception& err) {
+	    Database::execute ("ROLLBACK");
+
+	    Glib::ustring msg (_("Can't write movies for actor `%1'!\n\nReason: %2"));
+	    msg.replace (msg.find ("%1"), 2, actor->getName ());
+	    msg.replace (msg.find ("%2"), 2, err.what ());
+	    throw (msg);
+	 }
+
+	 changedRelMovies.erase (changedRelMovies.begin ());
+      } // end-while
    }
    catch (Glib::ustring& msg) {
       Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
@@ -787,6 +927,25 @@ void CDManager::removeDeletedEntries () {
 	    }
 	 }
 	 deletedMovies.erase (deletedMovies.begin ());
+      } // endwhile
+
+      while (deletedActors.size ()) {
+	 HActor actor (*deletedActors.begin ()); Check3 (actor.isDefined ());
+	 if (actor->getId ()) {
+	    try {
+	       std::stringstream query;
+	       query << "DELETE FROM Actors WHERE id=" << actor->getId ();
+	       Database::execute (query.str ().c_str ());
+	    }
+	    catch (std::exception& err) {
+	       Glib::ustring msg (_("Can't delete actor `%1'!\n\nReason: %2"));
+	       msg.replace (msg.find ("%1"), 2, actor->getName ());
+	       msg.replace (msg.find ("%2"), 2, err.what ());
+	       throw (msg);
+	    }
+	 }
+	 relDelActors.unrelateAll (actor);
+	 deletedActors.erase (deletedActors.begin ());
       } // endwhile
    }
    catch (Glib::ustring& msg) {

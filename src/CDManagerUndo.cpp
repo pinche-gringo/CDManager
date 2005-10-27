@@ -1,11 +1,11 @@
-//$Id: CDManagerUndo.cpp,v 1.2 2005/10/04 22:48:54 markus Exp $
+//$Id: CDManagerUndo.cpp,v 1.3 2005/10/27 21:51:50 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 4.10.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -166,6 +166,7 @@ void CDManager::undoCelebrity (const HEntity& obj) {
    HCelebrity celeb (HCelebrity::cast (obj));
    TRACE1 ("CDManager::undoCelebrity (const HEntity&) - Undo " << celeb->getId () << '/' << celeb->getName ());
 
+   /* Text like "Undone director 'Peter Richardson'" */
    Glib::ustring msg (_("Undone %1 '%2'"));
    msg.replace (msg.find ("%2"), 2, celeb->getName ());
    status.push (msg);
@@ -191,7 +192,7 @@ void CDManager::undoCelebrity (const HEntity& obj) {
       else {
 	 std::map<HInterpret, HInterpret>::iterator i (changedInterprets.find (celeb));
 	 if (i != changedInterprets.end ()) {
-	    TRACE1 ("CDManager::undo () - Undo to interpret " << i->second->getId () << '/' << i->second->getName ());
+	    TRACE1 ("CDManager::undo () - Undo interpret " << i->second->getId () << '/' << i->second->getName ());
 	    Gtk::TreeRow row (*movies.getObject (obj));
 	    *(i->first) = *(i->second);
 	    records.update (row);
@@ -202,11 +203,33 @@ void CDManager::undoCelebrity (const HEntity& obj) {
 	 }
 	 else {
 	    std::vector<HInterpret>::iterator i (std::find (deletedInterprets.begin (), deletedInterprets.end (), celeb));
-	    Check3 (i != deletedInterprets.end ());
-	    Check3 (i->isDefined ());
-	    records.scroll_to_row (records.getModel ()->get_path (records.append (*i)), 0.8);
-	    deletedInterprets.erase (i);
-	    msg.replace (msg.find ("%1"), 2, _("interpret"));
+	    if (i != deletedInterprets.end ()) {
+	       Check3 (i->isDefined ());
+	       records.scroll_to_row (records.getModel ()->get_path (records.append (*i)), 0.8);
+	       deletedInterprets.erase (i);
+	       msg.replace (msg.find ("%1"), 2, _("interpret"));
+	    }
+	    else {
+	       std::map<HActor, HActor>::iterator i (changedActors.find (celeb));
+	       if (i != changedActors.end ()) {
+		  TRACE1 ("CDManager::undo () - Undo actor " << i->second->getId () << '/' << i->second->getName ());
+		  Gtk::TreeRow row (*actors.getObject (obj));
+		  *(i->first) = *(i->second);
+		  actors.update (row);
+		  actors.scroll_to_row (actors.getModel ()->get_path (row), 0.8);
+
+		  changedActors.erase (i);
+		  msg.replace (msg.find ("%1"), 2, _("actor"));
+	       }
+	       else {
+		  std::vector<HActor>::iterator i (std::find (deletedActors.begin (), deletedActors.end (), celeb));
+		  Check3 (i != deletedActors.end ());
+		  Check3 (i->isDefined ());
+		  records.scroll_to_row (actors.getModel ()->get_path (actors.append (*i)), 0.8);
+		  deletedActors.erase (i);
+		  msg.replace (msg.find ("%1"), 2, _("actor"));
+	       }
+	    }
 	 }
       }
    }

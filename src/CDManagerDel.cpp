@@ -1,11 +1,11 @@
-//$Id: CDManagerDel.cpp,v 1.4 2005/10/04 22:50:51 markus Exp $
+//$Id: CDManagerDel.cpp,v 1.5 2005/10/27 21:51:50 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.1.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -39,6 +39,10 @@
 //-----------------------------------------------------------------------------
 void CDManager::deleteSelection () {
    switch(nb.get_current_page ()) {
+   case 2:
+      deleteSelectedActor ();
+      break;
+
    case 1:
       deleteSelectedMovies ();
       break;
@@ -48,6 +52,9 @@ void CDManager::deleteSelection () {
 	 deleteSelectedRecords ();
       else if (songs.has_focus ())
 	 deleteSelectedSongs ();
+
+   default:
+      Check1 (0);
    } // end-switch
 }
 
@@ -85,7 +92,7 @@ void CDManager::deleteSelectedRecords () {
 
 	 std::map<HInterpret, HInterpret>::iterator iArtist (changedInterprets.find (artist));
 	 if (iArtist != changedInterprets.end ())
-	    changedInterprets.erase (changedInterprets.find (artist));
+	    changedInterprets.erase (iArtist);
       }
    }
    apMenus[SAVE]->set_sensitive ();
@@ -149,7 +156,7 @@ void CDManager::deleteSelectedSongs () {
 
       std::map<HSong, HSong>::iterator iSong (changedSongs.find (song));
       if (iSong != changedSongs.end ())
-	 changedSongs.erase (changedSongs.find (song));
+	 changedSongs.erase (iSong);
       songs.getModel ()->erase (iter);
    }
 
@@ -191,8 +198,47 @@ void CDManager::deleteSelectedMovies () {
 
 	 std::map<HDirector, HDirector>::iterator iDirector (changedDirectors.find (director));
 	 if (iDirector != changedDirectors.end ())
-	    changedDirectors.erase (changedDirectors.find (director));
+	    changedDirectors.erase (iDirector);
       }
+   }
+   apMenus[UNDO]->set_sensitive ();
+   apMenus[SAVE]->set_sensitive ();
+}
+
+//-----------------------------------------------------------------------------
+/// Removes the selected actor from the listbox. Depending movies are disconnected.
+//-----------------------------------------------------------------------------
+void CDManager::deleteSelectedActor () {
+   TRACE9 ("CDManager::deleteSelectedActor ()");
+
+   Glib::RefPtr<Gtk::TreeSelection> selection (movies.get_selection ());
+   Gtk::TreeIter selRow (selection->get_selected ());
+   if (selRow) {
+      Check3 (!selRow->parent ());
+      HActor actor (actors.getActorAt (selRow)); Check3 (actor.isDefined ());
+      TRACE9 ("CDManager::deleteSelectedActor () - Deleting " << actor->getName ());
+
+      if (relDelActors.isRelated (actor))
+	 relDelActors.unrelateAll (actor);
+
+      if (relActors.isRelated (actor)) {
+	 relDelActors.getObjects (actor) = relActors.getObjects (actor);
+	 relActors.unrelateAll (actor);
+
+	 while (selRow->children ().size ())
+	    actors.getModel ()->erase (selRow->children ().begin ());
+      }
+      actors.getModel ()->erase (selRow);
+      undoEntities.push_back (HEntity::cast (actor));
+
+      // Though actor is already removed from the listbox, it still
+      // has to be removed from the database
+      if (actor->getId ())
+	 deletedActors.push_back (actor);
+
+      std::map<HActor, HActor>::iterator iActor (changedActors.find (actor));
+      if (iActor != changedActors.end ())
+	 changedDirectors.erase (iActor);
    }
    apMenus[UNDO]->set_sensitive ();
    apMenus[SAVE]->set_sensitive ();

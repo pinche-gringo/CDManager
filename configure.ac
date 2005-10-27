@@ -1,9 +1,9 @@
-dnl $Id: configure.ac,v 1.13 2005/09/10 22:01:26 markus Rel $
+dnl $Id: configure.ac,v 1.14 2005/10/27 23:18:08 markus Rel $
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.52)
-AC_REVISION($Revision: 1.13 $)
-AC_INIT(CDManager, 0.7.20, [g17m0@lycos.com], CDManager)
+AC_REVISION($Revision: 1.14 $)
+AC_INIT(CDManager, 0.8.00, [g17m0@lycos.com], CDManager)
 
 RELEASE=${PACKAGE_VERSION%.*}
 AC_DEFINE_UNQUOTED(PRG_RELEASE, "$RELEASE", [Define to the release of the program])
@@ -32,7 +32,7 @@ AC_DEFINE_UNQUOTED(CATALOGS, "$ALL_LINGUAS", [Translations])
 dnl Checks for libraries.
 AC_CHECK_LIB(stdc++, main)
 
-PKG_CHECK_MODULES(DEPS, glibmm-2.4 >= 2.4.0 YGP >= 0.7.00)
+PKG_CHECK_MODULES(DEPS, glibmm-2.4 >= 2.4.0 YGP >= 0.7.30)
 PKG_CHECK_MODULES(XGP, gtkmm-2.4 >= 2.6.0 gthread-2.0 > 2.2.0 XGP >= 0.7.01)
 
 
@@ -156,7 +156,7 @@ AC_MSG_RESULT([$MYSQLPP_libdir])
 AC_MSG_CHECKING([for MySQL++ include directory])
 MYSQLPP_incdir=
 for m in $MYSQLPP_inc_check; do
-    if test -d "$m" && test -f "$m/mysql++.hh"
+    if test -d "$m" && test -f "$m/mysql++.h"
     then
         MYSQLPP_incdir=$m
         break
@@ -220,7 +220,7 @@ dnl Settings for autoheader
 AH_TOP([#ifndef CDMANAGER_CFG_H
 #define CDMANAGER_CFG_H
 
-//$Id: configure.ac,v 1.13 2005/09/10 22:01:26 markus Rel $
+//$Id: configure.ac,v 1.14 2005/10/27 23:18:08 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

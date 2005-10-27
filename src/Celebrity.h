@@ -1,7 +1,7 @@
 #ifndef CELIBRITY_H
 #define CELIBRITY_H
 
-//$Id: Celebrity.h,v 1.10 2005/10/04 16:21:07 markus Exp $
+//$Id: Celebrity.h,v 1.11 2005/10/27 21:47:49 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@ class Celebrity : public YGP::Entity {
 
    Celebrity& operator= (const Celebrity& other);
 
+   static bool compById (const HCelebrity& a, const HCelebrity& b);
    static bool compByName (const HCelebrity& a, const HCelebrity& b);
    static Glib::ustring removeIgnored (const Glib::ustring& name);
 

@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.40 2005/10/04 16:22:21 markus Exp $
+//$Id: CDManager.h,v 1.41 2005/10/27 21:52:34 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,8 +25,6 @@
 #include <gtkmm/paned.h>
 #include <gtkmm/notebook.h>
 #include <gtkmm/treeview.h>
-#include <gtkmm/liststore.h>
-#include <gtkmm/treestore.h>
 #include <gtkmm/statusbar.h>
 
 #include "Song.h"
@@ -50,6 +48,7 @@
 // Forward declarations
 namespace YGP {
    class Entity;
+   class StatusObject;
 }
 
 
@@ -78,6 +77,8 @@ class CDManager : public XGP::XApplication {
    void newDirector ();
    void newMovie ();
    void newActor ();
+   void actorPlaysInMovie ();
+   void relateMovies (const HActor& actor, const std::vector<HMovie>& movies);
 
    void undo ();
    void undoMovie (const HEntity& obj);
@@ -99,15 +100,22 @@ class CDManager : public XGP::XApplication {
    virtual const char* getHelpfile ();
    void recordSelected ();
    void movieSelected ();
+   void actorSelected ();
    void pageSwitched (GtkNotebookPage* page, guint iPage);
 
    typedef enum { NONE_SELECTED, OWNER_SELECTED, OBJECT_SELECTED } SELECTED;
    void enableEdit (SELECTED selected);
+
    bool login (const Glib::ustring& user, const Glib::ustring& pwd);
    void loadDatabase ();
    void loadRecords ();
    void loadMovies ();
    void loadMovies (const std::string& lang);
+   void loadActors ();
+   void loadCelebrities (std::vector<HCelebrity>& target, const std::string& table,
+			 YGP::StatusObject& stat);
+
+   HMovie findMovie (unsigned int id) const;
    void addLanguageMenus (Glib::ustring& menu, Glib::RefPtr<Gtk::ActionGroup> grpAction);
    void enableMenus (bool enable);
    void loadSongs (const HRecord& record);
@@ -134,6 +142,7 @@ class CDManager : public XGP::XApplication {
    void deleteSelectedRecords ();
    void deleteSelectedSongs ();
    void deleteSelectedMovies ();
+   void deleteSelectedActor ();
 
    void removeDeletedEntries ();
    void writeChangedEntries ();
@@ -159,7 +168,8 @@ class CDManager : public XGP::XApplication {
    Genres movieGenres;
 
    YGP::Relation1_N<HDirector, HMovie> relMovies;
-   YGP::RelationN_M<HMovie, HActor>    relActors;
+   YGP::RelationN_M<HActor, HMovie>    relActors;
+   YGP::RelationN_M<HActor, HMovie>    relDelActors;
 
    YGP::Relation1_N<HInterpret, HRecord> relRecords;
    YGP::Relation1_N<HRecord, HSong>      relSongs;
@@ -175,6 +185,7 @@ class CDManager : public XGP::XApplication {
 
    std::vector<HInterpret> deletedInterprets;
    std::vector<HDirector>  deletedDirectors;
+   std::vector<HActor>     deletedActors;
 
    std::map<HSong, HRecord>      deletedSongs;
    std::map<HRecord, HInterpret> deletedRecords;
@@ -187,6 +198,8 @@ class CDManager : public XGP::XApplication {
    std::map<HMovie, std::string>    changedMovieNames;
    std::map<HDirector, HDirector>   changedDirectors;
    std::map<HActor, HActor>         changedActors;
+
+   std::vector<HActor> changedRelMovies;
 
    unsigned int                loadedPages;
    std::map<std::string, bool> loadedLangs;

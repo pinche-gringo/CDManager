@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.59 2005/10/04 16:22:02 markus Exp $
+//$Id: CDManager.cpp,v 1.60 2005/10/27 21:52:33 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.59 $
+//REVISION    : $Revision: 1.60 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -39,6 +39,7 @@
 #include <gtkmm/radioaction.h>
 #include <gtkmm/scrolledwindow.h>
 
+#define CHECK 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 
@@ -50,6 +51,7 @@
 #include "LangDlg.h"
 #include "Settings.h"
 #include "Language.h"
+#include "RelateMovie.h"
 
 #include "CDManager.h"
 
@@ -273,9 +275,10 @@ const char* CDManager::xpmAuthor[] = {
 //-----------------------------------------------------------------------------
 CDManager::CDManager (Options& options)
    : XApplication (PACKAGE " V" PRG_RELEASE), relMovies ("movies"),
-     relActors ("actors"), relRecords ("records"), relSongs ("songs"),
-     records (recGenres), songs (recGenres), movies (movieGenres),
-     actors (movieGenres), loadedPages (-1U), opt (options) {
+     relActors ("actors"), relDelActors ("delActors"), relRecords ("records"),
+     relSongs ("songs"), records (recGenres), songs (recGenres),
+     movies (movieGenres), actors (movieGenres), loadedPages (-1U),
+     opt (options) {
    TRACE9 ("CDManager::CDManager (Options&)");
 
    Language::init ();
@@ -399,6 +402,9 @@ CDManager::CDManager (Options& options)
    sel = movies.get_selection ();
    sel->signal_changed ().connect (mem_fun (*this, &CDManager::movieSelected));
 
+   sel = actors.get_selection ();
+   sel->signal_changed ().connect (mem_fun (*this, &CDManager::actorSelected));
+
    cds->set_position ((WIDTH - 20) >> 1);
    cds->add1 (*manage (scrlRecords));
    cds->add2 (*manage (scrlSongs));
@@ -470,6 +476,52 @@ void CDManager::newActor () {
 }
 
 //-----------------------------------------------------------------------------
+/// Displays a dialog enabling to connect movies and actors
+//-----------------------------------------------------------------------------
+void CDManager::actorPlaysInMovie () {
+   TRACE9 ("CDManager::actorPlaysInMovie ()");
+   Check3 (actors.get_selection ());
+   Gtk::TreeIter p (actors.get_selection ()->get_selected ()); Check3 (p);
+   Check3 (!(*p)->parent ());
+
+   HActor actor (actors.getActorAt (p)); Check3 (actor.isDefined ());
+   TRACE9 ("void CDManager::actorPlaysInMovie () - Founding actor " << actor->getName ());
+
+   RelateMovie* dlg (relActors.isRelated (actor)
+		     ? RelateMovie::create (actor, relActors.getObjects (actor), movies.getModel ())
+		     : RelateMovie::create (actor, movies.getModel ()));
+   dlg->get_window ()->set_transient_for (get_window ());
+   dlg->signalRelateMovies.connect (mem_fun (*this, &CDManager::relateMovies));
+}
+
+//-----------------------------------------------------------------------------
+/// Relates movies with an actor
+/// \param actor: Actor, to which store movies
+/// \param movies: Movies, starring this actor
+//-----------------------------------------------------------------------------
+void CDManager::relateMovies (const HActor& actor, const std::vector<HMovie>& movies) {
+   TRACE9 ("CDManager::relateMovies (const HActor&, const std::vector<HMovie>&)");
+   Check2 (actor.isDefined ());
+   if (!relActors.isRelated (actor))
+      relActors.relate (actor, *movies.begin ());
+   relActors.getObjects (actor) = movies;
+
+   Gtk::TreeIter i (actors.getOwner (actor)); Check3 (i);
+   while (i->children ().size ())
+      actors.getModel ()->erase (i->children ().begin ());
+
+   for (std::vector<HMovie>::iterator m (relActors.getObjects (actor).begin ());
+	m != relActors.getObjects (actor).end (); ++m)
+      actors.append (*m, *i);
+
+   if (std::find (changedRelMovies.begin (), changedRelMovies.end (), actor)
+       == changedRelMovies.end ())
+      changedRelMovies.push_back (actor);
+
+   apMenus[SAVE]->set_sensitive (true);
+}
+
+//-----------------------------------------------------------------------------
 /// Adds a new record to the first selected interpret
 //-----------------------------------------------------------------------------
 void CDManager::newRecord () {
@@ -517,9 +569,7 @@ void CDManager::newMovie () {
    TRACE5 ("void CDManager::newMovie ()");
 
    Glib::RefPtr<Gtk::TreeSelection> movieSel (movies.get_selection ()); Check3 (movieSel);
-   Gtk::TreeSelection::ListHandle_Path list (movieSel->get_selected_rows ()); Check3 (list.size ());
-   Glib::RefPtr<Gtk::TreeStore> model (movies.getModel ()); Check3 (model);
-   Gtk::TreeIter p (model->get_iter (*list.begin ())); Check3 (p);
+   Gtk::TreeIter p (movieSel->get_selected ()); Check3 (p);
    if ((*p)->parent ())
       p = ((*p)->parent ());
    TRACE9 ("void CDManager::newMovie () - Founding director " << movies.getDirectorAt (p)->getName ());
@@ -527,7 +577,7 @@ void CDManager::newMovie () {
    HMovie movie;
    movie.define ();
    Gtk::TreeIter i (movies.append (movie, *p));
-   movies.expand_row (model->get_path (p), false);
+   movies.expand_row (movies.getModel ()->get_path (p), false);
    movies.selectRow (i);
 
    HDirector director;
@@ -613,14 +663,27 @@ void CDManager::loadDatabase () {
    status.pop ();
    status.push (_("Reading database ..."));
 
-   if (nb.get_current_page ()) {
+   switch (nb.get_current_page ()) {
+   case 1:
       loadMovies ();
       movies.grab_focus ();
-   }
-   else {
+      break;
+
+   case 0:
       loadRecords ();
       records.grab_focus ();
-   }
+      break;
+
+   case 2:
+      if (!(loadedPages & 2))
+	 loadMovies ();
+      loadActors ();
+      actors.grab_focus ();
+      break;
+
+   default:
+      Check1 (0);
+   } // end-switch
 }
 
 //-----------------------------------------------------------------------------
@@ -666,6 +729,18 @@ void CDManager::movieSelected () {
    Check3 (movies.get_selection ());
 
    Gtk::TreeIter s (movies.get_selection ()->get_selected ());
+   enableEdit (s ? OWNER_SELECTED : NONE_SELECTED);
+}
+
+//-----------------------------------------------------------------------------
+/// Callback after selecting an actor
+/// \param row: Selected row
+//-----------------------------------------------------------------------------
+void CDManager::actorSelected () {
+   TRACE9 ("CDManager::actorSelected ()");
+   Check3 (actors.get_selection ());
+
+   Gtk::TreeIter s (actors.get_selection ()->get_selected ());
    enableEdit (s ? OWNER_SELECTED : NONE_SELECTED);
 }
 
@@ -803,7 +878,10 @@ void CDManager::addLanguageMenus (Glib::ustring& menu, Glib::RefPtr<Gtk::ActionG
 //-----------------------------------------------------------------------------
 void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
    TRACE9 ("CDManager::pageSwitched (GtkNotebookPage*, guint) - " << iPage);
-   Check1 (iPage < 2);
+   Check1 (iPage < 3);
+
+   if (!(loadedPages & (1 << iPage)))
+      loadDatabase ();
 
    static Gtk::UIManager::ui_merge_id idPageMrg (-1U);
    if (idPageMrg != -1U)
@@ -817,9 +895,6 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
    Glib::RefPtr<Gtk::ActionGroup> grpAction (Gtk::ActionGroup::create ());
    switch (iPage) {
    case 1:
-      if (!(loadedPages & (1 << iPage)))
-	 loadDatabase ();
-
       pageData.img = new LanguageImg (Movie::currLang.c_str ());
       pageData.img->signal_clicked ().connect
 	 (mem_fun (*this, &CDManager::selectLanguage));
@@ -864,12 +939,17 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
       break;
 
    case 2:
-      ui += "<menuitem action='NActor'/></placeholder></menu>";
+      ui += "<menuitem action='NActor'/><menuitem action='AddMovie'/></placeholder></menu>";
 
       grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NActor", Gtk::Stock::NEW,
 							   _("New _Actor")),
 		      Gtk::AccelKey (_("<ctl>N")),
 		      mem_fun (*this, &CDManager::newActor));
+      grpAction->add (apMenus[NEW2] = Gtk::Action::create ("AddMovie", _("_Plays in movie ...")),
+		      Gtk::AccelKey (_("<ctl><alt>N")),
+		      mem_fun (*this, &CDManager::actorPlaysInMovie));
+
+      actorSelected ();
       break;
    } // end-switch
 

@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.60 2005/10/27 21:52:33 markus Exp $
+//$Id: CDManager.cpp,v 1.61 2005/10/28 21:43:29 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.60 $
+//REVISION    : $Revision: 1.61 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -404,6 +404,7 @@ CDManager::CDManager (Options& options)
 
    sel = actors.get_selection ();
    sel->signal_changed ().connect (mem_fun (*this, &CDManager::actorSelected));
+   actors.signalOwnerChanged.connect (mem_fun (*this, &CDManager::actorChanged));
 
    cds->set_position ((WIDTH - 20) >> 1);
    cds->add1 (*manage (scrlRecords));
@@ -436,7 +437,10 @@ CDManager::~CDManager () {
 void CDManager::save () {
    writeChangedEntries ();
    removeDeletedEntries ();
+
+   undoEntities.erase (undoEntities.begin (), undoEntities.end ());
    apMenus[SAVE]->set_sensitive (false);
+   apMenus[UNDO]->set_sensitive (false);
 }
 
 //-----------------------------------------------------------------------------

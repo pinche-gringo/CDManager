@@ -1,11 +1,11 @@
-//$Id: CDManagerDB.cpp,v 1.11 2005/10/27 21:49:44 markus Exp $
+//$Id: CDManagerDB.cpp,v 1.12 2005/10/28 21:41:33 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.11 $
+//REVISION    : $Revision: 1.12 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.1.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -148,6 +148,11 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 //-----------------------------------------------------------------------------
 void CDManager::logout () {
    on_delete_event (NULL);
+
+   // Cleanup undo-info
+   relDelActors.unrelateAll ();
+   undoEntities.erase (undoEntities.begin (), undoEntities.end ());
+
    Words::destroy ();
    Database::close ();
    enableMenus (false);
@@ -947,6 +952,7 @@ void CDManager::removeDeletedEntries () {
 	 relDelActors.unrelateAll (actor);
 	 deletedActors.erase (deletedActors.begin ());
       } // endwhile
+      Check3 (relDelActors.getParents ().empty ());
    }
    catch (Glib::ustring& msg) {
       Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);

@@ -1,11 +1,11 @@
-//$Id: Writer.cpp,v 1.12 2005/10/18 06:23:56 markus Exp $
+//$Id: Writer.cpp,v 1.13 2005/10/28 21:41:00 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Writer
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.12 $
+//REVISION    : $Revision: 1.13 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 27.11.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -31,13 +31,8 @@
 
 #include <sstream>
 
-#include <YGP/File.h>
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
-#include <YGP/ADate.h>
-#include <YGP/ATStamp.h>
-#include <YGP/Process.h>
-#include <YGP/Relation.h>
 #include <YGP/Tokenize.h>
 
 #include "CDType.h"
@@ -131,8 +126,8 @@ void MovieWriter::writeMovie (const HMovie& movie, const HDirector& director,
 void MovieWriter::writeDirector (const HDirector& director, std::ostream& out) {
    Check2 (!hMovie.isDefined ()); Check2 (!hDirector.isDefined ());
    hDirector = director;
-   out << "<tr><td>&nbsp;</td></tr>\n"
-       << "<tr><td colspan=\"5\" class=\"owner\">" << hDirector->getName () << "</td></tr>\n";
+   out << "<tr><td>&nbsp;" << rowEnd << "\n"
+       << "<tr><td colspan=\"5\" class=\"owner\">" << hDirector->getName () << rowEnd;
    hDirector.undefine ();
 
    oddLine = true;
@@ -232,8 +227,8 @@ void RecordWriter::writeRecord (const HRecord& record, const HInterpret& interpr
 void RecordWriter::writeInterpret (const HInterpret& interpret, std::ostream& out) {
    Check2 (!hRecord.isDefined ()); Check2 (!hInterpret.isDefined ());
    hInterpret = interpret;
-   out << "<tr><td>&nbsp;</td></tr>\n"
-       << "<tr><td colspan=\"3\" class=\"owner\">" << hInterpret->getName () << "</td></tr>\n";
+   out << "<tr><td>&nbsp;" << rowEnd << "\n"
+       << "<tr><td colspan=\"3\" class=\"owner\">" << hInterpret->getName () << rowEnd;
    hInterpret.undefine ();
 
    oddLine = true;

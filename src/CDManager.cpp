@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.61 2005/10/28 21:43:29 markus Exp $
+//$Id: CDManager.cpp,v 1.62 2005/10/30 15:34:26 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.61 $
+//REVISION    : $Revision: 1.62 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -418,10 +418,7 @@ CDManager::CDManager (Options& options)
    show_all_children ();
    show ();
 
-   CDManager::login ("cdmgr", "");
-#if 0
    showLogin ();
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -910,10 +907,10 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 	     "</placeholder></menu><placeholder name='Lang'><menu action='Lang'>");
 
       grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NDirector", Gtk::Stock::NEW,
-							   _("New _Director")),
+							   _("New _director")),
 		      Gtk::AccelKey (_("<ctl>N")),
 		      mem_fun (*this, &CDManager::newDirector));
-      grpAction->add (apMenus[NEW2] = Gtk::Action::create ("NMovie", _("_New Movie")),
+      grpAction->add (apMenus[NEW2] = Gtk::Action::create ("NMovie", _("_New movie")),
 		      Gtk::AccelKey (_("<ctl><alt>N")),
 		      mem_fun (*this, &CDManager::newMovie));
       apMenus[NEW3].clear ();
@@ -929,13 +926,13 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 	     "<menuitem action='NSong'/></placeholder></menu>");
 
       grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NInterpret", Gtk::Stock::NEW,
-							   _("New _Interpret")),
+							   _("New _interpret")),
 		      Gtk::AccelKey (_("<ctl>N")),
 		      mem_fun (*this, &CDManager::newInterpret));
-      grpAction->add (apMenus[NEW2] = Gtk::Action::create ("NRecord", _("_New Record")),
+      grpAction->add (apMenus[NEW2] = Gtk::Action::create ("NRecord", _("_New record")),
 		      Gtk::AccelKey (_("<ctl><alt>N")),
 		      mem_fun (*this, &CDManager::newRecord));
-      grpAction->add (apMenus[NEW3] = Gtk::Action::create ("NSong", _("New _Song")),
+      grpAction->add (apMenus[NEW3] = Gtk::Action::create ("NSong", _("New _song")),
 		      Gtk::AccelKey (_("<ctl><shft>N")),
 		      mem_fun (*this, &CDManager::newSong));
 
@@ -946,10 +943,10 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
       ui += "<menuitem action='NActor'/><menuitem action='AddMovie'/></placeholder></menu>";
 
       grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NActor", Gtk::Stock::NEW,
-							   _("New _Actor")),
+							   _("New _actor")),
 		      Gtk::AccelKey (_("<ctl>N")),
 		      mem_fun (*this, &CDManager::newActor));
-      grpAction->add (apMenus[NEW2] = Gtk::Action::create ("AddMovie", _("_Plays in movie ...")),
+      grpAction->add (apMenus[NEW2] = Gtk::Action::create ("AddMovie", _("_Plays in movie...")),
 		      Gtk::AccelKey (_("<ctl><alt>N")),
 		      mem_fun (*this, &CDManager::actorPlaysInMovie));
 

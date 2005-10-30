@@ -1,11 +1,11 @@
-//$Id: CDManagerDB.cpp,v 1.12 2005/10/28 21:41:33 markus Exp $
+//$Id: CDManagerDB.cpp,v 1.13 2005/10/30 15:31:00 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.12 $
+//REVISION    : $Revision: 1.13 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.1.2005
 //COPYRIGHT   : Copyright (C) 2005
@@ -118,7 +118,6 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
       Words::create ();
       if (!Words::cArticles ()) {
 	 Database::execute ("SELECT word FROM Words");
-
 	 while (Database::hasData ()) {
 	    // Fill and store artist entry from DB-values
 	    Words::addName2Ignore (Database::getResultColumnAsString (0), Words::POS_END);
@@ -126,7 +125,6 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 	 }
 
 	 Database::execute ("SELECT article FROM Articles");
-
 	 while (Database::hasData ()) {
 	    // Fill and store artist entry from DB-values
 	    Words::addArticle (Database::getResultColumnAsString (0), Words::POS_END);

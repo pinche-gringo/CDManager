@@ -1,3 +1,93 @@
+2005-10-30  Markus Schwab  <g17m0@lycos.com>
+
+	* ChangeLog, NEWS: Changes of V0.8.00 added
+
+	* po/de.po, po/en.po, po/es.po: Added messages vor V0.8.00
+
+	* src/CDManager.cpp: Changed some menu-titles to lowercase
+
+	* src/CDManagerDB.cpp: Formatting changed
+
+	* src/Movie.cpp:
+	Fixed compareByName (to test for localized name, then international name)
+
+2005-10-28  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDManager.cpp: Save deletes undo-info; Handling changing actors
+
+	* src/CDManagerDB.cpp: Logout removes undo-info
+
+	* src/Writer.cpp:
+	Removed unused includes; used YGP::TableWriter-constants
+
+2005-10-27  Markus Schwab  <g17m0@lycos.com>
+
+	* configure.ac:
+	Version to 0.8.00; Testing for mysql++.h; Needing libYGP 0.7.30
+
+	* src/Actor.h: Intital revision
+
+	* src/MovieList.cpp, src/OOList.cpp:
+	Improved comparing names of entries
+
+	* src/CDManager.cpp, src/CDManager.h: Added handling of actors
+
+	* src/Makefile.am: Added Actor.h, ActorList.{cpp,h}
+
+	* src/CDManagerDel.cpp, src/CDManagerUndo.cpp: Handling actors
+
+	* src/CDManagerDB.cpp: Loading and saving actors
+
+	* src/Celebrity.h: Added a compById-method
+
+	* src/ActorList.cpp, src/ActorList.h: Intial revision
+
+2005-10-26  Markus Schwab  <g17m0@lycos.com>
+
+	* src/Celebrity.cpp: Fixed comparing when having equal family names
+
+	* src/RelateMovie.cpp, src/RelateMovie.h:
+	Added constructor for actors without movies; added OK-handling and removing
+
+2005-10-25  Markus Schwab  <g17m0@lycos.com>
+
+	* src/RelateMovie.cpp, src/RelateMovie.h: New file.
+
+2005-10-18  Markus Schwab  <g17m0@lycos.com>
+
+	* src/Writer.cpp, src/Writer.h: Adapted to new YGP::TableWriter
+
+2005-10-04  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDManagerDel.cpp:
+	Methods deleteRecord and deleteMovie don't delete owner anymore
+
+	* src/Record.cpp: Assignment operator sets the values unconditionally
+
+	* src/CDManagerUndo.cpp: Scrolling to the undone line
+
+	* src/OOList.cpp, src/OOList.h:
+	Added methods to retrive rows; Added methods to set the values of an entry
+
+	* src/MovieList.cpp, src/MovieList.h, src/RecordList.cpp, src/RecordList.h, src/SongList.cpp, src/SongList.h:
+	Added an method to update an entry in the list
+
+	* src/CDManager.h: Added undo
+
+	* src/CDManager.cpp: Added undo-menu and actor-notebook page
+
+	* src/Makefile.am: Added CDManagerUndo.cpp
+
+	* src/Celebrity.cpp, src/Celebrity.h, src/Movie.cpp, src/Movie.h, src/Record.cpp, src/Record.h, src/Song.h:
+	Added assignment operator
+
+	* src/CDManagerDB.cpp:
+	Only deleting entries if there are already stored in the database
+
+	* src/CDManagerDel.cpp: Storing deleted entries for undoing
+
+	* src/CDManagerUndo.cpp: New file.
+
 2005-09-24  Markus Schwab  <g17m0@lycos.com>
 
 	* ChangeLog, NEWS: Changes of V0.7.20 added

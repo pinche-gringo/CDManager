@@ -1,3 +1,11 @@
+Overview of changes in version 0.8.00:
+
+  - Can undo changes
+  - Handling actors of movies
+  - Using new YGP::TableWriter class (hence needing libYGP 0.7.30)
+  - Fixed sorting of names for equal family names
+
+
 Overview of changes in version 0.7.20:
 
   - Sharing reserved words/articles with CDWriter

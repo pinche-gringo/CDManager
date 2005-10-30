@@ -1,11 +1,11 @@
-//$Id: Movie.cpp,v 1.10 2005/10/04 16:21:07 markus Exp $
+//$Id: Movie.cpp,v 1.11 2005/10/30 15:30:14 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movie
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.10 $
+//REVISION    : $Revision: 1.11 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 29.11.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -106,8 +106,8 @@ Glib::ustring Movie::removeIgnored (const Glib::ustring& name) {
 //-----------------------------------------------------------------------------
 bool Movie::compByName (const HMovie& a, const HMovie& b) {
    Check1 (a.isDefined ()); Check1 (b.isDefined ());
-   Glib::ustring aname (removeIgnored (a->name[currLang]));
-   Glib::ustring bname (removeIgnored (b->name[currLang]));
+   Glib::ustring aname (removeIgnored (a->getName ()));
+   Glib::ustring bname (removeIgnored (b->getName ()));
    return aname < bname;
 }
 
@@ -146,7 +146,7 @@ bool Movie::compByMedia (const HMovie& a, const HMovie& b) {
 
 //-----------------------------------------------------------------------------
 /// Gets the name of the movie for the specified language. If such a name does
-/// not exist, use the international one (and if this is also not 
+/// not exist, use the international one.
 /// \param a: First movie
 /// \param b: Second movie
 /// \returns bool: True, if a->type < b->type

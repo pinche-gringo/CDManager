@@ -1,11 +1,11 @@
-//$Id: Words.cpp,v 1.11 2005/09/10 21:36:07 markus Rel $
+//$Id: Words.cpp,v 1.12 2005/11/12 13:41:13 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Words
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.11 $
+//REVISION    : $Revision: 1.12 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -40,6 +40,7 @@
 #include "Words.h"
 
 
+#undef PAGE_SIZE
 static const unsigned int PAGE_SIZE (4096);
 
 int Words::_key (-1);

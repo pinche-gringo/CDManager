@@ -1,8 +1,8 @@
 <!-- -*-HTML-*- -->
-<!-- $Id: CDManager.html.es,v 1.1 2005/01/20 04:48:44 markus Rel $ -->
+<!-- $Id: CDManager.html.es,v 1.2 2005/11/12 13:42:54 markus Rel $ -->
 
 <!--
-  Copyright (C) 2004 Markus Schwab (g17m0@lycos.com)
+  Copyright (C) 2004, 2005 Markus Schwab (g17m0@lycos.com)
 
   This is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public
@@ -31,7 +31,7 @@
 
     <meta name="DC.Creator" content="Markus Schwab">
     <meta name="DC.Date" content="2004-12-05">
-    <meta name="DC.Rights" content="Copyright (C) 2004, distributed under the GNU Free Documentation License">
+    <meta name="DC.Rights" content="Copyright (C) 2004, 2005; distributed under the GNU Free Documentation License">
   </head>
 
   <body>

@@ -19,7 +19,7 @@ CDManager_SOURCES=Settings.cpp Settings.h CDAppl.cpp CDAppl.h LangDlg.cpp \
 		  Language.cpp Language.h DB.cpp DB.h CDManagerDB.cpp	  \
 		  Actor.h ActorList.cpp ActorList.h RelateMovie.h 	  \
 		  RelateMovie.cpp CDManager.h CDManagerDel.cpp		  \
-		  CDManagerEI.cpp CDManagerUndo.cpp CDManager.cpp
+		  Director.h CDManagerEI.cpp CDManagerUndo.cpp CDManager.cpp
 
 CDManager_CPPFLAGS=@INCLUDES@ -I../Common @DEPS_CFLAGS@ @XGP_CFLAGS@ -DUSE_LANGUAGEPIXMAPS -Wall
 CDManager_LDFLAGS=-lCDMgr @DEPS_LIBS@ @XGP_LIBS@ @LTLIBINTL@ @MYSQLLIBS@

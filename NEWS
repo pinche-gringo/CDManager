@@ -1,3 +1,10 @@
+Overview of changes in version 0.8.01:
+
+  - Correct footers to contain correct HTML
+  - Added Director.h to distribution
+  - Words.cpp: Fixed compilation under (Open)BSD (undefine PAGE_SIZE)
+
+
 Overview of changes in version 0.8.00:
 
   - Can undo changes

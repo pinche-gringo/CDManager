@@ -1,11 +1,11 @@
-//$Id: Language.cpp,v 1.9 2005/12/22 01:36:55 markus Exp $
+//$Id: Language.cpp,v 1.10 2005/12/22 02:13:16 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Language
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.9 $
+//REVISION    : $Revision: 1.10 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 6.12.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -29,8 +29,6 @@
 
 #include <glibmm/convert.h>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 

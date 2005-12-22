@@ -1,11 +1,11 @@
-//$Id: Language.cpp,v 1.8 2005/08/02 01:55:43 markus Rel $
+//$Id: Language.cpp,v 1.9 2005/12/22 01:36:55 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Language
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.8 $
+//REVISION    : $Revision: 1.9 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 6.12.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -29,6 +29,8 @@
 
 #include <glibmm/convert.h>
 
+#define CHECK 9
+#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 
@@ -105,12 +107,15 @@ Language& Language::operator= (const Language& other) {
 /// Initializes the articles
 //-----------------------------------------------------------------------------
 void Language::init () {
-   languages["de"] = Language (_("German") LOADFLAG(de));
-   languages["en"] = Language (_("English") LOADFLAG(en));
-   languages["es"] = Language (_("Spanish") LOADFLAG(es));
-   languages["fr"] = Language (_("French") LOADFLAG(fr));
-   languages["it"] = Language (_("Italian") LOADFLAG(it));
-   languages["pt"] = Language (_("Portugese") LOADFLAG(pt));
+   languages.insert (languages.end (), langValue ("de", Language (_("German") LOADFLAG(de))));
+   languages.insert (languages.end (), langValue ("en", Language (_("English") LOADFLAG(en))));
+   languages.insert (languages.end (), langValue ("es", Language (_("Spanish") LOADFLAG(es))));
+   languages.insert (languages.end (), langValue ("fi", Language (_("Finnish") LOADFLAG(fi))));
+   languages.insert (languages.end (), langValue ("fr", Language (_("French") LOADFLAG(fr))));
+   languages.insert (languages.end (), langValue ("it", Language (_("Italian") LOADFLAG(it))));
+   languages.insert (languages.end (), langValue ("no", Language (_("Norwegian") LOADFLAG(no))));
+   languages.insert (languages.end (), langValue ("pt", Language (_("Portugese") LOADFLAG(pt))));
+   languages.insert (languages.end (), langValue ("sv", Language (_("Swedish") LOADFLAG(sv))));
 }
 
 //-----------------------------------------------------------------------------

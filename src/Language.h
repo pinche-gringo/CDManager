@@ -1,7 +1,7 @@
 #ifndef LANGUAGE_H
 #define LANGUAGE_H
 
-//$Id: Language.h,v 1.6 2005/08/02 01:55:49 markus Rel $
+//$Id: Language.h,v 1.7 2005/12/22 01:36:55 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -74,6 +74,7 @@ struct Language {
    Glib::RefPtr<Gdk::Pixbuf> flag;
 #endif
 
+   typedef std::pair<std::string, Language> langValue;
    static std::map<std::string, Language> languages;
 };
 

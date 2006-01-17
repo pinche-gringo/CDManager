@@ -1,14 +1,14 @@
-//$Id: CDWriter.cpp,v 1.15 2005/09/10 21:35:40 markus Rel $
+//$Id: CDWriter.cpp,v 1.16 2006/01/17 03:42:24 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDWriter
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.15 $
+//REVISION    : $Revision: 1.16 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
-//COPYRIGHT   : Copyright (C) 2005
+//COPYRIGHT   : Copyright (C) 2005, 2006
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@
 
 #include <cstring>
 
+#include <string>
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -38,13 +39,13 @@
 #include <glibmm/ustring.h>
 #include <glibmm/convert.h>
 
-
 #include <YGP/File.h>
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ADate.h>
 #include <YGP/ATStamp.h>
 #include <YGP/Relation.h>
+#include <YGP/Tokenize.h>
 
 #include "DB.h"
 #include "Words.h"
@@ -214,6 +215,8 @@ int CDWriter::perform (int argc, const char** argv) {
    }
 
    try {
+      if (!atoi (argv[1]))
+	 throw Glib::ustring (_("Invalid memory-key (0)!"));
       Words::access (atoi (argv[1]));
    }
    catch (Glib::ustring& e) {
@@ -294,6 +297,8 @@ int CDWriter::perform (int argc, const char** argv) {
    std::vector<HInterpret> artists;
    YGP::Relation1_N<HInterpret, HRecord> relRecords ("records");
 
+   std::string usedLanguages;
+
    // Read input from stdin; both movies and records are handled
    char type;
    std::cin >> type;
@@ -315,7 +320,7 @@ int CDWriter::perform (int argc, const char** argv) {
 	    artists.push_back (artist);
 	    break;
 
-	 case 'M':
+	 case 'M': {
 	    Check3 (director.isDefined ());
 	    movie.define ();
 	    std::cin >> *movie;
@@ -326,7 +331,15 @@ int CDWriter::perform (int argc, const char** argv) {
 	    relMovies.relate (director, movie);
 	    movieWriter.writeMovie (movie, director, fileMovie);
 	    movies.push_back (movie);
-	    break;
+
+	    YGP::Tokenize langs (movie->getLanguage ());
+	    while (langs.getNextNode (',').size ()) {
+	       if (usedLanguages.find (langs.getActNode ()) == std::string::npos) {
+		  usedLanguages += ',';
+		  usedLanguages += langs.getActNode ();
+	       }
+	    }
+	    break; }
 
 	 case 'R':
 	    Check3 (artist.isDefined ());
@@ -529,9 +542,10 @@ try {
    fileMovie << "<div class=\"header\">|";
    for (std::map<std::string, Language>::const_iterator l (Language::begin ());
 	l != Language::end (); ++l)
-      fileMovie << " <a href=\"#" << l->first << "\"><img src=\"images/" << l->first
-		<< ".png\" alt=\"" << l->first << " \"> "
-		<< l->second.getInternational () << "</a> |";
+      if (usedLanguages.find (l->first) != std::string::npos)
+	 fileMovie << " <a href=\"#" << l->first << "\"><img src=\"images/" << l->first
+		   << ".png\" alt=\"" << l->first << " \">&nbsp;"
+		   << l->second.getInternational () << "</a> |";
    fileMovie << "</div>";
 
    MovieWriter langWriter ("%l|%n|%d||%y|%g|%t", movieGenres);
@@ -541,21 +555,23 @@ try {
 
    for (std::map<std::string, Language>::const_iterator l (Language::begin ());
 	l != Language::end (); ++l) {
-      fileMovie << "<tr><td colspan=\"6\"><div class=\"header\"><a name=\"" << l->first << "\">\n<br></a><h2>"
-		<< l->second.getInternational () << "</h2></div></td></tr>";
+      if (usedLanguages.find (l->first) != std::string::npos) {
+	 fileMovie << "<tr><td colspan=\"6\"><div class=\"header\"><a name=\"" << l->first << "\">\n<br></a><h2>"
+		   << l->second.getInternational () << "</h2></div></td></tr>";
 
-      fileMovie << "<tr><td>";
-      writeHeader (argv[0], "[=]![n]![d]![y]![g]![m]", fileMovie, false);
-      fileMovie << "</td></tr>";
+	 fileMovie << "<tr><td>";
+	 writeHeader (argv[0], "[=]![n]![d]![y]![g]![m]", fileMovie, false);
+	 fileMovie << "</td></tr>";
 
-      for (std::vector<HMovie>::const_iterator m (movies.begin ());
-	   m != movies.end (); ++m)
-	 if (((*m)->getLanguage ().find (l->first) != std::string::npos)
-	     || ((*m)->getTitles ().find (l->first) != std::string::npos)) {
-	    HDirector director;
-	    director = relMovies.getParent (*m); Check3 (director.isDefined ());
-	    langWriter.writeMovie (*m, director, fileMovie);
+	 for (std::vector<HMovie>::const_iterator m (movies.begin ());
+	      m != movies.end (); ++m)
+	    if (((*m)->getLanguage ().find (l->first) != std::string::npos)
+		|| ((*m)->getTitles ().find (l->first) != std::string::npos)) {
+	       HDirector director;
+	       director = relMovies.getParent (*m); Check3 (director.isDefined ());
+	       langWriter.writeMovie (*m, director, fileMovie);
 	 }
+      }
    }
 
    langWriter.printEnd (fileMovie);

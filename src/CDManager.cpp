@@ -1,14 +1,14 @@
-//$Id: CDManager.cpp,v 1.62 2005/10/30 15:34:26 markus Rel $
+//$Id: CDManager.cpp,v 1.63 2006/01/17 03:40:03 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.62 $
+//REVISION    : $Revision: 1.63 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
-//COPYRIGHT   : Copyright (C) 2004, 2005
+//COPYRIGHT   : Copyright (C) 2004 - 2006
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -39,7 +39,6 @@
 #include <gtkmm/radioaction.h>
 #include <gtkmm/scrolledwindow.h>
 
-#define CHECK 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 
@@ -850,7 +849,7 @@ void CDManager::addLanguageMenus (Glib::ustring& menu, Glib::RefPtr<Gtk::ActionG
 		   Gtk::AccelKey ("<ctl>0"),
 		   bind (mem_fun (*this, &CDManager::changeLanguage), ""));
 
-   char accel[6];
+   char accel[7];
    strcpy (accel, "<ctl>1");
    for (std::map<std::string, Language>::const_iterator i (Language::begin ());
 	i != Language::end (); ++i) {

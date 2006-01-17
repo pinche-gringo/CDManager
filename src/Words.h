@@ -1,7 +1,7 @@
 #ifndef WORDS_H
 #define WORDS_H
 
-//$Id: Words.h,v 1.6 2005/09/10 21:36:07 markus Rel $
+//$Id: Words.h,v 1.7 2006/01/17 03:25:54 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,8 +17,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-
-#include <vector>
 
 #include <glibmm/ustring.h>
 
@@ -37,8 +35,8 @@ class Words {
    static void destroy ();
    //@}
 
-   static unsigned int cArticles () { return _keys->cArticles; }
-   static unsigned int cNames () { return _keys->cNames; }
+   static unsigned int cArticles ();
+   static unsigned int cNames ();
 
    enum { POS_END = -2U, POS_UNKNOWN = -1U };
    static void addName2Ignore (const Glib::ustring& word, unsigned int pos = POS_UNKNOWN);
@@ -51,30 +49,20 @@ class Words {
    template <class T>
    static void forEachName (unsigned int start, unsigned int end, T& obj,
 			    void (T::* cb) (const char*)) {
+      values* shMem (getValues ());
       for (unsigned int i (start); i < end; ++i)
-	 (obj.*cb) (_keys->values + _keys->aOffsets[i]);
+	 (obj.*cb) (shMem->values + shMem->aOffsets[i]);
    }
    /// Call a callback for each specified article
    template <class T>
    static void forEachArticle (unsigned int start, unsigned int end, T& obj,
 			       void (T::* cb) (const char*)) {
+      values* shMem (getValues ());
       for (unsigned int i (start); i < end; ++i)
-	 (obj.*cb) (_keys->values + _keys->aOffsets[_keys->maxEntries - _keys->cArticles + i]);
+	 (obj.*cb) (shMem->values + shMem->aOffsets[shMem->maxEntries - shMem->cArticles + i]);
    }
 
    static int getMemoryKey () { return _key; }
-
- private:
-   //Prohibited manager functions
-   ~Words ();
-   Words (const Words&);
-   Words& operator= (const Words&);
-
-   static void moveValues (unsigned int start, unsigned int end, unsigned int target);
-   static unsigned int binarySearch (unsigned int start, unsigned int end, const char* word);
-
-   static Glib::ustring Words::getWord (const Glib::ustring& text);
-   static bool containsWord (unsigned int start, unsigned int end, const Glib::ustring& word);
 
    typedef struct {
       char*          values;
@@ -84,10 +72,23 @@ class Words {
       unsigned int   maxEntries;
       char*          endValues;
       unsigned short aOffsets[];
-   } keys;
+   } values;
 
-   static keys* _keys;
+ private:
+   //Prohibited manager functions
+   ~Words ();
+   Words (const Words&);
+   Words& operator= (const Words&);
+
    static int   _key;
+
+   static values* getValues ();
+
+   static unsigned int binarySearch (values* values, unsigned int start, unsigned int end, const char* word);
+   static void moveValues (unsigned int start, unsigned int end, unsigned int target);
+
+   static Glib::ustring Words::getWord (const Glib::ustring& text);
+   static bool containsWord (unsigned int start, unsigned int end, const Glib::ustring& word);
 };
 
 #endif

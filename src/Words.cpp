@@ -1,14 +1,14 @@
-//$Id: Words.cpp,v 1.12 2005/11/12 13:41:13 markus Rel $
+//$Id: Words.cpp,v 1.13 2006/01/17 03:25:54 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Words
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.12 $
+//REVISION    : $Revision: 1.13 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
-//COPYRIGHT   : Copyright (C) 2004, 2005
+//COPYRIGHT   : Copyright (C) 2004 - 2006
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 
 #include <sys/shm.h>
 
+#include <map>
 #include <cerrno>
 #include <cctype>
 #include <cstring>
@@ -36,6 +37,7 @@
 
 #include <YGP/Trace.h>
 #include <YGP/Check.h>
+#include <YGP/Process.h>
 
 #include "Words.h"
 
@@ -44,7 +46,7 @@
 static const unsigned int PAGE_SIZE (4096);
 
 int Words::_key (-1);
-Words::keys* Words::_keys (NULL);
+static std::map<pid_t, Words::values*> ptrs;
 
 
 //-----------------------------------------------------------------------------
@@ -56,26 +58,28 @@ Words::keys* Words::_keys (NULL);
 //-----------------------------------------------------------------------------
 void Words::create (unsigned int words) throw (Glib::ustring) {
    TRACE8 ("Words::create (unsigned int) - " << words);
-   if (_keys)
+   if ((_key != -1) || (ptrs.find (YGP::Process::getPID ()) != ptrs.end ()))
       return;
 
+   Words::values* shMem (NULL);
    unsigned int size (PAGE_SIZE);
-   if ((sizeof (keys) + (sizeof (char*) * words)) > size)
-      size = ((sizeof (char*) * words) + PAGE_SIZE + sizeof (keys)) & ~(PAGE_SIZE - 1);
+   if ((sizeof (values) + (sizeof (char*) * words)) > size)
+      size = ((sizeof (char*) * words) + PAGE_SIZE + sizeof (values)) & ~(PAGE_SIZE - 1);
 
    if (((_key = shmget (IPC_PRIVATE, size, IPC_CREAT | IPC_EXCL | 0600)) == -1)
-       || ((_keys = (keys*)(shmat (_key, 0, 0))) == (keys*)-1)
-       || ((_keys->values = NULL),
-	   ((_keys->valuesKey = shmget (IPC_PRIVATE, size << 1, IPC_CREAT | IPC_EXCL | 0600)) == -1))
-       || ((_keys->values = (char*)(shmat (_keys->valuesKey, 0, 0))) == (char*)-1)) {
+       || ((shMem = (values*)(shmat (_key, 0, 0))) == (values*)-1)
+       || ((shMem->values = NULL),
+	   ((shMem->valuesKey = shmget (IPC_PRIVATE, size << 1, IPC_CREAT | IPC_EXCL | 0600)) == -1))
+       || ((shMem->values = (char*)(shmat (shMem->valuesKey, 0, 0))) == (char*)-1)) {
       destroy ();
       throw (Glib::ustring (strerror (errno)));
    }
 
-   _keys->cNames = _keys->cArticles = 0;
-   _keys->endValues = _keys->values;
-   _keys->maxEntries = (size - sizeof (keys)) / sizeof (char*);
+   shMem->cNames = shMem->cArticles = 0;
+   shMem->endValues = shMem->values;
+   shMem->maxEntries = (size - sizeof (values)) / sizeof (char*);
    TRACE1 ("Words::create (unsigned int) - Key: " << _key);
+   ptrs[YGP::Process::getPID ()] = shMem;
 }
 
 //-----------------------------------------------------------------------------
@@ -86,30 +90,36 @@ void Words::create (unsigned int words) throw (Glib::ustring) {
 //-----------------------------------------------------------------------------
 void Words::access (unsigned int key) throw (Glib::ustring) {
    TRACE8 ("Words::access (unsigned int) - " << key);
-   if (_keys)
+   if ((_key == -1) || (ptrs.find (YGP::Process::getPID ()) != ptrs.end ()))
       return;
 
-   if (((_keys = (keys*)(shmat (key, 0, 0))) == (keys*)-1)
-       || ((_keys->values = NULL),
-	   ((_keys->values = (char*)(shmat (_keys->valuesKey, 0, 0))) == (char*)-1))) {
+   Words::values* shMem (NULL);
+   if (((shMem = (values*)(shmat (key, 0, 0))) == (values*)-1)
+       || ((shMem->values = NULL),
+	   ((shMem->values = (char*)(shmat (shMem->valuesKey, 0, 0))) == (char*)-1))) {
       destroy ();
       throw (Glib::ustring (strerror (errno)));
    }
-   TRACE9 ("Words::access (unsigned int) - Articles: " << _keys->cArticles << "; Names: "
-	   << _keys->cNames << ": " << *_keys->values);
+   TRACE9 ("Words::access (unsigned int) - Articles: " << shMem->cArticles << "; Names: "
+	   << shMem->cNames << ": " << *shMem->values);
+   ptrs[YGP::Process::getPID ()] = shMem;
 }
 
 //-----------------------------------------------------------------------------
 /// Frees the used shared memory
 //-----------------------------------------------------------------------------
 void Words::destroy () {
-   if (_keys && _keys != (keys*)-1) {
-      if (_keys->values && _keys->values != (char*)-1)
-	 shmdt (_keys->values);
-      shmdt (_keys);
+   Check3 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+   Words::values* shMem (ptrs[YGP::Process::getPID ()]);
+
+   if (shMem && shMem != (values*)-1) {
+      if (shMem->values && shMem->values != (char*)-1)
+	 shmdt (shMem->values);
+      shmdt (shMem);
    }
-   _keys = NULL;
-   _key = -1;
+   ptrs.erase (ptrs.find (YGP::Process::getPID ()));
+   if (ptrs.empty ())
+      _key = -1;
 }
 
 
@@ -123,12 +133,16 @@ void Words::destroy () {
 void Words::moveValues (unsigned int start, unsigned int end, unsigned int target) {
    TRACE9 ("Words::moveValues (3x unsigned int start) - [" << start << '-' << end
 	   << "] -> " << target << "; Bytes: " << (end - start + 1) * sizeof (char*));
+   Check2 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+
+   Words::values* shMem (ptrs[YGP::Process::getPID ()]);
    Check2 (start <= end);
-   memcpy (_keys->aOffsets + target, _keys->aOffsets + start, (end - start + 1) * sizeof (char*));
+   memcpy (shMem->aOffsets + target, shMem->aOffsets + start, (end - start + 1) * sizeof (char*));
 }
 
 //-----------------------------------------------------------------------------
 /// Binary search for the passed words in the passed range
+/// \param values: Values to search
 /// \param start: First value to search
 /// \param end: Last value to search
 /// \param word: Word to search
@@ -136,24 +150,24 @@ void Words::moveValues (unsigned int start, unsigned int end, unsigned int targe
 /// \pre start <= end
 /// \requires There must be at least one element in the array
 //-----------------------------------------------------------------------------
-unsigned int Words::binarySearch (unsigned int start, unsigned int end, const char* word) {
-   Check2 (_keys);
-   Check2 (start <= end);
-   Check2 (end < _keys->maxEntries);
+unsigned int Words::binarySearch (values* values, unsigned int start,
+				  unsigned int end, const char* word) {
+   Check1 (values);
+   Check2 (end < values->maxEntries);
 
    unsigned int middle (0);
 
    while ((end - start) > 0 ) {
       middle = start + ((end - start) >> 1);
-      Check3 (strcmp (_keys->values + _keys->aOffsets[start], _keys->values + _keys->aOffsets[middle]) <= 0);
-      Check3 (strcmp (_keys->values + _keys->aOffsets[end], _keys->values + _keys->aOffsets[middle]) >= 0);
+      Check3 (strcmp (values->values + values->aOffsets[start], values->values + values->aOffsets[middle]) <= 0);
+      Check3 (strcmp (values->values + values->aOffsets[end], values->values + values->aOffsets[middle]) >= 0);
 
-      if (strcmp (word, _keys->values + _keys->aOffsets[middle]) < 0)
+      if (strcmp (word, values->values + values->aOffsets[middle]) < 0)
 	 end = middle;
       else
 	 start = middle + 1;
    }
-   TRACE9 ("Words::binarySearch (2x unsigned int, const char*) - " << _keys->values + _keys->aOffsets[start]);
+   TRACE9 ("Words::binarySearch (values*, 2x unsigned int, const char*) - " << values->values + values->aOffsets[start]);
    return start;
 }
 
@@ -163,20 +177,22 @@ unsigned int Words::binarySearch (unsigned int start, unsigned int end, const ch
 /// \param pos: Hint of position, where to insert
 //-----------------------------------------------------------------------------
 void Words::addName2Ignore (const Glib::ustring& word, unsigned int pos) {
-   TRACE2 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - " << word << " to " << _keys->cNames);
-   Check2 (_keys);
+   Check2 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+
+   Words::values* shMem (ptrs[YGP::Process::getPID ()]);
+   TRACE2 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - " << word << " to " << shMem->cNames);
 
    // Try to respect the hint
    if (pos != POS_UNKNOWN) {
-      if (pos > _keys->cNames)
-	 pos = _keys->cNames;
+      if (pos > shMem->cNames)
+	 pos = shMem->cNames;
 
       TRACE9 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Checking pos " << pos);
-      if (_keys->cNames) {
-	 TRACE9 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Comp: " << strcmp (_keys->values + _keys->aOffsets[pos - 1], word.c_str ()));
-	 if (strcmp (_keys->values + _keys->aOffsets[pos - 1], word.c_str ()) < 0) {
-	    if (pos < _keys->cNames) {
-	       if (strcmp (_keys->values + _keys->aOffsets[pos], word.c_str ()) <= 0)
+      if (shMem->cNames) {
+	 TRACE9 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Comp: " << strcmp (shMem->values + shMem->aOffsets[pos - 1], word.c_str ()));
+	 if (strcmp (shMem->values + shMem->aOffsets[pos - 1], word.c_str ()) < 0) {
+	    if (pos < shMem->cNames) {
+	       if (strcmp (shMem->values + shMem->aOffsets[pos], word.c_str ()) <= 0)
 		  pos = POS_UNKNOWN;
 	    }
 	 }
@@ -187,21 +203,21 @@ void Words::addName2Ignore (const Glib::ustring& word, unsigned int pos) {
 
    // Hint didn't work or wasn't passed: Search for position to insert
    if (pos == POS_UNKNOWN)
-      if (_keys->cNames) {
+      if (shMem->cNames) {
 	 TRACE9 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Search: " << word);
-	 pos = binarySearch (0, _keys->cNames - 1, word.c_str ());
+	 pos = binarySearch (shMem, 0, shMem->cNames - 1, word.c_str ());
       }
       else
 	 pos = 0;
 
-   if (pos < _keys->cNames)
-      moveValues (pos, _keys->cNames, pos + 1);
+   if (pos < shMem->cNames)
+      moveValues (pos, shMem->cNames, pos + 1);
 
    TRACE3 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Insert into " << pos);
-   _keys->aOffsets[pos] = _keys->endValues - _keys->values;
-   memcpy (_keys->endValues, word.c_str (), word.bytes ());
-   _keys->endValues += word.bytes () + 1;
-   _keys->cNames++;
+   shMem->aOffsets[pos] = shMem->endValues - shMem->values;
+   memcpy (shMem->endValues, word.c_str (), word.bytes ());
+   shMem->endValues += word.bytes () + 1;
+   shMem->cNames++;
 }
 
 //-----------------------------------------------------------------------------
@@ -210,20 +226,22 @@ void Words::addName2Ignore (const Glib::ustring& word, unsigned int pos) {
 /// \param pos: Hint of position, where to insert
 //-----------------------------------------------------------------------------
 void Words::addArticle (const Glib::ustring& word, unsigned int pos) {
-   TRACE2 ("Words::addArticle (const Glib::ustring&, unsigned int) - " << word << " to " << _keys->cArticles);
-   Check2 (_keys);
+   Check2 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+
+   Words::values* shMem (ptrs[YGP::Process::getPID ()]);
+   TRACE2 ("Words::addArticle (const Glib::ustring&, unsigned int) - " << word << " to " << shMem->cArticles);
 
    // Try to respect the hint
    if (pos != POS_UNKNOWN) {
-      pos = ((pos > _keys->cArticles) ? _keys->maxEntries - 1
-	     : _keys->maxEntries - _keys->cArticles + pos);
+      pos = ((pos > shMem->cArticles) ? shMem->maxEntries - 1
+	     : shMem->maxEntries - shMem->cArticles + pos);
 
       TRACE9 ("Words::addArticle (const Glib::ustring&, unsigned int) - Checking pos " << pos);
-      if (_keys->cArticles) {
-	 TRACE9 ("Words::addArticle (const Glib::ustring&, unsigned int) - Comp: " << strcmp (_keys->values + _keys->aOffsets[pos], word.c_str ()));
-	 if (strcmp (_keys->values + _keys->aOffsets[pos], word.c_str ()) < 0) {
-	    if (pos < (_keys->maxEntries - 1)) {
-	       if (strcmp (_keys->values + _keys->aOffsets[pos + 1], word.c_str ()) <= 0)
+      if (shMem->cArticles) {
+	 TRACE9 ("Words::addArticle (const Glib::ustring&, unsigned int) - Comp: " << strcmp (shMem->values + shMem->aOffsets[pos], word.c_str ()));
+	 if (strcmp (shMem->values + shMem->aOffsets[pos], word.c_str ()) < 0) {
+	    if (pos < (shMem->maxEntries - 1)) {
+	       if (strcmp (shMem->values + shMem->aOffsets[pos + 1], word.c_str ()) <= 0)
 		  pos = POS_UNKNOWN;
 	    }
 	 }
@@ -234,23 +252,23 @@ void Words::addArticle (const Glib::ustring& word, unsigned int pos) {
 
    // Hint didn't work or wasn't passed: Search for position to insert
    if (pos == POS_UNKNOWN)
-      if (_keys->cArticles) {
+      if (shMem->cArticles) {
 	 TRACE9 ("Words::addArticles (const Glib::ustring&, unsigned int) - Search: " << word);
-	 pos = binarySearch (_keys->maxEntries - _keys->cArticles,
-			     _keys->maxEntries - 1, word.c_str ());
+	 pos = binarySearch (shMem, shMem->maxEntries - shMem->cArticles,
+			     shMem->maxEntries - 1, word.c_str ());
       }
       else
-	 pos = _keys->maxEntries - 1;
+	 pos = shMem->maxEntries - 1;
 
-   if (pos >= (_keys->maxEntries - _keys->cArticles))
-      moveValues (_keys->maxEntries - _keys->cArticles, pos,
-		  _keys->maxEntries - _keys->cArticles - 1);
+   if (pos >= (shMem->maxEntries - shMem->cArticles))
+      moveValues (shMem->maxEntries - shMem->cArticles, pos,
+		  shMem->maxEntries - shMem->cArticles - 1);
 
    TRACE3 ("Words::addArticle (const Glib::ustring&, unsigned int) - Insert into " << pos);
-   _keys->aOffsets[pos] = _keys->endValues - _keys->values;
-   memcpy (_keys->endValues, word.c_str (), word.bytes ());
-   _keys->endValues += word.bytes () + 1;
-   _keys->cArticles++;
+   shMem->aOffsets[pos] = shMem->endValues - shMem->values;
+   memcpy (shMem->endValues, word.c_str (), word.bytes ());
+   shMem->endValues += word.bytes () + 1;
+   shMem->cArticles++;
 }
 
 //-----------------------------------------------------------------------------
@@ -260,12 +278,13 @@ void Words::addArticle (const Glib::ustring& word, unsigned int pos) {
 //-----------------------------------------------------------------------------
 Glib::ustring Words::removeArticle (const Glib::ustring& name) {
    TRACE9 ("Words::removeArticles (const Glib::ustring&) - " << name);
-   Check2 (_keys);
-   Check2 (_keys != (keys*)-1);
+   Check2 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+
+   Words::values* shMem (ptrs[YGP::Process::getPID ()]);
 
    Glib::ustring word (getWord (name));
    if (word.size () != name.size ()
-       && containsWord (_keys->maxEntries - _keys->cArticles, _keys->maxEntries - 1, word)) {
+       && containsWord (shMem->maxEntries - shMem->cArticles, shMem->maxEntries - 1, word)) {
       unsigned int pos (word.size ());
       while (!isalnum (name[pos]))
 	 ++pos;
@@ -284,13 +303,13 @@ Glib::ustring Words::removeArticle (const Glib::ustring& name) {
 //-----------------------------------------------------------------------------
 Glib::ustring Words::removeNames (const Glib::ustring& name) {
    TRACE9 ("Words::removeNames (const Glib::ustring&) - " << name);
-   Check2 (_keys);
-   Check2 (_keys != (keys*)-1);
+   Check2 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
 
+   Words::values* shMem (ptrs[YGP::Process::getPID ()]);
    Glib::ustring work (name);
    Glib::ustring word (getWord (work));
    while ((word.size () != name.size ())
-	  && containsWord (0, _keys->cNames - 1, word)) {
+	  && containsWord (0, shMem->cNames - 1, word)) {
       unsigned int pos (word.size ());
       while (!isalnum (name[pos]))
 	 ++pos;
@@ -326,16 +345,45 @@ Glib::ustring Words::getWord (const Glib::ustring& text) {
 //-----------------------------------------------------------------------------
 bool Words::containsWord (unsigned int start, unsigned int end, const Glib::ustring& word) {
    TRACE9 ("Words::containsWord (2x unsigned int, const Glib::ustring& word) - [" << start << '-' << end << ']');
-   Check2 (_keys);
-   Check2 (end < _keys->maxEntries);
+   Check2 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+
+   Words::values* shMem (ptrs[YGP::Process::getPID ()]);
+   Check2 (end < shMem->maxEntries);
    Check2 (start <= end);
-   TRACE9 ("Words::containsWord (2x unsigned int, const Glib::ustring& word) - " << _keys->values + _keys->aOffsets[start]);
-   TRACE9 ("Words::containsWord (2x unsigned int, const Glib::ustring& word) - " << _keys->values + _keys->aOffsets[end]);
+   TRACE9 ("Words::containsWord (2x unsigned int, const Glib::ustring& word) - " << shMem->values + shMem->aOffsets[start]);
+   TRACE9 ("Words::containsWord (2x unsigned int, const Glib::ustring& word) - " << shMem->values + shMem->aOffsets[end]);
    if (start < end) {
-      unsigned int pos (binarySearch (start, end, word.c_str ()));
-      return ((pos != start) && (word == (_keys->values + _keys->aOffsets[pos - 1])));
+      unsigned int pos (binarySearch (shMem, start, end, word.c_str ()));
+      return ((pos != start) && (word == (shMem->values + shMem->aOffsets[pos - 1])));
    }
    else
       return false;
 
+}
+
+//-----------------------------------------------------------------------------
+/// Returns the number of articles stored
+/// \returns unsigned int: Number of articles stored
+//-----------------------------------------------------------------------------
+unsigned int Words::cArticles () {
+   Check2 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+   return ptrs[YGP::Process::getPID ()]->cArticles;
+}
+
+//-----------------------------------------------------------------------------
+/// Returns the number of names stored
+/// \returns unsigned int: Number of names stored
+//-----------------------------------------------------------------------------
+unsigned int Words::cNames () {
+   Check2 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+   return ptrs[YGP::Process::getPID ()]->cNames;
+}
+
+//-----------------------------------------------------------------------------
+/// Returns the stored values for the current process
+/// \returns unsigned int: Stored values
+//-----------------------------------------------------------------------------
+Words::values* Words::getValues () {
+   Check2 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+   return ptrs[YGP::Process::getPID ()];
 }

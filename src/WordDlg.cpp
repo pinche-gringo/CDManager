@@ -5,10 +5,10 @@
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.4.2005
-//COPYRIGHT   : Copyright (C) 2005
+//COPYRIGHT   : Copyright (C) 2005, 2006
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -154,10 +154,15 @@ WordDialog::~WordDialog () {
 //-----------------------------------------------------------------------------
 void WordDialog::entryChanged (unsigned int which) {
    TRACE8 ("WordDialog::entryChanged (unsigned int) - " << which);
+
+   Words::values* shMem (Words::getValues ()); Check2 (shMem);
+
    Gtk::Entry* fields[] = { &txtName, &txtArticle };
    Gtk::Button* buttons[] = { &addName, &addArticle };
-   unsigned int starts[] = { 0, Words::_keys->maxEntries - Words::_keys->cArticles };
-   unsigned int ends[] = { Words::cNames (),  Words::_keys->maxEntries };
+
+   unsigned int starts[] = { 0, shMem->maxEntries - shMem->cArticles };
+   unsigned int ends[] = { Words::cNames (),  shMem->maxEntries };
+
    Check1 (which < 2);
    Check3 ((sizeof (fields) / sizeof (*fields)) > which);
    Check3 ((sizeof (buttons) / sizeof (*buttons)) > which);
@@ -279,8 +284,8 @@ void WordDialog::commit () {
    Check3 ((sizeof (models) / sizeof (*models))
 	   == (sizeof (fnInsert) / sizeof (*fnInsert)));
 
-   Check2 (Words::_keys);
-   Words::_keys->cArticles = Words::_keys->cNames = 0;
+   Words::values* shMem (Words::getValues ()); Check2 (shMem);
+   shMem->cArticles = shMem->cNames = 0;
 
    Glib::ustring value;
    for (unsigned int i (0); i < (sizeof (models) / sizeof (*models)); ++i)

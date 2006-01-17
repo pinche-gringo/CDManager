@@ -1,3 +1,33 @@
+2006-01-17  Markus Schwab  <g17m0@lycos.com>
+
+	* ChangeLog, NEWS: Changes of V0.8.02 documented
+
+	* configure.ac: Version to 0.8.02
+
+	* po/de.po, po/en.po, po/es.po: Actualized
+
+2006-01-16  Markus Schwab  <g17m0@lycos.com>
+
+	* src/WordDlg.cpp: Adapted to new Words interface
+
+	* src/CDWriter.cpp:
+	  Only generate links to language, if there are movies in that language
+
+	* src/CDManager.cpp: Fixed size of buffer for accelerator-text
+
+	* src/Words.cpp, src/Words.h: Storing pointer to segements per process
+
+2005-12-21  Markus Schwab  <g17m0@lycos.com>
+
+	* src/Language.cpp: Disabled traces and checks
+
+	* src/Language.cpp, src/Language.h:
+	  Added finish, norwegian & swedish language
+
+	* data/fi.png, data/no.png, data/sv.png: New file.
+
+	* data/Makefile.am: Added finish, swedish & norwegian flags
+
 2005-11-12  Markus Schwab  <g17m0@lycos.com>
 
 	* ChangeLog, NEWS: Changes of V0.8.01 documented

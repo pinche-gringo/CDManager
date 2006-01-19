@@ -1,8 +1,8 @@
 <!-- -*-HTML-*- -->
-<!-- $Id: CDManager.html.de,v 1.2 2005/11/12 13:42:54 markus Rel $ -->
+<!-- $Id: CDManager.html.de,v 1.3 2006/01/19 23:06:40 markus Rel $ -->
 
 <!--
-  Copyright (C) 2004, 2005 Markus Schwab (g17m0@lycos.com)
+  Copyright (C) 2004 - 2006 Markus Schwab (g17m0@lycos.com)
 
   This is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public
@@ -31,7 +31,7 @@
 
     <meta name="DC.Creator" content="Markus Schwab">
     <meta name="DC.Date" content="2004-12-21">
-    <meta name="DC.Rights" content="Copyright (C) 2004, 2005; distributed under the GNU Free Documentation License">
+    <meta name="DC.Rights" content="Copyright (C) 2004 - 2006, distributed under the GNU Free Documentation License">
   </head>
 
   <body>
@@ -49,7 +49,8 @@
 
     <p>Er kann unter anderem die verwalteten Datentr&auml;ger zu
       HTML-Seiten exportieren und Platten von Musikst&uuml;cken im
-      MP3-Format (sofern sie ein ID3-Tag aufweisen) importieren.</p>
+      MP3-Format (sofern sie ein ID3-Tag aufweisen) oder im OGG-Format
+      importieren.</p>
 
     <p>Vertrieben wird das Programm unter der GNU General Public License, die
       prinizipell folgendes aussagt (Details findet man in der in diesem Paket
@@ -69,13 +70,15 @@
         GNU General Public License.</p></em></blockquote>
 
     <h2><a name="Mainwindow"></a>Das Hauptfenster</h2>
-    <p>Das Hauptfenster enth&auml;lt ein Notebook mit zwei Reitern;
-      eines f&uuml;r die Platten und das andere f&uuml;r die Filme.</p>
+    <p>Das Hauptfenster enth&auml;lt ein Notebook mit drei Reitern;
+      eines f&uuml;r die Platten, eines f&uuml;r die Filme und das
+      dritte für die Schauspieler.</p>
 
     <h3>Platten-Reiter</h3>
     <p>Diese Seite enth&auml;lt zwei Listen; die linke zeigt die gespeicherten
       Platten mit deren Interpreten (sortiert nach Interpret; mit deren
-      Platten sortiert nach Name).</p>
+      Platten sortiert nach Name) und die rechte die Lieder (sortiert
+      nach Liednummer).</p>
 
     <p>Die angezeigten Werte k&ouml;nnen &ldquo;inline&rdquo;
       ge&auml;ndert werden (das bedeutet: Durch Anklicken der Spalte
@@ -93,15 +96,15 @@
 
     <p>Neue Entr&auml;ge k&ouml;nnen durch Ausw&auml;hlen des
       passenden Eintrags im <tt>Bearbeiten</tt> Men&uuml; oder durch
-      Importieren des ID3-Tags von MP3-Musikst&uuml;cken (Men&uuml;
-      <tt>Importieren von MP3-info</tt> inm <tt>CD</tt> Men&uuml;).</p>
+      Importieren des ID3-Tags von MP3-Musikst&uuml;cken bzw. von
+      OGG-Dateien (Men&uuml; <tt>Importieren von Datei-Info</tt> inm
+      <tt>CD</tt> Men&uuml;).</p>
 
     <p>Innerhalb der (ausgew&auml;hlten) Liste kann nach
-      Eintr&auml;gen gesucht werden. Dazu mu&szlig;
-      <tt>&lt;Strg&gt;-F</tt> gedr&uuml;ckt werden; innerhalb des
-      erscheinenden Such-Feldes kann durch die Tastenkombinationen
-      <tt>&lt;Strg&gt;-Auf</tt> und <tt>&lt;Strg&gt;-Ab</tt> der
-      vorherige/n&auml;chste passende Eintrag gesucht werden.</p>
+      Eintr&auml;gen gesucht werden. Die Suche wird einfach durch
+      Eingeben eines Suchbegriffs gestartet werden; die Tasten
+      <tt>Auf</tt> und <tt>Ab</tt> suchen dabei den
+      vorherigen/n&auml;chsten passenden Eintrag.</p>
 
     <h3>Film-Reiter</h3>
 
@@ -115,8 +118,20 @@
       hinzugef&uuml;gt werden.</p>
 
     <p>Genau wie bei den Platten kann innerhalb der (aktiven) Liste
-      kann nach Eintr&auml;gen gesucht werden. Dazu mu&szlig;
-      <tt>&lt;Strg&gt;-F</tt> gedr&uuml;ckt werden (siehe oben).</p>
+      kann nach Eintr&auml;gen gesucht werden (siehe oben).</p>
+
+    <h3>Schauspieler-Reiter</h3>
+
+    <p>Dieser Reiter enth&auml;hlt die Schauspieler; sortiert nach
+      Namen. Genau wie die Platten kann der Inhalt dieser Liste
+      &ldquo;inline&rdquo; (siehe oben) bearbeitet werden.</p>
+
+    <p>Neue Eintr&auml;ge k&ouml;nnen durch Ausw&auml;hlen des
+      entsprechenden Eintrags im <tt>Bearbeiten</tt> Men&uuml;
+      hinzugef&uuml;gt werden.</p>
+
+    <p>Genau wie bei den Platten kann innerhalb der (aktiven) Liste
+      kann nach Eintr&auml;gen gesucht werden (siehe oben).</p>
 
     <h2><a name="Dialogs"></a>Dialoge</h2>
 
@@ -128,11 +143,13 @@
       Datenbank verwendet.</p>
 
     <h3>Import</h3>
-    <p>Dieser Dialog wird mittels <tt>Importieren von MP3-Info
-      ...</tt> im <tt>CDs</tt> Men&uuml; ausgew&auml;lt. Er erm&ouml;glicht
-      ein Durchwandern der Verzeichnisstruktur und die Auswahl von
-      Dateien, die dann nach einem ID3-Tag f&uuml;r MP3-Dateien
-      durchsucht werden. Diese Information wird in die Datenbank importiert.</p>
+    <p>Dieser Dialog wird mittels <tt>Importieren von Datei-Info
+      ...</tt> im <tt>CDs</tt> Men&uuml; ausgew&auml;lt. Er
+      erm&ouml;glicht ein Durchwandern der Verzeichnisstruktur und die
+      Auswahl von Dateien, die dann nach &mdash; je nach Dateityp
+      &mdash; einem ID3-Tag f&uuml;r MP3-Dateien oder
+      OGG-Dateiinformationen durchsucht werden. Diese Information wird
+      in die Datenbank importiert.</p>
 
     <p>Beachte, da&szlig; dieser Import Doppel-Eintr&auml;ge
       verursachen kann, wenn die Namen unterschiedlich geschrieben
@@ -144,7 +161,8 @@
       <tt>Optionen</tt>-Men&uuml; aufgerufen.</p>
 
     <p>Er erm&ouml;glicht das &Auml;ndern von diversenen Einstellungen
-    des Programs (bez&uuml;glich des Exports von HTML Dokumenten).</p>
+      des Programs (bez&uuml;glich des Exports von HTML Dokumenten und
+      der speziellen Worte (f&uuml;r das Sortieren)).</p>
 
     <h2>Autor</h2>
     <p>Sowohl die Dokumentation als auch das Spiel wurden von Markus Schwab

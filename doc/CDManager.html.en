@@ -1,8 +1,8 @@
 <!-- -*-HTML-*- -->
-<!-- $Id: CDManager.html.en,v 1.3 2005/11/12 13:42:54 markus Rel $ -->
+<!-- $Id: CDManager.html.en,v 1.4 2006/01/19 23:06:40 markus Rel $ -->
 
 <!--
-  Copyright (C) 2004, 2005 Markus Schwab (g17m0@lycos.com)
+  Copyright (C) 2004 - 2006 Markus Schwab (g17m0@lycos.com)
 
   This is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public
@@ -31,7 +31,7 @@
 
     <meta name="DC.Creator" content="Markus Schwab">
     <meta name="DC.Date" content="2004-12-05">
-    <meta name="DC.Rights" content="Copyright (C) 2004, 2005; distributed under the GNU Free Documentation License">
+    <meta name="DC.Rights" content="Copyright (C) 2004 - 2006; distributed under the GNU Free Documentation License">
   </head>
 
   <body>
@@ -69,19 +69,20 @@
           details.</p></em></blockquote>
 
     <h2><a name="Mainwindow"></a>Main window</h2>
-    <p>The main window contains a notebook with two pages; one for the
-      records and the other for the movies.</p>
+    <p>The main window contains a notebook with three pages; one for the
+      records, one for the movies and one for actors.</p>
 
-    <h3>Record page</h3>
+    <h3>Records page</h3>
     <p>This page contains two list; the left one holds the stored
       records and their interprets (sorted by interpret; with their
-      records sorted by name).</p>
+      records sorted by name) and the right one with the songs (sorted
+      by tracknumber).</p>
 
     <p>The content of the displayed values can be changed
       &ldquo;inline&rdquo; (meaning: by clicking in the column of the
-      selected line, one wants to change). Usually this opens an entry
-      field in which data can be entered , or a list from which the
-      values can be selected.</p>
+      selected line, one wants to change. Usually this opens an entry
+      field in which data can be entered, or a list from which the
+      values can be selected.)</p>
 
     <p>If a record is selected, the right list shows its songs. Again,
       this list can be edited &ldquo;inline&rdquo;.</p>
@@ -90,15 +91,15 @@
       the title).</p>
 
     <p>New entries can be added by selecting the appropriate entry in
-      the <tt>Edit</tt> menu or by importing the ID3-tag from MP3 files
-      (Menu <tt>Import from MP3-info</tt> in the <tt>CD</tt> menu).</p>
+      the <tt>Edit</tt> menu or by importing the ID3-tag from MP3- or
+      OGG files (Menu <tt>Import from file-info</tt> in the <tt>CD</tt>
+      menu).</p>
 
-    <p>Entries can be searched for (in the active list) by pressing
-      <tt>&lt;Ctrl&gt;-F</tt>; within the search-field the keys
-      <tt>&lt;Ctrl&gt;-Up</tt> and <tt>&lt;Ctrl&gt;-Down</tt> find the
-      previous/next matching entry.</p>
+    <p>Entries can be searched for (in the active list) by just
+      writing the text to find. While searching the keys <tt>Up</tt>
+      and <tt>Down</tt> find the previous/next matching entry.</p>
 
-    <h3>Movie page</h3>
+    <h3>Movies page</h3>
 
     <p>This page contains the movies, sorted by director and (within
       director by year). As with the records, its contents can be
@@ -108,7 +109,19 @@
       the <tt>Edit</tt> menu.</p>
 
     <p>Equal to the record pages, it is possible to searched for
-      Entries by pressing <tt>&lt;Ctrl&gt;-F</tt> (see above).</p>
+      Entries (see above).</p>
+
+    <h3>Actors page</h3>
+
+    <p>This page contains the actors, sorted by name. As with the
+      records, its contents can be edited &ldquo;inline&rdquo; (see
+      above).</p>
+
+    <p>New entries can be added by selecting the appropriate entry in
+      the <tt>Edit</tt> menu.</p>
+
+    <p>Equal to the record pages, it is possible to searched for
+      Entries (see above).</p>
 
     <h2><a name="Dialogs"></a>Dialogs</h2>
 
@@ -119,11 +132,13 @@
       connect to the database.</p>
 
     <h3>Import</h3>
-    <p>This dialog is displayed by selecting <tt>Import from MP3-info
+    <p>This dialog is displayed by selecting <tt>Import from file-info
       ...</tt> from the <tt>CDs</tt> menu. It enables to browse
       through the directory structure and the selection of files. All
-      those files are searched for an ID3 tag for MP3 files, which -
-      if found - is imported into the database.</p>
+      those files are &mdash; depending on the type of the file
+      &mdash; either searched for an ID3 tag for MP3 files or for the
+      comment-section on OGG-files, which &mdash; if found &mdash; is
+      imported into the database.</p>
 
     <p>Note that this import might produce double entries, if names
       are differently written or they exceed the the size of the ID3
@@ -134,7 +149,8 @@
       the <tt>Options</tt> menu.</p>
 
     <p>It allows to change various aspects of the program (related to
-    the export of the information to HTML documents).</p>
+      the export of the information to HTML documents and the special
+      words (which are used for sorting)).</p>
 
     <h2>Author</h2>
     <p>Both the program and the documentation have been written by Markus

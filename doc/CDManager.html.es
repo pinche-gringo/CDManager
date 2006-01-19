@@ -1,8 +1,8 @@
 <!-- -*-HTML-*- -->
-<!-- $Id: CDManager.html.es,v 1.2 2005/11/12 13:42:54 markus Rel $ -->
+<!-- $Id: CDManager.html.es,v 1.3 2006/01/19 23:06:52 markus Rel $ -->
 
 <!--
-  Copyright (C) 2004, 2005 Markus Schwab (g17m0@lycos.com)
+  Copyright (C) 2004 - 2006 Markus Schwab (g17m0@lycos.com)
 
   This is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public
@@ -31,7 +31,7 @@
 
     <meta name="DC.Creator" content="Markus Schwab">
     <meta name="DC.Date" content="2004-12-05">
-    <meta name="DC.Rights" content="Copyright (C) 2004, 2005; distributed under the GNU Free Documentation License">
+    <meta name="DC.Rights" content="Copyright (C) 2004 - 2006, distributed under the GNU Free Documentation License">
   </head>
 
   <body>
@@ -47,8 +47,9 @@
 
     <p>El CD-Manager es una utiliad para manajar discos y pel&iacute;culas.</p>
 
-    <p>Sus features include exporting the managed media to HTML pages
-      and importing records from songs in MP3 format (having an ID3 tag).</p>
+    <p>Sus habilitades incluyen exportar la informaci&oacute;n
+      guardada a p&aacute;ginas HTML y importar desde canciones en el
+      formato MP3 o OGG.</p>
 
     <p>Este programa se distribuye bajo los condiciones de la GNU Licensia
       General P&uacute;blico, que principalmente expresa lo siguente (v&eacute;ase
@@ -69,73 +70,84 @@
         PROP&Oacute;SITO PARTICULAR.  V&eacute;ase la GNU Licensia General
         P&uacute;blico para m&aacute;s detalles).</p></em></blockquote>
 
-    <h2><a name="Mainwindow">Main window</a></h2>
-    <p>The main window contains a notebook with two pages; one for the
-      records and the other for the movies.</p>
+    <h2><a name="Mainwindow">Ventana principal</a></h2>
+    <p>La ventana principial contiene tres subp&aacute;ginas: Uno por
+      los discos, uno por las pel&iacute;culas y uno por los actores.</p>
 
-    <h3>Record page</h3>
-    <p>This page contains two list; the left one holds the stored
-      records and their interprets (sorted by interpret; with their
-      records sorted by name).</p>
+    <h3>P&aacute;gina Discos</h3>
+    <p>Ese p&aacute;gina contiene dos listas; la izquierda containe
+      los discos y sus artistas (ordenado por artista y sus discos
+      por nombre), la derecha contiene las canciones (ordenado por
+      n&uacute;mero de canci&oacte;n.</p>
 
-    <p>The content of the displayed values can be changed
-      &ldquo;inline&rdquo; (meaning: by clicking in the column of the
-      selected line, one wants to change). Usually this opens an entry
-      field in which data can be entered , or a list from which the
-      values can be selected.</p>
+    <p>El contenido de los valores mostrados se puede cambiar
+      &ldquo;inline&rdquo; (significando por hacer clic en una columna
+      de la entrada seleccionada).</p>
 
-    <p>If a record is selected, the right list shows its songs. Again,
-      this list can be edited &ldquo;inline&rdquo;.</p>
+    <p>Si se selecta un disco, la lista derecha muestra sus canciones,
+      cuales se puede cambiar &ldquo;inline&rdquo; tambi&eacute;n.</p>
 
-    <p>Both lists can be sorted by its various columns (by clicking in
-      the title).</p>
+    <p>Amb&aacute;s listas se puede ordenar por various columnas (con
+      hacer click en su t&iacute;tulo.</p>
 
-    <p>New entries can be added by selecting the appropriate entry in
-      the <tt>Edit</tt> menu or by importing the ID3-tag from MP3 files
-      (Menu <tt>Import from MP3-info</tt> in the <tt>CD</tt> menu).</p>
+    <p>A&ntilde;ade entradas con elegir el men&uacute; apropiado bajo
+      del men&uacute; <tt>Editar</tt> o con importar la
+      informaci&oacute;n guardada en archivos de MP3 o OGG (a
+      trav&eacute;s del men&uacute; <tt>Importar informaciones de
+      archivos audio</tt> en el men&uacute; <tt>CD</tt>).</p>
 
-    <p>Entries can be searched for (in the active list) by pressing
-      <tt>&lt;Ctrl&gt;-F</tt>; within the search-field the keys
-      <tt>&lt;Ctrl&gt;-Up</tt> and <tt>&lt;Ctrl&gt;-Down</tt> find the
-      previous/next matching entry.</p>
+    <p>Busca entradas (en la lista activa) con escribir el texto
+      buscado. Las teclas <tt>Arriba</tt> y <tt>Bajo</tt> buscan la
+      entrada pr&oacute;xima/siguiente.</p>
 
-    <h3>Movie page</h3>
+    <h3>P&aacute;gina Pel&iacute;culas</h3>
 
-    <p>This page contains the movies, sorted by director and (within
-      director by year). As with the records, its contents can be
-      edited &ldquo;inline&rdquo; (see above).</p>
+    <p>Esa p&aacute;gina contiene las pel&iacute;culas (ordenado por
+      su director y a&ntilde;o). Tal cual como los discos se puede
+      cambiar la informacion &ldquo;inline&rdquo; (v&eacute;ase arriba).</p>
 
-    <p>New entries can be added by selecting the appropriate entry in
-      the <tt>Edit</tt> menu.</p>
+    <p>Entradas neuves se a&ntilde;ade con elegir la entrada apropiada
+      en el men&uacte;  <tt>Editar</tt>.</p>
 
-    <p>Equal to the record pages, it is possible to searched for
-      Entries by pressing <tt>&lt;Ctrl&gt;-F</tt> (see above).</p>
+    <p>Igual a los discos se puede buscar (v&eacute;ase arriba).</p>
 
-    <h2><a name="Dialogs"></a>Dialogs</h2>
+    <h3>P&aacute;gina Actores</h3>
 
-    <h3>Login</h3>
-    <p>This dialog is displayed by selecting <tt>Login ...</tt> from
-      the <tt>CDs</tt> menu. It is a small window allowing to enter an
-      user-id an (optionally) a password. This information is used to
-      connect to the database.</p>
+    <p>Esa p&aacute;gina contiene los actores (ordenado por su
+      nombre). Tal cual como los discos se puede cambiar la
+      informacion &ldquo;inline&rdquo; (v&eacute;ase arriba).</p>
 
-    <h3>Import</h3>
-    <p>This dialog is displayed by selecting <tt>Import from MP3-info
-      ...</tt> from the <tt>CDs</tt> menu. It enables to browse
-      through the directory structure and the selection of files. All
-      those files are searched for an ID3 tag for MP3 files, which -
-      if found - is imported into the database.</p>
+    <p>Entradas neuves se a&ntilde;ade con elegir la entrada apropiada
+      en el men&uacute; <tt>Editar</tt>.</p>
 
-    <p>Note that this import might produce double entries, if names
-      are differently written or they exceed the the size of the ID3
-      information (which is limited to 30/32 characters).</p>
+    <p>Igual a los discos se puede buscar (v&eacute;ase arriba).</p>
 
-    <h3>Settings</h3>
-    <p>The <i>Settings-Dialog</i> is invoked with <tt>Preferences ...</tt> from
-      the <tt>Options</tt> menu.</p>
+    <h2><a name="Dialogs"></a>Dialogues</h2>
 
-    <p>It allows to change various aspects of the program (related to
-    the export of the information to HTML documents).</p>
+    <h3>Conectar</h3>
+    <p>Ese dialogue se muestra con elegir <tt>Conectar ...</tt> bajo
+      el men&uacute; <tt>CDs</tt>. Permite poner un usario y
+      (opcional) su contrase&ntilde;a. Ese informaci&oacute;n
+      est&aacute; usado para conectarse a la base de datos.</p>
+
+    <h3>Importar</h3>
+    <p>Se muestra con elegir <tt>Importar informaciones de archivos de
+      audio ...</tt> bajo el men&uacute; <tt>CDs</tt>. Permite navegar
+      el disco duro y elegir archivos. Todos los archivos elegidos
+      est&aacute;n analizado por &mdash; depende del tipo &mdash; MP3
+      ID3 informaci&oacute;n o comentarios OGG, cuales est&aacute;n
+      importados a la base de datos.</p>
+
+    <p>Nota que eso puede resultar en entradas dobles, si los nombres
+      est&aacute;n escrito diferente o cortados.</p>
+
+    <h3>Propiedades</h3>
+    <p>Se invoca ese dialogue con la entrada <tt>Propiedades ...</tt> del
+      men&uacute; <tt>Opciones</tt>.</p>
+
+    <p>Permite cambiar algunos aspectos del programa (relacionado con
+      exportar la informaci&oacute;n a documentos HTML o de las
+      palabras escpeciales (que se usa por ordenar las entradas)).</p>
 
     <h2>Autor</h2>
     <p>El programa y la documentaci&oacute;n han sido escrito de Markus
@@ -146,13 +158,13 @@
 
     <pre>   CDManager</pre>
 
-    <p>An overview of the available options can be displayed with</p>
+    <p>Las opciones disponibles se muestra con</p>
 
     <pre>   CDManager --help</pre>
 
-    <h2>Credits</h2>
-    <p>Thanks to the folks at MySQL for their great database and the
-      mysql++ library.</p>
+    <h2>Cr&eacute;ditos</h2>
+    <p>Gracias a la gente de MySQL por su base de datos excelente y su
+      biblioteca mysql++.</p>
 
     <hr noshade="noshade" size="2">
     <address>

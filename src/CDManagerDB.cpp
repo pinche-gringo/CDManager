@@ -1,14 +1,14 @@
-//$Id: CDManagerDB.cpp,v 1.13 2005/10/30 15:31:00 markus Rel $
+//$Id: CDManagerDB.cpp,v 1.14 2006/01/19 21:23:24 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
-//TODO        :
+//TODO        : Rewrite writting of INI-file
 //BUGS        :
-//REVISION    : $Revision: 1.13 $
+//REVISION    : $Revision: 1.14 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.1.2005
-//COPYRIGHT   : Copyright (C) 2005
+//COPYRIGHT   : Copyright (C) 2005, 2006
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -76,8 +76,7 @@ HMovie CDManager::findMovie (unsigned int id) const {
 /// \returns bool: True, if login could be performed
 //-----------------------------------------------------------------------------
 bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
-   TRACE9 ("CDManager::login (const Glib::ustring&, const Glib::ustring&) - "
-	   << user << '/' << pwd);
+   TRACE9 ("CDManager::login (const Glib::ustring&, const Glib::ustring&) - " << opt << '/' << pwd);
 
    try {
       Database::connect (DBNAME, user.c_str (), pwd.c_str ());
@@ -88,6 +87,8 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
       Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
       dlg.set_title (_("Login error"));
       dlg.run ();
+
+      showLogin ();
       return false;
    }
    TRACE9 ("CDManager::login (const Glib::ustring&, const Glib::ustring&) - Logged in");
@@ -805,6 +806,15 @@ void CDManager::storeArticle (const char* article) {
 void CDManager::savePreferences () {
    std::ofstream inifile (opt.pINIFile);
    if (inifile) {
+      inifile << "[Database]\nUser=";
+      if (!(opt.getCmdLineFlags () & Options::USER))
+	 inifile << opt.getUser ();
+
+      inifile << "\nPassword=";
+      if (!(opt.getCmdLineFlags () & Options::PWD))
+	 inifile << opt.getPassword ();
+      inifile << "\n\n";
+
       YGP::INIFile::write (inifile, "Export", opt);
 
       inifile << "[Movies]\nLanguage=" << Movie::currLang << '\n';

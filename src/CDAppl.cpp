@@ -1,14 +1,14 @@
-//$Id: CDAppl.cpp,v 1.8 2005/04/22 15:56:46 markus Rel $
+//$Id: CDAppl.cpp,v 1.9 2006/01/19 01:13:51 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Application
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.8 $
+//REVISION    : $Revision: 1.9 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.12.2004
-//COPYRIGHT   : Copyright (C) 2004, 2005
+//COPYRIGHT   : Copyright (C) 2004 - 2006
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -28,6 +28,8 @@
 #define DONT_CONVERT
 #include <cdmgr-cfg.h>
 
+#include <glibmm/convert.h>
+
 #include <YGP/INIFile.h>
 
 #include "CDManager.h"
@@ -37,6 +39,8 @@
 
 const YGP::IVIOApplication::longOptions CDAppl::lo[] = {
    { IVIOAPPL_HELP_OPTION },
+   { "user", 'u' },
+   { "password", 'p' },
    { "file", 'f' },
    { "version", 'V' },
    { NULL, '\0' } };
@@ -55,11 +59,16 @@ CDAppl::~CDAppl () {
 void CDAppl::showHelp () const {
    std::cout << _("Utility to manage CDs\n\nUsage:") << PACKAGE
              << _(" [OPTIONS]\n\n")
-             << "  -f, --file ......... " << _("[FILE] Use file as INI file\n")
-             << "  -V, --version ...... " << _("Output version information and exit\n")
-             << "  -h, -?, --help ..... " << _("Displays this help and exit\n\n")
+             << "  -u, --user ....... " << _("[USER] User for database login\n")
+             << "  -p, --password ... " << _("[PWD] Password for database login\n")
+             << "  -f, --file ....... " << _("[FILE] Use file as INI file\n")
+             << "  -V, --version .... " << _("Output version information and exit\n")
+             << "  -h, -?, --help ... " << _("Displays this help and exit\n\n")
              << _("The INI file can have the following entries:\n\n")
-             <<  ("  [Export]\n"
+             <<  ("  [Database]\n"
+		  "  User=user\n"
+		  "  Password=pwd\n\n"
+		  "  [Export]\n"
 		  "  MovieHead=Movies.head\n"
 		  "  MovieFoot=Movies.foot\n"
 		  "  RecordHead=Records.head\n"
@@ -79,6 +88,24 @@ bool CDAppl::handleOption (const char option) {
    Check3 (option != '\0');
 
    switch (option) {
+   case 'u':
+      if (checkOptionValue ()) {
+	 options.user = getOptionValue ();
+	 options.afCmdLine |= Options::USER;
+      }
+      else
+         std::cerr << PACKAGE << _("-warning: No user specified! Ignoring option `u'\n");
+      break;
+
+   case 'p':
+      if (checkOptionValue ()) {
+	 options.password = getOptionValue ();
+	 options.afCmdLine |= Options::PWD;
+      }
+      else
+         std::cerr << PACKAGE << _("-warning: No password specified! Ignoring option `p'\n");
+      break;
+
    case 'f': {
       const char* pFile (getOptionValue ());
       if (pFile)
@@ -107,8 +134,15 @@ bool CDAppl::handleOption (const char option) {
 void CDAppl::readINIFile (const char* pFile) {
    try {
       INIFILE (pFile);
+      // DB
+      INISECTION (Database);
+      INIATTR2 (Database, std::string, options.user, User);
+      INIATTR2 (Database, std::string, options.password, Password);
+
+      // Export-otions
       INIOBJ (options, Export);
 
+      // Language in which to show the movies
       INISECTION (Movies);
       INIATTR2 (Movies, std::string, Movie::currLang, Language);
 
@@ -116,8 +150,9 @@ void CDAppl::readINIFile (const char* pFile) {
       options.pINIFile = pFile;
    }
    catch (std::string& error) {
-      Glib::ustring err ("-warning: Error reading INI-file `%1'");
+      std::string err (_("-warning: Error reading INI-file `%1'!\nReason: %2"));
       err.replace (err.find ("%1"), 2, pFile);
+      err.replace (err.find ("%2"), 2, error);
       std::cerr << PACKAGE << err << '\n';
    }
 }
@@ -129,6 +164,24 @@ void CDAppl::readINIFile (const char* pFile) {
 /// \returns \c int: Status
 //-----------------------------------------------------------------------------
 int CDAppl::perform (int, const char**) {
+   try {
+      if (options.password.size ())
+	 options.password = Glib::locale_to_utf8 (options.password);
+   }
+   catch (Glib::ConvertError& e) {
+      options.password.clear ();
+      std::cerr << PACKAGE << _("-warning: Can't convert password to UTF-8! Ignoring ...\n");
+   }
+
+   try {
+      if (options.user.size ())
+	 options.user = Glib::locale_to_utf8 (options.getUser ());
+   }
+   catch (Glib::ConvertError& e) {
+      options.user.clear ();
+      std::cerr << PACKAGE << _("-warning: Can't convert username to UTF-8! Ignoring ...\n");
+   }
+
    CDManager win (options);
    Gtk::Main::run (win);
    return 0;

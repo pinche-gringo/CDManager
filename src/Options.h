@@ -1,7 +1,7 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
-//$Id: Options.h,v 1.3 2005/01/13 19:19:32 markus Rel $
+//$Id: Options.h,v 1.4 2006/01/19 01:12:53 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 
 
 class Options : public YGP::Entity {
+   friend class CDAppl;
    friend class Settings;
 
  public:
@@ -38,6 +39,11 @@ class Options : public YGP::Entity {
    const std::string& getRHeader () const { return rHeader; }
    const std::string& getRFooter () const { return rFooter; }
    const std::string& getDirOutput () const { return dirOutput; }
+
+   enum { USER = 1, PWD = 2 };
+   unsigned int getCmdLineFlags () const { return afCmdLine; }
+   const std::string& getUser () const { return user; }
+   const std::string& getPassword () const { return password; }
 
    void setMHeader (const std::string& value) { mHeader = value; }
    void setMFooter (const std::string& value) { mFooter = value; }
@@ -56,6 +62,10 @@ class Options : public YGP::Entity {
    std::string rHeader;             // %attrib%; RecordHead;     "Records.head"
    std::string rFooter;             // %attrib%; RecordFoot;     "Records.foot"
    std::string dirOutput;           // %attrib%; OutputDir;     "/var/www/cds/"
+
+   unsigned int afCmdLine;
+   std::string user;
+   std::string password;
 };
 
 #endif

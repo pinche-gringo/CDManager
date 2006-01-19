@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.63 2006/01/17 03:40:03 markus Rel $
+//$Id: CDManager.cpp,v 1.64 2006/01/19 01:13:28 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.63 $
+//REVISION    : $Revision: 1.64 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -271,6 +271,8 @@ const char* CDManager::xpmAuthor[] = {
 //-----------------------------------------------------------------------------
 /// Defaultconstructor; all widget are created
 /// \param options: Options for the program
+/// \param user: User for database
+/// \param pwd: Password for DB
 //-----------------------------------------------------------------------------
 CDManager::CDManager (Options& options)
    : XApplication (PACKAGE " V" PRG_RELEASE), relMovies ("movies"),
@@ -417,7 +419,10 @@ CDManager::CDManager (Options& options)
    show_all_children ();
    show ();
 
-   showLogin ();
+   if (opt.getUser ().size ())
+      login (opt.getUser (), opt.getPassword ());
+   else
+      showLogin ();
 }
 
 //-----------------------------------------------------------------------------
@@ -611,11 +616,18 @@ const char* CDManager::getHelpfile () {
 }
 
 //-----------------------------------------------------------------------------
-/// Displays a dialog to Login to the database
+/// Displays a dialog to login to the database
 //-----------------------------------------------------------------------------
 void CDManager::showLogin () {
-   XGP::TLoginDialog<CDManager>::create (_("Database login"), *this,
-					 &CDManager::login)->setCurrentUser ();
+   XGP::LoginDialog* dlg (XGP::LoginDialog::create (_("Database login")));
+   dlg->get_window ()->set_transient_for (get_window ());
+   dlg->sigLogin.connect (mem_fun (*this, &CDManager::login));
+
+   if (opt.getUser ().size ())
+      dlg->setUser (opt.getUser ());
+   else
+      dlg->setCurrentUser ();
+   dlg->setPassword (opt.getPassword ());
 }
 
 //-----------------------------------------------------------------------------

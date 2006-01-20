@@ -1,13 +1,13 @@
 # German translations for the CDManager project.
-# Copyright (C) 2005 Markus Schwab
+# Copyright (C) 2005, 2006 Markus Schwab
 # This file is distributed under the GNU General Public License
-# Markus Schwab <g17m0@lycos.com>, 2005.
+# Markus Schwab <g17m0@lycos.com>, 2006.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2006-01-17 01:12-0400\n"
+"POT-Creation-Date: 2006-01-19 19:07-0400\n"
 "PO-Revision-Date: 2005-05-21 15:16-0400\n"
 "Last-Translator: Markus Schwab <g17m0@lycos.com>\n"
 "Language-Team: German <g17m0@lycos.com>\n"
@@ -16,167 +16,167 @@ msgstr ""
 "Content-Transfer-Encoding: 8-bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
-#: src/CDManager.cpp:313
+#: src/CDManager.cpp:315
 msgid "_CD"
 msgstr ""
 
-#: src/CDManager.cpp:314
+#: src/CDManager.cpp:316
 msgid "_Login"
 msgstr "_Anmelden ..."
 
-#: src/CDManager.cpp:315
+#: src/CDManager.cpp:317
 msgid "<ctl>L"
 msgstr "<ctl>A"
 
-#: src/CDManager.cpp:319
+#: src/CDManager.cpp:321
 msgid "Log_out"
 msgstr "A_bmelden"
 
-#: src/CDManager.cpp:320
+#: src/CDManager.cpp:322
 msgid "<ctl>O"
 msgstr "<ctl>B"
 
-#: src/CDManager.cpp:322
+#: src/CDManager.cpp:324
 msgid "_Export to HTML"
 msgstr "_Exportiere HTML-Dateien"
 
-#: src/CDManager.cpp:323
+#: src/CDManager.cpp:325
 msgid "<ctl>E"
 msgstr "<ctl>A"
 
-#: src/CDManager.cpp:325
+#: src/CDManager.cpp:327
 msgid "_Import from file-info ..."
 msgstr "_Importiere Kommentare von Musikdateien ..."
 
-#: src/CDManager.cpp:326
+#: src/CDManager.cpp:328
 msgid "<ctl>I"
 msgstr "<ctl>A"
 
-#: src/CDManager.cpp:330
+#: src/CDManager.cpp:332
 msgid "_Edit"
 msgstr "_Bearbeiten"
 
-#: src/CDManager.cpp:332
+#: src/CDManager.cpp:334
 msgid "<ctl>Z"
 msgstr ""
 
-#: src/CDManager.cpp:334
+#: src/CDManager.cpp:336
 msgid "_Delete"
 msgstr "_Löschen"
 
-#: src/CDManager.cpp:335
+#: src/CDManager.cpp:337
 msgid "<ctl>Delete"
 msgstr ""
 
-#: src/CDManager.cpp:337
+#: src/CDManager.cpp:339
 msgid "_Options"
 msgstr "_Optionen"
 
-#: src/CDManager.cpp:339
+#: src/CDManager.cpp:341
 msgid "F9"
 msgstr ""
 
-#: src/CDManager.cpp:341
+#: src/CDManager.cpp:343
 msgid "_Save preferences"
 msgstr "Einstellungen _speichern"
 
-#: src/CDManager.cpp:342
+#: src/CDManager.cpp:344
 msgid "<ctl>F9"
 msgstr "<ctl>F9"
 
-#: src/CDManager.cpp:381
+#: src/CDManager.cpp:383
 msgid "_Records"
 msgstr "_Alben"
 
-#: src/CDManager.cpp:382
+#: src/CDManager.cpp:384
 msgid "_Movies"
 msgstr "_Filme"
 
-#: src/CDManager.cpp:383
+#: src/CDManager.cpp:385
 msgid "_Actors"
 msgstr "_Schauspieler"
 
-#: src/CDManager.cpp:412
+#: src/CDManager.cpp:414
 msgid "Connect to a database ..."
 msgstr "Verbinde zur Datenbank"
 
-#: src/CDManager.cpp:446
+#: src/CDManager.cpp:451
 msgid "Select file(s) to import"
 msgstr "Wähle Datei(en) zum Importieren"
 
-#: src/CDManager.cpp:594
+#: src/CDManager.cpp:599
 msgid ""
 "Copyright (C) 2004, 2005 Markus Schwab\n"
 "e-mail: <g17m0@lycos.com>\n"
 "\n"
 "Compiled on %1 at %2"
 msgstr ""
-"Copyright © 2004, 2005 Markus Schwab\n"
+"Copyright © 2004 - 2006 Markus Schwab\n"
 "E-Mail: <g17m0@lycos.com>\n"
 "\n"
 "Übersetzt am %1 um %2"
 
-#: src/CDManager.cpp:617
+#: src/CDManager.cpp:622
 msgid "Database login"
 msgstr "Datenbank-Anmeldung"
 
-#: src/CDManager.cpp:664
+#: src/CDManager.cpp:676
 msgid "Reading database ..."
 msgstr "Lese von der Datenbank ..."
 
-#: src/CDManager.cpp:848
+#: src/CDManager.cpp:860
 msgid "_Original name"
 msgstr "Name (_Original)"
 
-#: src/CDManager.cpp:909
+#: src/CDManager.cpp:921
 msgid "New _director"
 msgstr "Neuer _Regiseur"
 
-#: src/CDManager.cpp:910 src/CDManager.cpp:929 src/CDManager.cpp:946
+#: src/CDManager.cpp:922 src/CDManager.cpp:941 src/CDManager.cpp:958
 msgid "<ctl>N"
 msgstr ""
 
-#: src/CDManager.cpp:912
+#: src/CDManager.cpp:924
 msgid "_New movie"
 msgstr "_Neuer Film"
 
-#: src/CDManager.cpp:913 src/CDManager.cpp:932 src/CDManager.cpp:949
+#: src/CDManager.cpp:925 src/CDManager.cpp:944 src/CDManager.cpp:961
 msgid "<ctl><alt>N"
 msgstr ""
 
-#: src/CDManager.cpp:917
+#: src/CDManager.cpp:929
 msgid "_Language"
 msgstr "_Sprache"
 
-#: src/CDManager.cpp:928
+#: src/CDManager.cpp:940
 msgid "New _interpret"
 msgstr "Neuer _Interpret"
 
-#: src/CDManager.cpp:931
+#: src/CDManager.cpp:943
 msgid "_New record"
 msgstr "_Neues Album"
 
-#: src/CDManager.cpp:934
+#: src/CDManager.cpp:946
 msgid "New _song"
 msgstr "Neues _Lied"
 
-#: src/CDManager.cpp:935
+#: src/CDManager.cpp:947
 msgid "<ctl><shft>N"
 msgstr ""
 
-#: src/CDManager.cpp:945
+#: src/CDManager.cpp:957
 msgid "New _actor"
 msgstr "Neuer _Schauspieler"
 
-#: src/CDManager.cpp:948
+#: src/CDManager.cpp:960
 msgid "_Plays in movie..."
 msgstr "Spielt in _Film..."
 
-#: src/CDManager.cpp:1096
+#: src/CDManager.cpp:1108
 msgid "The data has been modified! Save those changes?"
 msgstr "Die Daten wurden geändert! Sollen diese Änderungen gespeichert werden?"
 
-#: src/CDManagerDB.cpp:86
+#: src/CDManagerDB.cpp:85
 msgid ""
 "Can't connect to database!\n"
 "\n"
@@ -186,11 +186,11 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManagerDB.cpp:89
+#: src/CDManagerDB.cpp:88
 msgid "Login error"
 msgstr "Fehler bei der Anmeldung"
 
-#: src/CDManagerDB.cpp:136
+#: src/CDManagerDB.cpp:137
 msgid ""
 "Can't query needed information!\n"
 "\n"
@@ -200,31 +200,31 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManagerDB.cpp:158
+#: src/CDManagerDB.cpp:159
 msgid "Disconnected!"
 msgstr "Abgemeldet!"
 
-#: src/CDManagerDB.cpp:195
+#: src/CDManagerDB.cpp:196
 msgid "Warning loading celebrity `%1': %2"
 msgstr "Warnung beim Laden von Person/Gruppe '%1' : %2"
 
-#: src/CDManagerDB.cpp:264
+#: src/CDManagerDB.cpp:265
 msgid "Loaded %1 record"
 msgid_plural "Loaded %1 records"
 msgstr[0] "%1 Platte"
 msgstr[1] "%1 Platten"
 
-#: src/CDManagerDB.cpp:267
+#: src/CDManagerDB.cpp:268
 msgid " from %1 artist"
 msgid_plural " from %1 artists"
 msgstr[0] " von %1 Interpreten geladen"
 msgstr[1] " von %1 Interpreten geladen"
 
-#: src/CDManagerDB.cpp:274 src/CDManagerDB.cpp:391
+#: src/CDManagerDB.cpp:275 src/CDManagerDB.cpp:392
 msgid "Warnings loading movies"
 msgstr "Warnungen beim Laden der Filme"
 
-#: src/CDManagerDB.cpp:279
+#: src/CDManagerDB.cpp:280
 msgid ""
 "Can't query available records!\n"
 "\n"
@@ -234,7 +234,7 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManagerDB.cpp:307 src/CDManagerDB.cpp:396
+#: src/CDManagerDB.cpp:308 src/CDManagerDB.cpp:397
 msgid ""
 "Can't query available movies!\n"
 "\n"
@@ -244,17 +244,17 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManagerDB.cpp:353
+#: src/CDManagerDB.cpp:354
 msgid "Warning loading movie `%1': %2"
 msgstr "Warnung beim Laden von Film '%1' : %2"
 
-#: src/CDManagerDB.cpp:383
+#: src/CDManagerDB.cpp:384
 msgid "Loaded %1 movie"
 msgid_plural "Loaded %1 movies"
 msgstr[0] "%1 Film geladen"
 msgstr[1] "%1 Filme geladen"
 
-#: src/CDManagerDB.cpp:438
+#: src/CDManagerDB.cpp:439
 msgid ""
 "Can't query the songs for record %1!\n"
 "\n"
@@ -264,17 +264,17 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/CDManagerDB.cpp:500
+#: src/CDManagerDB.cpp:501
 msgid "Loaded %1 actor"
 msgid_plural "Loaded %1 actors"
 msgstr[0] "%1 Schauspieler"
 msgstr[1] "%1 Schauspieler"
 
-#: src/CDManagerDB.cpp:508
+#: src/CDManagerDB.cpp:509
 msgid "Warnings loading actors!"
 msgstr "Warnungen beim Laden der Schauspieler"
 
-#: src/CDManagerDB.cpp:513
+#: src/CDManagerDB.cpp:514
 msgid ""
 "Can't query the actors1!\n"
 "\n"
@@ -284,7 +284,7 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManagerDB.cpp:548
+#: src/CDManagerDB.cpp:549
 msgid ""
 "Can't write interpret `%1'!\n"
 "\n"
@@ -294,7 +294,7 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/CDManagerDB.cpp:579
+#: src/CDManagerDB.cpp:580
 msgid ""
 "Can't write record `%1'!\n"
 "\n"
@@ -304,7 +304,7 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/CDManagerDB.cpp:611
+#: src/CDManagerDB.cpp:612
 msgid ""
 "Can't write song `%1'!\n"
 "\n"
@@ -314,7 +314,7 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/CDManagerDB.cpp:643
+#: src/CDManagerDB.cpp:644
 msgid ""
 "Can't write director `%1'!\n"
 "\n"
@@ -324,7 +324,7 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/CDManagerDB.cpp:699
+#: src/CDManagerDB.cpp:700
 msgid ""
 "Can't write movie `%1'!\n"
 "\n"
@@ -334,7 +334,7 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/CDManagerDB.cpp:732
+#: src/CDManagerDB.cpp:733
 msgid ""
 "Can't write actor `%1'!\n"
 "\n"
@@ -344,7 +344,7 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/CDManagerDB.cpp:765
+#: src/CDManagerDB.cpp:766
 msgid ""
 "Can't write movies for actor `%1'!\n"
 "\n"
@@ -354,7 +354,7 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/CDManagerDB.cpp:813 src/CDWriter.cpp:617
+#: src/CDManagerDB.cpp:823 src/CDWriter.cpp:617
 msgid ""
 "Can't create file `%1'!\n"
 "\n"
@@ -364,7 +364,7 @@ msgstr ""
 "\n"
 "Ursache: %2."
 
-#: src/CDManagerDB.cpp:833
+#: src/CDManagerDB.cpp:843
 msgid ""
 "Can't store special names!\n"
 "\n"
@@ -374,7 +374,7 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManagerDB.cpp:854
+#: src/CDManagerDB.cpp:864
 msgid ""
 "Can't delete interpret `%1'!\n"
 "\n"
@@ -384,7 +384,7 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/CDManagerDB.cpp:872
+#: src/CDManagerDB.cpp:882
 msgid ""
 "Can't delete record `%1'!\n"
 "\n"
@@ -394,7 +394,7 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/CDManagerDB.cpp:890
+#: src/CDManagerDB.cpp:900
 msgid ""
 "Can't delete song `%1'!\n"
 "\n"
@@ -404,7 +404,7 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/CDManagerDB.cpp:908
+#: src/CDManagerDB.cpp:918
 msgid ""
 "Can't delete director `%1'!\n"
 "\n"
@@ -414,7 +414,7 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/CDManagerDB.cpp:926
+#: src/CDManagerDB.cpp:936
 msgid ""
 "Can't delete movie `%1'!\n"
 "\n"
@@ -424,7 +424,7 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/CDManagerDB.cpp:944
+#: src/CDManagerDB.cpp:954
 msgid ""
 "Can't delete actor `%1'!\n"
 "\n"
@@ -598,7 +598,7 @@ msgstr "Portugiesisch"
 msgid "Swedish"
 msgstr "Schwedisch"
 
-#: src/CDAppl.cpp:56
+#: src/CDAppl.cpp:60
 msgid ""
 "Utility to manage CDs\n"
 "\n"
@@ -608,21 +608,29 @@ msgstr ""
 "\n"
 "Aufruf:"
 
-#: src/CDAppl.cpp:57
+#: src/CDAppl.cpp:61
 msgid ""
 " [OPTIONS]\n"
 "\n"
 msgstr "[OPTIONEN]\n"
 
-#: src/CDAppl.cpp:58
+#: src/CDAppl.cpp:62
+msgid "[USER] User for database login\n"
+msgstr ""
+
+#: src/CDAppl.cpp:63
+msgid "[PWD] Password for database login\n"
+msgstr ""
+
+#: src/CDAppl.cpp:64
 msgid "[FILE] Use file as INI file\n"
 msgstr "[DATEI] Verwende Datei als Initialisierungsdatei\n"
 
-#: src/CDAppl.cpp:59 src/CDWriter.cpp:93
+#: src/CDAppl.cpp:65 src/CDWriter.cpp:93
 msgid "Output version information and exit\n"
 msgstr "Versionsinformation anzeigen und beenden\n"
 
-#: src/CDAppl.cpp:60 src/CDWriter.cpp:94
+#: src/CDAppl.cpp:66 src/CDWriter.cpp:94
 msgid ""
 "Displays this help and exit\n"
 "\n"
@@ -630,7 +638,7 @@ msgstr ""
 "Diese Hilfe anzeigen und beenden\n"
 "\n"
 
-#: src/CDAppl.cpp:61
+#: src/CDAppl.cpp:67
 msgid ""
 "The INI file can have the following entries:\n"
 "\n"
@@ -638,20 +646,45 @@ msgstr ""
 "Die Initialisierungsdatei kann die folgenden Einträge enthalten:\n"
 "\n"
 
-#: src/CDAppl.cpp:87
+#: src/CDAppl.cpp:97
+msgid "-warning: No user specified! Ignoring option `u'\n"
+msgstr "-Warnung: Kein User angegeben! Die Option 'u' wird ignoriert ...\n"
+
+#: src/CDAppl.cpp:106
+msgid "-warning: No password specified! Ignoring option `p'\n"
+msgstr "-Warnung: Kein Paßwort angegeben! Die Option 'p' wird ignoriert ...\n"
+
+#: src/CDAppl.cpp:114
 msgid "-warning: No file specified! Ignoring option `f'\n"
 msgstr "-Warnung: Keine Datei angegeben! Die Option 'f' wird ignoriert\n"
 
-#: src/CDAppl.cpp:144 src/CDWriter.cpp:590
+#: src/CDAppl.cpp:153
+msgid ""
+"-warning: Error reading INI-file `%1'!\n"
+"Reason: %2"
+msgstr ""
+"Fehler beim Lesen der INI-Datei '%1'!\n"
+"\n"
+"Ursache: %2"
+
+#: src/CDAppl.cpp:173
+msgid "-warning: Can't convert password to UTF-8! Ignoring ...\n"
+msgstr ""
+
+#: src/CDAppl.cpp:182
+msgid "-warning: Can't convert username to UTF-8! Ignoring ...\n"
+msgstr ""
+
+#: src/CDAppl.cpp:197 src/CDWriter.cpp:590
 msgid "Compiled on"
 msgstr "Übersetzt am"
 
-#: src/CDAppl.cpp:146
+#: src/CDAppl.cpp:199
 msgid ""
 "Copyright (C) 2004, 2005 Markus Schwab; e-mail: g17m0@lycos.com\n"
 "Distributed under the terms of the GNU General Public License"
 msgstr ""
-"Copyright © 2004, 2005 Markus Schwab; E-Mail: g17m0@lycoscom\n"
+"Copyright © 2004 - 2006 Markus Schwab; E-Mail: g17m0@lycoscom\n"
 "Vertrieben unter den Bedingungen der GNU General Public License"
 
 #: src/Settings.cpp:62
@@ -794,8 +827,8 @@ msgstr "Sprache"
 
 #: src/CDWriter.cpp:592
 msgid ""
-"Copyright (C) 2005 Markus Schwab; e-mail: g17m0@lycos.com\n"
+"Copyright (C) 2005, 2006 Markus Schwab; e-mail: g17m0@lycos.com\n"
 "Distributed under the terms of the GNU General Public License"
 msgstr ""
-"Copyright © 2005 Markus Schwab; E-Mail: g17m0@lycoscom\n"
+"Copyright © 2005, 2006 Markus Schwab; E-Mail: g17m0@lycoscom\n"
 "Vertrieben unter den Bedingungen der GNU General Public License"

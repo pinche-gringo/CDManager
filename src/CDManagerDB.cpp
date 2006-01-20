@@ -1,11 +1,11 @@
-//$Id: CDManagerDB.cpp,v 1.14 2006/01/19 21:23:24 markus Exp $
+//$Id: CDManagerDB.cpp,v 1.15 2006/01/20 00:31:11 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
-//TODO        : Rewrite writting of INI-file
+//TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.14 $
+//REVISION    : $Revision: 1.15 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.1.2005
 //COPYRIGHT   : Copyright (C) 2005, 2006
@@ -806,14 +806,8 @@ void CDManager::storeArticle (const char* article) {
 void CDManager::savePreferences () {
    std::ofstream inifile (opt.pINIFile);
    if (inifile) {
-      inifile << "[Database]\nUser=";
-      if (!(opt.getCmdLineFlags () & Options::USER))
-	 inifile << opt.getUser ();
-
-      inifile << "\nPassword=";
-      if (!(opt.getCmdLineFlags () & Options::PWD))
-	 inifile << opt.getPassword ();
-      inifile << "\n\n";
+      inifile << "[Database]\nUser=" << opt.getUser () << "\nPassword="
+	      << opt.getPassword () << "\n\n";
 
       YGP::INIFile::write (inifile, "Export", opt);
 

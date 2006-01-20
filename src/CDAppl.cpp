@@ -1,11 +1,11 @@
-//$Id: CDAppl.cpp,v 1.9 2006/01/19 01:13:51 markus Exp $
+//$Id: CDAppl.cpp,v 1.10 2006/01/20 00:30:45 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Application
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.9 $
+//REVISION    : $Revision: 1.10 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.12.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -89,19 +89,15 @@ bool CDAppl::handleOption (const char option) {
 
    switch (option) {
    case 'u':
-      if (checkOptionValue ()) {
+      if (checkOptionValue ())
 	 options.user = getOptionValue ();
-	 options.afCmdLine |= Options::USER;
-      }
       else
          std::cerr << PACKAGE << _("-warning: No user specified! Ignoring option `u'\n");
       break;
 
    case 'p':
-      if (checkOptionValue ()) {
+      if (checkOptionValue ())
 	 options.password = getOptionValue ();
-	 options.afCmdLine |= Options::PWD;
-      }
       else
          std::cerr << PACKAGE << _("-warning: No password specified! Ignoring option `p'\n");
       break;

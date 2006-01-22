@@ -1,14 +1,14 @@
-//$Id: SongList.cpp,v 1.16 2005/10/04 16:23:12 markus Rel $
+//$Id: SongList.cpp,v 1.17 2006/01/22 18:36:23 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.16 $
+//REVISION    : $Revision: 1.17 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
-//COPYRIGHT   : Copyright (C) 2004, 2005
+//COPYRIGHT   : Copyright (C) 2004 - 2006
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@
 #include <XGP/XValue.h>
 #include <XGP/MessageDlg.h>
 
+#include "Genres.h"
 #include "Words.h"
 
 #include "SongList.h"
@@ -44,10 +45,10 @@
 //-----------------------------------------------------------------------------
 /// Default constructor
 //-----------------------------------------------------------------------------
-SongList::SongList (const std::map<unsigned int, Glib::ustring>& genres)
+SongList::SongList (const Genres& genres)
    : genres (genres), mSongs (Gtk::ListStore::create (colSongs))
      , mSongGenres (Gtk::ListStore::create (colSongGenres)) {
-   TRACE9 ("SongList::SongList (const std::map<unsigned int, Glib::ustring>&)");
+   TRACE9 ("SongList::SongList (const Genres&)");
 
    set_model (mSongs);
 
@@ -167,7 +168,7 @@ void SongList::valueChanged (const Glib::ustring& path,
 	 row[colSongs.colDuration] = song->getDuration ();
 	 break;
       case 3: {
-	 for (std::map<unsigned int, Glib::ustring>::const_iterator g (genres.begin ());
+	 for (Genres::const_iterator g (genres.begin ());
 	      g != genres.end (); ++g)
 	    if (g->second == value) {
 	       song->setGenre (g->first);
@@ -236,7 +237,7 @@ void SongList::updateGenres () {
    TRACE9 ("SongList::updateGenres () - Genres: " << genres.size ());
 
    mSongGenres->clear ();
-   for (std::map<unsigned int, Glib::ustring>::const_iterator g (genres.begin ());
+   for (Genres::const_iterator g (genres.begin ());
 	g != genres.end (); ++g) {
       Gtk::TreeModel::Row newGenre (*mSongGenres->append ());
       newGenre[colSongGenres.genre] = (g->second);
@@ -304,7 +305,7 @@ void SongList::setGenre (Gtk::TreeIter& iter, unsigned int genre) {
       song->setGenre (genre);
       signalChanged.emit (song);
 
-      std::map<unsigned int, Glib::ustring>::const_iterator g
+      Genres::const_iterator g
 	 (genres.find (song->getGenre ()));
       if (g == genres.end ())
 	 g = genres.begin ();
@@ -323,7 +324,7 @@ void SongList::update (Gtk::TreeModel::Row& row) {
    row[colSongs.colName] = song->getName ();
    row[colSongs.colDuration] = song->getDuration ();
 
-   std::map<unsigned int, Glib::ustring>::const_iterator g
+   Genres::const_iterator g
       (genres.find (song->getGenre ()));
    if (g == genres.end ())
       g = genres.begin ();

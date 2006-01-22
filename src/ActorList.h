@@ -1,7 +1,7 @@
 #ifndef ACTORLIST_H
 #define ACTORLIST_H
 
-//$Id: ActorList.h,v 1.1 2005/10/27 21:47:11 markus Rel $
+//$Id: ActorList.h,v 1.2 2006/01/22 18:36:23 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ class CellRendererList;
  */
 class ActorList : public OwnerObjectList {
  public:
-   ActorList (const std::map<unsigned int, Glib::ustring>& genres);
+   ActorList (const Genres& genres);
    virtual ~ActorList ();
 
    Gtk::TreeModel::Row append (const HActor& actor) {

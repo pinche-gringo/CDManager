@@ -1,14 +1,14 @@
-//$Id: MovieList.cpp,v 1.20 2005/10/27 21:53:10 markus Rel $
+//$Id: MovieList.cpp,v 1.21 2006/01/22 18:36:23 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.20 $
+//REVISION    : $Revision: 1.21 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
-//COPYRIGHT   : Copyright (C) 2004, 2005
+//COPYRIGHT   : Copyright (C) 2004 - 2006
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@
 #include <XGP/XValue.h>
 #include <XGP/MessageDlg.h>
 
+#include "Genres.h"
 #include "CDType.h"
 #include "LangDlg.h"
 
@@ -51,10 +52,10 @@
 /// Default constructor
 /// \param genres: Genres which should be displayed in the 3rd column
 //-----------------------------------------------------------------------------
-MovieList::MovieList (const std::map<unsigned int, Glib::ustring>& genres)
+MovieList::MovieList (const Genres& genres)
    : OwnerObjectList (genres)
      , mTypes (Gtk::ListStore::create (colTypes)) {
-   TRACE9 ("MovieList::MovieList (const std::map<unsigned int, Glib::ustring>&)");
+   TRACE9 ("MovieList::MovieList (const Genres&)");
    mOwnerObjects = Gtk::TreeStore::create (colMovies);
    init (colMovies);
 

@@ -1,14 +1,14 @@
-//$Id: ActorList.cpp,v 1.1 2005/10/27 21:47:11 markus Rel $
+//$Id: ActorList.cpp,v 1.2 2006/01/22 18:36:23 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actor
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.09.2005
-//COPYRIGHT   : Copyright (C) 2005
+//COPYRIGHT   : Copyright (C) 2005, 2006
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -42,9 +42,9 @@
 /// Default constructor
 /// \param genres: Genres which should be displayed in the 3rd column
 //-----------------------------------------------------------------------------
-ActorList::ActorList (const std::map<unsigned int, Glib::ustring>& genres)
+ActorList::ActorList (const Genres& genres)
    : OwnerObjectList (genres) {
-   TRACE9 ("ActorList::ActorList (const std::map<unsigned int, Glib::ustring>&)");
+   TRACE9 ("ActorList::ActorList (const Genres&)");
    mOwnerObjects = Gtk::TreeStore::create (colOwnerObjects);
    init (colOwnerObjects);
 

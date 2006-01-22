@@ -1,14 +1,14 @@
-//$Id: OOList.cpp,v 1.16 2005/10/27 21:53:10 markus Rel $
+//$Id: OOList.cpp,v 1.17 2006/01/22 18:36:23 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.16 $
+//REVISION    : $Revision: 1.17 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
-//COPYRIGHT   : Copyright (C) 2004, 2005
+//COPYRIGHT   : Copyright (C) 2004 - 2006
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -41,6 +41,8 @@
 
 #include <XGP/XValue.h>
 
+#include "Genres.h"
+
 #include "OOList.h"
 
 
@@ -48,10 +50,10 @@
 /// Default constructor
 /// \param genres: Genres which should be displayed in the 3rd column
 //-----------------------------------------------------------------------------
-OwnerObjectList::OwnerObjectList (const std::map<unsigned int, Glib::ustring>& genres)
+OwnerObjectList::OwnerObjectList (const Genres& genres)
    : genres (genres), colOwnerObjects (NULL)
      , mGenres (Gtk::ListStore::create (colGenres)) {
-   TRACE9 ("OwnerObjectList::OwnerObjectList (const std::map<unsigned int, Glib::ustring>&)");
+   TRACE9 ("OwnerObjectList::OwnerObjectList (const Genres&)");
 }
 
 //-----------------------------------------------------------------------------
@@ -163,7 +165,7 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
    try {
       if (row.parent ()) {
 	 HEntity object (getObjectAt (row));
-	 std::map<unsigned int, Glib::ustring>::const_iterator g (genres.end ());
+	 Genres::const_iterator g (genres.end ());
 
 	 // First check, if value is valid
 	 switch (column) {
@@ -271,7 +273,7 @@ void OwnerObjectList::updateGenres () {
    TRACE9 ("OwnerObjectList::updateGenres () - Genres: " << genres.size ());
 
    mGenres->clear ();
-   for (std::map<unsigned int, Glib::ustring>::const_iterator g (genres.begin ());
+   for (Genres::const_iterator g (genres.begin ());
 	g != genres.end (); ++g) {
       Gtk::TreeModel::Row newGenre (*mGenres->append ());
       newGenre[colGenres.genre] = (g->second);
@@ -363,7 +365,7 @@ void OwnerObjectList::changeGenre (Gtk::TreeModel::Row& row, unsigned int value)
    TRACE9 ("OwnerObjectList::changeGenre (Gtk::TreeModel::Row&, unsigned int) - " << value);
    Check2 (colOwnerObjects);
 
-   std::map<unsigned int, Glib::ustring>::const_iterator g
+   Genres::const_iterator g
       (genres.find (value));
    if (g == genres.end ())
       g = genres.begin ();

@@ -1,7 +1,7 @@
 #ifndef RECORDLIST_H
 #define RECORDLIST_H
 
-//$Id: RecordList.h,v 1.10 2005/10/04 16:23:12 markus Rel $
+//$Id: RecordList.h,v 1.11 2006/01/22 18:36:23 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,14 +26,14 @@
 #include "OOList.h"
 
 
-class CellRendererList;
+class Genres;
 
 
 /**Class to hold a list of records
  */
 class RecordList : public OwnerObjectList {
  public:
-   RecordList (const std::map<unsigned int, Glib::ustring>& genres);
+   RecordList (const Genres& genres);
    virtual ~RecordList ();
 
    Gtk::TreeModel::Row append (const HInterpret& artist) {

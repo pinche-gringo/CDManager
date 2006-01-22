@@ -1,7 +1,7 @@
 #ifndef MOVIELIST_H
 #define MOVIELIST_H
 
-//$Id: MovieList.h,v 1.13 2005/10/04 16:23:12 markus Rel $
+//$Id: MovieList.h,v 1.14 2006/01/22 18:36:23 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 #include "OOList.h"
 
 
-class CellRendererList;
+class Genres;
 
 
 /**Class describing the columns in the CDType-model
@@ -70,7 +70,7 @@ class MovieColumns : public OwnerObjectColumns {
  */
 class MovieList : public OwnerObjectList {
  public:
-   MovieList (const std::map<unsigned int, Glib::ustring>& genres);
+   MovieList (const Genres& genres);
    virtual ~MovieList ();
 
    Gtk::TreeModel::Row append (const HDirector& director) {

@@ -1,7 +1,7 @@
 #ifndef SONGLIST_H
 #define SONGLIST_H
 
-//$Id: SongList.h,v 1.11 2005/10/04 16:23:12 markus Rel $
+//$Id: SongList.h,v 1.12 2006/01/22 18:36:24 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 #include <Song.h>
 
 
-class CellRendererList;
+class Genres;
 
 
 /**Class describing the columns in the songgenre-model
@@ -57,7 +57,7 @@ class SongColumns : public Gtk::TreeModel::ColumnRecord {
  */
 class SongList : public Gtk::TreeView {
  public:
-   SongList (const std::map<unsigned int, Glib::ustring>& genres);
+   SongList (const Genres& genres);
    virtual ~SongList ();
 
    Gtk::TreeModel::iterator append (HSong& song);
@@ -95,7 +95,7 @@ class SongList : public Gtk::TreeView {
    SongList (const SongList& other);
    const SongList& operator= (const SongList& other);
 
-   const std::map<unsigned int, Glib::ustring>& genres;
+   const Genres& genres;
 
    SongColumns colSongs;
    SongGenreColumns colSongGenres;

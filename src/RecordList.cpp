@@ -1,14 +1,14 @@
-//$Id: RecordList.cpp,v 1.15 2005/10/04 16:23:12 markus Rel $
+//$Id: RecordList.cpp,v 1.16 2006/01/22 18:36:23 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.15 $
+//REVISION    : $Revision: 1.16 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
-//COPYRIGHT   : Copyright (C) 2004, 2005
+//COPYRIGHT   : Copyright (C) 2004 - 2006
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -35,6 +35,8 @@
 
 #include <XGP/XValue.h>
 
+#include "Genres.h"
+
 #include "RecordList.h"
 
 
@@ -42,9 +44,9 @@
 /// Default constructor
 /// \param genres: Genres which should be displayed in the 3rd column
 //-----------------------------------------------------------------------------
-RecordList::RecordList (const std::map<unsigned int, Glib::ustring>& genres)
+RecordList::RecordList (const Genres& genres)
    : OwnerObjectList (genres) {
-   TRACE9 ("RecordList::RecordList (const std::map<unsigned int, Glib::ustring>&)");
+   TRACE9 ("RecordList::RecordList (const Genres&)");
    mOwnerObjects = Gtk::TreeStore::create (colOwnerObjects);
    init (colOwnerObjects);
 }

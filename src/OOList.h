@@ -1,7 +1,7 @@
 #ifndef OOLIST_H
 #define OOLIST_H
 
-//$Id: OOList.h,v 1.10 2005/10/04 22:48:02 markus Rel $
+//$Id: OOList.h,v 1.11 2006/01/22 18:36:23 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 #include "Celebrity.h"
 
 
-class CellRendererList;
+class Genres;
 
 typedef YGP::Handle<YGP::Entity> HEntity;
 
@@ -58,7 +58,7 @@ class OwnerObjectColumns : public Gtk::TreeModel::ColumnRecord {
  */
 class OwnerObjectList : public Gtk::TreeView {
  public:
-   OwnerObjectList (const std::map<unsigned int, Glib::ustring>& genres);
+   OwnerObjectList (const Genres& genres);
    virtual ~OwnerObjectList ();
 
    Gtk::TreeModel::Row append (const HCelebrity& celebrity);
@@ -108,7 +108,7 @@ class OwnerObjectList : public Gtk::TreeView {
    virtual int sortEntity (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
    int sortOwner (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
 
-   const std::map<unsigned int, Glib::ustring>& genres;
+   const Genres& genres;
    const OwnerObjectColumns* colOwnerObjects;
    GenreColumns colGenres;
 

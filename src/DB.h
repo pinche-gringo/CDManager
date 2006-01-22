@@ -1,7 +1,7 @@
 #ifndef DB_H
 #define DB_H
 
-//$Id: DB.h,v 1.4 2005/04/20 05:43:29 markus Rel $
+//$Id: DB.h,v 1.5 2006/01/22 18:35:31 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -42,6 +42,8 @@ class Database {
    static unsigned int getResultColumnAsUInt (unsigned int column);
    static int getResultColumnAsInt (unsigned int column);
    static long getIDOfInsert ();
+
+   static std::string escapeDBValue (const std::string& value);
 
  private:
    Database ();

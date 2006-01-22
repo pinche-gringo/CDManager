@@ -1,14 +1,14 @@
-//$Id: DB.cpp,v 1.6 2005/04/28 19:36:59 markus Rel $
+//$Id: DB.cpp,v 1.7 2006/01/22 18:35:31 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Database
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 16.10.2004
-//COPYRIGHT   : Copyright (C) 2004, 2005
+//COPYRIGHT   : Copyright (C) 2004 - 2006
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,6 +31,24 @@
 #include <YGP/Trace.h>
 
 #include "DB.h"
+
+
+//-----------------------------------------------------------------------------
+/// Escapes the quotes in values for the database
+/// \param value: Value to escape
+/// \returns Glib::ustring: Escaped text
+//-----------------------------------------------------------------------------
+std::string Database::escapeDBValue (const std::string& value) {
+   unsigned int pos (0);
+   std::string rc (value);
+   while ((pos = rc.find ('"', pos)) != Glib::ustring::npos) {
+      rc.replace (pos, 1, "\\\"");
+      pos += 2;
+   }
+   TRACE9 ("CDManager::escapeDBValue (const Glib::ustring&) - Escaped: " << rc);
+   return rc;
+}
+
 
 #if defined HAVE_LIBMYSQLPP
 #  include <mysql++.h>

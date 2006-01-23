@@ -1,14 +1,14 @@
-//$Id: Genres.cpp,v 1.4 2005/08/02 01:55:04 markus Rel $
+//$Id: Genres.cpp,v 1.5 2006/01/23 03:15:07 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : libCDMgr
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 13.01.2005
-//COPYRIGHT   : Copyright (C) 2005
+//COPYRIGHT   : Copyright (C) 2005, 2006
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@
 /// languages: Colon-separated list of languages
 //-----------------------------------------------------------------------------
 void Genres::loadFromFile (const char* file, Genres& records, Genres& movies,
-			   const char* languages) {
+			   const char* languages) throw (std::string) {
    Check1 (file); Check1 (languages);
    std::string name (file);
 

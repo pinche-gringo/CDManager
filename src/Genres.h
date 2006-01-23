@@ -1,7 +1,7 @@
 #ifndef GENRES_H
 #define GENRES_H
 
-//$Id: Genres.h,v 1.2 2005/01/29 21:28:52 markus Rel $
+//$Id: Genres.h,v 1.3 2006/01/23 03:15:07 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ class Genres : public std::map<unsigned int, Glib::ustring> {
    virtual ~Genres () { }
 
    static void loadFromFile (const char* file, Genres& records, Genres& movies,
-			     const char* languages);
+			     const char* languages) throw (std::string);
 
  private:
    Genres (const Genres& other);

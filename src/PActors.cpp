@@ -1,11 +1,11 @@
-//$Id: PActors.cpp,v 1.1 2006/01/22 18:34:32 markus Exp $
+//$Id: PActors.cpp,v 1.2 2006/01/23 04:06:00 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actors
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -42,6 +42,7 @@
 #include <XGP/MessageDlg.h>
 
 #include "Genres.h"
+#include "PMovies.h"
 #include "MovieList.h"
 #include "StorageActor.h"
 
@@ -179,7 +180,7 @@ void PActors::relateMovies (const HActor& actor, const std::vector<HMovie>& movi
        == changedRelMovies.end ())
       changedRelMovies.push_back (actor);
 
-      enableSave ();
+   enableSave ();
 }
 
 //-----------------------------------------------------------------------------
@@ -262,19 +263,7 @@ void PActors::getFocus () {
 /// \returns HMovie: Found movie (undefined, if not found)
 //-----------------------------------------------------------------------------
 HMovie PActors::findMovie (unsigned int id) const {
-   for (std::vector<HDirector>::const_iterator d (directors.begin ());
-	d != directors.end (); ++d) {
-      Check3 (d->isDefined ());
-      const std::vector<HMovie>& movies (relMovies->getObjects (*d));
-
-      for (std::vector<HMovie>::const_iterator m (movies.begin ()); m != movies.end (); ++m) {
-	 Check3 (m->isDefined ());
-	 if ((*m)->getId () == id)
-	    return *m;
-	 }
-      }
-   HMovie m;
-   return m;
+   return PMovies::findMovie (directors, *relMovies, id);
 }
 
 //-----------------------------------------------------------------------------
@@ -386,10 +375,10 @@ void PActors::saveData () throw (Glib::ustring) {
    HActor actor;
    try {
       while (changedActors.size ()) {
+	 actor = changedActors.begin ()->first;
 	 Check3 (actor.isDefined ());
 	 Check3 (changedActors.begin ()->second);
 
-	 actor = changedActors.begin ()->first;
 	 StorageActor::saveActor (actor);
 	 changedActors.erase (changedActors.begin ());
       } // endwhile actors changed
@@ -402,11 +391,11 @@ void PActors::saveData () throw (Glib::ustring) {
       throw (msg);
    }
 
-   while (changedRelMovies.size ()) {
-      HActor actor (*changedRelMovies.begin ());
-      Check3 (actor.isDefined ()); Check3 (relActors.isRelated (actor));
+   try {
+      while (changedRelMovies.size ()) {
+	 actor = *changedRelMovies.begin ();
+	 Check3 (actor.isDefined ()); Check3 (relActors.isRelated (actor));
 
-      try {
 	 StorageActor::startTransaction ();
 	 StorageActor::deleteActorMovies (actor->getId ());
 
@@ -414,35 +403,35 @@ void PActors::saveData () throw (Glib::ustring) {
 	      m != relActors.getObjects (actor).end (); ++m)
 	    StorageActor::saveActorMovie (actor->getId (), (*m)->getId ());
 	 StorageActor::commitTransaction ();
-      }
-      catch (std::exception& err) {
-	 StorageActor ::abortTransaction ();
 
-	 Glib::ustring msg (_("Can't write movies for actor `%1'!\n\nReason: %2"));
-	 msg.replace (msg.find ("%1"), 2, actor->getName ());
-	 msg.replace (msg.find ("%2"), 2, err.what ());
-	 throw (msg);
-      }
+	 changedRelMovies.erase (changedRelMovies.begin ());
+      } // end-while
+   }
+   catch (std::exception& err) {
+      StorageActor::abortTransaction ();
 
-      changedRelMovies.erase (changedRelMovies.begin ());
-   } // end-while
+      Glib::ustring msg (_("Can't write movies for actor `%1'!\n\nReason: %2"));
+      msg.replace (msg.find ("%1"), 2, actor->getName ());
+      msg.replace (msg.find ("%2"), 2, err.what ());
+      throw (msg);
+   }
 
-   while (deletedActors.size ()) {
-      HActor actor (*deletedActors.begin ()); Check3 (actor.isDefined ());
-      if (actor->getId ()) {
-	 try {
+   try {
+      while (deletedActors.size ()) {
+	 HActor actor (*deletedActors.begin ()); Check3 (actor.isDefined ());
+	 if (actor->getId ())
 	    StorageActor::deleteActor (actor->getId ());
-	 }
-	 catch (std::exception& err) {
-	    Glib::ustring msg (_("Can't delete actor `%1'!\n\nReason: %2"));
-	    msg.replace (msg.find ("%1"), 2, actor->getName ());
-	    msg.replace (msg.find ("%2"), 2, err.what ());
-	    throw (msg);
-	 }
-      }
-      relDelActors.unrelateAll (actor);
-      deletedActors.erase (deletedActors.begin ());
-   } // endwhile
+
+	 relDelActors.unrelateAll (actor);
+	 deletedActors.erase (deletedActors.begin ());
+      } // endwhile
+   }
+   catch (std::exception& err) {
+      Glib::ustring msg (_("Can't delete actor `%1'!\n\nReason: %2"));
+      msg.replace (msg.find ("%1"), 2, actor->getName ());
+      msg.replace (msg.find ("%2"), 2, err.what ());
+      throw (msg);
+   }
 }
 
 #endif // WITH_ACTORS

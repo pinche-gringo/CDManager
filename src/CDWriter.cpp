@@ -1,11 +1,11 @@
-//$Id: CDWriter.cpp,v 1.17 2006/01/19 21:23:01 markus Exp $
+//$Id: CDWriter.cpp,v 1.18 2006/01/23 03:15:38 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDWriter
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.17 $
+//REVISION    : $Revision: 1.18 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
 //COPYRIGHT   : Copyright (C) 2005, 2006
@@ -214,20 +214,27 @@ int CDWriter::perform (int argc, const char** argv) {
       return - 1;
    }
 
+   Movie::currLang = *argv;
+   Genres movieGenres, recGenres;
+
    try {
       if (!atoi (argv[1]))
 	 throw Glib::ustring (_("Invalid memory-key (0)!"));
       Words::access (atoi (argv[1]));
+
+      Genres::loadFromFile (DATADIR "Genres.dat", recGenres, movieGenres, *argv);
    }
    catch (Glib::ustring& e) {
-      std::cerr << name () << _("-error: Can't access reserved words! ") << e << '\n';
+      std::string msg (_("-error: Can't access reserved words!\n\nReason: %1"));
+      msg.replace (msg.find ("%1"), 2, e);
+      std::cerr << name () << msg << '\n';
       return -2;
    }
-
-   Movie::currLang = *argv;
-
-   Genres movieGenres, recGenres;
-   Genres::loadFromFile (DATADIR "Genres.dat", recGenres, movieGenres, argv[0]);
+   catch (std::string& e) {
+      std::string msg (_("Can't read datafile containing the genres!\n\nReason: %1"));
+      msg.replace (msg.find ("%1"), 2, e);
+      std::cerr << name () << msg << '\n';
+   }
 
    Glib::ustring transTitleMovie (_("Movies (by %1)"));
    Glib::ustring transTitleRecord (_("Records (by %1)"));
@@ -391,7 +398,6 @@ int CDWriter::perform (int argc, const char** argv) {
    writeHeader (argv[0], "[d-n-y-g-m-l]", fileMovie, false);
    writeHeader (argv[0], "[a-n-y-g]", fileRec, false, "Records");
 
-try {
    movieWriter.printStart (fileMovie, "");
    for (std::vector<HDirector>::reverse_iterator i (directors.rbegin ());
 	i != directors.rend (); ++i)
@@ -404,10 +410,6 @@ try {
 	      m != dirMovies.end (); ++m)
 	    movieWriter.writeMovie (*m, *i, fileMovie);
       }
-} catch (Glib::Exception& e) {
-   TRACE1 ("Exception: " << e.what ());
-   return 1;
-}
    movieWriter.printEnd (fileMovie);
    fileMovie << htmlData[1].target;
 

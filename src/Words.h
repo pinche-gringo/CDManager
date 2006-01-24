@@ -1,7 +1,7 @@
 #ifndef WORDS_H
 #define WORDS_H
 
-//$Id: Words.h,v 1.7 2006/01/17 03:25:54 markus Rel $
+//$Id: Words.h,v 1.8 2006/01/24 18:01:44 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -46,12 +46,25 @@ class Words {
    static Glib::ustring removeNames (const Glib::ustring& name);
 
    /// Call a callback for each specified name
+   static void forEachName (unsigned int start, unsigned int end,
+			    void (*cb) (const char*)) {
+      values* shMem (getValues ());
+      for (unsigned int i (start); i < end; ++i)
+	 cb (shMem->values + shMem->aOffsets[i]);
+   }
    template <class T>
    static void forEachName (unsigned int start, unsigned int end, T& obj,
 			    void (T::* cb) (const char*)) {
       values* shMem (getValues ());
       for (unsigned int i (start); i < end; ++i)
 	 (obj.*cb) (shMem->values + shMem->aOffsets[i]);
+   }
+   /// Call a callback for each specified article
+   static void forEachArticle (unsigned int start, unsigned int end,
+			       void (*cb) (const char*)) {
+      values* shMem (getValues ());
+      for (unsigned int i (start); i < end; ++i)
+	 cb (shMem->values + shMem->aOffsets[shMem->maxEntries - shMem->cArticles + i]);
    }
    /// Call a callback for each specified article
    template <class T>

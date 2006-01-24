@@ -1,11 +1,11 @@
-//$Id: Storage.cpp,v 1.1 2006/01/22 18:34:32 markus Exp $
+//$Id: Storage.cpp,v 1.2 2006/01/24 18:02:17 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Storage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 21.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -33,9 +33,88 @@
 #include <YGP/Trace.h>
 
 #include "DB.h"
+#include "Words.h"
 
 #include "Storage.h"
 
+
+//-----------------------------------------------------------------------------
+/// Login to the database with the passed user/password pair
+/// \param db: Name of database
+/// \param user: User to use for the DB
+/// \param pwd: Password of user
+/// \throw std::exception: Occurred error
+//-----------------------------------------------------------------------------
+void Storage::login (const char* db, const char* user, const char* pwd) throw (std::exception) {
+   Database::connect (db, user, pwd);
+}
+
+//-----------------------------------------------------------------------------
+/// Log-out from the database
+//-----------------------------------------------------------------------------
+void Storage::logout () {
+   Database::close ();
+}
+
+//-----------------------------------------------------------------------------
+/// Loads the special words from the database
+//-----------------------------------------------------------------------------
+void Storage::loadSpecialWords () throw (std::exception) {
+   Words::create ();
+
+   Database::execute ("SELECT word FROM Words");
+   while (Database::hasData ()) {
+      // Fill and store artist entry from DB-values
+      Words::addName2Ignore (Database::getResultColumnAsString (0), Words::POS_END);
+      Database::getNextResultRow ();
+   }
+
+   Database::execute ("SELECT article FROM Articles");
+   while (Database::hasData ()) {
+      // Fill and store artist entry from DB-values
+      Words::addArticle (Database::getResultColumnAsString (0), Words::POS_END);
+      Database::getNextResultRow ();
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Stores one name into the database
+/// \param word: Word to store
+/// \throw std::exception: Occurred error
+//-----------------------------------------------------------------------------
+void Storage::storeWord (const char* word) throw (std::exception) {
+   std::string ins ("INSERT INTO Words VALUES ('%1')");
+   ins.replace (ins.find ("%1"), 2, word);
+
+   Database::execute (ins.c_str ());
+}
+
+//-----------------------------------------------------------------------------
+/// Stores one artice into the database
+/// \param article: Article to store
+/// \throw std::exception: Occurred error
+//-----------------------------------------------------------------------------
+void Storage::storeArticle (const char* article) throw (std::exception) {
+   std::string ins ("INSERT INTO Articles VALUES ('%1')");
+   ins.replace (ins.find ("%1"), 2, article);
+
+   Database::execute (ins.c_str ());
+}
+
+//-----------------------------------------------------------------------------
+/// Deletes all names stored in the database
+/// \throw std::exception: Occurred error
+//-----------------------------------------------------------------------------
+void Storage::deleteNames () throw (std::exception) {
+   Database::execute ("DELETE FROM Words");
+}
+
+//-----------------------------------------------------------------------------
+/// Deletes all articles stored in the database
+//-----------------------------------------------------------------------------
+void Storage::deleteArticles () throw (std::exception) {
+   Database::execute ("DELETE FROM Articles");
+}
 
 //-----------------------------------------------------------------------------
 /// Loads the stored celebrities from the database

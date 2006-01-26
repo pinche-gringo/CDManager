@@ -1,11 +1,11 @@
-//$Id: PMovies.cpp,v 1.1 2006/01/23 04:04:52 markus Exp $
+//$Id: PMovies.cpp,v 1.2 2006/01/26 17:51:13 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movies
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -244,9 +244,18 @@ void PMovies::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActi
 
    statusbar.pack_end (*imgLang, Gtk::PACK_SHRINK, 5);
 
-   ui += ("<menuitem action='NDirector'/><menuitem action='NMovie'/>"
-	  "</placeholder></menu><placeholder name='Lang'><menu action='Lang'>");
+   ui += ("<menuitem action='Undo'/>"
+	  "<separator/>"
+	  "<menuitem action='NDirector'/>"
+	  "<menuitem action='NMovie'/>"
+	  "<separator/>"
+	  "<menuitem action='Delete'/>"
+	  "</placeholder></menu>"
+	  "<placeholder name='Lang'><menu action='Lang'>");
 
+   grpAction->add (apMenus[UNDO] = Gtk::Action::create ("Undo", Gtk::Stock::UNDO),
+		   Gtk::AccelKey (_("<ctl>Z")),
+		   mem_fun (*this, &PMovies::undo));
    grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NDirector", Gtk::Stock::NEW,
 							_("New _director")),
 		   Gtk::AccelKey (_("<ctl>N")),
@@ -254,7 +263,9 @@ void PMovies::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActi
    grpAction->add (apMenus[NEW2] = Gtk::Action::create ("NMovie", _("_New movie")),
 		   Gtk::AccelKey (_("<ctl><alt>N")),
 		   mem_fun (*this, &PMovies::newMovie));
-   apMenus[NEW3].clear ();
+   grpAction->add (apMenus[DELETE] = Gtk::Action::create ("Delete", Gtk::Stock::DELETE, _("_Delete")),
+		   Gtk::AccelKey (_("<ctl>Delete")),
+		   mem_fun (*this, &PMovies::deleteSelection));
 
    grpAction->add (Gtk::Action::create ("Lang", _("_Language")));
    addLanguageMenus (ui, grpAction);
@@ -429,6 +440,7 @@ void PMovies::loadData (const std::string& lang) {
 
 //-----------------------------------------------------------------------------
 /// Saves the changed information
+/// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
 void PMovies::saveData () throw (Glib::ustring) {
    HDirector director;
@@ -512,6 +524,71 @@ void PMovies::saveData () throw (Glib::ustring) {
       msg.replace (msg.find ("%2"), 2, err.what ());
       throw (msg);
    }
+}
+
+//-----------------------------------------------------------------------------
+/// Removes the selected movies or directors from the listbox. Depending movies
+/// are deleted too.
+//-----------------------------------------------------------------------------
+void PMovies::deleteSelection () {
+   TRACE9 ("PMovies::deleteSelection ()");
+
+   Glib::RefPtr<Gtk::TreeSelection> selection (movies.get_selection ());
+   while (selection->get_selected_rows ().size ()) {
+      Gtk::TreeSelection::ListHandle_Path list (selection->get_selected_rows ());
+      Check3 (list.size ());
+      Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
+
+      Gtk::TreeIter iter (movies.get_model ()->get_iter (*i)); Check3 (iter);
+      if ((*iter)->parent ())                 // A movie is going to be deleted
+	 deleteMovie (iter);
+      else {                               // A director is going to be deleted
+	 TRACE9 ("PMovies::deleteSelection () - Deleting " << iter->children ().size () << " children");
+	 HDirector director (movies.getDirectorAt (iter)); Check3 (director.isDefined ());
+	 while (iter->children ().size ()) {
+	    Gtk::TreeIter child (iter->children ().begin ());
+	    deleteMovie (child);
+	 }
+	 movies.getModel ()->erase (iter);
+
+	 undoDirectors.push_back (director);
+	 // Though director is already removed from the listbox, it still
+	 // has to be removed from the database
+	 if (director->getId ())
+	    deletedDirectors.push_back (director);
+
+	 std::map<HDirector, HDirector>::iterator iDirector (changedDirectors.find (director));
+	 if (iDirector != changedDirectors.end ())
+	    changedDirectors.erase (iDirector);
+      }
+   }
+   apMenus[UNDO]->set_sensitive ();
+   enableSave ();
+}
+
+//-----------------------------------------------------------------------------
+/// Deletes the passed movie
+/// \param movie: Iterator to movie to delete
+//-----------------------------------------------------------------------------
+void PMovies::deleteMovie (const Gtk::TreeIter& movie) {
+   Check2 (movie->children ().empty ());
+
+   HMovie hMovie (movies.getMovieAt (movie));
+   TRACE9 ("PMovies::deleteMovie (const Gtk::TreeIter&) - Deleting movie "
+	   << hMovie->getName ());
+   Check3 (relMovies.isRelated (hMovie));
+   HDirector hDirector (relMovies.getParent (hMovie)); Check3 (hDirector.isDefined ());
+
+   undoMovies.push_back (hMovie);
+   deletedMovies[hMovie] = hDirector;
+   relMovies.unrelate (hDirector, hMovie);
+
+   std::map<HMovie, HMovie>::iterator iMovie (changedMovies.find (hMovie));
+   if (iMovie != changedMovies.end ())
+      changedMovies.erase (changedMovies.find (hMovie));
+
+   Glib::RefPtr<Gtk::TreeStore> model (movies.getModel ());
+   model->erase (movie);
 }
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef PMOVIES_H
 #define PMOVIES_H
 
-//$Id: PMovies.h,v 1.1 2006/01/23 04:04:52 markus Exp $
+//$Id: PMovies.h,v 1.2 2006/01/26 17:51:13 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ class MovieList;
 class LanguageImg;
 
 
-/**Class handling the actor notebook-page
+/**Class handling the movies notebook-page
  */
 class PMovies : public NBPage {
  public:
@@ -81,6 +81,7 @@ class PMovies : public NBPage {
 
    void newDirector ();
    void newMovie ();
+   void deleteMovie (const Gtk::TreeIter& movie);
 
    void movieSelected ();
    HMovie findMovie (unsigned int id) const {

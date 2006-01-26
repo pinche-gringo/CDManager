@@ -1,11 +1,11 @@
-//$Id: PRecords.cpp,v 1.1 2006/01/26 17:00:21 markus Exp $
+//$Id: PRecords.cpp,v 1.2 2006/01/26 17:50:38 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Records
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -505,4 +505,122 @@ void PRecords::saveData () throw (Glib::ustring) {
       throw (msg);
    }
 }
+
+//-----------------------------------------------------------------------------
+/// Removes the selected movies or directors from the listbox. Depending movies
+/// are deleted too.
+//-----------------------------------------------------------------------------
+void PRecords::deleteSelection () {
+   if (records.has_focus ())
+      deleteSelectedRecords ();
+   else if (songs.has_focus ())
+      deleteSelectedSongs ();
+}
+
+//-----------------------------------------------------------------------------
+/// Removes the selected records or artists from the listbox. Depending objects
+/// (records or songs) are deleted too.
+//-----------------------------------------------------------------------------
+void PRecords::deleteSelectedRecords () {
+   TRACE9 ("PRecords::deleteSelectedRecords ()");
+
+   Glib::RefPtr<Gtk::TreeSelection> selection (records.get_selection ());
+   while (selection->get_selected_rows ().size ()) {
+      Gtk::TreeSelection::ListHandle_Path list (selection->get_selected_rows ());
+      Check3 (list.size ());
+      Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
+
+      Gtk::TreeIter iter (records.get_model ()->get_iter (*i)); Check3 (iter);
+      if ((*iter)->parent ())                // A record is going to be deleted
+	 deleteRecord (iter);
+      else {                             // An interpret is going to be deleted
+	 TRACE9 ("PRecords::deleteSelectedRecords () - Deleting " <<
+		 iter->children ().size () << " children");
+	 HInterpret interpret (records.getInterpretAt (iter)); Check3 (interpret.isDefined ());
+	 while (iter->children ().size ()) {
+	    Gtk::TreeIter child (iter->children ().begin ());
+	    HRecord hRecord (records.getRecordAt (child));
+	    if (!hRecord->areSongsLoaded () && hRecord->getId ())
+	       loadSongs (hRecord);
+	    deleteRecord (child);
+	 }
+	 undoInterprets.push_back (interpret);
+	 records.getModel ()->erase (iter);
+	 if (interpret->getId ())
+	    deletedInterprets.push_back (interpret);
+
+	 std::map<HInterpret, HInterpret>::iterator iInterpret (changedInterprets.find (interpret));
+	 if (iInterpret != changedInterprets.end ())
+	    changedInterprets.erase (iInterpret);
+      }
+   }
+   apMenus[UNDO]->set_sensitive ();
+   enableSave ();
+}
+
+//-----------------------------------------------------------------------------
+/// Deletes the passed record
+/// \param record: Iterator to record to delete
+//-----------------------------------------------------------------------------
+void PRecords::deleteRecord (const Gtk::TreeIter& record) {
+   Check2 (record->children ().empty ());
+
+   HRecord hRec (records.getRecordAt (record));
+   TRACE9 ("PRecords::deleteRecord (const Gtk::TreeIter&) - Deleting record "
+	   << hRec->getName ());
+   Check3 (relRecords.isRelated (hRec));
+   HInterpret hInterpret (relRecords.getParent (hRec)); Check3 (hInterpret.isDefined ());
+
+   // Remove related songs
+   TRACE3 ("PRecords::deleteRecord (const Gtk::TreeIter&) - Remove Songs");
+   while (relSongs.isRelated (hRec)) {
+      std::vector<HSong>::iterator s (relSongs.getObjects (hRec).begin ());
+      undoSongs.push_back (*s);
+      deletedSongs[*s] = hRec;
+      relSongs.unrelate (hRec, *s);
+   }
+   undoRecords.push_back (hRec);
+   deletedRecords[hRec] = hInterpret;
+   relRecords.unrelate (hInterpret, hRec);
+
+   std::map<HRecord, HRecord>::iterator iRec (changedRecords.find (hRec));
+   if (iRec != changedRecords.end ())
+      changedRecords.erase (iRec);
+
+   // Delete interpret from listbox if it doesn't have any records
+   Glib::RefPtr<Gtk::TreeStore> model (records.getModel ());
+   model->erase (record);
+}
+
+//-----------------------------------------------------------------------------
+/// Removes the selected songs from the listbox.
+//-----------------------------------------------------------------------------
+void PRecords::deleteSelectedSongs () {
+   TRACE9 ("PRecords::deleteSelectedSongs ()");
+
+   Glib::RefPtr<Gtk::TreeSelection> selection (songs.get_selection ());
+   while (selection->get_selected_rows ().size ()) {
+      Gtk::TreeSelection::ListHandle_Path list (selection->get_selected_rows ());
+      Check3 (list.size ());
+      Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
+
+      Gtk::TreeIter iter (songs.get_model ()->get_iter (*i)); Check3 (iter);
+      HSong song (songs.getEntryAt (iter)); Check3 (song.isDefined ());
+      Check3 (relSongs.isRelated (song));
+      HRecord record (relSongs.getParent (song));
+
+      undoSongs.push_back (song);
+      deletedSongs[song] = record;
+      relSongs.unrelate (record, song);
+
+      std::map<HSong, HSong>::iterator iSong (changedSongs.find (song));
+      if (iSong != changedSongs.end ())
+	 changedSongs.erase (iSong);
+      songs.getModel ()->erase (iter);
+   }
+
+   apMenus[UNDO]->set_sensitive ();
+   enableSave ();
+}
+
 #endif

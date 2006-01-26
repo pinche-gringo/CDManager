@@ -1,7 +1,7 @@
 #ifndef PRECORDS_H
 #define PRECORDS_H
 
-//$Id: PRecords.h,v 1.1 2006/01/26 17:00:21 markus Exp $
+//$Id: PRecords.h,v 1.2 2006/01/26 17:50:38 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -101,6 +101,7 @@ class PRecords : public NBPage {
    std::map<HRecord, HRecord>       changedRecords;
    std::map<HInterpret, HInterpret> changedInterprets;
 
+   std::vector<HSong>      undoSongs;
    std::vector<HRecord>    undoRecords;
    std::vector<HInterpret> undoInterprets;
 };

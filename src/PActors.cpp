@@ -1,11 +1,11 @@
-//$Id: PActors.cpp,v 1.2 2006/01/23 04:06:00 markus Exp $
+//$Id: PActors.cpp,v 1.3 2006/01/26 17:52:53 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actors
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -272,8 +272,17 @@ HMovie PActors::findMovie (unsigned int id) const {
 /// \param grpActions: Added actions
 //-----------------------------------------------------------------------------
 void PActors::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAction) {
-   ui += "<menuitem action='NActor'/><menuitem action='AddMovie'/></placeholder></menu>";
+   ui += ("<menuitem action='Undo'/>"
+	  "<separator/>"
+	  "<menuitem action='NActor'/>"
+	  "<menuitem action='AddMovie'/>"
+	  "<separator/>"
+	  "<menuitem action='Delete'/>"
+	  "</placeholder></menu>");
 
+   grpAction->add (apMenus[UNDO] = Gtk::Action::create ("Undo", Gtk::Stock::UNDO),
+		   Gtk::AccelKey (_("<ctl>Z")),
+		   mem_fun (*this, &PActors::undo));
    grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NActor", Gtk::Stock::NEW,
 							_("New _actor")),
 		   Gtk::AccelKey (_("<ctl>N")),
@@ -281,6 +290,9 @@ void PActors::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActi
    grpAction->add (apMenus[NEW2] = Gtk::Action::create ("AddMovie", _("_Plays in movie...")),
 		   Gtk::AccelKey (_("<ctl><alt>N")),
 		   mem_fun (*this, &PActors::actorPlaysInMovie));
+   grpAction->add (apMenus[DELETE] = Gtk::Action::create ("Delete", Gtk::Stock::DELETE, _("_Delete")),
+		   Gtk::AccelKey (_("<ctl>Delete")),
+		   mem_fun (*this, &PActors::deleteSelection));
 
    actorSelected ();
 }
@@ -370,6 +382,7 @@ void PActors::clear () {
 
 //-----------------------------------------------------------------------------
 /// Saves the changed information
+/// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
 void PActors::saveData () throw (Glib::ustring) {
    HActor actor;

@@ -1,7 +1,7 @@
 #ifndef RECORD_H
 #define RECORD_H
 
-//$Id: Record.h,v 1.12 2005/10/04 16:21:07 markus Rel $
+//$Id: Record.h,v 1.13 2006/01/26 23:09:50 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -50,8 +50,8 @@ class Record : public YGP::Entity {
    void setYear     (const std::string& value) { year = value; }
    void setGenre    (const unsigned int value) { genre = value; }
 
-   bool areSongsLoaded () const { return songsLoaded; }
-   void setSongsLoaded () { songsLoaded = true; }
+   bool needsLoading () const { return loadSongs; }
+   void setSongsLoaded () { loadSongs = false; }
 
    static Glib::ustring removeIgnored (const Glib::ustring& name);
    static bool compByName (const HRecord& a, const HRecord& b);
@@ -63,7 +63,7 @@ class Record : public YGP::Entity {
    Glib::ustring     name;           // %attrib%; Name
    YGP::AYear        year;           // %attrib%; Made
    unsigned int      genre;          // %attrib%; Genre; 0
-   bool              songsLoaded;    // %attrib%; ; false
+   bool              loadSongs;      // %attrib%; ; true
 };
 
 #endif

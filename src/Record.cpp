@@ -1,14 +1,14 @@
-//$Id: Record.cpp,v 1.6 2005/10/04 22:49:24 markus Rel $
+//$Id: Record.cpp,v 1.7 2006/01/26 23:09:50 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Record
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 29.11.2004
-//COPYRIGHT   : Copyright (C) 2004, 2005
+//COPYRIGHT   : Copyright (C) 2004 - 2006
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@
 //-----------------------------------------------------------------------------
 Record::Record (const Record& other)
    : id (other.id), name (other.name),
-     year (other.year), genre (other.genre), songsLoaded (other.songsLoaded) {
+     year (other.year), genre (other.genre), loadSongs (other.loadSongs) {
  }
 
 
@@ -60,7 +60,7 @@ Record& Record::operator= (const Record& other) {
       name = other.name;
       year = other.year;
       genre = other.genre;
-      songsLoaded = other.songsLoaded;
+      loadSongs = other.loadSongs;
    }
    return *this;
 }

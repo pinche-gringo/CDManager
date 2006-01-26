@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.64 2006/01/19 01:13:28 markus Exp $
+//$Id: CDManager.cpp,v 1.65 2006/01/26 21:16:08 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.64 $
+//REVISION    : $Revision: 1.65 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -27,8 +27,12 @@
 #include <cdmgr-cfg.h>
 
 #include <cstring>
-
+#include <cstdlib>
+#include <clocale>
 #include <unistd.h>
+
+#include <fstream>
+#include <sstream>
 
 #include <gdkmm/pixbuf.h>
 
@@ -36,61 +40,40 @@
 #include <gtkmm/stock.h>
 #include <gtkmm/label.h>
 #include <gtkmm/button.h>
-#include <gtkmm/radioaction.h>
 #include <gtkmm/scrolledwindow.h>
 
+// TRACELEVEL 9 shows password
+#include <YGP/File.h>
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
+#include <YGP/INIFile.h>
 
 #include <XGP/XAbout.h>
 #include <XGP/XFileDlg.h>
 #include <XGP/LoginDlg.h>
 
+#include "Words.h"
 #include "CDAppl.h"
 #include "LangDlg.h"
+#include "Storage.h"
 #include "Settings.h"
 #include "Language.h"
-#include "RelateMovie.h"
+
+#if WITH_ACTORS == 1
+#  include "PActors.h"
+#endif
+#if WITH_MOVIES == 1
+#  include <YGP/Tokenize.h>
+#  include "PMovies.h"
+#endif
+#if WITH_RECORDS == 1
+#  include <YGP/Process.h>
+#  include <YGP/Tokenize.h>
+#  include "PRecords.h"
+#endif
 
 #include "CDManager.h"
 
-
-// Defines
-
-// Macro to define a callback to handle changing an entity (record, movie, ...)
-#define storeObject(store, type, obj) \
-   if (store.find (obj) == store.end ()) {\
-      store[obj] = new type (*obj);\
-      apMenus[SAVE]->set_sensitive ();\
-   }\
-   else\
-      undoEntities.erase (std::find (undoEntities.begin (), undoEntities.end (), obj));\
-   apMenus[UNDO]->set_sensitive ();
-
-// Macro to define a callback to handle changing an entity (record, movie, ...)
-#define defineChangeEntity(type, entity, store) \
-void CDManager::entity##Changed (const HEntity& entity) {\
-   H##type obj (H##type::cast (entity));\
-   TRACE9 ("CDManager::" #entity "Changed (const HEntity&) - "\
-	   << (obj.isDefined () ? obj->getId () : -1UL) << '/'\
-	   << (obj.isDefined () ? obj->getName ().c_str () : "Undefined"));\
-   Check1 (obj.isDefined ());\
-\
-   storeObject (store, type, obj);\
-   undoEntities.push_back (entity);\
-}
-
-// Macro to define a callback to handle changing an entity (record, movie, ...)
-#define defineChangeObject(type, entity, store) \
-void CDManager::entity##Changed (const H##type& entity) {\
-   TRACE9 ("CDManager::" #entity "Changed (const H" #type "&) - "\
-	   << (entity.isDefined () ? entity->getId () : -1UL) << '/'\
-	   << (entity.isDefined () ? entity->getName ().c_str () : "Undefined"));\
-   Check1 (entity.isDefined ());\
-\
-   storeObject (store, type, entity);\
-   undoEntities.push_back (HEntity::cast (entity));\
-}
 
 const unsigned int CDManager::WIDTH (800);
 const unsigned int CDManager::HEIGHT (600);
@@ -275,10 +258,7 @@ const char* CDManager::xpmAuthor[] = {
 /// \param pwd: Password for DB
 //-----------------------------------------------------------------------------
 CDManager::CDManager (Options& options)
-   : XApplication (PACKAGE " V" PRG_RELEASE), relMovies ("movies"),
-     relActors ("actors"), relDelActors ("delActors"), relRecords ("records"),
-     relSongs ("songs"), records (recGenres), songs (recGenres),
-     movies (movieGenres), actors (movieGenres), loadedPages (-1U),
+   : XApplication (PACKAGE " V" PRG_RELEASE),
      opt (options) {
    TRACE9 ("CDManager::CDManager (Options&)");
 
@@ -293,18 +273,18 @@ CDManager::CDManager (Options& options)
 		     "    <menuitem action='Login'/>"
 		     "    <menuitem action='SaveDB'/>"
 		     "    <menuitem action='Logout'/>"
+#if (WITH_RECORDS == 1) || (WITH_MOVIES == 1)
 		     "    <separator/>"
 		     "    <menuitem action='Export'/>"
+#endif
+#if WITH_RECORDS == 1
 		     "    <menuitem action='Import'/>"
+#endif
 		     "    <separator/>"
 		     "    <menuitem action='FQuit'/>"
 		     "  </menu>"
 		     "  <menu action='Edit'>"
-		     "    <menuitem action='Undo'/>"
-		     "    <separator/>"
 		     "    <placeholder name='EditAction'/>"
-		     "    <separator/>"
-		     "    <menuitem action='Delete'/>"
 		     "  </menu>"
 		     "  <placeholder name='Lang'/>"
 		     "  <menu action='Options'>"
@@ -321,21 +301,19 @@ CDManager::CDManager (Options& options)
    grpAction->add (apMenus[LOGOUT] = Gtk::Action::create ("Logout", _("Log_out")),
 		   Gtk::AccelKey (_("<ctl>O")),
 		   mem_fun (*this, &CDManager::logout));
+#if (WITH_RECORDS == 1) || (WITH_MOVIES == 1)
    grpAction->add (apMenus[EXPORT] = Gtk::Action::create ("Export", _("_Export to HTML")),
 		   Gtk::AccelKey (_("<ctl>E")),
-		   mem_fun (*this, &CDManager::exportToHTML));
+		   mem_fun (*this, &CDManager::export2HTML));
+#endif
+#if (WITH_RECORDS == 1)
    grpAction->add (apMenus[IMPORT_MP3] = Gtk::Action::create ("Import", _("_Import from file-info ...")),
 		   Gtk::AccelKey (_("<ctl>I")),
 		   mem_fun (*this, &CDManager::importFromFileInfo));
+#endif
    grpAction->add (Gtk::Action::create ("FQuit", Gtk::Stock::QUIT),
 		   mem_fun (*this, &CDManager::exit));
    grpAction->add (apMenus[MEDIT] = Gtk::Action::create ("Edit", _("_Edit")));
-   grpAction->add (apMenus[UNDO] = Gtk::Action::create ("Undo", Gtk::Stock::UNDO),
-		   Gtk::AccelKey (_("<ctl>Z")),
-		   mem_fun (*this, &CDManager::undo));
-   grpAction->add (apMenus[DELETE] = Gtk::Action::create ("Delete", Gtk::Stock::DELETE, _("_Delete")),
-		   Gtk::AccelKey (_("<ctl>Delete")),
-		   mem_fun (*this, &CDManager::deleteSelection));
    grpAction->add (Gtk::Action::create ("Options", _("_Options")));
    grpAction->add (Gtk::Action::create ("Prefs", Gtk::Stock::PREFERENCES),
 		   Gtk::AccelKey (_("F9")),
@@ -359,57 +337,25 @@ CDManager::CDManager (Options& options)
    getClient ()->pack_start (nb, Gtk::PACK_EXPAND_WIDGET);
    getClient ()->pack_end (status, Gtk::PACK_SHRINK);
 
-   Gtk::ScrolledWindow* scrlRecords (new Gtk::ScrolledWindow);
-   Gtk::ScrolledWindow* scrlSongs (new Gtk::ScrolledWindow);
-   Gtk::ScrolledWindow* scrlMovies (new Gtk::ScrolledWindow);
-   Gtk::ScrolledWindow* scrlActors (new Gtk::ScrolledWindow);
-
-   scrlRecords->set_shadow_type (Gtk::SHADOW_ETCHED_IN);
-   scrlSongs->set_shadow_type (Gtk::SHADOW_ETCHED_IN);
-   scrlMovies->set_shadow_type (Gtk::SHADOW_ETCHED_IN);
-   scrlActors->set_shadow_type (Gtk::SHADOW_ETCHED_IN);
-   scrlRecords->add (records);
-   scrlSongs->add (songs);
-   scrlMovies->add (movies);
-   scrlActors->add (actors);
-   scrlRecords->set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-   scrlSongs->set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-   scrlMovies->set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-   scrlActors->set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-
    TRACE9 ("CDManager::CDManager (Options&) - Add NB");
-   Gtk::HPaned* cds (new Gtk::HPaned);
+#if WITH_RECORDS == 1
+   NBPage* pgRecords = (new PRecords (status, apMenus[SAVE], recGenres));
+   pages[0] = pgRecords;
+   nb.append_page (*manage (pgRecords->getWindow ()), _("_Records"), true);
+#endif
 
-   nb.append_page (*manage (cds), _("_Records"), true);
-   nb.append_page (*manage (scrlMovies), _("_Movies"), true);
-   nb.append_page (*manage (scrlActors), _("_Actors"), true);
+#if WITH_MOVIES == 1
+   PMovies* pgMovies = (new PMovies (status, apMenus[SAVE], movieGenres));
+   pages[WITH_RECORDS] = pgMovies;
+   nb.append_page (*manage (pgMovies->getWindow ()), _("_Movies"), true);
+#endif
+
+#if WITH_ACTORS == 1
+   NBPage* pgActor = (new PActors (status, apMenus[SAVE], movieGenres, *pgMovies));
+   pages[WITH_RECORDS + WITH_MOVIES] = pgActor;
+   nb.append_page (*manage (pgActor->getWindow ()), _("_Actors"), true);
+#endif
    nb.signal_switch_page ().connect (mem_fun (*this, &CDManager::pageSwitched));
-
-   songs.get_selection ()->set_mode (Gtk::SELECTION_EXTENDED);
-   songs.signalChanged.connect (mem_fun (*this, &CDManager::songChanged));
-   records.signalOwnerChanged.connect (mem_fun (*this, &CDManager::artistChanged));
-   records.signalObjectChanged.connect (mem_fun (*this, &CDManager::recordChanged));
-   records.signalObjectGenreChanged.connect
-      (mem_fun (*this, &CDManager::recordGenreChanged));
-
-   movies.signalOwnerChanged.connect (mem_fun (*this, &CDManager::directorChanged));
-   movies.signalObjectChanged.connect (mem_fun (*this, &CDManager::movieChanged));
-   movies.signalNameChanged.connect (mem_fun (*this, &CDManager::movieNameChanged));
-
-   Glib::RefPtr<Gtk::TreeSelection> sel (records.get_selection ());
-   sel->set_mode (Gtk::SELECTION_EXTENDED);
-   sel->signal_changed ().connect (mem_fun (*this, &CDManager::recordSelected));
-
-   sel = movies.get_selection ();
-   sel->signal_changed ().connect (mem_fun (*this, &CDManager::movieSelected));
-
-   sel = actors.get_selection ();
-   sel->signal_changed ().connect (mem_fun (*this, &CDManager::actorSelected));
-   actors.signalOwnerChanged.connect (mem_fun (*this, &CDManager::actorChanged));
-
-   cds->set_position ((WIDTH - 20) >> 1);
-   cds->add1 (*manage (scrlRecords));
-   cds->add2 (*manage (scrlSongs));
 
    status.push (_("Connect to a database ..."));
 
@@ -417,12 +363,29 @@ CDManager::CDManager (Options& options)
 
    TRACE9 ("CDManager::CDManager (Options&) - Show");
    show_all_children ();
-   show ();
 
-   if (opt.getUser ().size ())
-      login (opt.getUser (), opt.getPassword ());
-   else
-      showLogin ();
+   try {
+      const char* pLang (getenv ("LANGUAGE"));
+      if (!pLang) {
+#ifdef HAVE_LC_MESSAGES
+	 pLang = setlocale (LC_MESSAGES, NULL);
+#else
+	 pLang = getenv ("LANG");
+#endif
+      }
+      Genres::loadFromFile (DATADIR "Genres.dat", recGenres, movieGenres, pLang);
+
+      if (opt.getUser ().size ())
+	 login (opt.getUser (), opt.getPassword ());
+      else
+	 showLogin ();
+   }
+   catch (std::string& e) {
+      Glib::ustring msg (_("Can't read datafile containing the genres!\n\nReason: %1"));
+      msg.replace (msg.find ("%1"), 2, e);
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
 }
 
 //-----------------------------------------------------------------------------
@@ -436,12 +399,10 @@ CDManager::~CDManager () {
 /// Saves the DB
 //-----------------------------------------------------------------------------
 void CDManager::save () {
-   writeChangedEntries ();
-   removeDeletedEntries ();
+   for (unsigned int i (0); i < (sizeof (pages) / sizeof (*pages)); ++i)
+      pages[i]->saveData ();
 
-   undoEntities.erase (undoEntities.begin (), undoEntities.end ());
    apMenus[SAVE]->set_sensitive (false);
-   apMenus[UNDO]->set_sensitive (false);
 }
 
 //-----------------------------------------------------------------------------
@@ -463,140 +424,10 @@ void CDManager::editPreferences () {
 }
 
 //-----------------------------------------------------------------------------
-/// Adds a new interpret to the list
-//-----------------------------------------------------------------------------
-void CDManager::newInterpret () {
-   HInterpret artist;
-   artist.define ();
-   addArtist (artist);
-}
-
-//-----------------------------------------------------------------------------
-/// Adds a new actor to the list
-//-----------------------------------------------------------------------------
-void CDManager::newActor () {
-   HActor actor;
-   actor.define ();
-   addActor (actor);
-}
-
-//-----------------------------------------------------------------------------
-/// Displays a dialog enabling to connect movies and actors
-//-----------------------------------------------------------------------------
-void CDManager::actorPlaysInMovie () {
-   TRACE9 ("CDManager::actorPlaysInMovie ()");
-   Check3 (actors.get_selection ());
-   Gtk::TreeIter p (actors.get_selection ()->get_selected ()); Check3 (p);
-   Check3 (!(*p)->parent ());
-
-   HActor actor (actors.getActorAt (p)); Check3 (actor.isDefined ());
-   TRACE9 ("void CDManager::actorPlaysInMovie () - Founding actor " << actor->getName ());
-
-   RelateMovie* dlg (relActors.isRelated (actor)
-		     ? RelateMovie::create (actor, relActors.getObjects (actor), movies.getModel ())
-		     : RelateMovie::create (actor, movies.getModel ()));
-   dlg->get_window ()->set_transient_for (get_window ());
-   dlg->signalRelateMovies.connect (mem_fun (*this, &CDManager::relateMovies));
-}
-
-//-----------------------------------------------------------------------------
-/// Relates movies with an actor
-/// \param actor: Actor, to which store movies
-/// \param movies: Movies, starring this actor
-//-----------------------------------------------------------------------------
-void CDManager::relateMovies (const HActor& actor, const std::vector<HMovie>& movies) {
-   TRACE9 ("CDManager::relateMovies (const HActor&, const std::vector<HMovie>&)");
-   Check2 (actor.isDefined ());
-   if (!relActors.isRelated (actor))
-      relActors.relate (actor, *movies.begin ());
-   relActors.getObjects (actor) = movies;
-
-   Gtk::TreeIter i (actors.getOwner (actor)); Check3 (i);
-   while (i->children ().size ())
-      actors.getModel ()->erase (i->children ().begin ());
-
-   for (std::vector<HMovie>::iterator m (relActors.getObjects (actor).begin ());
-	m != relActors.getObjects (actor).end (); ++m)
-      actors.append (*m, *i);
-
-   if (std::find (changedRelMovies.begin (), changedRelMovies.end (), actor)
-       == changedRelMovies.end ())
-      changedRelMovies.push_back (actor);
-
-   apMenus[SAVE]->set_sensitive (true);
-}
-
-//-----------------------------------------------------------------------------
-/// Adds a new record to the first selected interpret
-//-----------------------------------------------------------------------------
-void CDManager::newRecord () {
-   Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
-   Gtk::TreeSelection::ListHandle_Path list (recordSel->get_selected_rows ());
-   Check3 (list.size ());
-   Glib::RefPtr<Gtk::TreeStore> model (records.getModel ());
-   Gtk::TreeIter p (model->get_iter (*list.begin ())); Check3 (p);
-   if ((*p)->parent ())
-      p = ((*p)->parent ());
-
-   HRecord record;
-   record.define ();
-   record->setSongsLoaded ();
-   addRecord (p, record);
-}
-
-//-----------------------------------------------------------------------------
-/// Adds a new song to the first selected record
-//-----------------------------------------------------------------------------
-void CDManager::newSong () {
-   HSong song;
-   song.define ();
-   addSong (song);
-}
-
-//-----------------------------------------------------------------------------
-/// Adds a new direcotor to the list
-//-----------------------------------------------------------------------------
-void CDManager::newDirector () {
-   TRACE5 ("void CDManager::newDirector ()");
-   HDirector director;
-   director.define ();
-   directors.push_back (director);
-
-   Gtk::TreeModel::iterator i (movies.append (director));
-   movies.selectRow (i);
-   directorChanged (director);
-}
-
-//-----------------------------------------------------------------------------
-/// Adds a new movie to the first selected director
-//-----------------------------------------------------------------------------
-void CDManager::newMovie () {
-   TRACE5 ("void CDManager::newMovie ()");
-
-   Glib::RefPtr<Gtk::TreeSelection> movieSel (movies.get_selection ()); Check3 (movieSel);
-   Gtk::TreeIter p (movieSel->get_selected ()); Check3 (p);
-   if ((*p)->parent ())
-      p = ((*p)->parent ());
-   TRACE9 ("void CDManager::newMovie () - Founding director " << movies.getDirectorAt (p)->getName ());
-
-   HMovie movie;
-   movie.define ();
-   Gtk::TreeIter i (movies.append (movie, *p));
-   movies.expand_row (movies.getModel ()->get_path (p), false);
-   movies.selectRow (i);
-
-   HDirector director;
-   director = movies.getDirectorAt (p);
-   relMovies.relate (director, movie);
-
-   movieChanged (HEntity::cast (movie));
-}
-
-//-----------------------------------------------------------------------------
 /// Shows the about box for the program
 //-----------------------------------------------------------------------------
 void CDManager::showAboutbox () {
-   std::string ver (_("Copyright (C) 2004, 2005 Markus Schwab"
+   std::string ver (_("Copyright (C) 2004 - 2006 Markus Schwab"
                       "\ne-mail: <g17m0@lycos.com>\n\nCompiled on %1 at %2"));
    ver.replace (ver.find ("%1"), 2, __DATE__);
    ver.replace (ver.find ("%2"), 2, __TIME__);
@@ -619,6 +450,7 @@ const char* CDManager::getHelpfile () {
 /// Displays a dialog to login to the database
 //-----------------------------------------------------------------------------
 void CDManager::showLogin () {
+   TRACE9 ("CDManager::showLogin ()");
    XGP::LoginDialog* dlg (XGP::LoginDialog::create (_("Database login")));
    dlg->get_window ()->set_transient_for (get_window ());
    dlg->sigLogin.connect (mem_fun (*this, &CDManager::login));
@@ -637,7 +469,9 @@ void CDManager::showLogin () {
 void CDManager::enableMenus (bool enable) {
    apMenus[LOGOUT]->set_sensitive (enable);
    apMenus[MEDIT]->set_sensitive (enable);
+#if (WITH_RECORDS == 1) || (WITH_MOVIES == 1)
    apMenus[EXPORT]->set_sensitive (enable);
+#endif
    apMenus[IMPORT_MP3]->set_sensitive (enable);
    apMenus[SAVE_PREFS]->set_sensitive (enable);
 
@@ -645,23 +479,6 @@ void CDManager::enableMenus (bool enable) {
 
    apMenus[LOGIN]->set_sensitive (enable = !enable);
    apMenus[SAVE]->set_sensitive (false);
-
-   apMenus[UNDO]->set_sensitive (enable ? undoEntities.size () : false);
-}
-
-//-----------------------------------------------------------------------------
-/// Enables or disables the edit-menus entries according to the selection
-/// \param enable: Flag, if menus should be enabled
-//-----------------------------------------------------------------------------
-void CDManager::enableEdit (SELECTED selected) {
-   TRACE9 ("CDManager::enableEdit (SELECTED) - " << selected);
-   Check2 (apMenus[NEW1]); Check2 (apMenus[NEW2]);
-
-   apMenus[DELETE]->set_sensitive (selected != NONE_SELECTED);
-   apMenus[NEW1]->set_sensitive (true);
-   apMenus[NEW2]->set_sensitive (selected > NONE_SELECTED);
-   if (apMenus[NEW3])
-      apMenus[NEW3]->set_sensitive (selected == OBJECT_SELECTED);
 }
 
 //-----------------------------------------------------------------------------
@@ -671,216 +488,15 @@ void CDManager::enableEdit (SELECTED selected) {
 /// are created.
 //-----------------------------------------------------------------------------
 void CDManager::loadDatabase () {
-   TRACE9 ("CDManager::loadDatabase ()");
-   status.pop ();
-   status.push (_("Reading database ..."));
+   TRACE9 ("CDManager::loadDatabase () - " << nb.get_current_page ());
+   // Check if page is valid (at init the current page can be -1)
+   if (nb.get_current_page () < (int)(sizeof (pages) / sizeof (*pages))) {
+      status.pop ();
+      status.push (_("Reading database ..."));
 
-   switch (nb.get_current_page ()) {
-   case 1:
-      loadMovies ();
-      movies.grab_focus ();
-      break;
-
-   case 0:
-      loadRecords ();
-      records.grab_focus ();
-      break;
-
-   case 2:
-      if (!(loadedPages & 2))
-	 loadMovies ();
-      loadActors ();
-      actors.grab_focus ();
-      break;
-
-   default:
-      Check1 (0);
-   } // end-switch
-}
-
-//-----------------------------------------------------------------------------
-/// Callback after selecting a record
-/// \param row: Selected row
-//-----------------------------------------------------------------------------
-void CDManager::recordSelected () {
-   TRACE9 ("CDManager::recordSelected ()");
-   songs.clear ();
-   Check3 (records.get_selection ());
-   Gtk::TreeSelection::ListHandle_Path list
-      (records.get_selection ()->get_selected_rows ());
-   TRACE9 ("CDManager::recordSelected () - Size: " << list.size ());
-   if (list.size ()) {
-      Gtk::TreeIter i (records.get_model ()->get_iter (*list.begin ())); Check3 (i);
-
-      if ((*i)->parent ()) {
-	 HRecord hRecord (records.getRecordAt (i)); Check3 (hRecord.isDefined ());
-	 if (!hRecord->areSongsLoaded () && hRecord->getId ())
-	    loadSongs (hRecord);
-
-	 // Add related songs to the listbox
-	 if (relSongs.isRelated (hRecord))
-	    for (std::vector<HSong>::iterator i (relSongs.getObjects (hRecord).begin ());
-		 i != relSongs.getObjects (hRecord).end (); ++i)
-	       songs.append (*i);
-
-	 enableEdit (OBJECT_SELECTED);
-      }
-      else
-	 enableEdit (OWNER_SELECTED);
-   }
-   else
-      enableEdit (NONE_SELECTED);
-}
-
-//-----------------------------------------------------------------------------
-/// Callback after selecting a movie
-/// \param row: Selected row
-//-----------------------------------------------------------------------------
-void CDManager::movieSelected () {
-   TRACE9 ("CDManager::movieSelected ()");
-   Check3 (movies.get_selection ());
-
-   Gtk::TreeIter s (movies.get_selection ()->get_selected ());
-   enableEdit (s ? OWNER_SELECTED : NONE_SELECTED);
-}
-
-//-----------------------------------------------------------------------------
-/// Callback after selecting an actor
-/// \param row: Selected row
-//-----------------------------------------------------------------------------
-void CDManager::actorSelected () {
-   TRACE9 ("CDManager::actorSelected ()");
-   Check3 (actors.get_selection ());
-
-   Gtk::TreeIter s (actors.get_selection ()->get_selected ());
-   enableEdit (s ? OWNER_SELECTED : NONE_SELECTED);
-}
-
-//-----------------------------------------------------------------------------
-// void CDManager::songChanged (const HSong& song)
-/// Callback when a song is being changed
-/// \param song: Handle to changed song
-//-----------------------------------------------------------------------------
-defineChangeObject(Song, song, changedSongs)
-
-//-----------------------------------------------------------------------------
-// void CDManager::artistChanged (const HInterpret& artist)
-/// Callback when changing an artist
-/// \param entity: Handle to changed artist
-//-----------------------------------------------------------------------------
-defineChangeObject(Interpret, artist, changedInterprets)
-
-//-----------------------------------------------------------------------------
-// void CDManager::actorChanged (const HActor& actor)
-/// Callback when changing an actor
-/// \param entity: Handle to changed actor
-//-----------------------------------------------------------------------------
-defineChangeObject(Actor, actor, changedActors)
-
-//-----------------------------------------------------------------------------
-// void CDManager::recordChanged (const HRecord& record)
-/// Callback when changing a record
-/// \param entity: Handle to changed record
-//-----------------------------------------------------------------------------
-defineChangeEntity(Record, record, changedRecords)
-
-//-----------------------------------------------------------------------------
-// void CDManager::directorChanged (const HDirector& director)
-/// Callback when changing the director of a movie
-/// \param director: Handle to changed director
-//-----------------------------------------------------------------------------
-defineChangeObject(Director, director, changedDirectors)
-
-//-----------------------------------------------------------------------------
-// void CDManager::movieChanged (const HMovie& movie)
-/// Callback when changing a movie
-/// \param movie: Handle to changed movie
-//-----------------------------------------------------------------------------
-defineChangeEntity(Movie, movie, changedMovies)
-
-//-----------------------------------------------------------------------------
-/// Callback (additional to recordChanged) when the genre of a record is being
-/// changed
-/// \param record: Handle to changed record
-//-----------------------------------------------------------------------------
-void CDManager::recordGenreChanged (const HEntity& record) {
-   Check1 (record.isDefined ());
-   HRecord rec (HRecord::cast (record));
-   TRACE9 ("CDManager::recordGenreChanged (const HInterpret& record) - "
-	   << (rec.isDefined () ? rec->getId () : -1UL) << '/'
-	   << (rec.isDefined () ? rec->getName ().c_str () : "Undefined"));
-
-   if (relSongs.isRelated (rec)) {
-      unsigned int genre (rec->getGenre ());
-
-      Glib::RefPtr<Gtk::TreeModel> model (songs.get_model ());
-      Gtk::TreeSelection::ListHandle_Path list (songs.get_selection ()
-						->get_selected_rows ());
-      if (list.size ()) {
-	 Gtk::TreeIter iter;
-	 for (Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
-	      i != list.end (); ++i) {
-	    iter = model->get_iter (*i);
-	    songs.setGenre (iter, genre);
-	 }
-      }
-      else {
-	 Gtk::TreeModel::Children list (model->children ()); Check3 (list.size ());
-	 for (Gtk::TreeIter i (list.begin ()); i != list.end (); ++i)
-	    songs.setGenre (i, genre);
-      }
-   }
-}
-
-//-----------------------------------------------------------------------------
-/// Callback (additional to movieChanged) when the name of a movie is being
-/// changed
-/// \param movie: Handle to changed movie
-//-----------------------------------------------------------------------------
-void CDManager::movieNameChanged (const HMovie& movie) {
-   Check3 (movie.isDefined ());
-   TRACE9 ("CDManager::movieNameChanged (const HMovie&) - " << movie->getId ()
-	   << '/' << movie->getName ());
-
-   changedMovieNames[movie] += std::string (1, ',');
-   changedMovieNames[movie] += Movie::currLang;
-}
-
-//-----------------------------------------------------------------------------
-/// Adds the menu-entries for the language-menu to the passed string
-/// \param menu: String, where to add the language-entries to
-/// \param grpAction: Actiongroup to use
-//-----------------------------------------------------------------------------
-void CDManager::addLanguageMenus (Glib::ustring& menu, Glib::RefPtr<Gtk::ActionGroup> grpAction) {
-   TRACE9 ("CDManager::addLanguageMenus (Glib::ustring&)");
-
-   menu += "<menuitem action='Orig'/>";
-
-   Gtk::RadioButtonGroup grpLang;
-   grpAction->add (Gtk::RadioAction::create (grpLang, "Orig", _("_Original name")),
-		   Gtk::AccelKey ("<ctl>0"),
-		   bind (mem_fun (*this, &CDManager::changeLanguage), ""));
-
-   char accel[7];
-   strcpy (accel, "<ctl>1");
-   for (std::map<std::string, Language>::const_iterator i (Language::begin ());
-	i != Language::end (); ++i) {
-      TRACE9 ("CDManager::CDManager (Options&) - Adding language " << i->first);
-      menu += "<menuitem action='" + i->first + "'/>";
-
-      Glib::RefPtr<Gtk::RadioAction> act
-	 (Gtk::RadioAction::create (grpLang, i->first, i->second.getInternational ()));
-
-      if (accel[5] <= '9') {
-	 grpAction->add (act, Gtk::AccelKey (accel),
-			 bind (mem_fun (*this, &CDManager::changeLanguage), i->first));
-	 ++accel[5];
-      }
-      else
-	 grpAction->add (act, bind (mem_fun (*this, &CDManager::changeLanguage), i->first));
-
-      if (i->first == Movie::currLang)
-	 act->set_active ();
+      Check3 (pages[nb.get_current_page ()]);
+      pages[nb.get_current_page ()]->loadData ();
+      pages[nb.get_current_page ()]->getFocus ();
    }
 }
 
@@ -892,200 +508,26 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
    TRACE9 ("CDManager::pageSwitched (GtkNotebookPage*, guint) - " << iPage);
    Check1 (iPage < 3);
 
-   if (!(loadedPages & (1 << iPage)))
-      loadDatabase ();
+   Check3 (pages[iPage]);
+   if (!pages[iPage]->isLoaded ())
+      pages[iPage]->loadData ();
 
    static Gtk::UIManager::ui_merge_id idPageMrg (-1U);
    if (idPageMrg != -1U)
       mgrUI->remove_ui (idPageMrg);
-   pageData.clean ();
 
    Glib::ustring ui ("<menubar name='Menu'>"
 		     "  <menu action='Edit'>"
 		     "    <placeholder name='EditAction'>");
 
+   Check3 (pages[nb.get_current_page ()]);
+   pages[nb.get_current_page ()]->removeMenu ();
    Glib::RefPtr<Gtk::ActionGroup> grpAction (Gtk::ActionGroup::create ());
-   switch (iPage) {
-   case 1:
-      pageData.img = new LanguageImg (Movie::currLang.c_str ());
-      pageData.img->signal_clicked ().connect
-	 (mem_fun (*this, &CDManager::selectLanguage));
-      pageData.img->show ();
-
-      status.pack_end (*pageData.img, Gtk::PACK_SHRINK, 5);
-
-      ui += ("<menuitem action='NDirector'/><menuitem action='NMovie'/>"
-	     "</placeholder></menu><placeholder name='Lang'><menu action='Lang'>");
-
-      grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NDirector", Gtk::Stock::NEW,
-							   _("New _director")),
-		      Gtk::AccelKey (_("<ctl>N")),
-		      mem_fun (*this, &CDManager::newDirector));
-      grpAction->add (apMenus[NEW2] = Gtk::Action::create ("NMovie", _("_New movie")),
-		      Gtk::AccelKey (_("<ctl><alt>N")),
-		      mem_fun (*this, &CDManager::newMovie));
-      apMenus[NEW3].clear ();
-
-      grpAction->add (Gtk::Action::create ("Lang", _("_Language")));
-      addLanguageMenus (ui, grpAction);
-      ui += "</menu></placeholder>";
-      movieSelected ();
-      break;
-
-   case 0:
-      ui += ("<menuitem action='NInterpret'/><menuitem action='NRecord'/>"
-	     "<menuitem action='NSong'/></placeholder></menu>");
-
-      grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NInterpret", Gtk::Stock::NEW,
-							   _("New _interpret")),
-		      Gtk::AccelKey (_("<ctl>N")),
-		      mem_fun (*this, &CDManager::newInterpret));
-      grpAction->add (apMenus[NEW2] = Gtk::Action::create ("NRecord", _("_New record")),
-		      Gtk::AccelKey (_("<ctl><alt>N")),
-		      mem_fun (*this, &CDManager::newRecord));
-      grpAction->add (apMenus[NEW3] = Gtk::Action::create ("NSong", _("New _song")),
-		      Gtk::AccelKey (_("<ctl><shft>N")),
-		      mem_fun (*this, &CDManager::newSong));
-
-      recordSelected ();
-      break;
-
-   case 2:
-      ui += "<menuitem action='NActor'/><menuitem action='AddMovie'/></placeholder></menu>";
-
-      grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NActor", Gtk::Stock::NEW,
-							   _("New _actor")),
-		      Gtk::AccelKey (_("<ctl>N")),
-		      mem_fun (*this, &CDManager::newActor));
-      grpAction->add (apMenus[NEW2] = Gtk::Action::create ("AddMovie", _("_Plays in movie...")),
-		      Gtk::AccelKey (_("<ctl><alt>N")),
-		      mem_fun (*this, &CDManager::actorPlaysInMovie));
-
-      actorSelected ();
-      break;
-   } // end-switch
+   pages[iPage]->addMenu (ui, grpAction);
 
    ui += "</menubar>";
    mgrUI->insert_action_group (grpAction);
    idPageMrg = mgrUI->add_ui_from_string (ui);
-}
-
-//-----------------------------------------------------------------------------
-/// Adds an interpret to the record listbox
-/// \param artist: Handle to the new interpret
-/// \returns Gtk::TreeIter: Iterator to new added artist
-//-----------------------------------------------------------------------------
-Gtk::TreeIter CDManager::addArtist (const HInterpret& artist) {
-   artists.push_back (artist);
-
-   Gtk::TreeModel::iterator i (records.append (artist));
-   records.selectRow (i);
-   artistChanged (artist);
-   return i;
-}
-
-//-----------------------------------------------------------------------------
-/// Adds an actor to the actor listbox
-/// \param actor: Handle to the new actor
-/// \returns Gtk::TreeIter: Iterator to new added actor
-//-----------------------------------------------------------------------------
-Gtk::TreeIter CDManager::addActor (const HActor& actor) {
-   aActors.push_back (actor);
-
-   Gtk::TreeModel::iterator i (actors.append (actor));
-   actors.selectRow (i);
-   actorChanged (actor);
-   return i;
-}
-
-//-----------------------------------------------------------------------------
-/// Adds a record to the record listbox
-/// \param parent: Iterator to the interpret of the record
-/// \param record: Handle to the new record
-/// \returns Gtk::TreeIter: Iterator to new added record
-//-----------------------------------------------------------------------------
-Gtk::TreeIter CDManager::addRecord (Gtk::TreeIter& parent, HRecord& record) {
-   Gtk::TreeIter i (records.append (record, *parent));
-   Glib::RefPtr<Gtk::TreeStore> model (records.getModel ());
-   records.expand_row (model->get_path (parent), false);
-   records.selectRow (i);
-   recordChanged (HEntity::cast (record));
-
-   HInterpret artist;
-   artist = records.getInterpretAt (parent);
-   relRecords.relate (artist, record);
-   return i;
-}
-
-//-----------------------------------------------------------------------------
-/// Adds a song to the song listbox
-/// \param song: Handle to the new song
-/// \returns Gtk::TreeIter: Iterator to new added song
-//-----------------------------------------------------------------------------
-Gtk::TreeIter CDManager::addSong (HSong& song) {
-   Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
-   Gtk::TreeSelection::ListHandle_Path list (recordSel->get_selected_rows ());
-   Check3 (list.size ());
-   Gtk::TreeIter p (records.getModel ()->get_iter (*list.begin ())); Check3 (p);
-
-   HRecord record (records.getRecordAt (p)); Check3 (record.isDefined ());
-   relSongs.relate (record, song);
-   p = songs.append (song);
-   songs.scroll_to_row (songs.getModel ()->get_path (p), 0.8);
-   songs.get_selection ()->select (p);
-   songChanged (song);
-   return p;
-}
-
-//-----------------------------------------------------------------------------
-/// Callback after selecting menu to set the language in which the
-/// movies are displayed
-/// \param lang: Lanuage in which the movies should be displayed
-//-----------------------------------------------------------------------------
-void CDManager::changeLanguage (const std::string& lang) {
-   Check3 (lang.empty () || (lang.size () == 2));
-
-   static bool ignore (false);                  // Ignore de-selecting an entry
-   ignore = !ignore;
-   TRACE1 ("CDManager::changeLanguage (const std::string&) - " << lang << ": "
-	   << (ignore ? "True" : "False"));
-   if (ignore)
-      return;
-
-   setLanguage (lang);
-}
-
-//-----------------------------------------------------------------------------
-/// Changes the language in which the movies are displayed
-/// \param lang: Lanuage in which the movies should be displayed
-//-----------------------------------------------------------------------------
-void CDManager::setLanguage (const std::string& lang) {
-   TRACE9 ("CDManager::setLanguage (const std::string&) - " << lang);
-   Movie::currLang = lang;
-   if ((lang.size () == 2) && !loadedLangs[lang])
-      loadMovies (lang);
-
-   movies.update (lang);
-   pageData.img->update (lang.c_str ());
-}
-
-//-----------------------------------------------------------------------------
-/// Callback to select the language in which to display the movies
-//-----------------------------------------------------------------------------
-void CDManager::selectLanguage () {
-   TRACE9 ("CDManager::selectLanguage ()");
-
-   Glib::RefPtr<Gtk::UIManager> mgrUI (Gtk::UIManager::create ());
-   Glib::RefPtr<Gtk::ActionGroup> grpAction (Gtk::ActionGroup::create ());
-   Glib::ustring ui ("<ui><popup name='PopupLang'>");
-   addLanguageMenus (ui, grpAction);
-   ui += "</popup></ui>";
-
-   mgrUI->insert_action_group (grpAction);
-   mgrUI->add_ui_from_string (ui);
-
-   Gtk::Menu* popup (dynamic_cast<Gtk::Menu*> (mgrUI->get_widget ("/PopupLang")));
-   popup->popup (0, gtk_get_current_event_time ());
 }
 
 //-----------------------------------------------------------------------------
@@ -1104,12 +546,355 @@ void CDManager::exit () {
 /// \returns bool: True, if message has been processed
 //-----------------------------------------------------------------------------
 bool CDManager::on_delete_event (GdkEventAny* ev) {
-   if (undoEntities.size ()) {
-      Gtk::MessageDialog dlg (_("The data has been modified! Save those changes?"),
-			      false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO);
-      dlg.set_title (PACKAGE);
-      if (dlg.run () == Gtk::RESPONSE_YES)
-	 save ();
-   }
+   for (unsigned int i (0); i < (sizeof (pages) / sizeof (*pages)); ++i)
+      if (pages[i]->isChanged ()) {
+	 Gtk::MessageDialog dlg (_("The data has been modified! Save those changes?"),
+				 false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO);
+	 dlg.set_title (PACKAGE);
+	 if (dlg.run () == Gtk::RESPONSE_YES)
+	    save ();
+	 break;
+      }
    return ev ? XApplication::on_delete_event (ev) : true;
 }
+
+//-----------------------------------------------------------------------------
+/// Login to the database with the passed user/password pair
+/// \param user: User to connect to the DB with
+/// \param pwd: Password for user
+/// \returns bool: True, if login could be performed
+//-----------------------------------------------------------------------------
+bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
+   TRACE9 ("CDManager::login (const Glib::ustring&, const Glib::ustring&) - " << user << '/' << pwd);
+
+   try {
+      Storage::login (DBNAME, user.c_str (), pwd.c_str ());
+   }
+   catch (std::exception& err) {
+      Glib::ustring msg (_("Can't connect to database!\n\nReason: %1"));
+      msg.replace (msg.find ("%1"), 2, err.what ());
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.set_title (_("Login error"));
+      dlg.run ();
+
+      showLogin ();
+      return false;
+   }
+   TRACE9 ("CDManager::login (const Glib::ustring&, const Glib::ustring&) - Logged in");
+
+   try {
+      Storage::loadSpecialWords ();
+   }
+   catch (std::exception& err) {
+      Glib::ustring msg (_("Can't query needed information!\n\nReason: %1"));
+      msg.replace (msg.find ("%1"), 2, err.what ());
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
+
+   enableMenus (true);
+   loadDatabase ();
+   return true;
+}
+
+//-----------------------------------------------------------------------------
+/// Logout from the DB; give an opportunity to save changes
+//-----------------------------------------------------------------------------
+void CDManager::logout () {
+   on_delete_event (NULL);
+
+   for (unsigned int i (0); i < (sizeof (pages) / sizeof (*pages)); ++i)
+      pages[i]->clear ();
+
+   Words::destroy ();
+   Storage::logout ();
+   enableMenus (false);
+   status.pop ();
+   status.push (_("Disconnected!"));
+}
+
+//-----------------------------------------------------------------------------
+/// Edits dthe preferences
+//-----------------------------------------------------------------------------
+void CDManager::savePreferences () {
+   std::ofstream inifile (opt.pINIFile);
+   if (inifile) {
+      inifile << "[Database]\nUser=" << opt.getUser () << "\nPassword="
+	      << opt.getPassword () << "\n\n";
+
+      YGP::INIFile::write (inifile, "Export", opt);
+
+      inifile << "[Movies]\nLanguage=" << Movie::currLang << '\n';
+   }
+   else {
+      Glib::ustring msg (_("Can't create file `%1'!\n\nReason: %2."));
+      msg.replace (msg.find ("%1"), 2, opt.pINIFile);
+      msg.replace (msg.find ("%2"), 2, strerror (errno));
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
+
+   // Storing the special/first names and the articles
+   try {
+      Storage::startTransaction ();
+      Storage::deleteNames ();
+      Words::forEachName (0, Words::cNames (), &Storage::storeWord);
+      Storage::commitTransaction ();
+
+      Storage::startTransaction ();
+      Storage::deleteArticles ();
+      Words::forEachArticle (0, Words::cArticles (), &Storage::storeArticle);
+      Storage::commitTransaction ();
+   }
+   catch (std::exception& e) {
+      Storage::abortTransaction ();
+      Glib::ustring msg (_("Can't store special names!\n\nReason: %1."));
+      msg.replace (msg.find ("%1"), 2, e.what ());
+      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+      dlg.run ();
+   }
+}
+
+#if (WITH_RECORDS == 1) || (WITH_MOVIES == 1)
+//-----------------------------------------------------------------------------
+/// Exports the stored information to HTML documents
+//-----------------------------------------------------------------------------
+void CDManager::export2HTML () {
+   std::string dir (opt.getDirOutput ());
+   if (dir.size () && (dir[dir.size () - 1] != YGP::File::DIRSEPARATOR)) {
+      dir += YGP::File::DIRSEPARATOR;
+      opt.setDirOutput (dir);
+   }
+
+   // Load data
+   for (unsigned int i (0); i < (WITH_RECORDS + WITH_MOVIES); ++i)
+      if (!pages[i]->isLoaded ())
+	 pages[i]->loadData ();
+
+   // Get the key for the shared memory holding the special words
+   std::ostringstream memKey;
+   memKey << Words::getMemoryKey () << std::ends;
+
+   YGP::Tokenize langs (LANGUAGES);
+   std::string lang;
+   std::string tmpLang (Movie::currLang);
+   const char* envLang (getenv ("LANGUAGE"));
+   std::string oldLang;
+   if (envLang)
+      oldLang = envLang;
+
+   const char* args[] = { "CDWriter", "--outputDir", opt.getDirOutput ().c_str (),
+			  "--recHeader", opt.getRHeader ().c_str (),
+			  "--recFooter", opt.getRFooter ().c_str (),
+			  "--movieHeader", opt.getMHeader ().c_str (),
+			  "--movieFooter", opt.getMFooter ().c_str (),
+			  NULL, memKey.str ().c_str (), NULL };
+   Check2 (!args[11]);
+
+   // Export to every language supported
+   Glib::ustring statMsg (_("Exporting (language %1) ..."));
+   while ((lang = langs.getNextNode (' ')).size ()) {
+      TRACE1 ("CDManager::export2HTML () - Lang: " << lang);
+      Glib::ustring stat (statMsg);
+      stat.replace (stat.find ("%1"), 2, Language::findInternational (lang));
+      status.push (stat);
+
+      Glib::RefPtr<Glib::MainContext> ctx (Glib::MainContext::get_default ());
+      while (ctx->iteration (false));                      // Update statusbar
+
+      pid_t pid (-1);
+      int pipes[2];
+      try {
+	 for (unsigned int i (0); i < (WITH_RECORDS + WITH_MOVIES); ++i) {
+	    setenv ("LANGUAGE", lang.c_str (), true);
+	    args[11] = lang.c_str ();
+
+	    pipe (pipes);
+	    pid = YGP::Process::execIOConnected ("CDWriter", args, pipes);
+
+	    Movie::currLang = lang;
+	    pages[i]->export2HTML (pipes[1]);
+	    Movie::currLang = tmpLang;
+	 }
+	 close (pipes[1]);
+
+	 char output[128] = "";
+	 std::string allOut;
+	 int cRead;
+	 while ((cRead = ::read (pipes[0], output, sizeof (output))) != -1) {
+	    allOut.append (output, cRead);
+	    if (!cRead)
+	       break;
+	 }
+	 if (allOut.size ()) {
+	    Gtk::MessageDialog dlg (Glib::locale_to_utf8 (output), Gtk::MESSAGE_INFO);
+	    dlg.set_title (_("Export Warning!"));
+	    dlg.run ();
+	 }
+	 close (pipes[0]);
+	 status.pop ();
+
+	 Check3 (pid != -1);
+	 YGP::Process::waitForProcess (pid);
+      }
+      catch (Glib::ustring& e) {
+	 Gtk::MessageDialog dlg (e, Gtk::MESSAGE_ERROR);
+	 dlg.run ();
+      }
+      catch (std::string& e) {
+	 Gtk::MessageDialog dlg (Glib::locale_to_utf8 (e), Gtk::MESSAGE_ERROR);
+	 dlg.run ();
+	 continue;
+      }
+   } // end-while
+   setenv ("LANGUAGE", oldLang.c_str (), true);
+}
+#endif
+
+#if WITH_RECORDS == 1
+//-----------------------------------------------------------------------------
+/// Reads the ID3 information from a MP3 file
+/// \param file: Name of file to analzye
+//-----------------------------------------------------------------------------
+void CDManager::parseFileInfo (const std::string& file) {
+   TRACE9 ("CDManager::parseFileInfo (const std::string&) - " << file);
+   Check2 (file.size ());
+
+   std::ifstream stream (file.c_str ());
+   Glib::ustring artist, record, song;
+   unsigned int track (0);
+   if (!stream) {
+      Glib::ustring err (_("Can't open file `%1'!\n\nReason: %2"));
+      err.replace (err.find ("%1"), 2, file);
+      err.replace (err.find ("%2"), 2, strerror (errno));
+      Gtk::MessageDialog (err).run ();
+      return;
+   }
+
+   TRACE1 ("CDManager::parseFileInfo (const std::string&) - Type: " << file.substr (file.size () - 4));
+   if (((file.substr (file.size () - 4) == ".mp3")
+	&& parseMP3Info (stream, artist, record, song, track))
+       || ((file.substr (file.size () - 4) == ".ogg")
+	   && parseOGGCommentHeader (stream, artist, record, song, track))) {
+      TRACE9 ("CDManager::parseFileInfo (const std::string&) - " << artist
+	      << '/' << record << '/' << song << '/' << track);
+      Check1 (typeid (**pages) == typeid (PRecords));
+      ((PRecords*)*pages)->addEntry (artist, record, song, track);
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Reads the ID3 information from a MP3 file
+/// \param stream: MP3-file to analyze
+/// \param artist: Found artist
+/// \param record: Found record name
+/// \param song: Found song
+/// \param track: Tracknumber
+/// \returns bool: True, if ID3 info has been found
+//-----------------------------------------------------------------------------
+bool CDManager::parseMP3Info (std::istream& stream, Glib::ustring& artist,
+			      Glib::ustring& record, Glib::ustring& song,
+			      unsigned int& track) {
+   stream.seekg (-0x80, std::ios::end);
+   std::string value;
+
+   std::getline (stream, value, '\xff');
+   TRACE9 ("CDManager::parseMP3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Found: "
+	   << value << "; Length: " << value.size ());
+   if ((value.size () > 3) && (value[0] == 'T') && (value[1] == 'A') && (value[2] == 'G')) {
+      song = Glib::locale_to_utf8 (stripString (value, 3, 29));
+      artist = Glib::locale_to_utf8 (stripString (value, 33, 29));
+      record = Glib::locale_to_utf8 (stripString (value, 63, 29));
+      track = (value[0x7d] != 0x20) ? value[0x7e] : 0;
+      return true;
+   }
+   return false;
+}
+
+//-----------------------------------------------------------------------------
+/// Reads the OGG comment header from an OGG vorbis encoded file
+/// \param stream: OGG-file to analyze
+/// \param artist: Found artist
+/// \param record: Found record name
+/// \param song: Found song
+/// \param track: Tracknumber
+/// \returns bool: True, if comment header has been found
+//-----------------------------------------------------------------------------
+bool CDManager::parseOGGCommentHeader (std::istream& stream, Glib::ustring& artist,
+				       Glib::ustring& record, Glib::ustring& song,
+				       unsigned int& track) {
+   char buffer[512];
+   stream.read (buffer, 4);
+   if ((*buffer != 'O') && (buffer[1] != 'g') && (buffer[2] != 'g') && (buffer[3] != 'S'))
+      return false;
+
+   stream.seekg (0x69, std::ios::cur);
+   unsigned int len (0);
+   stream.read ((char*)&len, 4);                // Read the vendorstring-length
+   TRACE9 ("CDManager::parseOGGCommentHeader (std::istream&, 3x Glib::ustring&, unsigned&) - Length: " << len);
+   stream.seekg (len, std::ios::cur);
+
+   unsigned int cComments (0);
+   stream.read ((char*)&cComments, 4);               // Read number of comments
+   TRACE9 ("CDManager::parseOGGCommentHeader (std::istream&, 3x Glib::ustring&, unsigned&) - Comments: " << cComments);
+   if (!cComments)
+      return false;
+
+   std::string key;
+   Glib::ustring *value (NULL);
+   do {
+      stream.read ((char*)&len, 4);                  // Read the comment-length
+
+      std::getline (stream, key, '=');
+      len -= key.size () + 1;
+      TRACE9 ("CDManager::parseOGGCommentHeader (std::stream&, 3x Glib::ustring&, unsigned&) - Key: " << key);
+
+      if (key == "TITLE")
+	 value = &song;
+      else if (key == "ALBUM")
+	 value = &record;
+      else if (key == "ARTIST")
+	 value = &artist;
+      else if (key == "TRACKNUMBER") {
+	 Check2 (len < sizeof (buffer));
+	 stream.read (buffer, len);
+	 track = strtoul (buffer, NULL, 10);
+	 value = NULL;
+	 len = 0;
+      }
+      else
+	 value = NULL;
+
+      if (value) {
+	 unsigned int read (0);
+	 do {
+	    read = stream.readsome (buffer, (len > sizeof (buffer)) ? sizeof (buffer) - 1 : len);
+	    len -= read;
+	    buffer[read] = '\0';
+	    value->append (buffer);
+ 	 } while (len);
+      }
+      else
+	 stream.seekg (len, std::ios::cur);
+   } while (--cComments);  // end-do while comments
+   return true;
+}
+
+//-----------------------------------------------------------------------------
+/// Returns the specified substring, removed from trailing spaces
+/// \param value: String to manipulate
+/// \param pos: Starting pos inside the string
+/// \param len: Maximal length of string
+/// \returns std::string: Stripped value
+//-----------------------------------------------------------------------------
+std::string CDManager::stripString (const std::string& value, unsigned int pos, unsigned int len) {
+   len += pos;
+   while (len > pos) {
+      if ((value[len] != ' ') && (value[len]))
+         break;
+      --len;
+   }
+   return (pos == len) ? " " : value.substr (pos, len - pos + 1);
+}
+
+#endif

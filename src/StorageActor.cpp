@@ -1,11 +1,11 @@
-//$Id: StorageActor.cpp,v 1.2 2006/01/28 01:18:23 markus Exp $
+//$Id: StorageActor.cpp,v 1.3 2006/01/28 07:49:00 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Storage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 21.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -31,6 +31,8 @@
 
 #include <sstream>
 
+#include <YGP/Check.h>
+#include <YGP/Trace.h>
 #include <YGP/StatusObj.h>
 
 #include "DB.h"
@@ -42,12 +44,22 @@
 /// Loads the actors and its movies from the database
 /// \param aActors: Map to map an actor-id to movie-IDs
 //-----------------------------------------------------------------------------
-void StorageActor::loadActorsInMovies (std::map<unsigned int, std::vector<unsigned int> >& aActors)
+void StorageActor::StorageActor::loadActorsInMovies (std::map<unsigned int, std::vector<unsigned int> >& aActors)
    throw (std::exception) {
-   Database::execute ("SELECT idActor, idMovie FROM ActorsInMovies ORDER BY idMovie");
+   TRACE7 ("StorageActor::loadActorsInMovies (std::map<...>&)");
+
+   Database::execute ("SELECT idActor, idMovie FROM ActorsInMovies ORDER BY idActor");
    if (Database::resultSize ()) {
+      std::map<unsigned int, std::vector<unsigned int> >::iterator iter (aActors.end ());
       while (Database::hasData ()) {
-	 aActors[Database::getResultColumnAsUInt (0)].push_back (Database::getResultColumnAsUInt (1));
+	 unsigned int idLast (0);
+	 unsigned int idAct (Database::getResultColumnAsUInt (0)); Check3 (idAct);
+	 if (idAct != idLast) {
+	    idLast = idAct;
+	    iter = aActors.insert (aActors.end (), std::pair<unsigned int, std::vector<unsigned int> > (idAct, std::vector<unsigned int> ()));
+	 }
+	 Check3 (iter != aActors.end ());
+	 iter->second.push_back (Database::getResultColumnAsUInt (1));
 
 	 Database::getNextResultRow ();
       } // end-while actors for movies available
@@ -59,6 +71,8 @@ void StorageActor::loadActorsInMovies (std::map<unsigned int, std::vector<unsign
 /// \param actor: Actor to save
 //-----------------------------------------------------------------------------
 void StorageActor::saveActor (const HActor actor) throw (std::exception) {
+   TRACE9 ("StorageActor::saveActor (const HActor)");
+
    std::stringstream query;
    std::string tmp (Database::escapeDBValue (actor->getName ()));
    query << (actor->getId () ? "UPDATE Celebrities" : "INSERT INTO Celebrities")

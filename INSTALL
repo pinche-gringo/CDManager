@@ -37,7 +37,7 @@ Inside the directory containing the source code type
 
   gettextize --intl --no-changelog
   mv Makefile.am~ Makefile.am
-  mv configure.in~ configure.in
+  mv configure.ac~ configure.ac
   libtoolize
   aclocal && autoheader && automake -a && autoconf
   ./configure [configure-options]

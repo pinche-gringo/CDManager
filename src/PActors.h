@@ -1,7 +1,7 @@
 #ifndef PACTORS_H
 #define PACTORS_H
 
-//$Id: PActors.h,v 1.1 2006/01/22 18:34:32 markus Exp $
+//$Id: PActors.h,v 1.2 2006/01/28 01:17:13 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -37,15 +37,15 @@
 
 // Forward declarations
 class Genres;
-class MovieList;
+class PMovies;
 
 
 /**Class handling the actor notebook-page
  */
 class PActors : public NBPage {
  public:
-   PActors (Gtk::Statusbar& status, Gtk::Widget& menuSave, const Genres& genres,
-	    std::vector<HDirector>& directors, MovieList& movies);
+   PActors (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave,
+	    const Genres& genres, const PMovies& movies);
    virtual ~PActors ();
 
    virtual void loadData ();
@@ -87,10 +87,8 @@ class PActors : public NBPage {
 
    YGP::RelationN_M<HActor, HMovie> relDelActors;
 
-   // Information needed from movie-page
-   MovieList& movies;
-   std::vector<HDirector>& directors;
-   YGP::Relation1_N<HDirector, HMovie>* relMovies;
+   // Reference to movie-page
+   const PMovies& movies;
 };
 
 

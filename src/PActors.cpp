@@ -1,11 +1,11 @@
-//$Id: PActors.cpp,v 1.3 2006/01/26 17:52:53 markus Exp $
+//$Id: PActors.cpp,v 1.4 2006/01/28 01:17:13 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actors
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -54,16 +54,13 @@
 /// \param status: Statusbar to display status-messages
 /// \param menuSave: Menu-entry to save the database
 /// \param genres: Genres to use in actor-list
-/// \param directors: Managed directors
-/// \param movies: GUI storing the movies
+/// \param movies: Reference to movie-page
 //-----------------------------------------------------------------------------
-PActors::PActors (Gtk::Statusbar& status, Gtk::Widget& menuSave, const Genres& genres,
-		  std::vector<HDirector>& directors, MovieList& movies)
+PActors::PActors (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave,
+		  const Genres& genres, const PMovies& movies)
    : NBPage (status, menuSave), actors (genres), relActors ("actors"),
-     relDelActors ("delActors"), movies (movies), directors (directors),
-     relMovies ((YGP::Relation1_N<HDirector, HMovie>*)YGP::RelationManager::getRelation ("relMovies")) {
-   TRACE9 ("PActors::PActors (const Genres&)");
-   Check3 (relMovies);
+     relDelActors ("delActors"), movies (movies) {
+   TRACE9 ("PActors::PActors (Gtk::Statusbar&, Glib::RefPtr<Gtk::Action>, const Genres&, const PMovies&)");
 
    Gtk::ScrolledWindow* scrl (new Gtk::ScrolledWindow);
    scrl->set_shadow_type (Gtk::SHADOW_ETCHED_IN);
@@ -150,8 +147,9 @@ void PActors::actorPlaysInMovie () {
    TRACE9 ("void PActors::actorPlaysInMovie () - Founding actor " << actor->getName ());
 
    RelateMovie* dlg (relActors.isRelated (actor)
-		     ? RelateMovie::create (actor, relActors.getObjects (actor), movies.getModel ())
-		     : RelateMovie::create (actor, movies.getModel ()));
+		     ? RelateMovie::create (actor, relActors.getObjects (actor),
+					    movies.getMovieList ().getModel ())
+		     : RelateMovie::create (actor, movies.getMovieList ().getModel ()));
    dlg->get_window ()->set_transient_for (actors.get_window ());
    dlg->signalRelateMovies.connect (mem_fun (*this, &PActors::relateMovies));
 }
@@ -263,7 +261,7 @@ void PActors::getFocus () {
 /// \returns HMovie: Found movie (undefined, if not found)
 //-----------------------------------------------------------------------------
 HMovie PActors::findMovie (unsigned int id) const {
-   return PMovies::findMovie (directors, *relMovies, id);
+   return PMovies::findMovie (movies.getDirectors (), movies.getRelMovies (), id);
 }
 
 //-----------------------------------------------------------------------------
@@ -303,7 +301,7 @@ void PActors::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActi
 void PActors::deleteSelection () {
    TRACE9 ("PActors::deleteSelection ()");
 
-   Glib::RefPtr<Gtk::TreeSelection> selection (movies.get_selection ());
+   Glib::RefPtr<Gtk::TreeSelection> selection (actors.get_selection ());
    Gtk::TreeIter selRow (selection->get_selected ());
    if (selRow) {
       Check3 (!selRow->parent ());

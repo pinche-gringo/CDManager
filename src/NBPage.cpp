@@ -1,11 +1,11 @@
-//$Id: NBPage.cpp,v 1.2 2006/01/28 01:16:17 markus Exp $
+//$Id: NBPage.cpp,v 1.3 2006/01/28 08:33:47 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : NBPage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -27,8 +27,6 @@
 
 #include <gtkmm/statusbar.h>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 

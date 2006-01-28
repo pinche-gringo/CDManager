@@ -1,11 +1,11 @@
-//$Id: PMovies.cpp,v 1.2 2006/01/26 17:51:13 markus Exp $
+//$Id: PMovies.cpp,v 1.3 2006/01/28 03:27:59 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movies
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -29,6 +29,10 @@
 
 #if WITH_ACTORS == 1
 
+#include <sstream>
+
+#include <cstdlib>
+
 #include <gtkmm/main.h>
 #include <gtkmm/menu.h>
 #include <gtkmm/stock.h>
@@ -38,8 +42,6 @@
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/scrolledwindow.h>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ANumeric.h>
@@ -59,9 +61,11 @@
 /// \param menuSave: Menu-entry to save the database
 /// \param genres: Genres to use in actor-list
 //-----------------------------------------------------------------------------
-PMovies::PMovies (Gtk::Statusbar& status, Gtk::Widget& menuSave, const Genres& genres)
+PMovies::PMovies (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave, const Genres& genres)
    : NBPage (status, menuSave), imgLang (NULL), movies (genres), relMovies ("movies")
 {
+   TRACE9 ("PMovies::PMovies (Gtk::Statusbar&, Glib::RefPtr<Gtk::Action>, const Genres&)");
+
    Gtk::ScrolledWindow* scrlMovies (new Gtk::ScrolledWindow);
    scrlMovies->set_shadow_type (Gtk::SHADOW_ETCHED_IN);
    scrlMovies->add (movies);
@@ -274,12 +278,14 @@ void PMovies::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActi
 }
 
 //-----------------------------------------------------------------------------
-/// Removes any created page-related menus
+/// Removes page-related menus
 //-----------------------------------------------------------------------------
 void PMovies::removeMenu () {
-   statusbar.remove (*imgLang);
-   delete imgLang;
-   imgLang = NULL;
+   if (imgLang) {
+      statusbar.remove (*imgLang);
+      delete imgLang;
+      imgLang = NULL;
+   }
 }
 
 //-----------------------------------------------------------------------------
@@ -334,7 +340,7 @@ void PMovies::selectLanguage () {
 }
 
 //-----------------------------------------------------------------------------
-/// Sets the focus to the actor-list
+/// Sets the focus to the movie-list
 //-----------------------------------------------------------------------------
 void PMovies::getFocus () {
    movies.grab_focus ();
@@ -376,8 +382,8 @@ void PMovies::loadData () {
       std::sort (directors.begin (), directors.end (), &Director::compByName);
 
       std::map<unsigned int, std::vector<HMovie> > aMovies;
-      StorageMovie::loadMovies (aMovies, stat);
-      TRACE8 ("PMovies::loadData () - Found " << aMovies.size () << " movies");
+      unsigned int cMovies (StorageMovie::loadMovies (aMovies, stat));
+      TRACE8 ("PMovies::loadData () - Found " << cMovies << " movies");
 
       for (std::vector<HDirector>::const_iterator i (directors.begin ());
 	   i != directors.end (); ++i) {
@@ -398,8 +404,8 @@ void PMovies::loadData () {
 
       movies.expand_all ();
 
-      Glib::ustring msg (Glib::locale_to_utf8 (ngettext ("Loaded %1 movie", "Loaded %1 movies", aMovies.size ())));
-      msg.replace (msg.find ("%1"), 2, YGP::ANumeric::toString (aMovies.size ()));
+      Glib::ustring msg (Glib::locale_to_utf8 (ngettext ("Loaded %1 movie", "Loaded %1 movies", cMovies)));
+      msg.replace (msg.find ("%1"), 2, YGP::ANumeric::toString (cMovies));
       showStatus (msg);
 
       loaded = true;
@@ -415,6 +421,7 @@ void PMovies::loadData () {
       Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
       dlg.run ();
    }
+   TRACE1 ("Finished!");
 }
 
 //-----------------------------------------------------------------------------
@@ -589,6 +596,48 @@ void PMovies::deleteMovie (const Gtk::TreeIter& movie) {
 
    Glib::RefPtr<Gtk::TreeStore> model (movies.getModel ());
    model->erase (movie);
+}
+
+//-----------------------------------------------------------------------------
+/// Exports the contents of the page to HTML
+/// \param fd: File-descriptor for exporting
+//-----------------------------------------------------------------------------
+void PMovies::export2HTML (unsigned int fd) {
+   std::sort (directors.begin (), directors.end (), &Director::compByName);
+
+   // Write movie-information
+   for (std::vector<HDirector>::const_iterator i (directors.begin ());
+	i != directors.end (); ++i)
+      if (relMovies.isRelated (*i)) {
+	 std::stringstream output;
+	 output << 'D' << **i;
+
+	 std::vector<HMovie>& dirMovies (relMovies.getObjects (*i));
+	 Check3 (dirMovies.size ());
+	 for (std::vector<HMovie>::const_iterator m (dirMovies.begin ());
+	      m != dirMovies.end (); ++m)
+	    output << "M" << **m;
+
+	 TRACE9 ("CDManager::export () - Writing: " << output.str ());
+	 ::write (fd, output.str ().data (), output.str ().size ());
+      }
+}
+
+//-----------------------------------------------------------------------------
+/// Undoes the changes on the page
+//-----------------------------------------------------------------------------
+void PMovies::undo () {
+}
+
+//-----------------------------------------------------------------------------
+/// Removes all information from the page
+//-----------------------------------------------------------------------------
+void PMovies::clear () {
+   for (std::vector<HDirector>::iterator i (directors.begin ());
+	i != directors.end (); ++i)
+      if (relMovies.isRelated (*i))
+	 relMovies.unrelateAll (*i);
+   directors.clear ();
 }
 
 #endif

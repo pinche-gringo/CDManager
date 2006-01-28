@@ -1,7 +1,7 @@
 #ifndef PMOVIES_H
 #define PMOVIES_H
 
-//$Id: PMovies.h,v 1.2 2006/01/26 17:51:13 markus Exp $
+//$Id: PMovies.h,v 1.3 2006/01/28 03:27:59 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ class LanguageImg;
  */
 class PMovies : public NBPage {
  public:
-   PMovies (Gtk::Statusbar& status, Gtk::Widget& menuSave, const Genres& genres);
+   PMovies (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave, const Genres& genres);
    virtual ~PMovies ();
 
    virtual void loadData ();
@@ -55,12 +55,17 @@ class PMovies : public NBPage {
    virtual void deleteSelection ();
    virtual void undo ();
    virtual void clear ();
+   virtual void export2HTML (unsigned int fd);
 
    void addLanguageMenus (Glib::ustring& menu, Glib::RefPtr<Gtk::ActionGroup> grpAction);
 
    static HMovie findMovie (const std::vector<HDirector>& directors,
 			    const YGP::Relation1_N<HDirector, HMovie>& relMovies,
 			    unsigned int id);
+
+   const MovieList& getMovieList () const { return movies; }
+   const std::vector<HDirector>& getDirectors () const { return directors; }
+   const YGP::Relation1_N<HDirector, HMovie>& getRelMovies () const { return relMovies; }
 
  private:
    PMovies ();

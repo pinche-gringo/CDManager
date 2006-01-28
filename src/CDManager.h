@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.42 2006/01/26 21:18:21 markus Exp $
+//$Id: CDManager.h,v 1.43 2006/01/28 01:34:15 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -32,13 +32,7 @@
 #include <gtkmm/treeview.h>
 #include <gtkmm/statusbar.h>
 
-#include "Song.h"
 #include "Genres.h"
-#include "Record.h"
-#include "Options.h"
-#include "SongList.h"
-#include "Interpret.h"
-#include "RecordList.h"
 
 #include <YGP/Relation.h>
 
@@ -47,6 +41,7 @@
 
 // Forward declarations
 class NBPage;
+class Options;
 namespace YGP {
    class Entity;
    class StatusObject;

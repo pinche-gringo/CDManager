@@ -1,11 +1,11 @@
-//$Id: PActors.cpp,v 1.4 2006/01/28 01:17:13 markus Exp $
+//$Id: PActors.cpp,v 1.5 2006/01/28 07:48:03 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actors
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -32,8 +32,6 @@
 #include <gtkmm/stock.h>
 #include <gtkmm/scrolledwindow.h>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ANumeric.h>
@@ -57,10 +55,10 @@
 /// \param movies: Reference to movie-page
 //-----------------------------------------------------------------------------
 PActors::PActors (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave,
-		  const Genres& genres, const PMovies& movies)
+		  const Genres& genres, PMovies& movies)
    : NBPage (status, menuSave), actors (genres), relActors ("actors"),
      relDelActors ("delActors"), movies (movies) {
-   TRACE9 ("PActors::PActors (Gtk::Statusbar&, Glib::RefPtr<Gtk::Action>, const Genres&, const PMovies&)");
+   TRACE9 ("PActors::PActors (Gtk::Statusbar&, Glib::RefPtr<Gtk::Action>, const Genres&, PMovies&)");
 
    Gtk::ScrolledWindow* scrl (new Gtk::ScrolledWindow);
    scrl->set_shadow_type (Gtk::SHADOW_ETCHED_IN);
@@ -187,22 +185,24 @@ void PActors::relateMovies (const HActor& actor, const std::vector<HMovie>& movi
 /// According to the available information the page of the notebook
 /// is created.
 //-----------------------------------------------------------------------------
-void PActors::loadData () {
+void PActors::PActors::loadData () {
+   TRACE5 ("PActors::loadData ()");
+   if (!movies.isLoaded ())
+      movies.loadData ();
+
    try {
       YGP::StatusObject stat;
-
       std::vector<HActor> actrs;
       StorageActor::loadActors (actrs, stat);
+      TRACE9 ("PActors::loadData () - Actors: " << actrs.size ());
 
       if (actrs.size ()) {
-	 std::sort (actrs.begin (), actrs.end (), &Actor::compById);
+	 std::sort (actrs.begin (), actrs.end (), &Actor::compByName);
 
 	 std::map<unsigned int, std::vector<unsigned int> > actorMovies;
 	 StorageActor::loadActorsInMovies (actorMovies);
 
 	 // Iterate over all actors
-	 std::sort (actrs.begin (), actrs.end (), &Actor::compByName);
-	 HMovie movie; movie.define ();
 	 for (std::vector<HActor>::const_iterator i (actrs.begin ()); i != actrs.end (); ++i) {
 	    Check3 (i->isDefined ());
 	    Gtk::TreeModel::Row actor (actors.append (*i));
@@ -212,16 +212,26 @@ void PActors::loadData () {
 	       (actorMovies.find ((*i)->getId ()));
 	    if (iActor != actorMovies.end ()) {
 	       // Get movies to the movie-IDs
-	       std::vector<HMovie> movies (iActor->second.size ());
+	       std::vector<HMovie> movies;
+	       movies.reserve (iActor->second.size ());
 	       for (std::vector<unsigned int>::iterator m (iActor->second.begin ());
-		    m != iActor->second.end (); ++m)
-		  movies.push_back (findMovie (*m));
-	       std::sort (movies.begin (), movies.end (), Movie::compByName);
+		    m != iActor->second.end (); ++m) {
+		  HMovie movie (findMovie (*m));
+		  if (movie.isDefined ())
+		     movies.push_back (movie);
+		  else {
+		     Glib::ustring err (_("The database contains an invalid reference (%1) to a movie!"));
+		     err.replace (err.find ("%1"), 2, YGP::ANumeric::toString (*m));
+		     throw std::runtime_error (err);
+		  }
+	       }
 
 	       // Add the movies to the actor
+	       std::sort (movies.begin (), movies.end (), Movie::compByName);
 	       for (std::vector<HMovie>::iterator m (movies.begin ()); m != movies.end (); ++m) {
-		  actors.append (movie, actor);
-		  relActors.relate (*i, movie);
+		  Check (m->isDefined ());
+		  actors.append (*m, actor);
+		  relActors.relate (*i, *m);
 	       } // end-for all movies for an actor
 	       actorMovies.erase (iActor);
 	    } // end-if director has actors for movies

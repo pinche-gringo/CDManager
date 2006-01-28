@@ -1,7 +1,7 @@
 #ifndef PACTORS_H
 #define PACTORS_H
 
-//$Id: PActors.h,v 1.2 2006/01/28 01:17:13 markus Exp $
+//$Id: PActors.h,v 1.3 2006/01/28 07:47:21 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ class PMovies;
 class PActors : public NBPage {
  public:
    PActors (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave,
-	    const Genres& genres, const PMovies& movies);
+	    const Genres& genres, PMovies& movies);
    virtual ~PActors ();
 
    virtual void loadData ();
@@ -88,7 +88,7 @@ class PActors : public NBPage {
    YGP::RelationN_M<HActor, HMovie> relDelActors;
 
    // Reference to movie-page
-   const PMovies& movies;
+   PMovies& movies;
 };
 
 

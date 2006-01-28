@@ -1,7 +1,7 @@
 #ifndef RECORD_H
 #define RECORD_H
 
-//$Id: Record.h,v 1.13 2006/01/26 23:09:50 markus Exp $
+//$Id: Record.h,v 1.14 2006/01/28 08:03:24 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -39,10 +39,10 @@ class Record : public YGP::Entity {
 
    Record& operator= (const Record& other);
 
-   unsigned long int getId () const {return id; }
-   Glib::ustring     getName () const {return name; }
-   YGP::AYear        getYear () const { return year; }
-   unsigned int      getGenre () const { return genre; }
+   unsigned long int    getId () const {return id; }
+   const Glib::ustring& getName () const {return name; }
+   const YGP::AYear&    getYear () const { return year; }
+   unsigned int         getGenre () const { return genre; }
 
    void setId       (const unsigned long int value) { id = value; }
    void setName     (const Glib::ustring& value) { name = value; }

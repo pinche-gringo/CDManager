@@ -1,7 +1,7 @@
 #ifndef SONG_H
 #define SONG_H
 
-//$Id: Song.h,v 1.10 2005/10/04 16:21:07 markus Rel $
+//$Id: Song.h,v 1.11 2006/01/28 08:03:24 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -48,11 +48,11 @@ class Song : public YGP::Entity {
       return *this;
    }
 
-   unsigned long int getId () const { return id; }
-   Glib::ustring     getName () const { return name; }
-   YGP::ANumeric     getTrack () const { return track; }
-   YGP::ATime        getDuration () const { return duration; }
-   unsigned int      getGenre () const { return genre; }
+   unsigned long int    getId () const { return id; }
+   const Glib::ustring& getName () const { return name; }
+   const YGP::ANumeric& getTrack () const { return track; }
+   const YGP::ATime&    getDuration () const { return duration; }
+   unsigned int         getGenre () const { return genre; }
 
    void setId       (const unsigned long int value) { id = value; }
    void setName     (const Glib::ustring& value) { name = value; }

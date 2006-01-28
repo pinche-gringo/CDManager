@@ -1,11 +1,11 @@
-//$Id: SongList.cpp,v 1.18 2006/01/28 03:50:55 markus Exp $
+//$Id: SongList.cpp,v 1.19 2006/01/28 06:12:16 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.18 $
+//REVISION    : $Revision: 1.19 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -201,7 +201,7 @@ void SongList::valueChanged (const Glib::ustring& path,
 /// \returns int: Value of compare (analogue to strcmp)
 //-----------------------------------------------------------------------------
 int SongList::sortByTrack (const Gtk::TreeModel::iterator& a,
-			   const Gtk::TreeModel::iterator& b) {
+			   const Gtk::TreeModel::iterator& b) const {
    Gtk::TreeModel::Row rowa (*a);
    Gtk::TreeModel::Row rowb (*b);
    HSong ha (rowa[colSongs.entry]); Check3 (ha.isDefined ());
@@ -220,7 +220,7 @@ int SongList::sortByTrack (const Gtk::TreeModel::iterator& a,
 /// \returns int: Value as strcmp
 //-----------------------------------------------------------------------------
 int SongList::sortByName (const Gtk::TreeModel::iterator& a,
-			   const Gtk::TreeModel::iterator& b) {
+			   const Gtk::TreeModel::iterator& b) const {
    Gtk::TreeModel::Row rowa (*a);
    Gtk::TreeModel::Row rowb (*b);
    HSong ha (rowa[colSongs.entry]); Check3 (ha.isDefined ());

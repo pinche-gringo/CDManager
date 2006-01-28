@@ -1,11 +1,11 @@
-//$Id: RecordList.cpp,v 1.16 2006/01/22 18:36:23 markus Exp $
+//$Id: RecordList.cpp,v 1.17 2006/01/28 06:12:16 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.16 $
+//REVISION    : $Revision: 1.17 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -86,7 +86,7 @@ HRecord RecordList::getRecordAt (const Gtk::TreeIter iter) const {
    Check2 ((*iter)->parent ());
    HEntity hRec (getObjectAt (iter)); Check3 (hRec.isDefined ());
    HRecord record (HRecord::cast (hRec));
-   TRACE7 ("CDManager::getRecordAt (const Gtk::TreeIter&) - Selected record: " <<
+   TRACE7 ("RecordList::getRecordAt (const Gtk::TreeIter&) - Selected record: " <<
 	   record->getId () << '/' << record->getName ());
    return record;
 }
@@ -139,7 +139,7 @@ Glib::ustring RecordList::getColumnName () const {
 /// \returns int: Value as strcmp
 //-----------------------------------------------------------------------------
 int RecordList::sortEntity (const Gtk::TreeModel::iterator& a,
-			    const Gtk::TreeModel::iterator& b) {
+			    const Gtk::TreeModel::iterator& b) const {
    HRecord ha (getRecordAt (a));
    HRecord hb (getRecordAt (b));
    Glib::ustring aname (Record::removeIgnored (ha->getName ()));

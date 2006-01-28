@@ -1,7 +1,7 @@
 #ifndef OOLIST_H
 #define OOLIST_H
 
-//$Id: OOList.h,v 1.11 2006/01/22 18:36:23 markus Exp $
+//$Id: OOList.h,v 1.12 2006/01/28 06:12:16 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -75,13 +75,13 @@ class OwnerObjectList : public Gtk::TreeView {
    HEntity getObjectAt (const Gtk::TreeIter iterator) const;
    HCelebrity getCelebrityAt (const Gtk::TreeIter iterator) const;
 
-   Gtk::TreeModel::iterator getOwner (const Glib::ustring& name);
-   Gtk::TreeModel::iterator getOwner (const HCelebrity& owner);
+   Gtk::TreeModel::iterator getOwner (const Glib::ustring& name) const;
+   Gtk::TreeModel::iterator getOwner (const HCelebrity& owner) const;
    Gtk::TreeModel::iterator getObject (const Gtk::TreeIter& parent,
-				       const Glib::ustring& name);
+				       const Glib::ustring& name) const;
    Gtk::TreeModel::iterator getObject (const Gtk::TreeIter& parent,
-				       const HEntity& object);
-   Gtk::TreeModel::iterator getObject (const HEntity& object);
+				       const HEntity& object) const;
+   Gtk::TreeModel::iterator getObject (const HEntity& object) const;
 
    void selectRow (const Gtk::TreeModel::const_iterator& i);
 
@@ -102,11 +102,11 @@ class OwnerObjectList : public Gtk::TreeView {
 
    void changeGenre (Gtk::TreeModel::Row& row, unsigned int value);
 
-   int sortByName (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
-   int sortByYear (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
-   int sortByGenre (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
-   virtual int sortEntity (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
-   int sortOwner (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
+   int sortByName (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) const;
+   int sortByYear (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) const;
+   int sortByGenre (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) const;
+   virtual int sortEntity (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) const;
+   int sortOwner (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) const;
 
    const Genres& genres;
    const OwnerObjectColumns* colOwnerObjects;
@@ -119,7 +119,7 @@ class OwnerObjectList : public Gtk::TreeView {
    OwnerObjectList (const OwnerObjectList& other);
    const OwnerObjectList& operator= (const OwnerObjectList& other);
 
-   Glib::ustring getLiveSpan (const HCelebrity& owner);
+   Glib::ustring getLiveSpan (const HCelebrity& owner) const;
 };
 
 

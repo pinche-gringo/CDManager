@@ -1,11 +1,11 @@
-//$Id: MovieList.cpp,v 1.21 2006/01/22 18:36:23 markus Exp $
+//$Id: MovieList.cpp,v 1.22 2006/01/28 06:12:15 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.21 $
+//REVISION    : $Revision: 1.22 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -101,6 +101,7 @@ MovieList::MovieList (const Genres& genres)
 
    append_column (*Gtk::manage (column));
    column->set_resizable ();
+   set_rules_hint ();
 }
 
 //-----------------------------------------------------------------------------
@@ -189,7 +190,7 @@ Glib::ustring MovieList::getColumnName () const {
 /// \returns int: Value as strcmp
 //-----------------------------------------------------------------------------
 int MovieList::sortEntity (const Gtk::TreeModel::iterator& a,
-			   const Gtk::TreeModel::iterator& b) {
+			   const Gtk::TreeModel::iterator& b) const {
    HMovie ha (getMovieAt (a));
    HMovie hb (getMovieAt (b));
    int rc (Movie::removeIgnored (ha->getName ()).compare (Movie::removeIgnored (hb->getName ())));

@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.17 2006/01/22 18:36:23 markus Exp $
+//$Id: OOList.cpp,v 1.18 2006/01/28 06:12:15 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.17 $
+//REVISION    : $Revision: 1.18 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -70,6 +70,8 @@ OwnerObjectList::~OwnerObjectList () {
 //-----------------------------------------------------------------------------
 void OwnerObjectList::init (const OwnerObjectColumns& cols) {
    TRACE9 ("OwnerObject::init ()");
+   updateGenres ();
+
    colOwnerObjects = &cols;
    set_model (mOwnerObjects);
 
@@ -314,7 +316,7 @@ HCelebrity OwnerObjectList::getCelebrityAt (const Gtk::TreeIter iter) const {
 /// \param director: Director to display
 /// \returns Glib::ustring: Text to display
 //-----------------------------------------------------------------------------
-Glib::ustring OwnerObjectList::getLiveSpan (const HCelebrity& owner) {
+Glib::ustring OwnerObjectList::getLiveSpan (const HCelebrity& owner) const {
    TRACE9 ("OwnerObjectList::getLiveSpan (const HCelebrity&) - "
 	   << (owner.isDefined () ? owner->getName ().c_str () : "None"));
    Check1 (owner.isDefined ());
@@ -380,7 +382,7 @@ void OwnerObjectList::changeGenre (Gtk::TreeModel::Row& row, unsigned int value)
 /// \returns int: Value as strcmp
 //-----------------------------------------------------------------------------
 int OwnerObjectList::sortByName (const Gtk::TreeModel::iterator& a,
-				 const Gtk::TreeModel::iterator& b) {
+				 const Gtk::TreeModel::iterator& b) const {
    Check2 (a->parent () == b->parent ());
    if (a->parent ())
       return sortEntity (a, b);
@@ -395,7 +397,7 @@ int OwnerObjectList::sortByName (const Gtk::TreeModel::iterator& a,
 /// \returns int: Value as strcmp
 //-----------------------------------------------------------------------------
 int OwnerObjectList::sortByYear (const Gtk::TreeModel::iterator& a,
-				 const Gtk::TreeModel::iterator& b) {
+				 const Gtk::TreeModel::iterator& b) const {
    Check2 (a->parent () == b->parent ());
    if (a->parent ()) {
       Gtk::TreeRow ra (*a);
@@ -418,7 +420,7 @@ int OwnerObjectList::sortByYear (const Gtk::TreeModel::iterator& a,
 /// \returns int: Value as strcmp
 //-----------------------------------------------------------------------------
 int OwnerObjectList::sortByGenre (const Gtk::TreeModel::iterator& a,
-				  const Gtk::TreeModel::iterator& b) {
+				  const Gtk::TreeModel::iterator& b) const {
    if ((*a)->parent ()) {
       Gtk::TreeRow ra (*a);
       Gtk::TreeRow rb (*b); Check2 (rb->parent ());
@@ -438,7 +440,7 @@ int OwnerObjectList::sortByGenre (const Gtk::TreeModel::iterator& a,
 /// \returns int: Value as strcmp
 //-----------------------------------------------------------------------------
 int OwnerObjectList::sortOwner (const Gtk::TreeModel::iterator& a,
-				const Gtk::TreeModel::iterator& b) {
+				const Gtk::TreeModel::iterator& b) const {
    Check2 (!a->parent ()); Check2 (!b->parent ());
    HCelebrity ha (getCelebrityAt (a)); Check3 (ha.isDefined ());
    HCelebrity hb (getCelebrityAt (b)); Check3 (hb.isDefined ());
@@ -456,7 +458,7 @@ int OwnerObjectList::sortOwner (const Gtk::TreeModel::iterator& a,
 /// \returns int: Value as strcmp
 //-----------------------------------------------------------------------------
 int OwnerObjectList::sortEntity (const Gtk::TreeModel::iterator& a,
-				 const Gtk::TreeModel::iterator& b) {
+				 const Gtk::TreeModel::iterator& b) const {
    Check2 (a->parent ()); Check2 (b->parent ());
    Check2 (colOwnerObjects);
    Gtk::TreeRow ra (*a);
@@ -474,7 +476,7 @@ int OwnerObjectList::sortEntity (const Gtk::TreeModel::iterator& a,
 /// \param name: Name of entry
 /// \returns Gtk::TreeModel::iterator: Iterator to found entry or end ().
 //-----------------------------------------------------------------------------
-Gtk::TreeModel::iterator OwnerObjectList::getOwner (const Glib::ustring& name) {
+Gtk::TreeModel::iterator OwnerObjectList::getOwner (const Glib::ustring& name) const {
    Check2 (colOwnerObjects);
 
    for (Gtk::TreeModel::const_iterator i (mOwnerObjects->children ().begin ());
@@ -491,7 +493,7 @@ Gtk::TreeModel::iterator OwnerObjectList::getOwner (const Glib::ustring& name) {
 /// \param owner: Handle to owner
 /// \returns Gtk::TreeModel::iterator: Iterator to found entry or end ().
 //-----------------------------------------------------------------------------
-Gtk::TreeModel::iterator OwnerObjectList::getOwner (const HCelebrity& owner) {
+Gtk::TreeModel::iterator OwnerObjectList::getOwner (const HCelebrity& owner) const {
    Check2 (colOwnerObjects);
    Check2 (owner.isDefined ());
 
@@ -512,7 +514,7 @@ Gtk::TreeModel::iterator OwnerObjectList::getOwner (const HCelebrity& owner) {
 /// \returns Gtk::TreeModel::iterator: Iterator to found entry or end ().
 //-----------------------------------------------------------------------------
 Gtk::TreeModel::iterator OwnerObjectList::getObject (const Gtk::TreeIter& parent,
-						     const Glib::ustring& name) {
+						     const Glib::ustring& name) const {
    Check2 (colOwnerObjects);
 
    for (Gtk::TreeModel::const_iterator i (parent->children ().begin ());
@@ -531,7 +533,7 @@ Gtk::TreeModel::iterator OwnerObjectList::getObject (const Gtk::TreeIter& parent
 /// \returns Gtk::TreeModel::iterator: Iterator to found entry or end ().
 //-----------------------------------------------------------------------------
 Gtk::TreeModel::iterator OwnerObjectList::getObject (const Gtk::TreeIter& parent,
-						     const HEntity& object) {
+						     const HEntity& object) const {
    Check2 (colOwnerObjects);
 
    for (Gtk::TreeModel::const_iterator i (parent->children ().begin ());
@@ -548,7 +550,7 @@ Gtk::TreeModel::iterator OwnerObjectList::getObject (const Gtk::TreeIter& parent
 /// \param object: Entry to find
 /// \returns Gtk::TreeModel::iterator: Iterator to found entry or end ().
 //-----------------------------------------------------------------------------
-Gtk::TreeModel::iterator OwnerObjectList::getObject (const HEntity& object) {
+Gtk::TreeModel::iterator OwnerObjectList::getObject (const HEntity& object) const {
    Check2 (colOwnerObjects);
 
    for (Gtk::TreeModel::const_iterator i (mOwnerObjects->children ().begin ());

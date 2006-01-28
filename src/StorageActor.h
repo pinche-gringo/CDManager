@@ -1,7 +1,7 @@
 #ifndef STORAGEACTOR_H
 #define STORAGEACTOR_H
 
-//$Id: StorageActor.h,v 1.1 2006/01/22 18:34:32 markus Exp $
+//$Id: StorageActor.h,v 1.2 2006/01/28 01:18:00 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,11 +22,15 @@
 #include <vector>
 #include <string>
 
-#include <YGP/StatusObj.h>
-
 #include "Actor.h"
 
 #include "Storage.h"
+
+
+// Forward declarations
+namespace YGP {
+   class StatusObject;
+};
 
 
 /**Class to access the stored ators

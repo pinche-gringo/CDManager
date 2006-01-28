@@ -1,7 +1,7 @@
 #ifndef STORAGEMOVIE_H
 #define STORAGEMOVIE_H
 
-//$Id: StorageMovie.h,v 1.1 2006/01/23 04:04:52 markus Exp $
+//$Id: StorageMovie.h,v 1.2 2006/01/28 03:26:44 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@
 #include <string>
 
 #include <YGP/Relation.h>
-#include <YGP/StatusObj.h>
 
 #include "Movie.h"
 #include "Director.h"
@@ -30,14 +29,20 @@
 #include "Storage.h"
 
 
-/**Class to access the stored ators
+// Forward declarations
+namespace YGP {
+   class StatusObject;
+};
+
+
+/**Class to access the stored movies
  */
 class StorageMovie : public Storage {
  public:
    static void loadDirectors (std::vector<HDirector>& target, YGP::StatusObject& stat) {
       loadCelebrities (target, "Directors", stat); }
-   static void loadMovies (std::map<unsigned int, std::vector<HMovie> >& aMovies,
-			   YGP::StatusObject& stat) throw (std::exception);
+   static unsigned int loadMovies (std::map<unsigned int, std::vector<HMovie> >& aMovies,
+				   YGP::StatusObject& stat) throw (std::exception);
    static void saveMovie (const HMovie movie, unsigned int idDirector) throw (std::exception);
    static void saveDirector (const HDirector director) throw (std::exception);
    static void deleteMovie (unsigned int idMovie) throw (std::exception);

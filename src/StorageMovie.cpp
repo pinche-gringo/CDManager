@@ -1,11 +1,11 @@
-//$Id: StorageMovie.cpp,v 1.1 2006/01/23 04:04:52 markus Exp $
+//$Id: StorageMovie.cpp,v 1.2 2006/01/28 03:28:49 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Storage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -27,10 +27,10 @@
 
 #include <cdmgr-cfg.h>
 
+#if WITH_MOVIES == 1
+
 #include <sstream>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/StatusObj.h>
@@ -69,8 +69,9 @@ void StorageMovie::loadNames (const std::vector<HDirector>& directors,
 //-----------------------------------------------------------------------------
 /// Loads the movies from the database.
 /// \param aMovies: Map (with director-ID as index) to store the movies
+/// \returns unsigned int: Number of loaded movies
 //-----------------------------------------------------------------------------
-void StorageMovie::loadMovies (std::map<unsigned int, std::vector<HMovie> >& aMovies,
+unsigned int StorageMovie::loadMovies (std::map<unsigned int, std::vector<HMovie> >& aMovies,
 			       YGP::StatusObject& stat) throw (std::exception) {
    Database::execute ("SELECT id, name, director, year, genre, type, languages"
 		      ", subtitles FROM Movies ORDER BY director, year");
@@ -95,6 +96,7 @@ void StorageMovie::loadMovies (std::map<unsigned int, std::vector<HMovie> >& aMo
 	    movie->setType (Database::getResultColumnAsUInt (5));
 	    movie->setLanguage (Database::getResultColumnAsString (6));
 	    movie->setTitles (Database::getResultColumnAsString (7));
+	    aMovies[Database::getResultColumnAsUInt (2)].push_back (movie);
 	 }
 	 catch (std::exception& e) {
 	    Glib::ustring msg (_("Warning loading movie `%1': %2"));
@@ -103,10 +105,10 @@ void StorageMovie::loadMovies (std::map<unsigned int, std::vector<HMovie> >& aMo
 	    stat.setMessage (YGP::StatusObject::WARNING, msg);
 	 }
 
-	 aMovies[Database::getResultColumnAsUInt (2)].push_back (movie);
 	 Database::getNextResultRow ();
       } // end-while has movies
    } // endif movies found
+   return Database::resultSize ();
 }
 
 
@@ -199,3 +201,5 @@ void StorageMovie::deleteMovie (unsigned int idMovie) throw (std::exception) {
    query << "DELETE FROM Movies WHERE id=" << idMovie;
    Database::execute (query.str ().c_str ());
 }
+
+#endif

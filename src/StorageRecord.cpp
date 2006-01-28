@@ -1,11 +1,11 @@
-//$Id: StorageRecord.cpp,v 1.1 2006/01/26 17:03:32 markus Exp $
+//$Id: StorageRecord.cpp,v 1.2 2006/01/28 01:35:41 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : <FILLIN>
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -32,7 +32,6 @@
 #include <sstream>
 
 #define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/StatusObj.h>
@@ -45,21 +44,20 @@
 //-----------------------------------------------------------------------------
 /// Loads the records from the database.
 /// \param aRecords: Map (with interpret-ID as index) to store the records
+/// \returns unsigned int: Number of loaded records
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
-void StorageRecord::loadRecords (std::map<unsigned int, std::vector<HRecord> >& aRecords,
-				 YGP::StatusObject& stat) throw (std::exception) {
+unsigned int StorageRecord::loadRecords (std::map<unsigned int, std::vector<HRecord> >& aRecords,
+					 YGP::StatusObject& stat) throw (std::exception) {
    Database::execute ("SELECT id, name, interpret, year, genre FROM "
 		      "Records ORDER BY interpret, year");
    TRACE8 ("StorageRecord::loadRecords () - Records: " << Database::resultSize ());
 
    if (Database::resultSize ()) {
-      std::map<unsigned int, std::vector<HRecord> > aRecords;
-
       HRecord newRec;
       while (Database::hasData ()) {
 	 // Fill and store record entry from DB-values
-	 TRACE8 ("PRecords::loadData () - Adding record "
+	 TRACE8 ("StorageRecords::loadRecords (...) - Adding record "
 		 << Database::getResultColumnAsUInt (0) << '/'
 		 << Database::getResultColumnAsString (1));
 	 newRec.define ();
@@ -70,6 +68,7 @@ void StorageRecord::loadRecords (std::map<unsigned int, std::vector<HRecord> >& 
 	    if (Database::getResultColumnAsUInt (3))
 	       newRec->setYear (Database::getResultColumnAsUInt (3));
 	    newRec->setGenre (Database::getResultColumnAsUInt (4));
+
 	    aRecords[Database::getResultColumnAsUInt (2)].push_back (newRec);
 	 }
 	 catch (std::exception& e) {
@@ -82,6 +81,9 @@ void StorageRecord::loadRecords (std::map<unsigned int, std::vector<HRecord> >& 
 	 Database::getNextResultRow ();
       } // end-while has records
    } // endif has records
+
+   TRACE9 ("StorageRecord::loadRecords () - Records: " << aRecords.size ());
+   return Database::resultSize ();
 }
 
 //-----------------------------------------------------------------------------
@@ -91,9 +93,10 @@ void StorageRecord::loadRecords (std::map<unsigned int, std::vector<HRecord> >& 
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
 void StorageRecord::loadSongs (unsigned int idRecord, std::vector<HSong>& songs) throw (std::exception) {
+   TRACE9 ("StorageRecord::loadSongs (unsigned int, std::vector<HSong>&) - " << idRecord);
+
    std::stringstream query;
-   query << "SELECT id, name, duration, genre, track FROM Songs WHERE"
-      " idRecord=" << idRecord;
+   query << "SELECT id, name, duration, genre, track FROM Songs WHERE idRecord=" << idRecord;
    Database::execute (query.str ().c_str ());
 
    HSong song;
@@ -109,6 +112,7 @@ void StorageRecord::loadSongs (unsigned int idRecord, std::vector<HSong>& songs)
       if (track)
 	 song->setTrack (track);
 
+      songs.push_back (song);
       Database::getNextResultRow ();
    } // end-while
 }

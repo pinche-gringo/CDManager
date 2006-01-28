@@ -1,7 +1,7 @@
 #ifndef STORAGERECORD_H
 #define STORAGERECORD_H
 
-//$Id: StorageRecord.h,v 1.1 2006/01/26 17:03:32 markus Exp $
+//$Id: StorageRecord.h,v 1.2 2006/01/28 01:35:41 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -42,8 +42,8 @@ class StorageRecord : public Storage {
  public:
    static void loadInterprets (std::vector<HInterpret>& target, YGP::StatusObject& stat) {
       loadCelebrities (target, "Interprets", stat); }
-   static void loadRecords (std::map<unsigned int, std::vector<HRecord> >& aRecords,
-			    YGP::StatusObject& stat) throw (std::exception);
+   static unsigned int loadRecords (std::map<unsigned int, std::vector<HRecord> >& aRecords,
+				    YGP::StatusObject& stat) throw (std::exception);
    static void loadSongs (unsigned int idRecord, std::vector<HSong>& songs) throw (std::exception);
 
    static void saveSong (const HSong song, unsigned int idRecord) throw (std::exception);

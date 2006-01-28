@@ -1,7 +1,7 @@
 #ifndef SONGLIST_H
 #define SONGLIST_H
 
-//$Id: SongList.h,v 1.12 2006/01/22 18:36:24 markus Exp $
+//$Id: SongList.h,v 1.13 2006/01/28 03:50:55 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 #include <gtkmm/treeview.h>
 #include <gtkmm/liststore.h>
 
-#include <Song.h>
+#include "Song.h"
 
 
 class Genres;
@@ -46,7 +46,7 @@ class SongColumns : public Gtk::TreeModel::ColumnRecord {
       add (colGenre); }
 
    Gtk::TreeModelColumn<HSong>         entry;
-   Gtk::TreeModelColumn<YGP::ANumeric> colTrack;
+   Gtk::TreeModelColumn<Glib::ustring> colTrack;
    Gtk::TreeModelColumn<Glib::ustring> colName;
    Gtk::TreeModelColumn<YGP::ATime>    colDuration;
    Gtk::TreeModelColumn<Glib::ustring> colGenre;
@@ -65,7 +65,7 @@ class SongList : public Gtk::TreeView {
 
    void updateGenres ();
    void updateTrack (Gtk::TreeRow& row, const YGP::ANumeric& track) {
-      row[colSongs.colTrack] = track;
+      row[colSongs.colTrack] = track.toString ();
       signalChanged.emit (row[colSongs.entry]); }
    void setGenre (Gtk::TreeIter& iter, unsigned int genre);
 

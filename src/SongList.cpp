@@ -1,11 +1,11 @@
-//$Id: SongList.cpp,v 1.17 2006/01/22 18:36:23 markus Exp $
+//$Id: SongList.cpp,v 1.18 2006/01/28 03:50:55 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.17 $
+//REVISION    : $Revision: 1.18 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -46,11 +46,13 @@
 /// Default constructor
 //-----------------------------------------------------------------------------
 SongList::SongList (const Genres& genres)
-   : genres (genres), mSongs (Gtk::ListStore::create (colSongs))
-     , mSongGenres (Gtk::ListStore::create (colSongGenres)) {
-   TRACE9 ("SongList::SongList (const Genres&)");
+   : genres (genres), mSongs (Gtk::ListStore::create (colSongs)),
+     mSongGenres (Gtk::ListStore::create (colSongGenres)) {
+   TRACE9 ("SongList::SongList (const Genres&) - " << genres.size ());
+   Check3 (genres.size ());
 
    set_model (mSongs);
+   updateGenres ();
 
    append_column (_("Track"), colSongs.colTrack);
    append_column (_("Song"), colSongs.colName);
@@ -77,7 +79,7 @@ SongList::SongList (const Genres& genres)
    column->pack_start (*manage (renderer));
    append_column (*Gtk::manage (column));
 
-   column->set_sort_column (4);
+   column->set_sort_column (colSongs.colGenre);
    column->set_resizable ();
    column->add_attribute (renderer->property_text (), colSongs.colGenre);
 
@@ -95,6 +97,7 @@ SongList::SongList (const Genres& genres)
 			  sigc::mem_fun (*this, &SongList::sortByName));
 
    set_search_column (colSongs.colName);
+   set_rules_hint ();
 }
 
 //-----------------------------------------------------------------------------
@@ -150,8 +153,8 @@ void SongList::valueChanged (const Glib::ustring& path,
 	       throw (std::runtime_error (e));
 	    }
 	 }
-	 song->setTrack (track);
-	 row[colSongs.colTrack] = song->getTrack ();
+	 song->setTrack (YGP::ANumeric (track));
+	 row[colSongs.colTrack] = value;
 	 break; }
       case 1: {
 	 Gtk::TreeModel::const_iterator i (getSong (value));
@@ -195,7 +198,7 @@ void SongList::valueChanged (const Glib::ustring& path,
 /// Sorts the entries in the song listbox
 /// \param a: First entry to compare
 /// \param a: Second entry to compare
-/// \returns int: Value as strcmp
+/// \returns int: Value of compare (analogue to strcmp)
 //-----------------------------------------------------------------------------
 int SongList::sortByTrack (const Gtk::TreeModel::iterator& a,
 			   const Gtk::TreeModel::iterator& b) {
@@ -280,11 +283,12 @@ Gtk::TreeModel::iterator SongList::getSong (const Glib::ustring& name) const {
 /// \returns Gtk::TreeModel::iterator: Iterator to found song or end ().
 //-----------------------------------------------------------------------------
 Gtk::TreeModel::iterator SongList::getSong (const YGP::ANumeric& track) const {
+   Glib::ustring strTrack (track.toString ());
    for (Gtk::TreeModel::const_iterator i (mSongs->children ().begin ());
 	i != mSongs->children ().end (); ++i) {
       Gtk::TreeModel::Row actRow (*i);
-      YGP::ANumeric value (actRow[colSongs.colTrack]);
-      if (value == track)
+      Glib::ustring value (actRow[colSongs.colTrack]);
+      if (value == strTrack)
 	 return i;
    }
    return mSongs->children ().end ();
@@ -319,14 +323,18 @@ void SongList::setGenre (Gtk::TreeIter& iter, unsigned int genre) {
 /// \param row: Row to update
 //-----------------------------------------------------------------------------
 void SongList::update (Gtk::TreeModel::Row& row) {
-   HSong song (row[colSongs.entry]);
-   row[colSongs.colTrack] = song->getTrack ();
+   TRACE9 ("SongList::update (Gtk::TreeModel::Row&)");
+
+   HSong song (row[colSongs.entry]); Check3 (song.isDefined ());
+   row[colSongs.colTrack] = song->getTrack ().toString ();
    row[colSongs.colName] = song->getName ();
    row[colSongs.colDuration] = song->getDuration ();
 
+   Check3 (genres.size ());
    Genres::const_iterator g
       (genres.find (song->getGenre ()));
    if (g == genres.end ())
       g = genres.begin ();
+   Check3 (g != genres.end ());
    row[colSongs.colGenre] = g->second;
 }

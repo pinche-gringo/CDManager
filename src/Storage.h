@@ -1,7 +1,7 @@
 #ifndef STORAGE_H
 #define STORAGE_H
 
-//$Id: Storage.h,v 1.2 2006/01/24 18:02:17 markus Exp $
+//$Id: Storage.h,v 1.3 2006/01/28 01:14:44 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -45,7 +45,8 @@ class Storage {
    static void startTransaction ();
    static void abortTransaction ();
    static void commitTransaction ();
-   static void loadCelebrities (std::vector<HCelebrity>& target, const std::string& table, YGP::StatusObject& stat);
+   static void loadCelebrities (std::vector<HCelebrity>& target, const std::string& table,
+				YGP::StatusObject& stat) throw (std::exception);
 
  private:
    Storage ();

@@ -1,11 +1,11 @@
-//$Id: CDAppl.cpp,v 1.10 2006/01/20 00:30:45 markus Exp $
+//$Id: CDAppl.cpp,v 1.11 2006/01/28 01:15:16 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Application
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.10 $
+//REVISION    : $Revision: 1.11 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.12.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -32,6 +32,7 @@
 
 #include <YGP/INIFile.h>
 
+#include "Movie.h"
 #include "CDManager.h"
 
 #include "CDAppl.h"
@@ -192,7 +193,7 @@ const char* CDAppl::description () const {
       (PACKAGE " V" VERSION " - "
        + std::string (_("Compiled on"))
        + std::string (" " __DATE__ " - " __TIME__ "\n\n")
-       + std::string (_("Copyright (C) 2004, 2005 Markus Schwab; e-mail: g17m0@lycos.com"
+       + std::string (_("Copyright (C) 2004 - 2006 Markus Schwab; e-mail: g17m0@lycos.com"
 			"\nDistributed under the terms of the GNU General "
 			"Public License")));
    return version.c_str ();

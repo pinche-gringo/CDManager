@@ -1,7 +1,7 @@
 #ifndef PRECORDS_H
 #define PRECORDS_H
 
-//$Id: PRecords.h,v 1.2 2006/01/26 17:50:38 markus Exp $
+//$Id: PRecords.h,v 1.3 2006/01/28 03:36:56 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -45,17 +45,20 @@ class LanguageImg;
  */
 class PRecords : public NBPage {
  public:
-   PRecords (Gtk::Statusbar& status, Gtk::Widget& menuSave, const Genres& genres);
+   PRecords (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave, const Genres& genres);
    virtual ~PRecords ();
 
    virtual void loadData ();
    virtual void saveData () throw (Glib::ustring);
    virtual void getFocus ();
    virtual void addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAction);
-   virtual void removeMenu ();
    virtual void deleteSelection ();
    virtual void undo ();
    virtual void clear ();
+
+   virtual void export2HTML (unsigned int fd);
+   void addEntry (const Glib::ustring&artist, const Glib::ustring& record,
+		  const Glib::ustring& song, unsigned int track);
 
  private:
    PRecords ();

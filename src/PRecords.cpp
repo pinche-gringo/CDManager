@@ -1,11 +1,11 @@
-//$Id: PRecords.cpp,v 1.2 2006/01/26 17:50:38 markus Exp $
+//$Id: PRecords.cpp,v 1.3 2006/01/28 03:37:56 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Records
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -29,14 +29,16 @@
 
 #if WITH_RECORDS == 1
 
+#include <cstdlib>
+
+#include <sstream>
+
 #include <gtkmm/paned.h>
 #include <gtkmm/stock.h>
 #include <gtkmm/uimanager.h>
 #include <gtkmm/statusbar.h>
 #include <gtkmm/scrolledwindow.h>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ANumeric.h>
@@ -55,9 +57,11 @@
 /// \param menuSave: Menu-entry to save the database
 /// \param genres: Genres to use in actor-list
 //-----------------------------------------------------------------------------
-PRecords::PRecords (Gtk::Statusbar& status, Gtk::Widget& menuSave, const Genres& genres)
+PRecords::PRecords (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave, const Genres& genres)
    : NBPage (status, menuSave), records (genres), songs (genres),
      relRecords ("records"), relSongs ("songs") {
+   TRACE9 ("PRecords::PRecords (Gtk::Statusbar&, Glib::RefPtr<Gtk::Action>, const Genres&)");
+
    Gtk::HPaned* cds (new Gtk::HPaned);
    Gtk::ScrolledWindow* scrlRecords (new Gtk::ScrolledWindow);
    Gtk::ScrolledWindow* scrlSongs (new Gtk::ScrolledWindow);
@@ -82,6 +86,7 @@ PRecords::PRecords (Gtk::Statusbar& status, Gtk::Widget& menuSave, const Genres&
 
    cds->add1 (*manage (scrlRecords));
    cds->add2 (*manage (scrlSongs));
+   cds->set_position (400);
 
    widget = cds;
 }
@@ -90,6 +95,7 @@ PRecords::PRecords (Gtk::Statusbar& status, Gtk::Widget& menuSave, const Genres&
 /// Destructor
 //-----------------------------------------------------------------------------
 PRecords::~PRecords () {
+   TRACE9 ("PRecords::~PRecords ()");
 }
 
 
@@ -107,7 +113,7 @@ void PRecords::loadData () {
       std::sort (interprets.begin (), interprets.end (), &Interpret::compByName);
 
       std::map<unsigned int, std::vector<HRecord> > aRecords;
-      StorageRecord::loadRecords (aRecords, status);
+      unsigned int cRecords (StorageRecord::loadRecords (aRecords, status));
       TRACE8 ("PRecords::loadData () - Found " << aRecords.size () << " records");
 
       for (std::vector<HInterpret>::const_iterator i (interprets.begin ());
@@ -121,7 +127,7 @@ void PRecords::loadData () {
 		 r != iRec->second.end (); ++r) {
 	       records.append (*r, interpret);
 	       relRecords.relate (*i, *r);
-	    } // end-for all records for an artist
+	    }
 	    aRecords.erase (iRec);
 	 } // end-if artist has record
       } // end-for all artists
@@ -129,8 +135,8 @@ void PRecords::loadData () {
 
       loaded = true;
 
-      Glib::ustring msg (Glib::locale_to_utf8 (ngettext ("Loaded %1 record", "Loaded %1 records", aRecords.size ())));
-      msg.replace (msg.find ("%1"), 2, YGP::ANumeric::toString (aRecords.size ()));
+      Glib::ustring msg (Glib::locale_to_utf8 (ngettext ("Loaded %1 record", "Loaded %1 records", cRecords)));
+      msg.replace (msg.find ("%1"), 2, YGP::ANumeric::toString (cRecords));
 
       Glib::ustring tmp (Glib::locale_to_utf8 (ngettext (" from %1 artist", " from %1 artists", interprets.size ())));
       tmp.replace (tmp.find ("%1"), 2, YGP::ANumeric::toString (interprets.size ()));
@@ -160,13 +166,14 @@ void PRecords::loadSongs (const HRecord& record) {
    Check1 (record.isDefined ());
 
    try {
-      std::vector<HSong> songs;
-      StorageRecord::loadSongs (record->getId (), songs);
+      std::vector<HSong> songs_;
+      StorageRecord::loadSongs (record->getId (), songs_);
+      TRACE5 ("PRecords::loadSongs (const HRecord& record) - Found songs: " << songs_.size ());
 
-      if (songs.size ()) {
-	  relSongs.relate (record, *songs.begin ());
-	  if (songs.size () > 1)
-	     relSongs.getObjects (record) = songs;
+      if (songs_.size ()) {
+	  relSongs.relate (record, *songs_.begin ());
+	  if (songs_.size () > 1)
+	     relSongs.getObjects (record) = songs_;
       }
       record->setSongsLoaded ();
    }
@@ -231,14 +238,15 @@ void PRecords::recordSelected () {
 
       if ((*i)->parent ()) {
 	 HRecord hRecord (records.getRecordAt (i)); Check3 (hRecord.isDefined ());
-	 if (!hRecord->areSongsLoaded () && hRecord->getId ())
+	 if (hRecord->needsLoading () && hRecord->getId ())
 	    loadSongs (hRecord);
+	 Check3 (!hRecord->needsLoading ());
 
 	 // Add related songs to the listbox
 	 if (relSongs.isRelated (hRecord))
-	    for (std::vector<HSong>::iterator i (relSongs.getObjects (hRecord).begin ());
-		 i != relSongs.getObjects (hRecord).end (); ++i)
-	       songs.append (*i);
+	    for (std::vector<HSong>::iterator s (relSongs.getObjects (hRecord).begin ());
+		 s != relSongs.getObjects (hRecord).end (); ++s)
+	       songs.append (*s);
 
 	 enableEdit (OBJECT_SELECTED);
       }
@@ -254,6 +262,7 @@ void PRecords::recordSelected () {
 /// \param song: Handle to changed song
 //-----------------------------------------------------------------------------
 void PRecords::songChanged (const HSong& song) {
+   TRACE9 ("PRecords::songChanged (const HSong&)");
 }
 
 //-----------------------------------------------------------------------------
@@ -540,7 +549,7 @@ void PRecords::deleteSelectedRecords () {
 	 while (iter->children ().size ()) {
 	    Gtk::TreeIter child (iter->children ().begin ());
 	    HRecord hRecord (records.getRecordAt (child));
-	    if (!hRecord->areSongsLoaded () && hRecord->getId ())
+	    if (hRecord->needsLoading () && hRecord->getId ())
 	       loadSongs (hRecord);
 	    deleteRecord (child);
 	 }
@@ -621,6 +630,120 @@ void PRecords::deleteSelectedSongs () {
 
    apMenus[UNDO]->set_sensitive ();
    enableSave ();
+}
+
+//-----------------------------------------------------------------------------
+/// Exports the contents of the page to HTML
+/// \param fd: File-descriptor for exporting
+//-----------------------------------------------------------------------------
+void PRecords::export2HTML (unsigned int fd) {
+   std::sort (interprets.begin (), interprets.end (), &Interpret::compByName);
+
+   // Write record-information
+   for (std::vector<HInterpret>::const_iterator i (interprets.begin ());
+	i != interprets.end (); ++i)
+      if (relRecords.isRelated (*i)) {
+	 std::stringstream output;
+	 output << 'I' << **i;
+
+	 std::vector<HRecord>& records (relRecords.getObjects (*i));
+	 Check3 (records.size ());
+	 for (std::vector<HRecord>::const_iterator r (records.begin ());
+	      r != records.end (); ++r)
+	    output << "R" << **r;
+
+	 TRACE9 ("CDManager::export () - Writing: " << output.str ());
+	 ::write (fd, output.str ().data (), output.str ().size ());
+      }
+}
+
+//-----------------------------------------------------------------------------
+/// Adds a song to the list (creating record/interpret, if necessary)
+/// \param artist: Name of artist
+/// \param record: Name of record
+/// \param song: Name of song
+/// \param track: Number of track
+//-----------------------------------------------------------------------------
+void PRecords::addEntry (const Glib::ustring&artist, const Glib::ustring& record,
+			 const Glib::ustring& song, unsigned int track) {
+   HInterpret interpret;
+   Gtk::TreeIter i (records.getOwner (artist));
+   if (i == records.getModel ()->children ().end ()) {
+      TRACE9 ("PRecords::addEntry (3x const Glib::ustring&, unsigned int) - Adding band " << artist);
+      interpret.define ();
+      interpret->setName (artist);
+      i = addInterpret (interpret);
+   }
+   else
+      interpret = records.getInterpretAt (i);
+
+   HRecord rec;
+   Gtk::TreeIter r (records.getObject (i, record));
+   if (r == i->children ().end ()) {
+      TRACE9 ("PRecords::addEntry (3x const Glib::ustring&, unsigned int) - Adding record " << record);
+      rec.define ();
+      rec->setSongsLoaded ();
+      rec->setName (record);
+      addRecord (i, rec);
+   }
+   else {
+      rec = records.getRecordAt (r);
+      records.selectRow (r);
+   }
+
+   HSong hSong;
+   Gtk::TreeIter s (songs.getSong (song));
+   if (s == songs.getModel ()->children ().end ()) {
+      TRACE9 ("PRecords::addEntry (3x const Glib::ustring&, unsigned int) - Adding song " << hSong);
+      hSong.define ();
+      hSong->setName (song);
+      if (track)
+	 hSong->setTrack (track);
+      addSong (hSong);
+   }
+   else {
+      hSong = songs.getEntryAt (s);
+      songs.scroll_to_row (songs.getModel ()->get_path (s), 0.80);
+      Glib::RefPtr<Gtk::TreeSelection> songSel (songs.get_selection ());
+      songSel->select (s);
+      if (track) {
+	 hSong->setTrack (track);
+	 Gtk::TreeRow row (*s);
+	 songs.updateTrack (row, hSong->getTrack ());
+      }
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Undoes the changes on the page
+//-----------------------------------------------------------------------------
+void PRecords::undo () {
+}
+
+//-----------------------------------------------------------------------------
+/// Sets the focus to the record-list
+//-----------------------------------------------------------------------------
+void PRecords::getFocus () {
+   records.grab_focus ();
+}
+
+//-----------------------------------------------------------------------------
+/// Removes all information from the page
+//-----------------------------------------------------------------------------
+void PRecords::clear () {
+   for (std::vector<HInterpret>::iterator i (interprets.begin ());
+	i != interprets.end (); ++i)
+      if (relRecords.isRelated (*i)) {
+	 std::vector<HRecord>& records (relRecords.getObjects (*i));
+	 for (std::vector<HRecord>::iterator r (records.begin ());
+	      r != records.end (); ++r)
+	    if (relSongs.isRelated (*r))
+	       relSongs.unrelateAll (*r);
+	 relRecords.unrelateAll (*i);
+      }
+   interprets.clear ();
+
+   songs.getModel ()->clear ();
 }
 
 #endif

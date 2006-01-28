@@ -1,8 +1,8 @@
-dnl $Id: configure.ac,v 1.17 2006/01/19 21:24:14 markus Exp $
+dnl $Id: configure.ac,v 1.18 2006/01/28 01:14:08 markus Exp $
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.52)
-AC_REVISION($Revision: 1.17 $)
+AC_REVISION($Revision: 1.18 $)
 AC_INIT(CDManager, 0.8.10, [g17m0@lycos.com], CDManager)
 
 RELEASE=${PACKAGE_VERSION%.*}
@@ -194,6 +194,9 @@ dnl Checks for typedefs, structures, and compiler characteristics.
 dnl Checks for library functions.
 
 dnl Enable special features
+ACTORS=0
+MOVIES=0
+RECORDS=0
 AC_ARG_ENABLE(debug,
               AC_HELP_STRING([[[[[--enable-debug[=LEVEL]]]]]],
                              [Enables additional traces]),
@@ -210,6 +213,32 @@ AC_ARG_ENABLE(checks,
                   CXXFLAGS="$CXXFLAGS -DCHECK=$enableval";
               else
                   CXXFLAGS="$CXXFLAGS -DNDEBUG -UCHECK"; fi)
+AC_ARG_ENABLE(actors,
+              AC_HELP_STRING([--enable-actors],
+                             [Enables handling of actors]))
+if test "$enable_actors" != "no"; then
+   if test "$enable_movies" = "no"; then
+      AC_MSG_WARN([--enable-actors needs the movies enabled! Enabling both ...])
+      enable_movies=yes
+   fi
+   ACTORS=1
+fi
+AC_ARG_ENABLE(movies,
+              AC_HELP_STRING([--enable-movies],
+                             [Enables handling of movies]))
+if test "$enable_movies" != "no"; then
+   MOVIES=1
+fi
+AC_ARG_ENABLE(records,
+              AC_HELP_STRING([--enable-records],
+                             [Enables handling of records]))
+if test "$enable_records" != "no"; then
+   RECORDS=1
+fi
+
+AC_DEFINE_UNQUOTED(WITH_ACTORS, $ACTORS, [Define if actors should be handled])
+AC_DEFINE_UNQUOTED(WITH_MOVIES, $MOVIES, [Define if movies should be handled])
+AC_DEFINE_UNQUOTED(WITH_RECORDS, $RECORDS, [Define if records should be handled])
 
 
 AC_OUTPUT(Makefile intl/Makefile po/Makefile.in src/Makefile doc/Makefile\
@@ -220,7 +249,7 @@ dnl Settings for autoheader
 AH_TOP([#ifndef CDMANAGER_CFG_H
 #define CDMANAGER_CFG_H
 
-//$Id: configure.ac,v 1.17 2006/01/19 21:24:14 markus Exp $
+//$Id: configure.ac,v 1.18 2006/01/28 01:14:08 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

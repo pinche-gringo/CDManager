@@ -1,7 +1,7 @@
 #ifndef NBPAGE_H
 #define NBPAGE_H
 
-//$Id: NBPage.h,v 1.1 2006/01/22 18:34:31 markus Exp $
+//$Id: NBPage.h,v 1.2 2006/01/28 01:16:17 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 
 #include <gtkmm/action.h>
 #include <gtkmm/actiongroup.h>
+#include <gtkmm/box.h>
 
 #include <sigc++/trackable.h>
 
@@ -39,7 +40,7 @@ class NBPage : public sigc::trackable {
  public:
    virtual ~NBPage ();
 
-   virtual Gtk::Widget* getWindow () { return widget; }
+   virtual Gtk::Widget* getWindow () const { return widget; }
 
    bool isLoaded () const { return loaded; }
 
@@ -47,22 +48,26 @@ class NBPage : public sigc::trackable {
    virtual void saveData () throw (Glib::ustring) = 0;
    virtual void getFocus () = 0;
    virtual void addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAction) = 0;
+   virtual void removeMenu ();
    virtual void deleteSelection () = 0;
    virtual void undo () = 0;
    virtual void clear () = 0;
+   virtual void export2HTML (unsigned int fd);
+
+   bool isChanged () const { return false; }
 
  protected:
-   NBPage (Gtk::Statusbar& status, Gtk::Widget& menuSave) : widget (NULL),
+   NBPage (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave) : widget (NULL),
       menuSave (menuSave), statusbar (status), loaded (false) { }
 
-   Gtk::Widget* widget;
-   Gtk::Widget& menuSave;
-   Gtk::Statusbar& statusbar;
+   Gtk::Widget*              widget;
+   Glib::RefPtr<Gtk::Action> menuSave;
+   Gtk::Statusbar&           statusbar;
 
    typedef enum { NONE_SELECTED, OWNER_SELECTED, OBJECT_SELECTED } SELECTED;
    void enableEdit (SELECTED selected);
    void showStatus (const Glib::ustring& msgStatus);
-   void enableSave (bool on = true) { menuSave.set_sensitive (on); }
+   void enableSave (bool on = true) { menuSave->set_sensitive (on); }
 
    enum { NEW1, NEW2, NEW3, UNDO, DELETE, LAST };
    Glib::RefPtr<Gtk::Action> apMenus[LAST];

@@ -1,11 +1,11 @@
-//$Id: NBPage.cpp,v 1.1 2006/01/22 18:34:31 markus Exp $
+//$Id: NBPage.cpp,v 1.2 2006/01/28 01:16:17 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : NBPage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.1 $
+//REVISION    : $Revision: 1.2 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -64,4 +64,17 @@ void NBPage::enableEdit (SELECTED selected) {
 void NBPage::showStatus (const Glib::ustring& msgStatus) {
    statusbar.pop ();
    statusbar.push (msgStatus);
+}
+
+//-----------------------------------------------------------------------------
+/// Removes any created page-related menus
+//-----------------------------------------------------------------------------
+void NBPage::removeMenu () {
+}
+
+//-----------------------------------------------------------------------------
+/// Exports the contents of the page to HTML
+/// \param fd: File-descriptor for exporting
+//-----------------------------------------------------------------------------
+void NBPage::export2HTML (unsigned int fd) {
 }

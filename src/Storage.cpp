@@ -1,11 +1,11 @@
-//$Id: Storage.cpp,v 1.2 2006/01/24 18:02:17 markus Exp $
+//$Id: Storage.cpp,v 1.3 2006/01/28 03:29:48 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Storage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 21.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -27,8 +27,6 @@
 
 #include <cdmgr-cfg.h>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 
@@ -123,7 +121,7 @@ void Storage::deleteArticles () throw (std::exception) {
 /// \param stat: Statusobject, in which to return the errors
 //-----------------------------------------------------------------------------
 void Storage::loadCelebrities (std::vector<HCelebrity>& target, const std::string& table,
-			       YGP::StatusObject& stat) {
+			       YGP::StatusObject& stat) throw (std::exception) {
    TRACE9 ("Storage::loadCelebrities (std::vector<HCelebrity>&, const std::string&,\n\tYGP::StatusObject&) - " << table);
 
    // Load data from Celebrities table

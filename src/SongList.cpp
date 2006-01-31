@@ -1,11 +1,11 @@
-//$Id: SongList.cpp,v 1.19 2006/01/28 06:12:16 markus Exp $
+//$Id: SongList.cpp,v 1.20 2006/01/31 20:45:45 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.19 $
+//REVISION    : $Revision: 1.20 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -136,8 +136,8 @@ void SongList::valueChanged (const Glib::ustring& path,
 
    Gtk::TreeModel::Row row (*mSongs->get_iter (Gtk::TreeModel::Path (path)));
 
+   Glib::ustring oldValue;
    HSong song (row[colSongs.entry]); Check3 (song.isDefined ());
-   signalChanged.emit (song);
    try {
       switch (column) {
       case 0: {
@@ -153,9 +153,11 @@ void SongList::valueChanged (const Glib::ustring& path,
 	       throw (std::runtime_error (e));
 	    }
 	 }
-	 song->setTrack (YGP::ANumeric (track));
+	 song->setTrack (track);
+	 oldValue = row[colSongs.colTrack];
 	 row[colSongs.colTrack] = value;
 	 break; }
+
       case 1: {
 	 Gtk::TreeModel::const_iterator i (getSong (value));
 	 if ((i != row) && (i != mSongs->children ().end ())) {
@@ -164,22 +166,29 @@ void SongList::valueChanged (const Glib::ustring& path,
 	    throw (std::runtime_error (e));
 	 }
 	 song->setName (value);
+	 oldValue = row[colSongs.colName];
 	 row[colSongs.colName] = song->getName ();
 	 break; }
+
       case 2:
 	 song->setDuration (value);
+	 oldValue = YGP::ATime (row[colSongs.colDuration]).toUnformattedString ();
 	 row[colSongs.colDuration] = song->getDuration ();
 	 break;
+
       case 3: {
-	 for (Genres::const_iterator g (genres.begin ());
-	      g != genres.end (); ++g)
+	 Genres::const_iterator g (genres.begin ());
+	 for (; g != genres.end (); ++g)
 	    if (g->second == value) {
 	       song->setGenre (g->first);
+	       oldValue = row[colSongs.colGenre];
 	       row[colSongs.colGenre] = value;
-	       return;
+	       break;
 	    }
-	 throw (std::invalid_argument (_("Unknown genre!")));
+	 if (g == genres.end ())
+	    throw (std::invalid_argument (_("Unknown genre!")));
 	 break; }
+
       default:
 	 Check3 (0);
       } // endswitch
@@ -192,6 +201,7 @@ void SongList::valueChanged (const Glib::ustring& path,
       dlg->set_title (PACKAGE);
       dlg->get_window ()->set_transient_for (this->get_window ());
    }
+   signalChanged.emit (row, column, oldValue);
 }
 
 //-----------------------------------------------------------------------------
@@ -307,7 +317,8 @@ void SongList::setGenre (Gtk::TreeIter& iter, unsigned int genre) {
    if (!song->getGenre ()) {
       TRACE9 ("SongList::setGenre (Gtk::TreeIter&, unsigned int) - Changing " << song->getName ());
       song->setGenre (genre);
-      signalChanged.emit (song);
+      Glib::ustring oldValue ((*iter)[colSongs.colGenre]);
+      signalChanged.emit (iter, 3, oldValue);
 
       Genres::const_iterator g
 	 (genres.find (song->getGenre ()));

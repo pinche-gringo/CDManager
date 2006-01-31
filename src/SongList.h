@@ -1,7 +1,7 @@
 #ifndef SONGLIST_H
 #define SONGLIST_H
 
-//$Id: SongList.h,v 1.14 2006/01/28 06:12:16 markus Exp $
+//$Id: SongList.h,v 1.15 2006/01/31 20:45:46 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -65,22 +65,23 @@ class SongList : public Gtk::TreeView {
 
    void updateGenres ();
    void updateTrack (Gtk::TreeRow& row, const YGP::ANumeric& track) {
+      Glib::ustring oldValue (row[colSongs.colTrack]);
       row[colSongs.colTrack] = track.toString ();
-      signalChanged.emit (row[colSongs.entry]); }
+      signalChanged.emit (row, 0, oldValue); }
    void setGenre (Gtk::TreeIter& iter, unsigned int genre);
 
    virtual void update (Gtk::TreeModel::Row& row);
 
    Glib::RefPtr<Gtk::ListStore> getModel () const { return mSongs; }
    HSong getEntryAt (const Gtk::TreeModel::iterator& row) const {
-      Gtk::TreeModel::Row r (*row);
+      Gtk::TreeRow r (*row);
       return r[colSongs.entry];
    }
    Gtk::TreeModel::iterator getSong (const HSong& song) const;
    Gtk::TreeModel::iterator getSong (const YGP::ANumeric& track) const;
    Gtk::TreeModel::iterator getSong (const Glib::ustring& name) const;
 
-   sigc::signal<void, const HSong&> signalChanged;
+   sigc::signal<void, const Gtk::TreeIter&, unsigned int, Glib::ustring&> signalChanged;
 
  protected:
    void valueChanged (const Glib::ustring& path, const Glib::ustring& value,

@@ -1,7 +1,7 @@
 #ifndef PRECORDS_H
 #define PRECORDS_H
 
-//$Id: PRecords.h,v 1.3 2006/01/28 03:36:56 markus Exp $
+//$Id: PRecords.h,v 1.4 2006/01/31 20:47:13 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ class PRecords : public NBPage {
    void interpretChanged (const HInterpret& interpret);
    void recordChanged (const HRecord& record);
    void entityChanged (const HEntity& record);
-   void songChanged (const HSong& song);
+   void songChanged (const Gtk::TreeIter&, unsigned int column, Glib::ustring& oldValue);
    void recordGenreChanged (const HEntity& record);
 
    Gtk::TreeIter addInterpret (const HInterpret& interpret);
@@ -84,8 +84,11 @@ class PRecords : public NBPage {
    void deleteRecord (const Gtk::TreeIter& record);
    void deleteSelectedRecords ();
    void deleteSelectedSongs ();
+   void deleteSong (const HSong& song, const HRecord& record);
 
    void loadSongs (const HRecord& record);
+
+   enum { INTERPRET, RECORD, SONG };
 
    RecordList records;                              // GUI-element holding records
    SongList   songs;
@@ -94,19 +97,6 @@ class PRecords : public NBPage {
    std::vector<HInterpret>               interprets;
    YGP::Relation1_N<HInterpret, HRecord> relRecords;
    YGP::Relation1_N<HRecord, HSong>      relSongs;
-
-   // Information for undo
-   std::vector<HInterpret>       deletedInterprets;
-   std::map<HSong, HRecord>      deletedSongs;
-   std::map<HRecord, HInterpret> deletedRecords;
-
-   std::map<HSong, HSong>           changedSongs;
-   std::map<HRecord, HRecord>       changedRecords;
-   std::map<HInterpret, HInterpret> changedInterprets;
-
-   std::vector<HSong>      undoSongs;
-   std::vector<HRecord>    undoRecords;
-   std::vector<HInterpret> undoInterprets;
 };
 
 

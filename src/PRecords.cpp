@@ -1,11 +1,11 @@
-//$Id: PRecords.cpp,v 1.3 2006/01/28 03:37:56 markus Exp $
+//$Id: PRecords.cpp,v 1.4 2006/01/31 20:47:13 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Records
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -39,6 +39,8 @@
 #include <gtkmm/statusbar.h>
 #include <gtkmm/scrolledwindow.h>
 
+#define CHECK 9
+#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ANumeric.h>
@@ -259,10 +261,15 @@ void PRecords::recordSelected () {
 
 //-----------------------------------------------------------------------------
 /// Callback when a song is being changed
-/// \param song: Handle to changed song
+/// \param row: Changed line
+/// \param column: Changed column
+/// \param oldValue: Old value of the changed entry
 //-----------------------------------------------------------------------------
-void PRecords::songChanged (const HSong& song) {
-   TRACE9 ("PRecords::songChanged (const HSong&)");
+void PRecords::songChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue) {
+   TRACE9 ("PRecords::songChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&) - " << column);
+
+   Gtk::TreePath path (songs.getModel ()->get_path (row));
+   aUndo.push (Undo (Undo::CHANGED, SONG, column, path, oldValue));
 }
 
 //-----------------------------------------------------------------------------
@@ -353,6 +360,7 @@ void PRecords::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAct
 		   Gtk::AccelKey (_("<ctl>Delete")),
 		   mem_fun (*this, &PRecords::deleteSelection));
 
+   apMenus[UNDO]->set_sensitive (false);
    recordSelected ();
 }
 
@@ -403,9 +411,13 @@ Gtk::TreeIter PRecords::addSong (HSong& song) {
    HRecord record (records.getRecordAt (p)); Check3 (record.isDefined ());
    relSongs.relate (record, song);
    p = songs.append (song);
-   songs.scroll_to_row (songs.getModel ()->get_path (p), 0.8);
-   songs.get_selection ()->select (p);
-   songChanged (song);
+
+   Gtk::TreePath path (songs.getModel ()->get_path (p));
+   // songs.scroll_to_row (songs.getModel ()->get_path (p), 0.8);
+   // songs.get_selection ()->select (p);
+   songs.set_cursor (path);
+
+   aUndo.push (Undo (Undo::INSERT, SONG, 0, path, ""));
    return p;
 }
 
@@ -414,6 +426,7 @@ Gtk::TreeIter PRecords::addSong (HSong& song) {
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
 void PRecords::saveData () throw (Glib::ustring) {
+#if 0
    HInterpret interpret;
    try {
       while (changedInterprets.size ()) {
@@ -513,6 +526,7 @@ void PRecords::saveData () throw (Glib::ustring) {
       msg.replace (msg.find ("%2"), 2, err.what ());
       throw (msg);
    }
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -524,6 +538,9 @@ void PRecords::deleteSelection () {
       deleteSelectedRecords ();
    else if (songs.has_focus ())
       deleteSelectedSongs ();
+
+   apMenus[UNDO]->set_sensitive ();
+   enableSave ();
 }
 
 //-----------------------------------------------------------------------------
@@ -553,18 +570,12 @@ void PRecords::deleteSelectedRecords () {
 	       loadSongs (hRecord);
 	    deleteRecord (child);
 	 }
-	 undoInterprets.push_back (interpret);
+	 Gtk::TreePath path (records.getModel ()->get_path (iter));
+	 aUndo.push (Undo (Undo::DELETE, (unsigned int)INTERPRET, delEntries.size (), path, ""));
+	 delEntries.push_back (YGP::HEntity::cast (interpret));
 	 records.getModel ()->erase (iter);
-	 if (interpret->getId ())
-	    deletedInterprets.push_back (interpret);
-
-	 std::map<HInterpret, HInterpret>::iterator iInterpret (changedInterprets.find (interpret));
-	 if (iInterpret != changedInterprets.end ())
-	    changedInterprets.erase (iInterpret);
       }
    }
-   apMenus[UNDO]->set_sensitive ();
-   enableSave ();
 }
 
 //-----------------------------------------------------------------------------
@@ -582,23 +593,40 @@ void PRecords::deleteRecord (const Gtk::TreeIter& record) {
 
    // Remove related songs
    TRACE3 ("PRecords::deleteRecord (const Gtk::TreeIter&) - Remove Songs");
-   while (relSongs.isRelated (hRec)) {
-      std::vector<HSong>::iterator s (relSongs.getObjects (hRec).begin ());
-      undoSongs.push_back (*s);
-      deletedSongs[*s] = hRec;
-      relSongs.unrelate (hRec, *s);
+   if (relSongs.isRelated (hRec)) {
+      for (std::vector<HSong>::iterator s (relSongs.getObjects (hRec).begin ());
+	   s != relSongs.getObjects (hRec).end (); ++s)
+	 deleteSong (*s, hRec);
+      relSongs.unrelateAll (hRec);
    }
-   undoRecords.push_back (hRec);
-   deletedRecords[hRec] = hInterpret;
+
+   Check3 (std::find (delEntries.begin (), delEntries.end (), YGP::HEntity::cast (hRec)) == delEntries.end ());
+   Check3 (delRelation.find (YGP::HEntity::cast (hRec)) == delRelation.end ());
+
+   Gtk::TreePath path (records.getModel ()->get_path (record));
+   aUndo.push (Undo (Undo::DELETE, (unsigned int)RECORD, delEntries.size (), path, ""));
+   delEntries.push_back (YGP::HEntity::cast (hRec));
+   delRelation[YGP::HEntity::cast (hRec)] = YGP::HEntity::cast (hInterpret);
    relRecords.unrelate (hInterpret, hRec);
 
-   std::map<HRecord, HRecord>::iterator iRec (changedRecords.find (hRec));
-   if (iRec != changedRecords.end ())
-      changedRecords.erase (iRec);
+   records.getModel ()->erase (record);
+}
 
-   // Delete interpret from listbox if it doesn't have any records
-   Glib::RefPtr<Gtk::TreeStore> model (records.getModel ());
-   model->erase (record);
+//-----------------------------------------------------------------------------
+/// Removes the passed songs from the model (but not from the relations).
+/// \param song: Song to delete
+/// \param record: Record of song
+//-----------------------------------------------------------------------------
+void PRecords::deleteSong (const HSong& song, const HRecord& record) {
+   TRACE9 ("PRecords::deleteSong (const HSong& song, const HRecord& record)");
+   Check1 (song.isDefined ()); Check1 (record.isDefined ());
+   Check3 (std::find (delEntries.begin (), delEntries.end (), YGP::HEntity::cast (song)) == delEntries.end ());
+   Check3 (delRelation.find (YGP::HEntity::cast (song)) == delRelation.end ());
+
+   Gtk::TreePath path (records.getModel ()->get_path (songs.getSong (song)));
+   aUndo.push (Undo (Undo::DELETE, (unsigned int)SONG, delEntries.size (), path, ""));
+   delEntries.push_back (YGP::HEntity::cast (song));
+   delRelation[YGP::HEntity::cast (song)] = YGP::HEntity::cast (record);
 }
 
 //-----------------------------------------------------------------------------
@@ -617,19 +645,12 @@ void PRecords::deleteSelectedSongs () {
       HSong song (songs.getEntryAt (iter)); Check3 (song.isDefined ());
       Check3 (relSongs.isRelated (song));
       HRecord record (relSongs.getParent (song));
+      Check3 (record.isDefined ());
+      deleteSong (song, record);
 
-      undoSongs.push_back (song);
-      deletedSongs[song] = record;
       relSongs.unrelate (record, song);
-
-      std::map<HSong, HSong>::iterator iSong (changedSongs.find (song));
-      if (iSong != changedSongs.end ())
-	 changedSongs.erase (iSong);
       songs.getModel ()->erase (iter);
    }
-
-   apMenus[UNDO]->set_sensitive ();
-   enableSave ();
 }
 
 //-----------------------------------------------------------------------------
@@ -718,6 +739,61 @@ void PRecords::addEntry (const Glib::ustring&artist, const Glib::ustring& record
 /// Undoes the changes on the page
 //-----------------------------------------------------------------------------
 void PRecords::undo () {
+   TRACE9 ("PRecords::undo ()");
+   Check3 (aUndo.size ());
+
+   Undo last (aUndo.top ());
+
+   Gtk::TreePath path (last.getPath ());
+   Gtk::TreeIter iter (songs.getModel ()->get_iter (path));
+   switch (last.how ()) {
+   case Undo::CHANGED: {
+      HSong song (songs.getEntryAt (iter));
+      switch (last.column ()) {
+      case 0:
+	 song->setTrack (last.getValue ());
+	 break;
+
+      case 1:
+	 song->setName (last.getValue ());
+	 break;
+
+      case 2:
+	 song->setDuration (last.getValue ());
+	 break;
+
+      case 3:
+	 // song->setGenre (last.getValue ());
+	 break;
+
+      default:
+	 Check1 (0);
+      } // end-switch
+      break; }
+
+   case Undo::INSERT:
+      songs.getModel ()->erase (iter);
+      break;
+
+   case Undo::DELETE: {
+      // TODO: Insert at right place
+      Check2 (delEntries.size () > last.column ());
+      Check3 (typeid (delEntries[last.column ()]) == typeid (HSong));
+      HSong song (HSong::cast (delEntries[last.column ()]));
+      songs.append (song);
+      break; }
+
+   default:
+      Check1 (0);
+   } // end-switch
+
+   Gtk::TreeRow row (*iter);
+   songs.update (row);
+   songs.set_cursor (path);
+
+   aUndo.pop ();
+   if (aUndo.empty ())
+      apMenus[UNDO]->set_sensitive (false);
 }
 
 //-----------------------------------------------------------------------------

@@ -1,11 +1,11 @@
-//$Id: PRecords.cpp,v 1.7 2006/02/01 18:01:36 markus Exp $
+//$Id: PRecords.cpp,v 1.8 2006/02/01 22:22:06 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Records
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -456,66 +456,77 @@ void PRecords::saveData () throw (Glib::ustring) {
    TRACE5 ("PRecords::saveData () - " << aUndo.size ());
 
    try {
+      std::vector<YGP::HEntity> aSaved;
+      std::vector<YGP::HEntity>::iterator posSaved (aSaved.end ());
+
       while (aUndo.size ()) {
 	 Undo last (aUndo.top ());
-	 switch (last.what ()) {
-	 case SONG: {
-	    HSong song (songs.getEntryAt (songs.getModel ()->get_iter (last.getPath ())));
-	    if (last.how () == Undo::DELETE) {
-	       if (!song->getId ()) {
-		  Check3 (song->getId () == last.column ());
-		  StorageRecord::deleteSong (song->getId ());
+
+	 YGP::HEntity entity (((last.what () == SONG)
+			       ? YGP::HEntity::cast (songs.getEntryAt (records.getModel ()->get_iter (last.getPath ())))
+			       : records.getObjectAt (records.getModel ()->get_iter (last.getPath ()))));
+	 posSaved = lower_bound (aSaved.begin (), aSaved.end (), entity);
+	 if ((posSaved == aSaved.end ()) || (*posSaved != entity)) {
+	    switch (last.what ()) {
+	    case SONG: {
+	       HSong song (songs.getEntryAt (songs.getModel ()->get_iter (last.getPath ())));
+	       if (last.how () == Undo::DELETE) {
+		  if (!song->getId ()) {
+		     Check3 (song->getId () == last.column ());
+		     StorageRecord::deleteSong (song->getId ());
+		  }
+
+		  std::map<YGP::HEntity, YGP::HEntity>::iterator delRel
+		     (delRelation.find (delEntries.back ()));
+		  Check3 (delRel != delRelation.end ());
+		  Check3 (typeid (*delRel->second) == typeid (Record));
+		  delRelation.erase (delRel);
+		  delEntries.erase (delEntries.end () - 1);
 	       }
+	       else
+		  StorageRecord::saveSong (song, relSongs.getParent (song)->getId ());
+	       break; }
 
-	       std::map<YGP::HEntity, YGP::HEntity>::iterator delRel
-		  (delRelation.find (delEntries.back ()));
-	       Check3 (delRel != delRelation.end ());
-	       Check3 (typeid (*delRel->second) == typeid (Record));
-	       delRelation.erase (delRel);
-	       delEntries.erase (delEntries.end () - 1);
-	    }
-	    else
-	       StorageRecord::saveSong (song, relSongs.getParent (song)->getId ());
-	    break; }
+	    case RECORD: {
+	       HRecord rec (records.getRecordAt (records.getModel ()->get_iter (last.getPath ())));
+	       if (last.how () == Undo::DELETE) {
+		  if (rec->getId ()) {
+		     Check3 (rec->getId () == last.column ());
+		     StorageRecord::deleteRecord (rec->getId ());
+		  }
 
-	 case RECORD: {
-	    HRecord rec (records.getRecordAt (records.getModel ()->get_iter (last.getPath ())));
-	    if (last.how () == Undo::DELETE) {
-	       if (rec->getId ()) {
-		  Check3 (rec->getId () == last.column ());
-		  StorageRecord::deleteRecord (rec->getId ());
+		  std::map<YGP::HEntity, YGP::HEntity>::iterator delRel
+		     (delRelation.find (delEntries.back ()));
+		  Check3 (delRel != delRelation.end ());
+		  Check3 (typeid (*delRel->second) == typeid (Interpret));
+		  delRelation.erase (delRel);
+		  delEntries.erase (delEntries.end () - 1);
 	       }
+	       else
+		  StorageRecord::saveRecord (rec, relRecords.getParent (rec)->getId ());
+	       break; }
 
-	       std::map<YGP::HEntity, YGP::HEntity>::iterator delRel
-		  (delRelation.find (delEntries.back ()));
-	       Check3 (delRel != delRelation.end ());
-	       Check3 (typeid (*delRel->second) == typeid (Interpret));
-	       delRelation.erase (delRel);
-	       delEntries.erase (delEntries.end () - 1);
-	    }
-	    else
-	       StorageRecord::saveRecord (rec, relRecords.getParent (rec)->getId ());
-	    break; }
-
-	 case INTERPRET: {
-	    HInterpret interpret (records.getInterpretAt (records.getModel ()->get_iter (last.getPath ())));
-	    if (last.how () == Undo::DELETE) {
-	       if (interpret->getId ()) {
-		  Check3 (interpret->getId () == last.column ());
-		  StorageRecord::deleteInterpret (interpret->getId ());
+	    case INTERPRET: {
+	       HInterpret interpret (records.getInterpretAt (records.getModel ()->get_iter (last.getPath ())));
+	       if (last.how () == Undo::DELETE) {
+		  if (interpret->getId ()) {
+		     Check3 (interpret->getId () == last.column ());
+		     StorageRecord::deleteInterpret (interpret->getId ());
+		  }
 	       }
-	    }
-	    else
-	       StorageRecord::saveInterpret (interpret);
-	    break; }
+	       else
+		  StorageRecord::saveInterpret (interpret);
+	       break; }
 
-	 default:
-	    Check1 (0);
-	 } // end-switch
+	    default:
+	       Check1 (0);
+	    } // end-switch
 
+	    aSaved.insert (posSaved, entity);
+	 }
 	 aUndo.pop ();
-	 TRACE5 ("PRecords::saveData () - " << aUndo.size ());
       } // end-while
+      Check3 (apMenus[UNDO]);
       apMenus[UNDO]->set_sensitive (false);
    }
    catch (std::exception& err) {
@@ -980,19 +991,13 @@ void PRecords::getFocus () {
 /// Removes all information from the page
 //-----------------------------------------------------------------------------
 void PRecords::clear () {
-   for (std::vector<HInterpret>::iterator i (interprets.begin ());
-	i != interprets.end (); ++i)
-      if (relRecords.isRelated (*i)) {
-	 std::vector<HRecord>& records (relRecords.getObjects (*i));
-	 for (std::vector<HRecord>::iterator r (records.begin ());
-	      r != records.end (); ++r)
-	    if (relSongs.isRelated (*r))
-	       relSongs.unrelateAll (*r);
-	 relRecords.unrelateAll (*i);
-      }
+   TRACE9 ("PRecords::clear ()");
+   relSongs.unrelateAll ();
+   relRecords.unrelateAll ();
    interprets.clear ();
 
    songs.getModel ()->clear ();
+   records.getModel ()->clear ();
 }
 
 #endif

@@ -1,11 +1,11 @@
-//$Id: PMovies.cpp,v 1.4 2006/02/01 18:00:58 markus Exp $
+//$Id: PMovies.cpp,v 1.5 2006/02/01 22:22:06 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movies
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -436,46 +436,55 @@ void PMovies::saveData () throw (Glib::ustring) {
    TRACE9 ("PMovies::saveData ()");
 
    try {
+      std::vector<YGP::HEntity> aSaved;
+      std::vector<YGP::HEntity>::iterator posSaved (aSaved.end ());
+
       while (aUndo.size ()) {
 	 Undo last (aUndo.top ());
-	 switch (last.what ()) {
-	 case MOVIE: {
-	    HMovie movie (movies.getMovieAt (movies.getModel ()->get_iter (last.getPath ())));
-	    if (last.how () == Undo::DELETE) {
-	       if (movie->getId ()) {
-		  Check3 (movie->getId () == last.column ());
-		  StorageMovie::deleteMovie (movie->getId ());
+
+	 YGP::HEntity entity (movies.getObjectAt (movies.getModel ()->get_iter (last.getPath ())));
+	 posSaved = lower_bound (aSaved.begin (), aSaved.end (), entity);
+	 if ((posSaved == aSaved.end ()) || (*posSaved != entity)) {
+	    switch (last.what ()) {
+	    case MOVIE: {
+	       HMovie movie (movies.getMovieAt (movies.getModel ()->get_iter (last.getPath ())));
+	       if (last.how () == Undo::DELETE) {
+		  if (movie->getId ()) {
+		     Check3 (movie->getId () == last.column ());
+		     StorageMovie::deleteMovie (movie->getId ());
+		  }
+
+		  std::map<YGP::HEntity, YGP::HEntity>::iterator delRel
+		     (delRelation.find (delEntries.back ()));
+		  Check3 (delRel != delRelation.end ());
+		  Check3 (typeid (*delRel->second) == typeid (Director));
+		  delRelation.erase (delRel);
+		  delEntries.erase (delEntries.end () - 1);
 	       }
+	       else
+		  StorageMovie::saveMovie (movie, relMovies.getParent (movie)->getId ());
+	       break; }
 
-	       std::map<YGP::HEntity, YGP::HEntity>::iterator delRel
-		  (delRelation.find (delEntries.back ()));
-	       Check3 (delRel != delRelation.end ());
-	       Check3 (typeid (*delRel->second) == typeid (Director));
-	       delRelation.erase (delRel);
-	       delEntries.erase (delEntries.end () - 1);
-	    }
-	    else
-	       StorageMovie::saveMovie (movie, relMovies.getParent (movie)->getId ());
-	    break; }
-
-	 case DIRECTOR: {
-	    HDirector director (movies.getDirectorAt (movies.getModel ()->get_iter (last.getPath ())));
-	    if (last.how () == Undo::DELETE) {
-	       if (director->getId ()) {
-		  Check3 (director->getId () == last.column ());
-		  StorageMovie::deleteDirector (director->getId ());
+	    case DIRECTOR: {
+	       HDirector director (movies.getDirectorAt (movies.getModel ()->get_iter (last.getPath ())));
+	       if (last.how () == Undo::DELETE) {
+		  if (director->getId ()) {
+		     Check3 (director->getId () == last.column ());
+		     StorageMovie::deleteDirector (director->getId ());
+		  }
 	       }
-	    }
-	    else
-	       StorageMovie::saveDirector (director);
-	    break; }
+	       else
+		  StorageMovie::saveDirector (director);
+	       break; }
 
-	 default:
-	    Check1 (0);
-	 } // end-switch
-
+	    default:
+	       Check1 (0);
+	    } // end-switch
+	    aSaved.insert (posSaved, entity);
+	 }
 	 aUndo.pop ();
       } // end-while
+      Check3 (apMenus[UNDO]);
       apMenus[UNDO]->set_sensitive (false);
    }
    catch (std::exception& err) {
@@ -606,9 +615,10 @@ void PMovies::undoMovie (const Undo& last) {
    TRACE5 ("PMovies::undoMovie (const Undo&)");
 
    Gtk::TreePath path (last.getPath ());
-   Gtk::TreeIter iter (movies.getModel ()->get_iter (path)); Check3 (iter->parent ());
+   Gtk::TreeIter iter (movies.getModel ()->get_iter (path));
    switch (last.how ()) {
    case Undo::CHANGED: {
+      Check3 (iter->parent ());
       HMovie movie (movies.getMovieAt (iter));
       TRACE9 ("PMovies::undoMovie (const Undo&) - Change " << movie->getName ());
       TRACE8 ("PMovies::undoMovie (const Undo&) - Value " << last.column () << '/' << last.getValue ());
@@ -644,6 +654,7 @@ void PMovies::undoMovie (const Undo& last) {
       break; }
 
    case Undo::INSERT: {
+      Check3 (iter->parent ());
       HMovie movie (movies.getMovieAt (iter));
       TRACE9 ("PMovies::undoMovie (const Undo&) - Insert");
       Check3 (!relMovies.isRelated (movie));
@@ -745,11 +756,9 @@ void PMovies::undoDirector (const Undo& last) {
 /// Removes all information from the page
 //-----------------------------------------------------------------------------
 void PMovies::clear () {
-   for (std::vector<HDirector>::iterator i (directors.begin ());
-	i != directors.end (); ++i)
-      if (relMovies.isRelated (*i))
-	 relMovies.unrelateAll (*i);
+   relMovies.unrelateAll ();
    directors.clear ();
+   movies.clear ();
 }
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef CELIBRITY_H
 #define CELIBRITY_H
 
-//$Id: Celebrity.h,v 1.11 2005/10/27 21:47:49 markus Rel $
+//$Id: Celebrity.h,v 1.12 2006/02/01 03:01:57 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -56,9 +56,10 @@ class Celebrity : public YGP::Entity {
    void setId   (const unsigned long int value) { id = value; }
    void setName (const Glib::ustring& value) { name = value; }
    void setBorn (const YGP::AYear& value) { born = value; }
-   void setBorn (const std::string& value) { born = value; }
+   void setBorn (const std::string& value) throw (std::invalid_argument) { born = value; }
    void setDied (const YGP::AYear& value) { died = value; }
-   void setDied (const std::string& value) { died = value; }
+   void setDied (const std::string& value) throw (std::invalid_argument) { died = value; }
+   void setLifespan (const Glib::ustring& value) throw (std::invalid_argument);
 
  private:
    unsigned long int id;   // %attrib%; ; 0

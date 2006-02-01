@@ -1,14 +1,14 @@
-//$Id: Celebrity.cpp,v 1.8 2005/10/27 03:41:14 markus Rel $
+//$Id: Celebrity.cpp,v 1.9 2006/02/01 03:01:57 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Celebrity
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.8 $
+//REVISION    : $Revision: 1.9 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
-//COPYRIGHT   : Copyright (C) 2004, 2005
+//COPYRIGHT   : Copyright (C) 2004 - 2006
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -100,4 +100,23 @@ bool Celebrity::compByName (const HCelebrity& a, const HCelebrity& b) {
 bool Celebrity::compById (const HCelebrity& a, const HCelebrity& b) {
    Check1 (a.isDefined ()); Check1 (b.isDefined ());
    return a->getId () < b->getId ();
+}
+
+//-----------------------------------------------------------------------------
+/// Sets the born and died values from the passed string
+/// \param value: Year the celebrity was born/died in format [born][-died]
+/// \throw std::exception in case of error
+//-----------------------------------------------------------------------------
+void Celebrity::setLifespan (const Glib::ustring& value) throw (std::invalid_argument) {
+   unsigned int pos (value.find ("- "));
+   if (pos != std::string::npos)
+      setDied (value.substr (pos + 2));
+   else
+      died.undefine ();
+
+   if ((pos == std::string::npos)
+       || ((pos > 0) && (value[pos - 1] == ' ')))
+      setBorn (value.substr (0, pos - 1));
+   else
+      born.undefine ();
 }

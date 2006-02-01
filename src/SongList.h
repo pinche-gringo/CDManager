@@ -1,7 +1,7 @@
 #ifndef SONGLIST_H
 #define SONGLIST_H
 
-//$Id: SongList.h,v 1.15 2006/01/31 20:45:46 markus Exp $
+//$Id: SongList.h,v 1.16 2006/02/01 00:43:02 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -60,7 +60,9 @@ class SongList : public Gtk::TreeView {
    SongList (const Genres& genres);
    virtual ~SongList ();
 
-   Gtk::TreeModel::iterator append (HSong& song);
+   Gtk::TreeModel::iterator insert (HSong& song, const Gtk::TreeIter& pos);
+   Gtk::TreeModel::iterator append (HSong& song) { return insert (song, mSongs->children ().end ()); }
+   Gtk::TreeModel::iterator prepend (HSong& song) { return insert (song, mSongs->children ().begin ()); }
    void clear () { mSongs->clear (); }
 
    void updateGenres ();

@@ -1,11 +1,11 @@
-//$Id: StorageRecord.cpp,v 1.2 2006/01/28 01:35:41 markus Exp $
+//$Id: StorageRecord.cpp,v 1.3 2006/02/01 00:45:14 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : <FILLIN>
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -151,7 +151,7 @@ void StorageRecord::saveRecord (const HRecord record, unsigned int idInterpret) 
    std::stringstream query;
    query << (record->getId () ? "UPDATE Records" : "INSERT INTO Records")
 	 << " SET name=\"" << Database::escapeDBValue (record->getName ())
-	 << query << ", interpret=" << idInterpret
+	 << "\", interpret=" << idInterpret
 	 << "\", genre=" << record->getGenre ();
    if (record->getYear ().isDefined ())
       query << ", year=" << record->getYear ();
@@ -173,8 +173,8 @@ void StorageRecord::saveSong (const HSong song, unsigned int idRecord) throw (st
    std::stringstream query;
    query << (song->getId () ? "UPDATE Songs" : "INSERT INTO Songs")
 	 << " SET name=\"" << Database::escapeDBValue (song->getName ())
-	 << query << ", idRecord=" << idRecord
-	 << "\", duration=\"" << song->getDuration () << "\", genre="
+	 << "\", idRecord=" << idRecord
+	 << ", duration=\"" << song->getDuration () << "\", genre="
 	 << song->getGenre ();
    if (song->getTrack ().isDefined ())
       query << ", track=" << song->getTrack ();

@@ -1,7 +1,7 @@
 #ifndef PRECORDS_H
 #define PRECORDS_H
 
-//$Id: PRecords.h,v 1.5 2006/02/01 00:44:53 markus Exp $
+//$Id: PRecords.h,v 1.6 2006/02/01 03:05:21 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -66,11 +66,9 @@ class PRecords : public NBPage {
    PRecords (const PRecords& other);
    const PRecords& operator= (const PRecords& other);
 
-   void interpretChanged (const HInterpret& interpret);
-   void recordChanged (const HRecord& record);
-   void entityChanged (const HEntity& record);
-   void songChanged (const Gtk::TreeIter&, unsigned int column, Glib::ustring& oldValue);
-   void recordGenreChanged (const HEntity& record);
+   void interpretChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
+   void recordChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
+   void songChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
 
    Gtk::TreeIter addInterpret (const HInterpret& interpret);
    Gtk::TreeIter addRecord (Gtk::TreeIter& parent, HRecord& record);
@@ -88,6 +86,8 @@ class PRecords : public NBPage {
    void deleteSong (const HSong& song, const HRecord& record);
 
    void undoSong (const Undo& last);
+   void undoRecord (const Undo& last);
+   void undoInterpret (const Undo& last);
 
    void loadSongs (const HRecord& record);
 

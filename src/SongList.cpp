@@ -1,11 +1,11 @@
-//$Id: SongList.cpp,v 1.20 2006/01/31 20:45:45 markus Exp $
+//$Id: SongList.cpp,v 1.21 2006/02/01 00:43:19 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.20 $
+//REVISION    : $Revision: 1.21 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -109,15 +109,15 @@ SongList::~SongList () {
 
 
 //-----------------------------------------------------------------------------
-/// Appends a song to the list
+/// Inserts a song into the list
 /// \param song: Song to add
 /// \returns Gtk::TreeModel::iterator: Inserted row
 //-----------------------------------------------------------------------------
-Gtk::TreeModel::iterator SongList::append (HSong& song) {
-   TRACE3 ("SongList::append (HSong&) - " << (song.isDefined () ? song->getName ().c_str () : "None"));
+Gtk::TreeModel::iterator SongList::insert (HSong& song, const Gtk::TreeIter& pos) {
+   TRACE3 ("SongList::insert (HSong&, const TreeIter&) - " << (song.isDefined () ? song->getName ().c_str () : "None"));
    Check1 (song.isDefined ());
 
-   Gtk::TreeModel::Row newSong (*mSongs->append ());
+   Gtk::TreeModel::Row newSong (*mSongs->insert (pos));
    newSong[colSongs.entry] = song;
    update (newSong);
    return newSong;
@@ -181,7 +181,7 @@ void SongList::valueChanged (const Glib::ustring& path,
 	 for (; g != genres.end (); ++g)
 	    if (g->second == value) {
 	       song->setGenre (g->first);
-	       oldValue = row[colSongs.colGenre];
+	       oldValue = Glib::ustring (1, (char)g->first);
 	       row[colSongs.colGenre] = value;
 	       break;
 	    }

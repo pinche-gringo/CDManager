@@ -1,7 +1,7 @@
 #ifndef PRECORDS_H
 #define PRECORDS_H
 
-//$Id: PRecords.h,v 1.4 2006/01/31 20:47:13 markus Exp $
+//$Id: PRecords.h,v 1.5 2006/02/01 00:44:53 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -80,11 +80,14 @@ class PRecords : public NBPage {
    void newRecord ();
    void newSong ();
 
+   void songSelected ();
    void recordSelected ();
    void deleteRecord (const Gtk::TreeIter& record);
    void deleteSelectedRecords ();
    void deleteSelectedSongs ();
    void deleteSong (const HSong& song, const HRecord& record);
+
+   void undoSong (const Undo& last);
 
    void loadSongs (const HRecord& record);
 

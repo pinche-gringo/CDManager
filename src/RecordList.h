@@ -1,7 +1,7 @@
 #ifndef RECORDLIST_H
 #define RECORDLIST_H
 
-//$Id: RecordList.h,v 1.12 2006/01/28 06:12:16 markus Exp $
+//$Id: RecordList.h,v 1.13 2006/02/01 03:02:55 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -36,8 +36,11 @@ class RecordList : public OwnerObjectList {
    RecordList (const Genres& genres);
    virtual ~RecordList ();
 
-   Gtk::TreeModel::Row append (const HInterpret& artist) {
-      return OwnerObjectList::append (artist); }
+   Gtk::TreeModel::Row insert (const HInterpret& artist, const Gtk::TreeIter& pos) {
+      return OwnerObjectList::insert (artist, pos); }
+   Gtk::TreeModel::Row append (const HInterpret& artist) { return insert (artist, mOwnerObjects->children ().end ()); }
+   Gtk::TreeModel::Row prepend (const HInterpret& artist) { return insert (artist, mOwnerObjects->children ().begin ()); }
+
    Gtk::TreeModel::Row append (HRecord& record, const Gtk::TreeModel::Row& artist);
 
    HRecord getRecordAt (const Gtk::TreeIter iterator) const;
@@ -48,7 +51,7 @@ class RecordList : public OwnerObjectList {
 
  protected:
    virtual void setName (HEntity& object, const Glib::ustring& value);
-   virtual void setYear (HEntity& object, const Glib::ustring& value);
+   virtual void setYear (HEntity& object, const Glib::ustring& value) throw (std::exception);
    virtual void setGenre (HEntity& object, unsigned int value);
 
    virtual Glib::ustring getColumnName () const;

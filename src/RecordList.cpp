@@ -1,11 +1,11 @@
-//$Id: RecordList.cpp,v 1.17 2006/01/28 06:12:16 markus Exp $
+//$Id: RecordList.cpp,v 1.18 2006/02/01 03:02:55 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.17 $
+//REVISION    : $Revision: 1.18 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -67,7 +67,7 @@ RecordList::~RecordList () {
 //-----------------------------------------------------------------------------
 Gtk::TreeModel::Row RecordList::append (HRecord& record,
 					const Gtk::TreeModel::Row& artist) {
-   TRACE3 ("RecordList::append (HRecord&, Gtk::TreeModel::Row) - "
+   TRACE3 ("RecordList::append (HRecord&, Gtk::TreeModel::Row&) - "
 	   << (record.isDefined () ? record->getName ().c_str () : "None"));
    Check1 (record.isDefined ());
 
@@ -106,9 +106,10 @@ void RecordList::setName (HEntity& object, const Glib::ustring& value) {
 /// Sets the year of the object
 /// \param object: Object to change
 /// \param value: Value to set
+/// \throw std::exception: In case of an error
 /// \remarks To be implemented
 //-----------------------------------------------------------------------------
-void RecordList::setYear (HEntity& object, const Glib::ustring& value) {
+void RecordList::setYear (HEntity& object, const Glib::ustring& value) throw (std::exception) {
    HRecord m (HRecord::cast (object));
    m->setYear (value);
 }

@@ -1,7 +1,7 @@
 #ifndef NBPAGE_H
 #define NBPAGE_H
 
-//$Id: NBPage.h,v 1.3 2006/01/31 20:46:48 markus Exp $
+//$Id: NBPage.h,v 1.4 2006/02/01 22:21:30 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ class NBPage : public sigc::trackable {
    virtual void clear () = 0;
    virtual void export2HTML (unsigned int fd);
 
-   bool isChanged () const { return false; }
+   bool isChanged () const { return aUndo.size (); }
 
  protected:
    NBPage (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave) : widget (NULL),

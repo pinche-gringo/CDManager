@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.18 2006/01/28 06:12:15 markus Exp $
+//$Id: OOList.cpp,v 1.19 2006/02/01 03:03:44 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.18 $
+//REVISION    : $Revision: 1.19 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -124,7 +124,7 @@ void OwnerObjectList::init (const OwnerObjectColumns& cols) {
 //-----------------------------------------------------------------------------
 Gtk::TreeModel::Row OwnerObjectList::append (HEntity& object,
 					     const Gtk::TreeModel::Row& owner) {
-   TRACE3 ("OwnerObjectList::append (HEntity&, const Gtk::TreeModel::Row)");
+   TRACE3 ("OwnerObjectList::append (HEntity&, const Gtk::TreeModel::Row&)");
    Check2 (colOwnerObjects);
    Check1 (object.isDefined ());
 
@@ -136,15 +136,16 @@ Gtk::TreeModel::Row OwnerObjectList::append (HEntity& object,
 //-----------------------------------------------------------------------------
 /// Appends an owner to the list
 /// \param owner: Owner to add
+/// \param pos: Position in model for insert
 /// \returns Gtk::TreeModel::Row: Inserted row
 //-----------------------------------------------------------------------------
-Gtk::TreeModel::Row OwnerObjectList::append (const HCelebrity& owner) {
-   TRACE3 ("OwnerObjectList::append (const HCelebrity&) - "
+Gtk::TreeModel::Row OwnerObjectList::insert (const HCelebrity& owner, const Gtk::TreeIter& pos) {
+   TRACE3 ("OwnerObjectList::insert (const HCelebrity&, const Gtk::TreeIter&) - "
 	   << (owner.isDefined () ? owner->getName ().c_str () : "None"));
    Check1 (owner.isDefined ());
    Check2 (colOwnerObjects);
 
-   Gtk::TreeModel::Row newOwner (*mOwnerObjects->append ());
+   Gtk::TreeModel::Row newOwner (*mOwnerObjects->insert (pos));
    set (newOwner, YGP::Handle<YGP::Entity>::cast (owner));
    return newOwner;
 }
@@ -163,11 +164,11 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
    Check2 (colOwnerObjects);
 
    Gtk::TreeModel::Row row (*mOwnerObjects->get_iter (Gtk::TreeModel::Path (path)));
+   Glib::ustring oldValue;
 
    try {
       if (row.parent ()) {
 	 HEntity object (getObjectAt (row));
-	 Genres::const_iterator g (genres.end ());
 
 	 // First check, if value is valid
 	 switch (column) {
@@ -178,11 +179,29 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 	       e.replace (e.find ("%1"), 2, value);
 	       throw (std::runtime_error (e));
 	    }
+	    oldValue = row[colOwnerObjects->name];
+	    row[colOwnerObjects->name] = value;
+	    setName (object, value);
 	    break; }
 
+	 case 1:
+	    setYear (object, value);
+	    oldValue = row[colOwnerObjects->year];
+	    row[colOwnerObjects->year] = value;
+	    break;
+
 	 case 2: {
+	    oldValue = row[colOwnerObjects->genre];
+	    for (Genres::const_iterator g (genres.begin ()); g != genres.end (); ++g)
+	       if (g->second == oldValue) {
+		  oldValue = Glib::ustring (1, (char)g->first);
+		  break;
+	       }
+	    Genres::const_iterator g (genres.end ());
 	    for (g = genres.begin (); g != genres.end (); ++g)
 	       if (g->second == value) {
+		  setGenre (object, g->first);
+		  row[colOwnerObjects->genre] = value;
 		  break;
 	       }
 	    if (g == genres.end ())
@@ -190,71 +209,34 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 	    break; }
 	 } // endswitch
 
-	 signalObjectChanged.emit (object);           // Signal changed entity
-
-	 // Set changes in list and object
-	 switch (column) {
-	 case 0:
-	    setName (object, value);
-	    row[colOwnerObjects->name] = value;
-	    break;
-
-	 case 1:
-	    setYear (object, value);
-	    row[colOwnerObjects->year] = value;
-	    break;
-
-	 case 2:
-	    Check3 (g != genres.end ());
-	    setGenre (object, g->first);
-	    row[colOwnerObjects->genre] = value;
-	    signalObjectGenreChanged.emit (object);
-	    break;
-	 } // end-switch
+	 signalObjectChanged.emit (row, column, oldValue);
       } // endif object edited
       else {
 	 HCelebrity celeb (getCelebrityAt (row)); Check3 (celeb.isDefined ());
 
-	 // Check if changes are valid
-	 if (!column) {
-	    Gtk::TreeModel::const_iterator i (getOwner (value));
-	    if ((i != row) && (i != mOwnerObjects->children ().end ())) {
-		  Glib::ustring e (_("Entry `%1' already exists!"));
-		  e.replace (e.find ("%1"), 2, value);
-		  throw (std::runtime_error (e));
-	    }
-	 }
-
-	 // Signal changes and update list and object
-	 signalOwnerChanged.emit (celeb);
 	 switch (column) {
 	 case 0: {
+	    // Check if changes are valid
+	    Gtk::TreeModel::const_iterator i (getOwner (value));
+	    if ((i != row) && (i != mOwnerObjects->children ().end ())) {
+	       Glib::ustring e (_("Entry `%1' already exists!"));
+	       e.replace (e.find ("%1"), 2, value);
+	       throw (std::runtime_error (e));
+	    }
+
+	    oldValue = row[colOwnerObjects->name];
 	    celeb->setName (value);
 	    row[colOwnerObjects->name] = celeb->getName ();
 	    break; }
 
 	 case 1:
-	    if (value.size ()) {
-	       unsigned int pos (value.find ("- "));
-	       if (pos != std::string::npos)
-		  celeb->setDied (value.substr (pos + 2));
-	       else
-		  celeb->undefineDied ();
-
-	       if ((pos == std::string::npos)
-		   || ((pos > 0) && (value[pos - 1] == ' ')))
-		  celeb->setBorn (value.substr (0, pos - 1));
-	       else
-		  celeb->undefineBorn ();
-	    }
-	    else {
-	       celeb->undefineDied ();
-	       celeb->undefineBorn ();
-	    }
-
+	    celeb->setLifespan (value);
+	    oldValue = row[colOwnerObjects->year];
 	    row[colOwnerObjects->year] = getLiveSpan (celeb);
 	    break;
 	 } // end-switch
+
+	 signalOwnerChanged.emit (row, column, oldValue);
       } // end-else director edited
    } // end-try
    catch (std::exception& e) {
@@ -264,7 +246,6 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
       XGP::MessageDlg* dlg (XGP::MessageDlg::create (obj));
       dlg->set_title (PACKAGE);
       dlg->get_window ()->set_transient_for (this->get_window ());
-      return;
    }
 }
 
@@ -344,9 +325,10 @@ void OwnerObjectList::setName (HEntity& object, const Glib::ustring& value) {
 /// Sets the year of the object
 /// \param object: Object to change
 /// \param value: Value to set
+/// \throw std::exception: In case of an error
 /// \remarks To be implemented
 //-----------------------------------------------------------------------------
-void OwnerObjectList::setYear (HEntity& object, const Glib::ustring& value) {
+void OwnerObjectList::setYear (HEntity& object, const Glib::ustring& value) throw (std::exception) {
 }
 
 //-----------------------------------------------------------------------------

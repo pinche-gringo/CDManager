@@ -1,7 +1,7 @@
 #ifndef OOLIST_H
 #define OOLIST_H
 
-//$Id: OOList.h,v 1.12 2006/01/28 06:12:16 markus Exp $
+//$Id: OOList.h,v 1.13 2006/02/01 03:03:44 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -61,15 +61,17 @@ class OwnerObjectList : public Gtk::TreeView {
    OwnerObjectList (const Genres& genres);
    virtual ~OwnerObjectList ();
 
-   Gtk::TreeModel::Row append (const HCelebrity& celebrity);
-   virtual Gtk::TreeModel::Row append (HEntity& movie, const Gtk::TreeModel::Row& celebrity);
+   Gtk::TreeModel::Row insert (const HCelebrity& celebrity, const Gtk::TreeIter& pos);
+   Gtk::TreeModel::Row append (const HCelebrity& celebrity) { return insert (celebrity, mOwnerObjects->children ().end ()); }
+   Gtk::TreeModel::Row prepend (const HCelebrity& celebrity) { return insert (celebrity, mOwnerObjects->children ().begin ()); }
+
+   Gtk::TreeModel::Row append (HEntity& object, const Gtk::TreeModel::Row& celebrity);
    void clear () { mOwnerObjects->clear (); }
 
    void updateGenres ();
 
-   sigc::signal<void, const HCelebrity&> signalOwnerChanged;
-   sigc::signal<void, const HEntity&> signalObjectChanged;
-   sigc::signal<void, const HEntity&> signalObjectGenreChanged;
+   sigc::signal<void, const Gtk::TreeIter&, unsigned int, Glib::ustring&> signalOwnerChanged;
+   sigc::signal<void, const Gtk::TreeIter&, unsigned int, Glib::ustring&> signalObjectChanged;
 
    Glib::RefPtr<Gtk::TreeStore> getModel () const { return mOwnerObjects; }
    HEntity getObjectAt (const Gtk::TreeIter iterator) const;
@@ -95,7 +97,7 @@ class OwnerObjectList : public Gtk::TreeView {
 		      unsigned int column);
 
    virtual void setName (HEntity& object, const Glib::ustring& value);
-   virtual void setYear (HEntity& object, const Glib::ustring& value);
+   virtual void setYear (HEntity& object, const Glib::ustring& value) throw (std::exception);
    virtual void setGenre (HEntity& object, unsigned int value);
 
    virtual Glib::ustring getColumnName () const = 0;

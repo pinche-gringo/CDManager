@@ -1,11 +1,11 @@
-//$Id: PActors.cpp,v 1.5 2006/01/28 07:48:03 markus Exp $
+//$Id: PActors.cpp,v 1.6 2006/02/01 18:00:58 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actors
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -32,6 +32,8 @@
 #include <gtkmm/stock.h>
 #include <gtkmm/scrolledwindow.h>
 
+#define CHECK 9
+#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ANumeric.h>
@@ -57,7 +59,7 @@
 PActors::PActors (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave,
 		  const Genres& genres, PMovies& movies)
    : NBPage (status, menuSave), actors (genres), relActors ("actors"),
-     relDelActors ("delActors"), movies (movies) {
+     movies (movies) {
    TRACE9 ("PActors::PActors (Gtk::Statusbar&, Glib::RefPtr<Gtk::Action>, const Genres&, PMovies&)");
 
    Gtk::ScrolledWindow* scrl (new Gtk::ScrolledWindow);
@@ -93,20 +95,18 @@ void PActors::actorSelected () {
 
 //----------------------------------------------------------------------------
 /// Callback when changing an actor
-/// \param actor: Handle to changed actor
+/// \param row: Changed line
+/// \param column: Changed column
+/// \param oldValue: Old value of the changed entry
 //-----------------------------------------------------------------------------
-void PActors::actorChanged (const HActor& actor) {
-   TRACE9 ("PActors::actorChanged (const HActor&)");
+void PActors::actorChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue) {
+   TRACE9 ("PActors::actorChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&)");
 
-   if (changedActors.find (actor) == changedActors.end ()) {
-      changedActors[actor] = new Actor (*actor);
-      enableSave ();
-   }
-   else
-      undoActors.erase (std::find (undoActors.begin (), undoActors.end (), actor));
+   Gtk::TreePath path (actors.getModel ()->get_path (row));
+   aUndo.push (Undo (Undo::CHANGED, ACTOR, column, path, oldValue));
+
    apMenus[UNDO]->set_sensitive ();
-
-   undoActors.push_back (actor);
+   enableSave ();
 }
 
 //-----------------------------------------------------------------------------
@@ -115,21 +115,15 @@ void PActors::actorChanged (const HActor& actor) {
 void PActors::newActor () {
    HActor actor;
    actor.define ();
-   addActor (actor);
-}
-
-//-----------------------------------------------------------------------------
-/// Adds an actor to the actor listbox
-/// \param actor: Handle to the new actor
-/// \returns Gtk::TreeIter: Iterator to new added actor
-//-----------------------------------------------------------------------------
-Gtk::TreeIter PActors::addActor (const HActor& actor) {
-   aActors.push_back (actor);
-
    Gtk::TreeModel::iterator i (actors.append (actor));
+   Gtk::TreePath path (actors.getModel ()->get_path (i));
    actors.selectRow (i);
-   actorChanged (actor);
-   return i;
+   actors.set_cursor (path);
+
+   aUndo.push (Undo (Undo::INSERT, ACTOR, 0, path, ""));
+
+   apMenus[UNDO]->set_sensitive ();
+   enableSave ();
 }
 
 //-----------------------------------------------------------------------------
@@ -171,10 +165,6 @@ void PActors::relateMovies (const HActor& actor, const std::vector<HMovie>& movi
    for (std::vector<HMovie>::iterator m (relActors.getObjects (actor).begin ());
 	m != relActors.getObjects (actor).end (); ++m)
       actors.append (*m, *i);
-
-   if (std::find (changedRelMovies.begin (), changedRelMovies.end (), actor)
-       == changedRelMovies.end ())
-      changedRelMovies.push_back (actor);
 
    enableSave ();
 }
@@ -280,15 +270,15 @@ HMovie PActors::findMovie (unsigned int id) const {
 /// \param grpActions: Added actions
 //-----------------------------------------------------------------------------
 void PActors::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAction) {
-   ui += ("<menuitem action='Undo'/>"
+   ui += ("<menuitem action='AUndo'/>"
 	  "<separator/>"
 	  "<menuitem action='NActor'/>"
 	  "<menuitem action='AddMovie'/>"
 	  "<separator/>"
-	  "<menuitem action='Delete'/>"
+	  "<menuitem action='ADelete'/>"
 	  "</placeholder></menu>");
 
-   grpAction->add (apMenus[UNDO] = Gtk::Action::create ("Undo", Gtk::Stock::UNDO),
+   grpAction->add (apMenus[UNDO] = Gtk::Action::create ("AUndo", Gtk::Stock::UNDO),
 		   Gtk::AccelKey (_("<ctl>Z")),
 		   mem_fun (*this, &PActors::undo));
    grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NActor", Gtk::Stock::NEW,
@@ -298,10 +288,11 @@ void PActors::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActi
    grpAction->add (apMenus[NEW2] = Gtk::Action::create ("AddMovie", _("_Plays in movie...")),
 		   Gtk::AccelKey (_("<ctl><alt>N")),
 		   mem_fun (*this, &PActors::actorPlaysInMovie));
-   grpAction->add (apMenus[DELETE] = Gtk::Action::create ("Delete", Gtk::Stock::DELETE, _("_Delete")),
+   grpAction->add (apMenus[DELETE] = Gtk::Action::create ("ADelete", Gtk::Stock::DELETE, _("_Delete")),
 		   Gtk::AccelKey (_("<ctl>Delete")),
 		   mem_fun (*this, &PActors::deleteSelection));
 
+   apMenus[UNDO]->set_sensitive (false);
    actorSelected ();
 }
 
@@ -318,27 +309,18 @@ void PActors::deleteSelection () {
       HActor actor (actors.getActorAt (selRow)); Check3 (actor.isDefined ());
       TRACE9 ("PActors::deleteSelectedActor () - Deleting " << actor->getName ());
 
-      if (relDelActors.isRelated (actor))
-	 relDelActors.unrelateAll (actor);
-
+      Glib::RefPtr<Gtk::TreeStore> model (actors.getModel ());
       if (relActors.isRelated (actor)) {
-	 relDelActors.getObjects (actor) = relActors.getObjects (actor);
 	 relActors.unrelateAll (actor);
 
 	 while (selRow->children ().size ())
-	    actors.getModel ()->erase (selRow->children ().begin ());
+	    model->erase (selRow->children ().begin ());
       }
-      actors.getModel ()->erase (selRow);
-      undoActors.push_back (actor);
 
-      // Though actor is already removed from the listbox, it still
-      // has to be removed from the database
-      if (actor->getId ())
-	 deletedActors.push_back (actor);
-
-      std::map<HActor, HActor>::iterator iActor (changedActors.find (actor));
-      if (iActor != changedActors.end ())
-	 changedActors.erase (iActor);
+      Gtk::TreePath path (model->get_path (selRow));
+      aUndo.push (Undo (Undo::DELETE, ACTOR, actor->getId (), path, ""));
+      delEntries.push_back (YGP::HEntity::cast (actor));
+      model->erase (selRow);
    }
    apMenus[UNDO]->set_sensitive ();
    enableSave ();
@@ -349,43 +331,87 @@ void PActors::deleteSelection () {
 //-----------------------------------------------------------------------------
 void PActors::undo () {
    TRACE9 ("PActors::undo ()");
-   Check3 (undoActors.size ());
+   Check3 (aUndo.size ());
 
-   HActor actor (undoActors.back ());
-   undoActors.pop_back ();
+   Undo last (aUndo.top ());
+   switch (last.what ()) {
+   case ACTOR:
+      undoActor (last);
+      break;
 
-   /* Text like "Undone actor 'Sean Penn'" */
-   Glib::ustring msg (_("Undone %1 '%2'"));
-   msg.replace (msg.find ("%2"), 2, actor->getName ());
+   default:
+      Check1 (0);
+   } // end-switch
 
-   std::map<HActor, HActor>::iterator i (changedActors.find (actor));
-   if (i != changedActors.end ()) {
-      TRACE1 ("PActors::undo () - Undo actor " << i->second->getId () << '/' << i->second->getName ());
-      Gtk::TreeRow row (*actors.getObject (HEntity::cast (actor)));
-      *(i->first) = *(i->second);
+   aUndo.pop ();
+   if (aUndo.empty ()) {
+      enableSave (false);
+      apMenus[UNDO]->set_sensitive (false);
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Undoes the last changes to an actor
+/// \param last: Undo-information
+//-----------------------------------------------------------------------------
+void PActors::undoActor (const Undo& last) {
+   TRACE7 ("PActors::undoActor (const Undo&)");
+
+   Gtk::TreePath path (last.getPath ());
+   Gtk::TreeIter iter (actors.getModel ()->get_iter (path)); Check3 (!iter->parent ());
+   switch (last.how ()) {
+   case Undo::CHANGED: {
+      HActor actor (actors.getActorAt (iter));
+      TRACE9 ("PActors::undoActor (const Undo&) - Change " << actor->getName ());
+
+      switch (last.column ()) {
+      case 0:
+	 actor->setName (last.getValue ());
+	 break;
+
+      case 1:
+	 actor->setLifespan (last.getValue ());
+	 break;
+
+      default:
+	 Check1 (0);
+      } // end-switch
+      break; }
+
+   case Undo::INSERT: {
+      HActor actor (actors.getActorAt (iter));
+      TRACE9 ("PActors::undoActor (const Undo&) - Insert");
+      Check3 (!relActors.isRelated (actor));
+      actors.getModel ()->erase (iter);
+      iter = actors.getModel ()->children ().end ();
+      break; }
+
+   case Undo::DELETE: {
+      Check3 (typeid (*delEntries.back ()) == typeid (Actor));
+      HActor actor (HActor::cast (delEntries.back ()));
+      TRACE9 ("PActors::undoActor (const Undo&) - Delete " << actor->getName ());
+      iter = actors.insert (actor, iter);
+      path = actors.getModel ()->get_path (iter);
+
+      delEntries.erase (delEntries.end () - 1);
+      break; }
+
+   default:
+      Check1 (0);
+   } // end-switch
+
+   if (iter) {
+      Gtk::TreeRow row (*iter);
       actors.update (row);
-      actors.scroll_to_row (actors.getModel ()->get_path (row), 0.8);
-
-      changedActors.erase (i);
-      msg.replace (msg.find ("%1"), 2, _("actor"));
    }
-   else {
-      std::vector<HActor>::iterator i (std::find (deletedActors.begin (), deletedActors.end (), actor));
-      Check3 (i != deletedActors.end ());
-      Check3 (i->isDefined ());
-      actors.scroll_to_row (actors.getModel ()->get_path (actors.append (*i)), 0.8);
-      deletedActors.erase (i);
-      msg.replace (msg.find ("%1"), 2, _("actor"));
-   }
-   showStatus (msg);
+   actors.set_cursor (path);
+   actors.scroll_to_row (path, 0.8);
 }
 
 //-----------------------------------------------------------------------------
 /// Removes all information from the page
 //-----------------------------------------------------------------------------
 void PActors::clear () {
-   relDelActors.unrelateAll ();
-   undoActors.clear ();
 }
 
 //-----------------------------------------------------------------------------
@@ -393,25 +419,37 @@ void PActors::clear () {
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
 void PActors::saveData () throw (Glib::ustring) {
-   HActor actor;
-   try {
-      while (changedActors.size ()) {
-	 actor = changedActors.begin ()->first;
-	 Check3 (actor.isDefined ());
-	 Check3 (changedActors.begin ()->second);
+   TRACE9 ("PActors::saveData ()");
 
-	 StorageActor::saveActor (actor);
-	 changedActors.erase (changedActors.begin ());
-      } // endwhile actors changed
+   try {
+      while (aUndo.size ()) {
+	 Undo last (aUndo.top ());
+	 switch (last.what ()) {
+	 case ACTOR: {
+	    HActor actor (actors.getActorAt (actors.getModel ()->get_iter (last.getPath ())));
+	    if (last.how () == Undo::DELETE) {
+	       if (actor->getId ()) {
+		  Check3 (actor->getId () == last.column ());
+		  StorageActor::deleteActor (actor->getId ());
+	       }
+	    }
+	    else
+	       StorageActor::saveActor (actor);
+	    break; }
+
+	 default:
+	    Check1 (0);
+	 } // end-switch
+
+	 aUndo.pop ();
+      } // end-while
    }
    catch (std::exception& err) {
-      Check3 (actor.isDefined ());
-      Glib::ustring msg (_("Can't write actor `%1'!\n\nReason: %2"));
-      msg.replace (msg.find ("%1"), 2, actor->getName ());
-      msg.replace (msg.find ("%2"), 2, err.what ());
+      Glib::ustring msg (_("Error saving data!\n\nReason: %1"));
+      msg.replace (msg.find ("%1"), 2, err.what ());
       throw (msg);
    }
-
+#if 0
    try {
       while (changedRelMovies.size ()) {
 	 actor = *changedRelMovies.begin ();
@@ -427,7 +465,8 @@ void PActors::saveData () throw (Glib::ustring) {
 
 	 changedRelMovies.erase (changedRelMovies.begin ());
       } // end-while
-   }
+      apMenus[UNDO]->set_sensitive (false);
+  }
    catch (std::exception& err) {
       StorageActor::abortTransaction ();
 
@@ -436,23 +475,7 @@ void PActors::saveData () throw (Glib::ustring) {
       msg.replace (msg.find ("%2"), 2, err.what ());
       throw (msg);
    }
-
-   try {
-      while (deletedActors.size ()) {
-	 HActor actor (*deletedActors.begin ()); Check3 (actor.isDefined ());
-	 if (actor->getId ())
-	    StorageActor::deleteActor (actor->getId ());
-
-	 relDelActors.unrelateAll (actor);
-	 deletedActors.erase (deletedActors.begin ());
-      } // endwhile
-   }
-   catch (std::exception& err) {
-      Glib::ustring msg (_("Can't delete actor `%1'!\n\nReason: %2"));
-      msg.replace (msg.find ("%1"), 2, actor->getName ());
-      msg.replace (msg.find ("%2"), 2, err.what ());
-      throw (msg);
-   }
+#endif
 }
 
 #endif // WITH_ACTORS

@@ -1,11 +1,11 @@
-//$Id: PMovies.cpp,v 1.3 2006/01/28 03:27:59 markus Exp $
+//$Id: PMovies.cpp,v 1.4 2006/02/01 18:00:58 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movies
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -72,8 +72,7 @@ PMovies::PMovies (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave, co
    scrlMovies->set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
 
    movies.signalOwnerChanged.connect (mem_fun (*this, &PMovies::directorChanged));
-   movies.signalObjectChanged.connect (mem_fun (*this, &PMovies::entityChanged));
-   movies.signalNameChanged.connect (mem_fun (*this, &PMovies::movieNameChanged));
+   movies.signalObjectChanged.connect (mem_fun (*this, &PMovies::movieChanged));
 
    Check3 (movies.get_selection ());
    movies.get_selection ()->signal_changed ().connect (mem_fun (*this, &PMovies::movieSelected));
@@ -98,8 +97,13 @@ void PMovies::newDirector () {
    directors.push_back (director);
 
    Gtk::TreeModel::iterator i (movies.append (director));
+   Gtk::TreePath path (movies.getModel ()->get_path (i));
    movies.selectRow (i);
-   directorChanged (director);
+   movies.set_cursor (path);
+
+   aUndo.push (Undo (Undo::INSERT, DIRECTOR, 0, path, ""));
+   apMenus[UNDO]->set_sensitive ();
+   enableSave ();
 }
 
 //-----------------------------------------------------------------------------
@@ -117,14 +121,17 @@ void PMovies::newMovie () {
    HMovie movie;
    movie.define ();
    Gtk::TreeIter i (movies.append (movie, *p));
-   movies.expand_row (movies.getModel ()->get_path (p), false);
+   Gtk::TreePath path (movies.getModel ()->get_path (p));
+   movies.expand_row (path, false);
    movies.selectRow (i);
 
    HDirector director;
    director = movies.getDirectorAt (p);
    relMovies.relate (director, movie);
 
-   movieChanged (movie);
+   aUndo.push (Undo (Undo::INSERT, MOVIE, 0, path, ""));
+   apMenus[UNDO]->set_sensitive ();
+   enableSave ();
 }
 
 //-----------------------------------------------------------------------------
@@ -141,60 +148,34 @@ void PMovies::movieSelected () {
 
 //----------------------------------------------------------------------------
 /// Callback when changing a director
-/// \param director: Handle to changed director
+/// \param row: Changed line
+/// \param column: Changed column
+/// \param oldValue: Old value of the changed entry
 //-----------------------------------------------------------------------------
-void PMovies::directorChanged (const HDirector& director) {
-   TRACE9 ("PDirectors::directorChanged (const HDirector&)");
+void PMovies::directorChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue) {
+   TRACE9 ("PDirectors::directorChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&)\n\t- " << column << '/' << oldValue);
 
-   if (changedDirectors.find (director) == changedDirectors.end ()) {
-      changedDirectors[director] = new Director (*director);
-      enableSave ();
-   }
-   else
-      undoDirectors.erase (std::find (undoDirectors.begin (), undoDirectors.end (), director));
+   Gtk::TreePath path (movies.getModel ()->get_path (row));
+   aUndo.push (Undo (Undo::CHANGED, DIRECTOR, column, path, oldValue));
+
+   enableSave ();
    apMenus[UNDO]->set_sensitive ();
-
-   undoDirectors.push_back (director);
 }
 
 //----------------------------------------------------------------------------
 /// Callback when changing a movie
-/// \param movie: Handle to changed movie
+/// \param row: Changed line
+/// \param column: Changed column
+/// \param oldValue: Old value of the changed entry
 //-----------------------------------------------------------------------------
-void PMovies::entityChanged (const HEntity& movie) {
-   TRACE9 ("PMovies::movieChanged (const HEntity&)");
-   movieChanged (HMovie::cast (movie));
-}
+void PMovies::movieChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue) {
+   TRACE9 ("PMovies::movieChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&)\n\t- " << column << '/' << oldValue);
 
-//----------------------------------------------------------------------------
-/// Callback when changing a movie
-/// \param movie: Handle to changed movie
-//-----------------------------------------------------------------------------
-void PMovies::movieChanged (const HMovie& movie) {
-   TRACE9 ("PMovies::movieChanged (const HMovie&)");
+   Gtk::TreePath path (movies.getModel ()->get_path (row));
+   aUndo.push (Undo (Undo::CHANGED, MOVIE, column, path, oldValue));
 
-   if (changedMovies.find (movie) == changedMovies.end ()) {
-      changedMovies[movie] = new Movie (*movie);
-      enableSave ();
-   }
-   else
-      undoMovies.erase (std::find (undoMovies.begin (), undoMovies.end (), movie));
    apMenus[UNDO]->set_sensitive ();
-
-   undoMovies.push_back (movie);
-}
-
-//-----------------------------------------------------------------------------
-/// Callback (additional to movieChanged) when the name of a movie is being
-/// changed
-/// \param movie: Handle to changed movie
-//-----------------------------------------------------------------------------
-void PMovies::movieNameChanged (const HMovie& movie) {
-   Check3 (movie.isDefined ());
-   TRACE9 ("PMovies::movieNameChanged (const HMovie&) - " << movie->getId () << '/' << movie->getName ());
-
-   changedMovieNames[movie] += std::string (1, ',');
-   changedMovieNames[movie] += Movie::currLang;
+   enableSave ();
 }
 
 //-----------------------------------------------------------------------------
@@ -248,16 +229,16 @@ void PMovies::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActi
 
    statusbar.pack_end (*imgLang, Gtk::PACK_SHRINK, 5);
 
-   ui += ("<menuitem action='Undo'/>"
+   ui += ("<menuitem action='MUndo'/>"
 	  "<separator/>"
 	  "<menuitem action='NDirector'/>"
 	  "<menuitem action='NMovie'/>"
 	  "<separator/>"
-	  "<menuitem action='Delete'/>"
+	  "<menuitem action='MDelete'/>"
 	  "</placeholder></menu>"
 	  "<placeholder name='Lang'><menu action='Lang'>");
 
-   grpAction->add (apMenus[UNDO] = Gtk::Action::create ("Undo", Gtk::Stock::UNDO),
+   grpAction->add (apMenus[UNDO] = Gtk::Action::create ("MUndo", Gtk::Stock::UNDO),
 		   Gtk::AccelKey (_("<ctl>Z")),
 		   mem_fun (*this, &PMovies::undo));
    grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NDirector", Gtk::Stock::NEW,
@@ -267,13 +248,15 @@ void PMovies::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActi
    grpAction->add (apMenus[NEW2] = Gtk::Action::create ("NMovie", _("_New movie")),
 		   Gtk::AccelKey (_("<ctl><alt>N")),
 		   mem_fun (*this, &PMovies::newMovie));
-   grpAction->add (apMenus[DELETE] = Gtk::Action::create ("Delete", Gtk::Stock::DELETE, _("_Delete")),
+   grpAction->add (apMenus[DELETE] = Gtk::Action::create ("MDelete", Gtk::Stock::DELETE, _("_Delete")),
 		   Gtk::AccelKey (_("<ctl>Delete")),
 		   mem_fun (*this, &PMovies::deleteSelection));
 
    grpAction->add (Gtk::Action::create ("Lang", _("_Language")));
    addLanguageMenus (ui, grpAction);
    ui += "</menu></placeholder>";
+
+   apMenus[UNDO]->set_sensitive (false);
    movieSelected ();
 }
 
@@ -450,85 +433,54 @@ void PMovies::loadData (const std::string& lang) {
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
 void PMovies::saveData () throw (Glib::ustring) {
-   HDirector director;
+   TRACE9 ("PMovies::saveData ()");
 
    try {
-      while (changedDirectors.size ()) {
-	 director = changedDirectors.begin ()->first;
-	 Check3 (director.isDefined ());
-	 Check3 (changedDirectors.begin ()->second);
+      while (aUndo.size ()) {
+	 Undo last (aUndo.top ());
+	 switch (last.what ()) {
+	 case MOVIE: {
+	    HMovie movie (movies.getMovieAt (movies.getModel ()->get_iter (last.getPath ())));
+	    if (last.how () == Undo::DELETE) {
+	       if (movie->getId ()) {
+		  Check3 (movie->getId () == last.column ());
+		  StorageMovie::deleteMovie (movie->getId ());
+	       }
 
-	 StorageMovie::saveDirector (director);
-	 changedDirectors.erase (changedDirectors.begin ());
-      } // endwhile
+	       std::map<YGP::HEntity, YGP::HEntity>::iterator delRel
+		  (delRelation.find (delEntries.back ()));
+	       Check3 (delRel != delRelation.end ());
+	       Check3 (typeid (*delRel->second) == typeid (Director));
+	       delRelation.erase (delRel);
+	       delEntries.erase (delEntries.end () - 1);
+	    }
+	    else
+	       StorageMovie::saveMovie (movie, relMovies.getParent (movie)->getId ());
+	    break; }
+
+	 case DIRECTOR: {
+	    HDirector director (movies.getDirectorAt (movies.getModel ()->get_iter (last.getPath ())));
+	    if (last.how () == Undo::DELETE) {
+	       if (director->getId ()) {
+		  Check3 (director->getId () == last.column ());
+		  StorageMovie::deleteDirector (director->getId ());
+	       }
+	    }
+	    else
+	       StorageMovie::saveDirector (director);
+	    break; }
+
+	 default:
+	    Check1 (0);
+	 } // end-switch
+
+	 aUndo.pop ();
+      } // end-while
+      apMenus[UNDO]->set_sensitive (false);
    }
    catch (std::exception& err) {
-      Glib::ustring msg (_("Can't write director `%1'!\n\nReason: %2"));
-      msg.replace (msg.find ("%1"), 2, director->getName ());
-      msg.replace (msg.find ("%2"), 2, err.what ());
-      throw (msg);
-   }
-
-   HMovie movie;
-   try {
-      while (changedMovies.size ()) {
-	 movie = changedMovies.begin ()->first; Check3 (movie.isDefined ());
-	 Check3 (relMovies.isRelated (movie));
-
-	 StorageMovie::saveMovie (movie, relMovies.getParent (movie)->getId ());
-
-	 StorageMovie::startTransaction ();
-	 StorageMovie::deleteMovieNames (movie->getId ());
-
-	 YGP::Tokenize langs (changedMovieNames[movie]);
-	 std::string lang;
-	 while ((lang = langs.getNextNode (',')).size ()) {
-	    Check3 (Language::exists (lang));
-
-	    if (movie->getName (lang).size ())
-	       StorageMovie::saveMovieName (movie, lang);
-	 } // endwhile languages changed
-	 StorageMovie::commitTransaction ();
-      }
-      Check3 (changedMovies.begin ()->second);
-      changedMovies.erase (changedMovies.begin ());
-   }
-   catch (std::exception& err) {
-      StorageMovie::abortTransaction ();
-
-      Glib::ustring msg (_("Can't write movie `%1'!\n\nReason: %2"));
-      msg.replace (msg.find ("%1"), 2, movie->getName ());
-      msg.replace (msg.find ("%2"), 2, err.what ());
-      throw (msg);
-   }
-
-   try {
-      while (deletedMovies.size ()) {
-	 movie = deletedMovies.begin ()->first; Check3 (movie.isDefined ());
-	 if (movie->getId ())
-	    StorageMovie::deleteMovie (movie->getId ());
-	 deletedMovies.erase (deletedMovies.begin ());
-      } // endwhile
-   }
-   catch (std::exception& err) {
-      Glib::ustring msg (_("Can't delete movie `%1'!\n\nReason: %2"));
-      msg.replace (msg.find ("%1"), 2, movie->getName ());
-      msg.replace (msg.find ("%2"), 2, err.what ());
-      throw (msg);
-   }
-
-   try {
-      while (deletedDirectors.size ()) {
-	 director = *deletedDirectors.begin (); Check3 (director.isDefined ());
-	 if (director->getId ())
-	    StorageMovie::deleteDirector (director->getId ());
-	 deletedDirectors.erase (deletedDirectors.begin ());
-      } // endwhile
-   }
-   catch (std::exception& err) {
-      Glib::ustring msg (_("Can't delete director `%1'!\n\nReason: %2"));
-      msg.replace (msg.find ("%1"), 2, director->getName ());
-      msg.replace (msg.find ("%2"), 2, err.what ());
+      Glib::ustring msg (_("Error saving data!\n\nReason: %1"));
+      msg.replace (msg.find ("%1"), 2, err.what ());
       throw (msg);
    }
 }
@@ -556,17 +508,11 @@ void PMovies::deleteSelection () {
 	    Gtk::TreeIter child (iter->children ().begin ());
 	    deleteMovie (child);
 	 }
+
+	 Gtk::TreePath path (movies.getModel ()->get_path (iter));
+	 aUndo.push (Undo (Undo::DELETE, DIRECTOR, director->getId (), path, ""));
+	 delEntries.push_back (YGP::HEntity::cast (director));
 	 movies.getModel ()->erase (iter);
-
-	 undoDirectors.push_back (director);
-	 // Though director is already removed from the listbox, it still
-	 // has to be removed from the database
-	 if (director->getId ())
-	    deletedDirectors.push_back (director);
-
-	 std::map<HDirector, HDirector>::iterator iDirector (changedDirectors.find (director));
-	 if (iDirector != changedDirectors.end ())
-	    changedDirectors.erase (iDirector);
       }
    }
    apMenus[UNDO]->set_sensitive ();
@@ -586,15 +532,16 @@ void PMovies::deleteMovie (const Gtk::TreeIter& movie) {
    Check3 (relMovies.isRelated (hMovie));
    HDirector hDirector (relMovies.getParent (hMovie)); Check3 (hDirector.isDefined ());
 
-   undoMovies.push_back (hMovie);
-   deletedMovies[hMovie] = hDirector;
-   relMovies.unrelate (hDirector, hMovie);
-
-   std::map<HMovie, HMovie>::iterator iMovie (changedMovies.find (hMovie));
-   if (iMovie != changedMovies.end ())
-      changedMovies.erase (changedMovies.find (hMovie));
+   Check3 (std::find (delEntries.begin (), delEntries.end (), YGP::HEntity::cast (hMovie)) == delEntries.end ());
+   Check3 (delRelation.find (YGP::HEntity::cast (hMovie)) == delRelation.end ());
 
    Glib::RefPtr<Gtk::TreeStore> model (movies.getModel ());
+   Gtk::TreePath path (model->get_path (movie));
+   aUndo.push (Undo (Undo::DELETE, MOVIE, hMovie->getId (), path, ""));
+   delEntries.push_back (YGP::HEntity::cast (hMovie));
+   delRelation[YGP::HEntity::cast (hMovie)] = YGP::HEntity::cast (hDirector);
+
+   relMovies.unrelate (hDirector, hMovie);
    model->erase (movie);
 }
 
@@ -627,6 +574,171 @@ void PMovies::export2HTML (unsigned int fd) {
 /// Undoes the changes on the page
 //-----------------------------------------------------------------------------
 void PMovies::undo () {
+   TRACE1 ("PMovies::undo ()");
+   Check3 (aUndo.size ());
+
+   Undo last (aUndo.top ());
+   switch (last.what ()) {
+   case MOVIE:
+      undoMovie (last);
+      break;
+
+   case DIRECTOR:
+      undoDirector (last);
+      break;
+
+   default:
+      Check1 (0);
+   } // end-switch
+
+   aUndo.pop ();
+   if (aUndo.empty ()) {
+      enableSave (false);
+      apMenus[UNDO]->set_sensitive (false);
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Undoes the last changes to a movie
+/// \param last: Undo-information
+//-----------------------------------------------------------------------------
+void PMovies::undoMovie (const Undo& last) {
+   TRACE5 ("PMovies::undoMovie (const Undo&)");
+
+   Gtk::TreePath path (last.getPath ());
+   Gtk::TreeIter iter (movies.getModel ()->get_iter (path)); Check3 (iter->parent ());
+   switch (last.how ()) {
+   case Undo::CHANGED: {
+      HMovie movie (movies.getMovieAt (iter));
+      TRACE9 ("PMovies::undoMovie (const Undo&) - Change " << movie->getName ());
+      TRACE8 ("PMovies::undoMovie (const Undo&) - Value " << last.column () << '/' << last.getValue ());
+
+      switch (last.column ()) {
+      case 0:
+	 movie->setName (last.getValue ());
+	 break;
+
+      case 1:
+	 movie->setYear (last.getValue ());
+	 break;
+
+      case 2:
+	 movie->setGenre ((unsigned int)last.getValue ()[0]);
+	 break;
+
+      case 3:
+	 movie->setType (last.getValue ());
+	 break;
+
+      case 4:
+	 movie->setLanguage (last.getValue ());
+	 break;
+
+      case 5:
+	 movie->setTitles (last.getValue ());
+	 break;
+
+      default:
+	 Check1 (0);
+      } // end-switch
+      break; }
+
+   case Undo::INSERT: {
+      HMovie movie (movies.getMovieAt (iter));
+      TRACE9 ("PMovies::undoMovie (const Undo&) - Insert");
+      Check3 (!relMovies.isRelated (movie));
+      movies.getModel ()->erase (iter);
+      iter = movies.getModel ()->children ().end ();
+      break; }
+
+   case Undo::DELETE: {
+      Check3 (typeid (*delEntries.back ()) == typeid (Movie));
+      HMovie movie (HMovie::cast (delEntries.back ()));
+      TRACE9 ("PMovies::undoMovie (const Undo&) - Delete " << movie->getName ());
+
+      std::map<YGP::HEntity, YGP::HEntity>::iterator delRel
+	 (delRelation.find (delEntries.back ()));
+      Check3 (typeid (*delRel->second) == typeid (Director));
+      HDirector director (HDirector::cast (delRel->second));
+      Gtk::TreeRow rowDirector (*movies.getOwner (director));
+
+      iter = movies.append (movie, rowDirector);
+      path = movies.getModel ()->get_path (iter);
+
+      relMovies.relate (director, movie);
+
+      delRelation.erase (delRel);
+      delEntries.erase (delEntries.end () - 1);
+      break; }
+
+   default:
+      Check1 (0);
+   } // end-switch
+
+   if (iter) {
+      Gtk::TreeRow row (*iter);
+      movies.update (row);
+   }
+   movies.set_cursor (path);
+   movies.scroll_to_row (path, 0.8);
+}
+
+//-----------------------------------------------------------------------------
+/// Undoes the last changes to a director
+/// \param last: Undo-information
+//-----------------------------------------------------------------------------
+void PMovies::undoDirector (const Undo& last) {
+   TRACE5 ("PMovies::undoDirector (const Undo&)");
+
+   Gtk::TreePath path (last.getPath ());
+   Gtk::TreeIter iter (movies.getModel ()->get_iter (path)); Check3 (!iter->parent ());
+   switch (last.how ()) {
+   case Undo::CHANGED: {
+      HDirector director (movies.getDirectorAt (iter));
+      TRACE9 ("PMovies::undoDirector (const Undo&) - Change " << director->getName ());
+
+      switch (last.column ()) {
+      case 0:
+	 director->setName (last.getValue ());
+	 break;
+
+      case 1:
+	 director->setLifespan (last.getValue ());
+	 break;
+
+      default:
+	 Check1 (0);
+      } // end-switch
+      break; }
+
+   case Undo::INSERT: {
+      HDirector director (movies.getDirectorAt (iter));
+      TRACE9 ("PMovies::undoDirector (const Undo&) - Insert");
+      Check3 (!relMovies.isRelated (director));
+      movies.getModel ()->erase (iter);
+      iter = movies.getModel ()->children ().end ();
+      break; }
+
+   case Undo::DELETE: {
+      Check3 (typeid (*delEntries.back ()) == typeid (Director));
+      HDirector director (HDirector::cast (delEntries.back ()));
+      TRACE9 ("PMovies::undoDirector (const Undo&) - Delete " << director->getName ());
+      iter = movies.insert (director, iter);
+      path = movies.getModel ()->get_path (iter);
+
+      delEntries.erase (delEntries.end () - 1);
+      break; }
+
+   default:
+      Check1 (0);
+   } // end-switch
+
+   if (iter) {
+      Gtk::TreeRow row (*iter);
+      movies.update (row);
+   }
+   movies.set_cursor (path);
+   movies.scroll_to_row (path, 0.8);
 }
 
 //-----------------------------------------------------------------------------

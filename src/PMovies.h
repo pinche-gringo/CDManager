@@ -1,7 +1,7 @@
 #ifndef PMOVIES_H
 #define PMOVIES_H
 
-//$Id: PMovies.h,v 1.3 2006/01/28 03:27:59 markus Exp $
+//$Id: PMovies.h,v 1.4 2006/02/01 18:00:58 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -79,14 +79,15 @@ class PMovies : public NBPage {
    void setLanguage (const std::string& lang);
    void changeLanguage (const std::string& lang);
 
-   void directorChanged (const HDirector& director);
-   void movieNameChanged (const HMovie& movie);
-   void movieChanged (const HMovie& movie);
-   void entityChanged (const HEntity& movie);
+   void directorChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
+   void movieChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
 
    void newDirector ();
    void newMovie ();
    void deleteMovie (const Gtk::TreeIter& movie);
+
+   void undoMovie (const Undo& last);
+   void undoDirector (const Undo& last);
 
    void movieSelected ();
    HMovie findMovie (unsigned int id) const {
@@ -98,20 +99,11 @@ class PMovies : public NBPage {
    MovieList movies;                              // GUI-element holding movies
 
    // Model
+   enum { DIRECTOR, MOVIE };
    std::vector<HDirector> directors;
    YGP::Relation1_N<HDirector, HMovie> relMovies;
 
    std::map<std::string, bool> loadedLangs;
-
-   // Information for undo
-   std::vector<HDirector>         deletedDirectors;
-   std::map<HMovie, HDirector>    deletedMovies;
-   std::map<HMovie, HMovie>       changedMovies;
-   std::map<HMovie, std::string>  changedMovieNames;
-   std::map<HDirector, HDirector> changedDirectors;
-
-   std::vector<HMovie>    undoMovies;
-   std::vector<HDirector> undoDirectors;
 };
 
 

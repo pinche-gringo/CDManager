@@ -1,7 +1,7 @@
 #ifndef PACTORS_H
 #define PACTORS_H
 
-//$Id: PActors.h,v 1.3 2006/01/28 07:47:21 markus Exp $
+//$Id: PActors.h,v 1.4 2006/02/01 18:00:58 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -65,10 +65,10 @@ class PActors : public NBPage {
    const PActors& operator= (const PActors& other);
 
    void actorSelected ();
-   void actorChanged (const HActor& actor);
+   void actorChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
 
    void newActor ();
-   Gtk::TreeIter addActor (const HActor& actor);
+   void undoActor (const Undo& last);
 
    void actorPlaysInMovie ();
    void relateMovies (const HActor& actor, const std::vector<HMovie>& movies);
@@ -76,16 +76,10 @@ class PActors : public NBPage {
    ActorList actors;                              // GUI-element holding actors
 
    // Model
+   enum { ACTOR, MOVIES };
+
    std::vector<HActor> aActors;
    YGP::RelationN_M<HActor, HMovie> relActors;
-
-   // Information for undo
-   std::map<HActor, HActor> changedActors;
-   std::vector<HActor>      undoActors;
-   std::vector<HActor>      deletedActors;
-   std::vector<HActor>      changedRelMovies;
-
-   YGP::RelationN_M<HActor, HMovie> relDelActors;
 
    // Reference to movie-page
    PMovies& movies;

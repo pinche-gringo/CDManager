@@ -1,11 +1,11 @@
-//$Id: PRecords.cpp,v 1.6 2006/02/01 03:05:21 markus Exp $
+//$Id: PRecords.cpp,v 1.7 2006/02/01 18:01:36 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Records
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -353,16 +353,16 @@ void PRecords::recordChanged (const Gtk::TreeIter& row, unsigned int column, Gli
 /// \param grpActions: Added actions
 //-----------------------------------------------------------------------------
 void PRecords::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAction) {
-   ui += ("<menuitem action='Undo'/>"
+   ui += ("<menuitem action='RUndo'/>"
 	  "<separator/>"
 	  "<menuitem action='NInterpret'/>"
 	  "<menuitem action='NRecord'/>"
 	  "<menuitem action='NSong'/>"
 	  "<separator/>"
-	  "<menuitem action='Delete'/>"
+	  "<menuitem action='RDelete'/>"
 	  "</placeholder></menu>");
 
-   grpAction->add (apMenus[UNDO] = Gtk::Action::create ("Undo", Gtk::Stock::UNDO),
+   grpAction->add (apMenus[UNDO] = Gtk::Action::create ("RUndo", Gtk::Stock::UNDO),
 		   Gtk::AccelKey (_("<ctl>Z")),
 		   mem_fun (*this, &PRecords::undo));
    grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NInterpret", Gtk::Stock::NEW,
@@ -375,7 +375,7 @@ void PRecords::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAct
    grpAction->add (apMenus[NEW3] = Gtk::Action::create ("NSong", _("New _song")),
 		   Gtk::AccelKey (_("<ctl><shft>N")),
 		   mem_fun (*this, &PRecords::newSong));
-   grpAction->add (apMenus[DELETE] = Gtk::Action::create ("Delete", Gtk::Stock::DELETE, _("_Delete")),
+   grpAction->add (apMenus[DELETE] = Gtk::Action::create ("RDelete", Gtk::Stock::DELETE, _("_Delete")),
 		   Gtk::AccelKey (_("<ctl>Delete")),
 		   mem_fun (*this, &PRecords::deleteSelection));
 
@@ -516,6 +516,7 @@ void PRecords::saveData () throw (Glib::ustring) {
 	 aUndo.pop ();
 	 TRACE5 ("PRecords::saveData () - " << aUndo.size ());
       } // end-while
+      apMenus[UNDO]->set_sensitive (false);
    }
    catch (std::exception& err) {
       Glib::ustring msg (_("Error saving data!\n\nReason: %1"));
@@ -566,7 +567,7 @@ void PRecords::deleteSelectedRecords () {
 	    deleteRecord (child);
 	 }
 	 Gtk::TreePath path (records.getModel ()->get_path (iter));
-	 aUndo.push (Undo (Undo::DELETE, (unsigned int)INTERPRET, interpret->getId (), path, ""));
+	 aUndo.push (Undo (Undo::DELETE, INTERPRET, interpret->getId (), path, ""));
 	 delEntries.push_back (YGP::HEntity::cast (interpret));
 	 records.getModel ()->erase (iter);
       }
@@ -599,7 +600,7 @@ void PRecords::deleteRecord (const Gtk::TreeIter& record) {
    Check3 (delRelation.find (YGP::HEntity::cast (hRec)) == delRelation.end ());
 
    Gtk::TreePath path (records.getModel ()->get_path (record));
-   aUndo.push (Undo (Undo::DELETE, (unsigned int)RECORD, hRec->getId (), path, ""));
+   aUndo.push (Undo (Undo::DELETE, RECORD, hRec->getId (), path, ""));
    delEntries.push_back (YGP::HEntity::cast (hRec));
    delRelation[YGP::HEntity::cast (hRec)] = YGP::HEntity::cast (hInterpret);
    relRecords.unrelate (hInterpret, hRec);
@@ -619,7 +620,7 @@ void PRecords::deleteSong (const HSong& song, const HRecord& record) {
    Check3 (delRelation.find (YGP::HEntity::cast (song)) == delRelation.end ());
 
    Gtk::TreePath path (songs.getModel ()->get_path (songs.getSong (song)));
-   aUndo.push (Undo (Undo::DELETE, (unsigned int)SONG, song->getId (), path, ""));
+   aUndo.push (Undo (Undo::DELETE, SONG, song->getId (), path, ""));
    delEntries.push_back (YGP::HEntity::cast (song));
    delRelation[YGP::HEntity::cast (song)] = YGP::HEntity::cast (record);
 }
@@ -799,7 +800,7 @@ void PRecords::undoRecord (const Undo& last) {
       TRACE9 ("PRecords::undoRecord (const Undo&) - Insert");
       Check3 (!relRecords.isRelated (record));
       records.getModel ()->erase (iter);
-      iter = songs.getModel ()->children ().end ();
+      iter = records.getModel ()->children ().end ();
       break; }
 
    case Undo::DELETE: {
@@ -868,7 +869,7 @@ void PRecords::undoInterpret (const Undo& last) {
       TRACE9 ("PRecords::undoInterpret (const Undo&) - Insert");
       Check3 (!relRecords.isRelated (interpret));
       records.getModel ()->erase (iter);
-      iter = songs.getModel ()->children ().end ();
+      iter = records.getModel ()->children ().end ();
       break; }
 
    case Undo::DELETE: {

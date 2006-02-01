@@ -1,11 +1,11 @@
-//$Id: SongList.cpp,v 1.21 2006/02/01 00:43:19 markus Exp $
+//$Id: SongList.cpp,v 1.22 2006/02/01 03:01:14 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.21 $
+//REVISION    : $Revision: 1.22 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -97,7 +97,6 @@ SongList::SongList (const Genres& genres)
 			  sigc::mem_fun (*this, &SongList::sortByName));
 
    set_search_column (colSongs.colName);
-   set_rules_hint ();
 }
 
 //-----------------------------------------------------------------------------
@@ -111,6 +110,7 @@ SongList::~SongList () {
 //-----------------------------------------------------------------------------
 /// Inserts a song into the list
 /// \param song: Song to add
+/// \param pos: Position in model for insert
 /// \returns Gtk::TreeModel::iterator: Inserted row
 //-----------------------------------------------------------------------------
 Gtk::TreeModel::iterator SongList::insert (HSong& song, const Gtk::TreeIter& pos) {
@@ -180,8 +180,8 @@ void SongList::valueChanged (const Glib::ustring& path,
 	 Genres::const_iterator g (genres.begin ());
 	 for (; g != genres.end (); ++g)
 	    if (g->second == value) {
+	       oldValue = Glib::ustring (1, (char)song->getGenre ());
 	       song->setGenre (g->first);
-	       oldValue = Glib::ustring (1, (char)g->first);
 	       row[colSongs.colGenre] = value;
 	       break;
 	    }

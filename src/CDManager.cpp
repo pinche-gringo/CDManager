@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.66 2006/02/01 18:02:18 markus Exp $
+//$Id: CDManager.cpp,v 1.67 2006/02/01 22:22:54 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.66 $
+//REVISION    : $Revision: 1.67 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -405,7 +405,8 @@ CDManager::~CDManager () {
 void CDManager::save () {
    try {
       for (unsigned int i (0); i < (sizeof (pages) / sizeof (*pages)); ++i)
-	 pages[i]->saveData ();
+	 if (pages[i]->isChanged ())
+	    pages[i]->saveData ();
 
       apMenus[SAVE]->set_sensitive (false);
    }
@@ -612,6 +613,7 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 /// Logout from the DB; give an opportunity to save changes
 //-----------------------------------------------------------------------------
 void CDManager::logout () {
+   TRACE9 ("CDManager::logout ()");
    on_delete_event (NULL);
 
    for (unsigned int i (0); i < (sizeof (pages) / sizeof (*pages)); ++i)

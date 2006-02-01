@@ -1,11 +1,11 @@
-//$Id: MovieList.cpp,v 1.22 2006/01/28 06:12:15 markus Exp $
+//$Id: MovieList.cpp,v 1.23 2006/02/01 17:59:30 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.22 $
+//REVISION    : $Revision: 1.23 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -152,15 +152,15 @@ HMovie MovieList::getMovieAt (const Gtk::TreeIter iter) const {
 void MovieList::setName (HEntity& object, const Glib::ustring& value) {
    HMovie m (HMovie::cast (object));
    m->setName (value);
-   signalNameChanged.emit (m);
 }
 
 //-----------------------------------------------------------------------------
 /// Sets the year of the object
 /// \param object: Object to change
 /// \param value: Value to set
+/// \throw std::exception: In case of an error
 //-----------------------------------------------------------------------------
-void MovieList::setYear (HEntity& object, const Glib::ustring& value) {
+void MovieList::setYear (HEntity& object, const Glib::ustring& value) throw (std::exception) {
    HMovie m (HMovie::cast (object));
    m->setYear (value);
 }
@@ -214,6 +214,7 @@ void MovieList::valueChanged (const Glib::ustring& path,
    try {
       if (row.parent ()) {
 	 HMovie movie (getMovieAt (row));
+	 Glib::ustring oldValue;
 	 switch (column) {
 	 case 0: {
 	    CDType& type (CDType::getInstance ());
@@ -222,23 +223,27 @@ void MovieList::valueChanged (const Glib::ustring& path,
 	       throw (std::runtime_error (e));
 	    }
 	    movie->setType (value);
+	    oldValue = row[colMovies.type];
 	    row[colMovies.type] = value;
 	    break; }
 
 	 case 1:
+	    oldValue = movie->getLanguage ();
 	    setLanguage (row, value);
 	    movie->setLanguage (value);
 	    break;
 
 	 case 2:
+	    oldValue = movie->getTitles ();
 	    setTitles (row, value);
 	    movie->setTitles (value);
+	    break;
 
 	 default:
 	    Check3 (0);
 	 } // end-switch
 
-	 signalObjectChanged.emit (getObjectAt (row));
+	 signalObjectChanged.emit (row, column + 3, oldValue);
       } // endif object edited
    } // end-try
    catch (std::exception& e) {

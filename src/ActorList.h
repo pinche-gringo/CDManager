@@ -1,7 +1,7 @@
 #ifndef ACTORLIST_H
 #define ACTORLIST_H
 
-//$Id: ActorList.h,v 1.2 2006/01/22 18:36:23 markus Exp $
+//$Id: ActorList.h,v 1.3 2006/02/01 17:59:31 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ class ActorList : public OwnerObjectList {
 
  protected:
    virtual void setName (HEntity& object, const Glib::ustring& value);
-   virtual void setYear (HEntity& object, const Glib::ustring& value);
+   virtual void setYear (HEntity& object, const Glib::ustring& value) throw (std::exception);
    virtual void ActorList::setGenre (HEntity& object, unsigned int value);
 
    virtual Glib::ustring getColumnName () const;

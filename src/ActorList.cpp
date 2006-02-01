@@ -1,11 +1,11 @@
-//$Id: ActorList.cpp,v 1.2 2006/01/22 18:36:23 markus Exp $
+//$Id: ActorList.cpp,v 1.3 2006/02/01 17:59:31 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actor
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.09.2005
 //COPYRIGHT   : Copyright (C) 2005, 2006
@@ -107,9 +107,10 @@ void ActorList::setName (HEntity& object, const Glib::ustring& value) {
 /// Sets the year of the object
 /// \param object: Object to change
 /// \param value: Value to set
+/// \throw std::exception: In case of an error
 /// \remarks To be implemented
 //-----------------------------------------------------------------------------
-void ActorList::setYear (HEntity& object, const Glib::ustring& value) {
+void ActorList::setYear (HEntity& object, const Glib::ustring& value) throw (std::exception) {
    HMovie m (HMovie::cast (object));
    m->setYear (value);
 }

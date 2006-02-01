@@ -1,7 +1,7 @@
 #ifndef MOVIELIST_H
 #define MOVIELIST_H
 
-//$Id: MovieList.h,v 1.15 2006/01/28 06:12:16 markus Exp $
+//$Id: MovieList.h,v 1.16 2006/02/01 17:59:30 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -85,11 +85,9 @@ class MovieList : public OwnerObjectList {
 
    virtual void update (Gtk::TreeModel::Row& row);
 
-   sigc::signal<void, const HMovie&> signalNameChanged;
-
  protected:
    virtual void setName (HEntity& object, const Glib::ustring& value);
-   virtual void setYear (HEntity& object, const Glib::ustring& value);
+   virtual void setYear (HEntity& object, const Glib::ustring& value) throw (std::exception);
    virtual void setGenre (HEntity& object, unsigned int value);
 
    virtual Glib::ustring getColumnName () const;

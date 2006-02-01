@@ -1,11 +1,11 @@
-//$Id: StorageRecord.cpp,v 1.3 2006/02/01 00:45:14 markus Exp $
+//$Id: StorageRecord.cpp,v 1.4 2006/02/01 22:22:28 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : <FILLIN>
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -152,9 +152,8 @@ void StorageRecord::saveRecord (const HRecord record, unsigned int idInterpret) 
    query << (record->getId () ? "UPDATE Records" : "INSERT INTO Records")
 	 << " SET name=\"" << Database::escapeDBValue (record->getName ())
 	 << "\", interpret=" << idInterpret
-	 << "\", genre=" << record->getGenre ();
-   if (record->getYear ().isDefined ())
-      query << ", year=" << record->getYear ();
+	 << ", genre=" << record->getGenre ()
+	 << ", year=" << (record->getYear ().isDefined () ? (unsigned int)record->getYear () : 0);
    if (record->getId ())
       query << " WHERE id=" << record->getId ();
    Database::execute (query.str ().c_str ());

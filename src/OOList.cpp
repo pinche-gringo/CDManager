@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.19 2006/02/01 03:03:44 markus Exp $
+//$Id: OOList.cpp,v 1.20 2006/02/02 00:08:59 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.19 $
+//REVISION    : $Revision: 1.20 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -303,9 +303,9 @@ Glib::ustring OwnerObjectList::getLiveSpan (const HCelebrity& owner) const {
    Check1 (owner.isDefined ());
 
    Glib::ustring tmp (owner->getBorn ().toString ());
-   if (owner->getBorn ().isDefined ())
-      tmp.append (1, ' ');
    if (owner->getDied ().isDefined ()) {
+      if (owner->getBorn ().isDefined ())
+	 tmp.append (1, ' ');
       tmp.append ("- ");
       tmp.append (owner->getDied ().toString ());
    }

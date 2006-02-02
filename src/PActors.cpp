@@ -1,11 +1,11 @@
-//$Id: PActors.cpp,v 1.6 2006/02/01 18:00:58 markus Exp $
+//$Id: PActors.cpp,v 1.7 2006/02/02 00:08:43 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actors
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -32,8 +32,6 @@
 #include <gtkmm/stock.h>
 #include <gtkmm/scrolledwindow.h>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ANumeric.h>
@@ -412,6 +410,8 @@ void PActors::undoActor (const Undo& last) {
 /// Removes all information from the page
 //-----------------------------------------------------------------------------
 void PActors::clear () {
+   actors.clear ();
+   relActors.unrelateAll ();
 }
 
 //-----------------------------------------------------------------------------
@@ -422,27 +422,37 @@ void PActors::saveData () throw (Glib::ustring) {
    TRACE9 ("PActors::saveData ()");
 
    try {
+      std::vector<YGP::HEntity> aSaved;
+      std::vector<YGP::HEntity>::iterator posSaved (aSaved.end ());
+
       while (aUndo.size ()) {
 	 Undo last (aUndo.top ());
-	 switch (last.what ()) {
-	 case ACTOR: {
-	    HActor actor (actors.getActorAt (actors.getModel ()->get_iter (last.getPath ())));
-	    if (last.how () == Undo::DELETE) {
-	       if (actor->getId ()) {
-		  Check3 (actor->getId () == last.column ());
-		  StorageActor::deleteActor (actor->getId ());
+
+	 YGP::HEntity entity (actors.getObjectAt (actors.getModel ()->get_iter (last.getPath ())));
+	 posSaved = lower_bound (aSaved.begin (), aSaved.end (), entity);
+	 if ((posSaved == aSaved.end ()) || (*posSaved != entity)) {
+	    switch (last.what ()) {
+	    case ACTOR: {
+	       HActor actor (actors.getActorAt (actors.getModel ()->get_iter (last.getPath ())));
+	       if (last.how () == Undo::DELETE) {
+		  if (actor->getId ()) {
+		     Check3 (actor->getId () == last.column ());
+		     StorageActor::deleteActor (actor->getId ());
+		  }
 	       }
-	    }
-	    else
-	       StorageActor::saveActor (actor);
-	    break; }
+	       else
+		  StorageActor::saveActor (actor);
+	       break; }
 
-	 default:
-	    Check1 (0);
-	 } // end-switch
-
+	    default:
+	       Check1 (0);
+	    } // end-switch
+	    aSaved.insert (posSaved, entity);
+	 }
 	 aUndo.pop ();
       } // end-while
+      Check3 (apMenus[UNDO]);
+      apMenus[UNDO]->set_sensitive (false);
    }
    catch (std::exception& err) {
       Glib::ustring msg (_("Error saving data!\n\nReason: %1"));
@@ -465,7 +475,6 @@ void PActors::saveData () throw (Glib::ustring) {
 
 	 changedRelMovies.erase (changedRelMovies.begin ());
       } // end-while
-      apMenus[UNDO]->set_sensitive (false);
   }
    catch (std::exception& err) {
       StorageActor::abortTransaction ();

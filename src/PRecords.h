@@ -1,7 +1,7 @@
 #ifndef PRECORDS_H
 #define PRECORDS_H
 
-//$Id: PRecords.h,v 1.6 2006/02/01 03:05:21 markus Exp $
+//$Id: PRecords.h,v 1.7 2006/02/03 18:02:27 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@
 
 #if WITH_RECORDS == 1
 
-#include <map>
 #include <vector>
 
 #include <YGP/Relation.h>

@@ -1,11 +1,11 @@
-//$Id: PMovies.cpp,v 1.5 2006/02/01 22:22:06 markus Exp $
+//$Id: PMovies.cpp,v 1.6 2006/02/03 18:02:17 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movies
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -486,6 +486,9 @@ void PMovies::saveData () throw (Glib::ustring) {
       } // end-while
       Check3 (apMenus[UNDO]);
       apMenus[UNDO]->set_sensitive (false);
+
+      Check3 (delEntries.empty ());
+      Check3 (delRelation.empty ());
    }
    catch (std::exception& err) {
       Glib::ustring msg (_("Error saving data!\n\nReason: %1"));

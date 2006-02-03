@@ -1,11 +1,11 @@
-//$Id: PRecords.cpp,v 1.8 2006/02/01 22:22:06 markus Exp $
+//$Id: PRecords.cpp,v 1.9 2006/02/03 18:02:17 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Records
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.8 $
+//REVISION    : $Revision: 1.9 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -528,7 +528,10 @@ void PRecords::saveData () throw (Glib::ustring) {
       } // end-while
       Check3 (apMenus[UNDO]);
       apMenus[UNDO]->set_sensitive (false);
-   }
+
+      Check3 (delEntries.empty ());
+      Check3 (delRelation.empty ());
+  }
    catch (std::exception& err) {
       Glib::ustring msg (_("Error saving data!\n\nReason: %1"));
       msg.replace (msg.find ("%1"), 2, err.what ());

@@ -1,11 +1,11 @@
-//$Id: PActors.cpp,v 1.7 2006/02/02 00:08:43 markus Exp $
+//$Id: PActors.cpp,v 1.8 2006/02/03 18:00:35 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actors
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -152,19 +152,47 @@ void PActors::actorPlaysInMovie () {
 void PActors::relateMovies (const HActor& actor, const std::vector<HMovie>& movies) {
    TRACE9 ("PActors::relateMovies (const HActor&, const std::vector<HMovie>&)");
    Check2 (actor.isDefined ());
-   if (!relActors.isRelated (actor))
-      relActors.relate (actor, *movies.begin ());
+
+   Glib::RefPtr<Gtk::TreeStore> model (actors.getModel ());
+   Gtk::TreeIter i (actors.getOwner (actor)); Check3 (i);
+   Gtk::TreePath path (model->get_path (i));
+
+   aUndo.push (Undo (Undo::CHANGED, MOVIES, actor->getId (), path, ""));
+
+   YGP::Handle<RelUndo> hOldRel; hOldRel.define ();
+
+   if (relActors.isRelated (actor)) {
+      TRACE5 ("PActors::relateMovies (...) - Storing " << relActors.getObjects (actor).size () << " related movies");
+      hOldRel->setRelatedMovies (relActors.getObjects (actor));
+   }
+   else {
+      HMovie movie;
+      relActors.relate (actor, movie);
+   }
+   delEntries.push_back (YGP::HEntity::cast (hOldRel));
+   delRelation[YGP::HEntity::cast (hOldRel)] = YGP::HEntity::cast (actor);
+
    relActors.getObjects (actor) = movies;
 
-   Gtk::TreeIter i (actors.getOwner (actor)); Check3 (i);
-   while (i->children ().size ())
-      actors.getModel ()->erase (i->children ().begin ());
+   showMovies (i);
+   apMenus[UNDO]->set_sensitive ();
+   enableSave ();
+}
 
+//-----------------------------------------------------------------------------
+/// Shows the movies of a certain actor
+/// \param row: Iterator to actor
+//-----------------------------------------------------------------------------
+void PActors::showMovies (const Gtk::TreeIter& row) {
+   Glib::RefPtr<Gtk::TreeStore> model (actors.getModel ());
+
+   while (row->children ().size ())
+      model->erase (row->children ().begin ());
+
+   HActor actor (actors.getActorAt (row)); Check3 (actor.isDefined ());
    for (std::vector<HMovie>::iterator m (relActors.getObjects (actor).begin ());
 	m != relActors.getObjects (actor).end (); ++m)
-      actors.append (*m, *i);
-
-   enableSave ();
+      actors.append (*m, *row);
 }
 
 //-----------------------------------------------------------------------------
@@ -302,18 +330,27 @@ void PActors::deleteSelection () {
 
    Glib::RefPtr<Gtk::TreeSelection> selection (actors.get_selection ());
    Gtk::TreeIter selRow (selection->get_selected ());
+   Glib::RefPtr<Gtk::TreeStore> model (actors.getModel ());
+   Gtk::TreePath path (model->get_path (selRow));
+
    if (selRow) {
       Check3 (!selRow->parent ());
       HActor actor (actors.getActorAt (selRow)); Check3 (actor.isDefined ());
       TRACE9 ("PActors::deleteSelectedActor () - Deleting " << actor->getName ());
 
-      Glib::RefPtr<Gtk::TreeStore> model (actors.getModel ());
+      YGP::Handle<RelUndo> hOldRel; hOldRel.define ();
       if (relActors.isRelated (actor)) {
+	 hOldRel->setRelatedMovies (relActors.getObjects (actor));
+
 	 relActors.unrelateAll (actor);
 
 	 while (selRow->children ().size ())
 	    model->erase (selRow->children ().begin ());
       }
+
+      delEntries.push_back (YGP::HEntity::cast (hOldRel));
+      delRelation[YGP::HEntity::cast (hOldRel)] = YGP::HEntity::cast (actor);
+      aUndo.push (Undo (Undo::DELETE, MOVIES, actor->getId (), path, ""));
 
       Gtk::TreePath path (model->get_path (selRow));
       aUndo.push (Undo (Undo::DELETE, ACTOR, actor->getId (), path, ""));
@@ -336,6 +373,26 @@ void PActors::undo () {
    case ACTOR:
       undoActor (last);
       break;
+
+   case MOVIES: {
+      Check3 ((last.how () == Undo::CHANGED) || (last.how () == Undo::DELETE));
+      Check3 (typeid (*delEntries.back ()) == typeid (RelUndo));
+      YGP::Handle<RelUndo> relActor (YGP::Handle<RelUndo>::cast (delEntries.back ()));
+
+      std::map<YGP::HEntity, YGP::HEntity>::iterator delRel
+	 (delRelation.find (delEntries.back ()));
+      Check3 (typeid (*delRel->second) == typeid (Actor));
+      HActor actor (HActor::cast (delRel->second));
+
+      TRACE5 ("PActors::undo () - Relate to " << relActor->getRelatedMovies ().size () << " movies");
+      if (relActors.isRelated (actor))
+	 relActors.getObjects (actor) = relActor->getRelatedMovies ();
+
+      showMovies (actors.getModel ()->get_iter (last.getPath ()));
+
+      delRelation.erase (delRel);
+      delEntries.erase (delEntries.end () - 1);
+      break; }
 
    default:
       Check1 (0);
@@ -432,16 +489,26 @@ void PActors::saveData () throw (Glib::ustring) {
 	 posSaved = lower_bound (aSaved.begin (), aSaved.end (), entity);
 	 if ((posSaved == aSaved.end ()) || (*posSaved != entity)) {
 	    switch (last.what ()) {
+	    case MOVIES:
 	    case ACTOR: {
-	       HActor actor (actors.getActorAt (actors.getModel ()->get_iter (last.getPath ())));
+	       HActor actor (HActor::cast (entity));
 	       if (last.how () == Undo::DELETE) {
 		  if (actor->getId ()) {
 		     Check3 (actor->getId () == last.column ());
 		     StorageActor::deleteActor (actor->getId ());
 		  }
 	       }
-	       else
+	       else {
 		  StorageActor::saveActor (actor);
+
+		  // Check if the related movies have been changed
+		  for (std::map<YGP::HEntity, YGP::HEntity>::iterator i (delRelation.begin ());
+		       i != delRelation.end (); ++i)
+		     if (i->second == entity) {
+			saveRelatedMovies (HActor::cast (entity));
+			delRelation.erase (i);
+		     }
+	       }
 	       break; }
 
 	    default:
@@ -453,38 +520,36 @@ void PActors::saveData () throw (Glib::ustring) {
       } // end-while
       Check3 (apMenus[UNDO]);
       apMenus[UNDO]->set_sensitive (false);
+
+      delEntries.clear ();
+      delRelation.clear ();
    }
    catch (std::exception& err) {
       Glib::ustring msg (_("Error saving data!\n\nReason: %1"));
       msg.replace (msg.find ("%1"), 2, err.what ());
       throw (msg);
    }
-#if 0
+}
+
+//-----------------------------------------------------------------------------
+/// Saves the related movies
+/// \param actor: Actor whose movies shall be stored
+/// \throw std::exception in case of an error
+//-----------------------------------------------------------------------------
+void PActors::saveRelatedMovies (const HActor& actor) throw (std::exception) {
+   StorageActor::startTransaction ();
+   StorageActor::deleteActorMovies (actor->getId ());
+
    try {
-      while (changedRelMovies.size ()) {
-	 actor = *changedRelMovies.begin ();
-	 Check3 (actor.isDefined ()); Check3 (relActors.isRelated (actor));
-
-	 StorageActor::startTransaction ();
-	 StorageActor::deleteActorMovies (actor->getId ());
-
-	 for (std::vector<HMovie>::const_iterator m (relActors.getObjects (actor).begin ());
-	      m != relActors.getObjects (actor).end (); ++m)
-	    StorageActor::saveActorMovie (actor->getId (), (*m)->getId ());
-	 StorageActor::commitTransaction ();
-
-	 changedRelMovies.erase (changedRelMovies.begin ());
-      } // end-while
-  }
-   catch (std::exception& err) {
-      StorageActor::abortTransaction ();
-
-      Glib::ustring msg (_("Can't write movies for actor `%1'!\n\nReason: %2"));
-      msg.replace (msg.find ("%1"), 2, actor->getName ());
-      msg.replace (msg.find ("%2"), 2, err.what ());
-      throw (msg);
+      for (std::vector<HMovie>::const_iterator m (relActors.getObjects (actor).begin ());
+	   m != relActors.getObjects (actor).end (); ++m)
+	 StorageActor::saveActorMovie (actor->getId (), (*m)->getId ());
+      StorageActor::commitTransaction ();
    }
-#endif
+   catch (std::exception& e) {
+      StorageActor::abortTransaction ();
+      throw e;
+   }
 }
 
 #endif // WITH_ACTORS

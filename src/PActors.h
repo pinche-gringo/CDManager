@@ -1,7 +1,7 @@
 #ifndef PACTORS_H
 #define PACTORS_H
 
-//$Id: PActors.h,v 1.4 2006/02/01 18:00:58 markus Exp $
+//$Id: PActors.h,v 1.5 2006/02/03 18:00:35 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@
 
 #if WITH_ACTORS == 1
 
-#include <map>
 #include <vector>
 
 #include <YGP/Relation.h>
@@ -72,6 +71,9 @@ class PActors : public NBPage {
 
    void actorPlaysInMovie ();
    void relateMovies (const HActor& actor, const std::vector<HMovie>& movies);
+   void showMovies (const Gtk::TreeIter& row);
+
+   void saveRelatedMovies (const HActor& actor) throw (std::exception);
 
    ActorList actors;                              // GUI-element holding actors
 
@@ -83,6 +85,23 @@ class PActors : public NBPage {
 
    // Reference to movie-page
    PMovies& movies;
+
+   // Info for undoing relating actors and movies
+   class RelUndo : public YGP::Entity {
+    public:
+      RelUndo () { }
+      RelUndo (const std::vector<HMovie>& aMovies) : movies (aMovies) { }
+      ~RelUndo () { }
+
+      void setRelatedMovies (const std::vector<HMovie>& aMovies) { movies = aMovies; }
+      const std::vector<HMovie>& getRelatedMovies () const { return movies; }
+
+    private:
+      RelUndo (const RelUndo&);
+      RelUndo& operator= (const RelUndo&);
+
+      std::vector<HMovie> movies;
+   };
 };
 
 

@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.67 2006/02/01 22:22:54 markus Exp $
+//$Id: CDManager.cpp,v 1.68 2006/02/08 02:20:37 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.67 $
+//REVISION    : $Revision: 1.68 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -42,7 +42,7 @@
 #include <gtkmm/button.h>
 #include <gtkmm/scrolledwindow.h>
 
-// TRACELEVEL 9 shows password
+// TRACELEVEL 1 shows shared-memory key; TRACELEVEL 9 shows password
 #include <YGP/File.h>
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
@@ -596,6 +596,7 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 
    try {
       Storage::loadSpecialWords ();
+      TRACE1 ("CDManager::login () - Key: " << Words::getMemoryKey ());
    }
    catch (std::exception& err) {
       Glib::ustring msg (_("Can't query needed information!\n\nReason: %1"));
@@ -696,18 +697,19 @@ void CDManager::export2HTML () {
    if (envLang)
       oldLang = envLang;
 
+   std::string key (memKey.str ());
    const char* args[] = { "CDWriter", "--outputDir", opt.getDirOutput ().c_str (),
 			  "--recHeader", opt.getRHeader ().c_str (),
 			  "--recFooter", opt.getRFooter ().c_str (),
 			  "--movieHeader", opt.getMHeader ().c_str (),
 			  "--movieFooter", opt.getMFooter ().c_str (),
-			  NULL, memKey.str ().c_str (), NULL };
+			  NULL, key.c_str (), NULL };
    Check2 (!args[11]);
 
    // Export to every language supported
    Glib::ustring statMsg (_("Exporting (language %1) ..."));
    while ((lang = langs.getNextNode (' ')).size ()) {
-      TRACE1 ("CDManager::export2HTML () - Lang: " << lang);
+      TRACE8 ("CDManager::export2HTML () - Lang: " << lang);
       Glib::ustring stat (statMsg);
       stat.replace (stat.find ("%1"), 2, Language::findInternational (lang));
       status.push (stat);
@@ -721,6 +723,7 @@ void CDManager::export2HTML () {
 	 for (unsigned int i (0); i < (WITH_RECORDS + WITH_MOVIES); ++i) {
 	    setenv ("LANGUAGE", lang.c_str (), true);
 	    args[11] = lang.c_str ();
+	    TRACE5 ("CDManager::export2HTML () - Parms: " << args[11] << ' ' << args[12]);
 
 	    pipe (pipes);
 	    pid = YGP::Process::execIOConnected ("CDWriter", args, pipes);
@@ -757,7 +760,10 @@ void CDManager::export2HTML () {
       catch (std::string& e) {
 	 Gtk::MessageDialog dlg (Glib::locale_to_utf8 (e), Gtk::MESSAGE_ERROR);
 	 dlg.run ();
-	 continue;
+      }
+      catch (Glib::Error& e) {
+	 Gtk::MessageDialog dlg (e.what (), Gtk::MESSAGE_ERROR);
+	 dlg.run ();
       }
    } // end-while
    setenv ("LANGUAGE", oldLang.c_str (), true);

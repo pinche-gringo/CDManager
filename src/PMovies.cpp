@@ -1,11 +1,11 @@
-//$Id: PMovies.cpp,v 1.6 2006/02/03 18:02:17 markus Exp $
+//$Id: PMovies.cpp,v 1.7 2006/02/08 02:15:46 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movies
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -447,8 +447,10 @@ void PMovies::saveData () throw (Glib::ustring) {
 	 if ((posSaved == aSaved.end ()) || (*posSaved != entity)) {
 	    switch (last.what ()) {
 	    case MOVIE: {
-	       HMovie movie (movies.getMovieAt (movies.getModel ()->get_iter (last.getPath ())));
 	       if (last.how () == Undo::DELETE) {
+		  Check3 (typeid (*delEntries.back ()) == typeid (Movie));
+		  HMovie movie (HMovie::cast (delEntries.back ()));
+
 		  if (movie->getId ()) {
 		     Check3 (movie->getId () == last.column ());
 		     StorageMovie::deleteMovie (movie->getId ());
@@ -461,8 +463,10 @@ void PMovies::saveData () throw (Glib::ustring) {
 		  delRelation.erase (delRel);
 		  delEntries.erase (delEntries.end () - 1);
 	       }
-	       else
+	       else {
+		  HMovie movie (movies.getMovieAt (movies.getModel ()->get_iter (last.getPath ())));
 		  StorageMovie::saveMovie (movie, relMovies.getParent (movie)->getId ());
+	       }
 	       break; }
 
 	    case DIRECTOR: {
@@ -548,7 +552,7 @@ void PMovies::deleteMovie (const Gtk::TreeIter& movie) {
    Check3 (delRelation.find (YGP::HEntity::cast (hMovie)) == delRelation.end ());
 
    Glib::RefPtr<Gtk::TreeStore> model (movies.getModel ());
-   Gtk::TreePath path (model->get_path (movie));
+   Gtk::TreePath path (model->get_path (movies.getOwner (hDirector)));
    aUndo.push (Undo (Undo::DELETE, MOVIE, hMovie->getId (), path, ""));
    delEntries.push_back (YGP::HEntity::cast (hMovie));
    delRelation[YGP::HEntity::cast (hMovie)] = YGP::HEntity::cast (hDirector);
@@ -562,6 +566,11 @@ void PMovies::deleteMovie (const Gtk::TreeIter& movie) {
 /// \param fd: File-descriptor for exporting
 //-----------------------------------------------------------------------------
 void PMovies::export2HTML (unsigned int fd) {
+   // Load the names of the movies in the actual language
+   if (!loadedLangs[Movie::currLang])
+      loadData (Movie::currLang);
+   Check3 (loadedLangs[Movie::currLang]);
+
    std::sort (directors.begin (), directors.end (), &Director::compByName);
 
    // Write movie-information
@@ -577,7 +586,7 @@ void PMovies::export2HTML (unsigned int fd) {
 	      m != dirMovies.end (); ++m)
 	    output << "M" << **m;
 
-	 TRACE9 ("CDManager::export () - Writing: " << output.str ());
+	 TRACE9 ("PMovies::export2HTML (unsinged int) - Writing: " << output.str ());
 	 ::write (fd, output.str ().data (), output.str ().size ());
       }
 }

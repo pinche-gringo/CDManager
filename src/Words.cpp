@@ -1,11 +1,11 @@
-//$Id: Words.cpp,v 1.14 2006/02/08 02:13:18 markus Exp $
+//$Id: Words.cpp,v 1.15 2006/02/09 20:40:32 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Words
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.14 $
+//REVISION    : $Revision: 1.15 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -90,7 +90,7 @@ void Words::create (unsigned int words) throw (Glib::ustring) {
 //-----------------------------------------------------------------------------
 void Words::access (unsigned int key) throw (Glib::ustring) {
    TRACE8 ("Words::access (unsigned int) - " << key);
-   if ((key == -1) || (ptrs.find (YGP::Process::getPID ()) != ptrs.end ()))
+   if (!key || (ptrs.find (YGP::Process::getPID ()) != ptrs.end ()))
       return;
 
    Words::values* shMem (NULL);

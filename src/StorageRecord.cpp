@@ -1,11 +1,11 @@
-//$Id: StorageRecord.cpp,v 1.4 2006/02/01 22:22:28 markus Exp $
+//$Id: StorageRecord.cpp,v 1.5 2006/02/10 02:07:22 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : <FILLIN>
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -148,6 +148,8 @@ void StorageRecord::saveInterpret (const HInterpret interpret) throw (std::excep
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
 void StorageRecord::saveRecord (const HRecord record, unsigned int idInterpret) throw (std::exception) {
+   Check3 (idInterpret);
+
    std::stringstream query;
    query << (record->getId () ? "UPDATE Records" : "INSERT INTO Records")
 	 << " SET name=\"" << Database::escapeDBValue (record->getName ())
@@ -169,14 +171,15 @@ void StorageRecord::saveRecord (const HRecord record, unsigned int idInterpret) 
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
 void StorageRecord::saveSong (const HSong song, unsigned int idRecord) throw (std::exception) {
+   Check3 (idRecord);
+
    std::stringstream query;
    query << (song->getId () ? "UPDATE Songs" : "INSERT INTO Songs")
 	 << " SET name=\"" << Database::escapeDBValue (song->getName ())
 	 << "\", idRecord=" << idRecord
 	 << ", duration=\"" << song->getDuration () << "\", genre="
-	 << song->getGenre ();
-   if (song->getTrack ().isDefined ())
-      query << ", track=" << song->getTrack ();
+	 << song->getGenre ()
+	 << ", track=" << (song->getTrack ().isDefined () ? song->getTrack () : YGP::ANumeric (0));
    if (song->getId ())
       query << " WHERE id=" << song->getId ();
    Database::execute (query.str ().c_str ());

@@ -1,11 +1,11 @@
-//$Id: PRecords.cpp,v 1.10 2006/02/08 02:16:26 markus Exp $
+//$Id: PRecords.cpp,v 1.11 2006/02/10 01:36:21 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Records
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.10 $
+//REVISION    : $Revision: 1.11 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -278,10 +278,15 @@ void PRecords::songSelected () {
 /// \param oldValue: Old value of the changed entry
 //-----------------------------------------------------------------------------
 void PRecords::songChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue) {
-   TRACE9 ("PRecords::songChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&) - " << column);
+   TRACE4 ("PRecords::songChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&) - " << column);
 
-   Gtk::TreePath path (songs.getModel ()->get_path (row));
+   // Store the selected row and save the changed song in changedSongs
+   Gtk::TreeSelection::ListHandle_Path list
+      (records.get_selection ()->get_selected_rows ());
+   TRACE9 ("PRecords::songChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&) - Selected: " << list.size ());
+   Gtk::TreePath path (*list.begin ());
    aUndo.push (Undo (Undo::CHANGED, SONG, column, path, oldValue));
+   changedSongs.push_back (songs.getEntryAt (row));
 
    apMenus[UNDO]->set_sensitive ();
    enableSave ();
@@ -437,12 +442,14 @@ Gtk::TreeIter PRecords::addSong (HSong& song) {
 
    HRecord record (records.getRecordAt (p)); Check3 (record.isDefined ());
    relSongs.relate (record, song);
-   p = songs.append (song);
+   Gtk::TreeIter iterSong (songs.append (song));
+   Gtk::TreePath pathSong (songs.getModel ()->get_path (iterSong));
+   songs.set_cursor (pathSong);
 
-   Gtk::TreePath path (songs.getModel ()->get_path (p));
-   songs.set_cursor (path);
-
+   Gtk::TreePath path (*list.begin ());
    aUndo.push (Undo (Undo::INSERT, SONG, 0, path, ""));
+   changedSongs.push_back (song);
+
    apMenus[UNDO]->set_sensitive ();
    enableSave ();
    return p;
@@ -461,9 +468,10 @@ void PRecords::saveData () throw (Glib::ustring) {
 
       while (aUndo.size ()) {
 	 Undo last (aUndo.top ());
+	 TRACE7 ("PRecords::saveData () - " << last.what ());
 
 	 YGP::HEntity entity (((last.what () == SONG)
-			       ? YGP::HEntity::cast (songs.getEntryAt (songs.getModel ()->get_iter (last.getPath ())))
+			       ? YGP::HEntity::cast (changedSongs.back ())
 			       : records.getObjectAt (records.getModel ()->get_iter (last.getPath ()))));
 	 posSaved = lower_bound (aSaved.begin (), aSaved.end (), entity);
 	 if ((posSaved == aSaved.end ()) || (*posSaved != entity)) {
@@ -485,9 +493,31 @@ void PRecords::saveData () throw (Glib::ustring) {
 		  delEntries.erase (delEntries.end () - 1);
 	       }
 	       else {
-		  HSong song (songs.getEntryAt (songs.getModel ()->get_iter (last.getPath ())));
-		  StorageRecord::saveSong (song, relSongs.getParent (song)->getId ());
+		  HSong song (changedSongs.back ());
+		  HRecord hRec (relSongs.getParent (song));
+		  if (!hRec->getId ()) {
+		     Check3 (std::find (delEntries.begin (), delEntries.end (), YGP::HEntity::cast (hRec)) == delEntries.end ());
+		     Check3 (std::find (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (hRec)) == aSaved.end ());
+		     Check3 (delRelation.find (YGP::HEntity::cast (hRec)) == delRelation.end ());
+
+		     HInterpret interpret  (relRecords.getParent (hRec));
+		     if (!interpret->getId ()) {
+			Check3 (std::find (delEntries.begin (), delEntries.end (), YGP::HEntity::cast (interpret)) == delEntries.end ());
+			Check3 (std::find (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (interpret)) == aSaved.end ());
+			Check3 (delRelation.find (YGP::HEntity::cast (interpret)) == delRelation.end ());
+
+			StorageRecord::saveInterpret (interpret);
+			aSaved.insert (lower_bound (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (interpret)),
+				       YGP::HEntity::cast (interpret));
+		     }
+		     StorageRecord::saveRecord (hRec, relRecords.getParent (hRec)->getId ());
+		     aSaved.insert (lower_bound (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (hRec)),
+				    YGP::HEntity::cast (hRec));
+		     posSaved = lower_bound (aSaved.begin (), aSaved.end (), entity);
+		  }
+		  StorageRecord::saveSong (song, hRec->getId ());
 	       }
+	       changedSongs.erase (changedSongs.end () - 1);
 	       break;
 
 	    case RECORD:
@@ -508,13 +538,24 @@ void PRecords::saveData () throw (Glib::ustring) {
 	       }
 	       else {
 		  HRecord rec (records.getRecordAt (records.getModel ()->get_iter (last.getPath ())));
-		  StorageRecord::saveRecord (rec, relRecords.getParent (rec)->getId ());
+		  HInterpret interpret  (relRecords.getParent (rec));
+		  if (!interpret->getId ()) {
+		     Check3 (std::find (delEntries.begin (), delEntries.end (), YGP::HEntity::cast (interpret)) == delEntries.end ());
+		     Check3 (std::find (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (interpret)) == aSaved.end ());
+		     Check3 (delRelation.find (YGP::HEntity::cast (interpret)) == delRelation.end ());
+
+		     StorageRecord::saveInterpret (interpret);
+		     aSaved.insert (lower_bound (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (interpret)),
+				    YGP::HEntity::cast (interpret));
+		     posSaved = lower_bound (aSaved.begin (), aSaved.end (), entity);
+		  }
+		  StorageRecord::saveRecord (rec, interpret->getId ());
 	       }
 	       break;
 
 	    case INTERPRET:
 	       if (last.how () == Undo::DELETE) {
-		  Check3 (typeid (*delEntries.back ()) == typeid (Record));
+		  Check3 (typeid (*delEntries.back ()) == typeid (Interpret));
 		  HInterpret interpret (HInterpret::cast (delEntries.back ()));
 		  if (interpret->getId ()) {
 		     Check3 (interpret->getId () == last.column ());
@@ -540,6 +581,7 @@ void PRecords::saveData () throw (Glib::ustring) {
 
       Check3 (delEntries.empty ());
       Check3 (delRelation.empty ());
+      changedSongs.clear ();
   }
    catch (std::exception& err) {
       Glib::ustring msg (_("Error saving data!\n\nReason: %1"));
@@ -926,12 +968,17 @@ void PRecords::undoSong (const Undo& last) {
    TRACE6 ("PRecords::undoSong (const Undo&) - " << last.column ());
 
    Gtk::TreePath path (last.getPath ());
-   Gtk::TreeIter iter (songs.getModel ()->get_iter (path));
+   Gtk::TreeIter iter (records.getModel ()->get_iter (path));
+   Glib::RefPtr<Gtk::TreeSelection> sel (records.get_selection ());
+   sel->unselect_all ();
+   sel->select (iter);
+
+   HSong song (changedSongs.back ());
+   TRACE9 ("PRecords::undoSong (const Undo&) - Song " << song->getName ());
+   iter = songs.getSong (song); Check3 (iter);
    switch (last.how ()) {
    case Undo::CHANGED: {
-      HSong song (songs.getEntryAt (iter));
       TRACE9 ("PRecords::undoSong (const Undo&) - Change " << song->getName ());
-
       switch (last.column ()) {
       case 0:
 	 song->setTrack (last.getValue ());
@@ -956,7 +1003,6 @@ void PRecords::undoSong (const Undo& last) {
       break; }
 
    case Undo::INSERT: {
-      HSong song (songs.getEntryAt (iter));
       TRACE9 ("PRecords::undoSong (const Undo&) - Insert");
       relSongs.unrelate (relSongs.getParent (song), song);
       songs.getModel ()->erase (iter);
@@ -964,11 +1010,8 @@ void PRecords::undoSong (const Undo& last) {
       break; }
 
    case Undo::DELETE: {
-      Check3 (typeid (*delEntries.back ()) == typeid (Song));
-      HSong song (HSong::cast (delEntries.back ()));
       TRACE9 ("PRecords::undoSong (const Undo&) - Delete " << song->getName ());
       iter = songs.insert (song, iter);
-      path = songs.getModel ()->get_path (iter);
 
       std::map<YGP::HEntity, YGP::HEntity>::iterator delRel
 	 (delRelation.find (delEntries.back ()));
@@ -982,10 +1025,12 @@ void PRecords::undoSong (const Undo& last) {
    default:
       Check1 (0);
    } // end-switch
+   changedSongs.erase (changedSongs.end () - 1);
 
    if (iter) {
       Gtk::TreeRow row (*iter);
       songs.update (row);
+      path = songs.getModel ()->get_path (iter);
    }
    songs.set_cursor (path);
    songs.scroll_to_row (path, 0.8);

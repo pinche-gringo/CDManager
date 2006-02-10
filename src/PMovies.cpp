@@ -1,11 +1,11 @@
-//$Id: PMovies.cpp,v 1.7 2006/02/08 02:15:46 markus Exp $
+//$Id: PMovies.cpp,v 1.8 2006/02/10 01:37:04 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movies
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -465,6 +465,15 @@ void PMovies::saveData () throw (Glib::ustring) {
 	       }
 	       else {
 		  HMovie movie (movies.getMovieAt (movies.getModel ()->get_iter (last.getPath ())));
+		  HDirector director  (relMovies.getParent (movie));
+		  if (!director->getId ()) {
+		     Check3 (std::find (delEntries.begin (), delEntries.end (), YGP::HEntity::cast (director)) == delEntries.end ());
+		     Check3 (std::find (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (director)) == aSaved.end ());
+		     Check3 (delRelation.find (YGP::HEntity::cast (director)) == delRelation.end ());
+
+		     StorageMovie::saveDirector (director);
+		     aSaved.insert (posSaved, YGP::HEntity::cast (director));
+		  }
 		  StorageMovie::saveMovie (movie, relMovies.getParent (movie)->getId ());
 	       }
 	       break; }

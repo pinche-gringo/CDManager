@@ -1,11 +1,11 @@
-//$Id: SongList.cpp,v 1.22 2006/02/01 03:01:14 markus Exp $
+//$Id: SongList.cpp,v 1.23 2006/02/11 03:16:24 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.22 $
+//REVISION    : $Revision: 1.23 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -312,7 +312,7 @@ Gtk::TreeModel::iterator SongList::getSong (const YGP::ANumeric& track) const {
 void SongList::setGenre (Gtk::TreeIter& iter, unsigned int genre) {
    TRACE9 ("SongList::setGenre (Gtk::TreeIter&, unsigned int) - " << genre);
    Check1 (iter);
-   HSong song (getEntryAt (iter)); Check2 (song.isDefined ());
+   HSong song (getSongAt (iter)); Check2 (song.isDefined ());
    TRACE9 ("SongList::setGenre (Gtk::TreeIter&, unsigned int) - Genre: " << song->getGenre ());
    if (!song->getGenre ()) {
       TRACE9 ("SongList::setGenre (Gtk::TreeIter&, unsigned int) - Changing " << song->getName ());

@@ -1,11 +1,11 @@
-//$Id: NBPage.cpp,v 1.3 2006/01/28 08:33:47 markus Exp $
+//$Id: NBPage.cpp,v 1.4 2006/02/11 03:17:06 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : NBPage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -75,4 +75,23 @@ void NBPage::removeMenu () {
 /// \param fd: File-descriptor for exporting
 //-----------------------------------------------------------------------------
 void NBPage::export2HTML (unsigned int fd) {
+}
+
+
+//-----------------------------------------------------------------------------
+/// Constructor of the undo-information
+/// \param chg: Flag, how information was changed
+/// \param what: Specifies what kind of entity was changed
+/// \param col: Specifies what in the entity was changed
+/// \param entity: Changed entity
+/// \param row: Listbox-line related to the changed entity
+/// \param value: Old value of changed entry
+//-----------------------------------------------------------------------------
+NBPage::Undo::Undo (CHGSPEC chg, unsigned int what, unsigned int col, YGP::HEntity entity,
+		    Gtk::TreePath& row, const Glib::ustring& value)
+   : entity (entity), row (row), value (value) {
+   TRACE9 ("NBPage::Undo::Undo (...)");
+   chgSpec.how = chg;
+   chgSpec.what = what;
+   chgSpec.column = col;
 }

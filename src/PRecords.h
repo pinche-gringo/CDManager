@@ -1,7 +1,7 @@
 #ifndef PRECORDS_H
 #define PRECORDS_H
 
-//$Id: PRecords.h,v 1.8 2006/02/10 01:36:48 markus Exp $
+//$Id: PRecords.h,v 1.9 2006/02/11 03:17:06 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -99,9 +99,6 @@ class PRecords : public NBPage {
    std::vector<HInterpret>               interprets;
    YGP::Relation1_N<HInterpret, HRecord> relRecords;
    YGP::Relation1_N<HRecord, HSong>      relSongs;
-
-   // Data to undo changes to songs
-   std::vector<HSong> changedSongs;
 };
 
 

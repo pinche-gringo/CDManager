@@ -1,11 +1,11 @@
-//$Id: PActors.cpp,v 1.8 2006/02/03 18:00:35 markus Exp $
+//$Id: PActors.cpp,v 1.9 2006/02/11 03:17:06 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actors
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.8 $
+//REVISION    : $Revision: 1.9 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -101,7 +101,7 @@ void PActors::actorChanged (const Gtk::TreeIter& row, unsigned int column, Glib:
    TRACE9 ("PActors::actorChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&)");
 
    Gtk::TreePath path (actors.getModel ()->get_path (row));
-   aUndo.push (Undo (Undo::CHANGED, ACTOR, column, path, oldValue));
+   aUndo.push (Undo (Undo::CHANGED, ACTOR, column, actors.getObjectAt (row), path, oldValue));
 
    apMenus[UNDO]->set_sensitive ();
    enableSave ();
@@ -118,7 +118,7 @@ void PActors::newActor () {
    actors.selectRow (i);
    actors.set_cursor (path);
 
-   aUndo.push (Undo (Undo::INSERT, ACTOR, 0, path, ""));
+   aUndo.push (Undo (Undo::INSERT, ACTOR, 0, YGP::HEntity::cast (actor), path, ""));
 
    apMenus[UNDO]->set_sensitive ();
    enableSave ();
@@ -157,10 +157,7 @@ void PActors::relateMovies (const HActor& actor, const std::vector<HMovie>& movi
    Gtk::TreeIter i (actors.getOwner (actor)); Check3 (i);
    Gtk::TreePath path (model->get_path (i));
 
-   aUndo.push (Undo (Undo::CHANGED, MOVIES, actor->getId (), path, ""));
-
    YGP::Handle<RelUndo> hOldRel; hOldRel.define ();
-
    if (relActors.isRelated (actor)) {
       TRACE5 ("PActors::relateMovies (...) - Storing " << relActors.getObjects (actor).size () << " related movies");
       hOldRel->setRelatedMovies (relActors.getObjects (actor));
@@ -169,9 +166,9 @@ void PActors::relateMovies (const HActor& actor, const std::vector<HMovie>& movi
       HMovie movie;
       relActors.relate (actor, movie);
    }
-   delEntries.push_back (YGP::HEntity::cast (hOldRel));
-   delRelation[YGP::HEntity::cast (hOldRel)] = YGP::HEntity::cast (actor);
+   aUndo.push (Undo (Undo::CHANGED, MOVIES, actor->getId (), YGP::HEntity::cast (hOldRel), path, ""));
 
+   delRelation[YGP::HEntity::cast (hOldRel)] = YGP::HEntity::cast (actor);
    relActors.getObjects (actor) = movies;
 
    showMovies (i);
@@ -348,13 +345,11 @@ void PActors::deleteSelection () {
 	    model->erase (selRow->children ().begin ());
       }
 
-      delEntries.push_back (YGP::HEntity::cast (hOldRel));
       delRelation[YGP::HEntity::cast (hOldRel)] = YGP::HEntity::cast (actor);
-      aUndo.push (Undo (Undo::DELETE, MOVIES, actor->getId (), path, ""));
+      aUndo.push (Undo (Undo::DELETE, MOVIES, actor->getId (), YGP::HEntity::cast (hOldRel), path, ""));
 
       Gtk::TreePath path (model->get_path (selRow));
-      aUndo.push (Undo (Undo::DELETE, ACTOR, actor->getId (), path, ""));
-      delEntries.push_back (YGP::HEntity::cast (actor));
+      aUndo.push (Undo (Undo::DELETE, ACTOR, actor->getId (), YGP::HEntity::cast (actor), path, ""));
       model->erase (selRow);
    }
    apMenus[UNDO]->set_sensitive ();
@@ -376,11 +371,11 @@ void PActors::undo () {
 
    case MOVIES: {
       Check3 ((last.how () == Undo::CHANGED) || (last.how () == Undo::DELETE));
-      Check3 (typeid (*delEntries.back ()) == typeid (RelUndo));
-      YGP::Handle<RelUndo> relActor (YGP::Handle<RelUndo>::cast (delEntries.back ()));
+      Check3 (typeid (*last.getEntity ()) == typeid (RelUndo));
+      YGP::Handle<RelUndo> relActor (YGP::Handle<RelUndo>::cast (last.getEntity ()));
 
       std::map<YGP::HEntity, YGP::HEntity>::iterator delRel
-	 (delRelation.find (delEntries.back ()));
+	 (delRelation.find (last.getEntity ()));
       Check3 (typeid (*delRel->second) == typeid (Actor));
       HActor actor (HActor::cast (delRel->second));
 
@@ -391,7 +386,6 @@ void PActors::undo () {
       showMovies (actors.getModel ()->get_iter (last.getPath ()));
 
       delRelation.erase (delRel);
-      delEntries.erase (delEntries.end () - 1);
       break; }
 
    default:
@@ -414,11 +408,13 @@ void PActors::undoActor (const Undo& last) {
 
    Gtk::TreePath path (last.getPath ());
    Gtk::TreeIter iter (actors.getModel ()->get_iter (path)); Check3 (!iter->parent ());
-   switch (last.how ()) {
-   case Undo::CHANGED: {
-      HActor actor (actors.getActorAt (iter));
-      TRACE9 ("PActors::undoActor (const Undo&) - Change " << actor->getName ());
 
+   Check3 (typeid (*last.getEntity ()) == typeid (Actor));
+   HActor actor (HActor::cast (last.getEntity ()));
+   TRACE9 ("PActors::undoActor (const Undo&) - " << last.how () << ": " << actor->getName ());
+
+   switch (last.how ()) {
+   case Undo::CHANGED:
       switch (last.column ()) {
       case 0:
 	 actor->setName (last.getValue ());
@@ -431,25 +427,18 @@ void PActors::undoActor (const Undo& last) {
       default:
 	 Check1 (0);
       } // end-switch
-      break; }
+      break;
 
-   case Undo::INSERT: {
-      HActor actor (actors.getActorAt (iter));
-      TRACE9 ("PActors::undoActor (const Undo&) - Insert");
+   case Undo::INSERT:
       Check3 (!relActors.isRelated (actor));
       actors.getModel ()->erase (iter);
       iter = actors.getModel ()->children ().end ();
-      break; }
+      break;
 
-   case Undo::DELETE: {
-      Check3 (typeid (*delEntries.back ()) == typeid (Actor));
-      HActor actor (HActor::cast (delEntries.back ()));
-      TRACE9 ("PActors::undoActor (const Undo&) - Delete " << actor->getName ());
+   case Undo::DELETE:
       iter = actors.insert (actor, iter);
       path = actors.getModel ()->get_path (iter);
-
-      delEntries.erase (delEntries.end () - 1);
-      break; }
+      break;
 
    default:
       Check1 (0);
@@ -485,13 +474,12 @@ void PActors::saveData () throw (Glib::ustring) {
       while (aUndo.size ()) {
 	 Undo last (aUndo.top ());
 
-	 YGP::HEntity entity (actors.getObjectAt (actors.getModel ()->get_iter (last.getPath ())));
-	 posSaved = lower_bound (aSaved.begin (), aSaved.end (), entity);
-	 if ((posSaved == aSaved.end ()) || (*posSaved != entity)) {
+	 posSaved = lower_bound (aSaved.begin (), aSaved.end (), last.getEntity ());
+	 if ((posSaved == aSaved.end ()) || (*posSaved != last.getEntity ())) {
 	    switch (last.what ()) {
 	    case MOVIES:
 	    case ACTOR: {
-	       HActor actor (HActor::cast (entity));
+	       HActor actor (HActor::cast (last.getEntity ()));
 	       if (last.how () == Undo::DELETE) {
 		  if (actor->getId ()) {
 		     Check3 (actor->getId () == last.column ());
@@ -504,8 +492,8 @@ void PActors::saveData () throw (Glib::ustring) {
 		  // Check if the related movies have been changed
 		  for (std::map<YGP::HEntity, YGP::HEntity>::iterator i (delRelation.begin ());
 		       i != delRelation.end (); ++i)
-		     if (i->second == entity) {
-			saveRelatedMovies (HActor::cast (entity));
+		     if (i->second == last.getEntity ()) {
+			saveRelatedMovies (HActor::cast (last.getEntity ()));
 			delRelation.erase (i);
 		     }
 	       }
@@ -514,14 +502,13 @@ void PActors::saveData () throw (Glib::ustring) {
 	    default:
 	       Check1 (0);
 	    } // end-switch
-	    aSaved.insert (posSaved, entity);
+	    aSaved.insert (posSaved, last.getEntity ());
 	 }
 	 aUndo.pop ();
       } // end-while
       Check3 (apMenus[UNDO]);
       apMenus[UNDO]->set_sensitive (false);
 
-      delEntries.clear ();
       delRelation.clear ();
    }
    catch (std::exception& err) {

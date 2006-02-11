@@ -1,7 +1,7 @@
 #ifndef NBPAGE_H
 #define NBPAGE_H
 
-//$Id: NBPage.h,v 1.4 2006/02/01 22:21:30 markus Exp $
+//$Id: NBPage.h,v 1.5 2006/02/11 03:17:06 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -84,16 +84,14 @@ class NBPage : public sigc::trackable {
    public:
       typedef enum { UNDEFINED = 0, INSERT, DELETE, CHANGED } CHGSPEC;
       Undo () { chgSpec.how = UNDEFINED; };
-      Undo (CHGSPEC chg, unsigned int what, unsigned int col, Gtk::TreePath& row,
-	    const Glib::ustring& value) : row (row), value (value) {
-	 chgSpec.how = chg;
-	 chgSpec.what = what;
-	 chgSpec.column = col;
-       }
+      Undo (CHGSPEC chg, unsigned int what, unsigned int col, YGP::HEntity entity,
+	    Gtk::TreePath& row, const Glib::ustring& value);
 
       unsigned int how () const { return chgSpec.how; }
       unsigned int what () const { return chgSpec.what; }
       unsigned int column () const { return chgSpec.column; }
+
+      const YGP::HEntity getEntity () const { return entity; }
       const Gtk::TreePath& getPath () const { return row; }
       const Glib::ustring& getValue () const { return value; }
 
@@ -103,13 +101,13 @@ class NBPage : public sigc::trackable {
 	 unsigned int how    : 2;
 	 unsigned int what   : 3;
       } chgSpec;
+      YGP::HEntity  entity;
       Gtk::TreePath row;
       Glib::ustring value;
    };
 
    bool loaded;
    std::stack<Undo>                     aUndo;
-   std::vector<YGP::HEntity>            delEntries;
    std::map<YGP::HEntity, YGP::HEntity> delRelation;
 
  private:

@@ -1,11 +1,11 @@
-//$Id: ActorList.cpp,v 1.3 2006/02/01 17:59:31 markus Exp $
+//$Id: ActorList.cpp,v 1.4 2006/02/11 22:02:38 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actor
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.09.2005
 //COPYRIGHT   : Copyright (C) 2005, 2006
@@ -90,40 +90,6 @@ HMovie ActorList::getMovieAt (const Gtk::TreeIter iter) const {
    TRACE7 ("CDManager::getMovieAt (const Gtk::TreeIter&) - Selected movie: " <<
 	   movie->getId () << '/' << movie->getName ());
    return movie;
-}
-
-//-----------------------------------------------------------------------------
-/// Sets the name of the object
-/// \param object: Object to change
-/// \param value: Value to set
-/// \remarks To be implemented
-//-----------------------------------------------------------------------------
-void ActorList::setName (HEntity& object, const Glib::ustring& value) {
-   HActor m (HActor::cast (object));
-   m->setName (value);
-}
-
-//-----------------------------------------------------------------------------
-/// Sets the year of the object
-/// \param object: Object to change
-/// \param value: Value to set
-/// \throw std::exception: In case of an error
-/// \remarks To be implemented
-//-----------------------------------------------------------------------------
-void ActorList::setYear (HEntity& object, const Glib::ustring& value) throw (std::exception) {
-   HMovie m (HMovie::cast (object));
-   m->setYear (value);
-}
-
-//-----------------------------------------------------------------------------
-/// Sets the genre of the object
-/// \param object: Object to change
-/// \param value: Value to set
-/// \remarks To be implemented
-//-----------------------------------------------------------------------------
-void ActorList::setGenre (HEntity& object, unsigned int value) {
-   HMovie m (HMovie::cast (object));
-   m->setGenre (value);
 }
 
 //-----------------------------------------------------------------------------

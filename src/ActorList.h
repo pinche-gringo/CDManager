@@ -1,7 +1,7 @@
 #ifndef ACTORLIST_H
 #define ACTORLIST_H
 
-//$Id: ActorList.h,v 1.3 2006/02/01 17:59:31 markus Exp $
+//$Id: ActorList.h,v 1.4 2006/02/11 22:02:39 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -47,10 +47,6 @@ class ActorList : public OwnerObjectList {
    virtual void update (Gtk::TreeModel::Row& row);
 
  protected:
-   virtual void setName (HEntity& object, const Glib::ustring& value);
-   virtual void setYear (HEntity& object, const Glib::ustring& value) throw (std::exception);
-   virtual void ActorList::setGenre (HEntity& object, unsigned int value);
-
    virtual Glib::ustring getColumnName () const;
    virtual int sortEntity (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
 

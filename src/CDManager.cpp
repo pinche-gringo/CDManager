@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.68 2006/02/08 02:20:37 markus Exp $
+//$Id: CDManager.cpp,v 1.69 2006/02/12 04:27:44 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.68 $
+//REVISION    : $Revision: 1.69 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -261,7 +261,7 @@ const char* CDManager::xpmAuthor[] = {
 CDManager::CDManager (Options& options)
    : XApplication (PACKAGE " V" PRG_RELEASE),
      opt (options) {
-   TRACE9 ("CDManager::CDManager (Options&)");
+   TRACE8 ("CDManager::CDManager (Options&)");
 
    Language::init ();
 
@@ -348,7 +348,7 @@ CDManager::CDManager (Options& options)
 #endif
       }
       Genres::loadFromFile (DATADIR "Genres.dat", recGenres, movieGenres, pLang);
-      TRACE9 ("Genres: " << recGenres.size () << '/' << movieGenres.size ());
+      TRACE8 ("Genres: " << recGenres.size () << '/' << movieGenres.size ());
 
       if (opt.getUser ().size ())
 	 login (opt.getUser (), opt.getPassword ());
@@ -356,7 +356,7 @@ CDManager::CDManager (Options& options)
 	 Glib::signal_idle ().connect
 	    (bind_return (mem_fun (*this, &CDManager::showLogin), false));
 
-      TRACE9 ("CDManager::CDManager (Options&) - Add NB");
+      TRACE8 ("CDManager::CDManager (Options&) - Add NB");
 #if WITH_RECORDS == 1
       NBPage* pgRecords = (new PRecords (status, apMenus[SAVE], recGenres));
       pages[0] = pgRecords;
@@ -374,11 +374,11 @@ CDManager::CDManager (Options& options)
       pages[WITH_RECORDS + WITH_MOVIES] = pgActor;
       nb.append_page (*manage (pgActor->getWindow ()), _("_Actors"), true);
 #endif
-      nb.signal_switch_page ().connect (mem_fun (*this, &CDManager::pageSwitched));
+      nb.signal_switch_page ().connect (mem_fun (*this, &CDManager::pageSwitched), false);
       status.push (_("Connect to a database ..."));
       apMenus[SAVE]->set_sensitive (false);
 
-      TRACE9 ("CDManager::CDManager (Options&) - Show");
+      TRACE8 ("CDManager::CDManager (Options&) - Show");
       show_all_children ();
       show ();
    }
@@ -394,7 +394,7 @@ CDManager::CDManager (Options& options)
 /// Destructor
 //-----------------------------------------------------------------------------
 CDManager::~CDManager () {
-   TRACE9 ("CDManager::~CDManager ()");
+   TRACE8 ("CDManager::~CDManager ()");
    for (unsigned int i (0); i < (sizeof (pages) / sizeof (*pages)); ++i)
       pages[i]->clear ();
 }
@@ -461,7 +461,7 @@ const char* CDManager::getHelpfile () {
 /// Displays a dialog to login to the database
 //-----------------------------------------------------------------------------
 void CDManager::showLogin () {
-   TRACE9 ("CDManager::showLogin ()");
+   TRACE8 ("CDManager::showLogin ()");
    XGP::LoginDialog* dlg (XGP::LoginDialog::create (_("Database login")));
    dlg->get_window ()->set_transient_for (get_window ());
    dlg->sigLogin.connect (mem_fun (*this, &CDManager::login));
@@ -499,7 +499,7 @@ void CDManager::enableMenus (bool enable) {
 /// are created.
 //-----------------------------------------------------------------------------
 void CDManager::loadDatabase () {
-   TRACE9 ("CDManager::loadDatabase () - " << nb.get_current_page ());
+   TRACE8 ("CDManager::loadDatabase () - " << nb.get_current_page ());
    // Check if page is valid (at init the current page can be -1)
    if ((unsigned int)nb.get_current_page () < (sizeof (pages) / sizeof (*pages))) {
       status.pop ();
@@ -516,7 +516,7 @@ void CDManager::loadDatabase () {
 /// \param iPage: Index of the newly selected page
 //-----------------------------------------------------------------------------
 void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
-   TRACE9 ("CDManager::pageSwitched (GtkNotebookPage*, guint) - " << iPage);
+   TRACE6 ("CDManager::pageSwitched (GtkNotebookPage*, guint) - " << iPage);
    Check1 (iPage < 3);
 
    Check3 (pages[iPage]);
@@ -531,8 +531,10 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
 		     "  <menu action='Edit'>"
 		     "    <placeholder name='EditAction'>");
 
-   Check3 (pages[nb.get_current_page ()]);
-   pages[nb.get_current_page ()]->removeMenu ();
+   if (nb.get_current_page () != -1) {
+      Check3 (pages[nb.get_current_page ()]);
+      pages[nb.get_current_page ()]->removeMenu ();
+   }
    Glib::RefPtr<Gtk::ActionGroup> grpAction (Gtk::ActionGroup::create ());
    pages[iPage]->addMenu (ui, grpAction);
 
@@ -592,7 +594,6 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
       showLogin ();
       return false;
    }
-   TRACE9 ("CDManager::login (const Glib::ustring&, const Glib::ustring&) - Logged in");
 
    try {
       Storage::loadSpecialWords ();
@@ -614,7 +615,7 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 /// Logout from the DB; give an opportunity to save changes
 //-----------------------------------------------------------------------------
 void CDManager::logout () {
-   TRACE9 ("CDManager::logout ()");
+   TRACE8 ("CDManager::logout ()");
    on_delete_event (NULL);
 
    for (unsigned int i (0); i < (sizeof (pages) / sizeof (*pages)); ++i)
@@ -709,7 +710,7 @@ void CDManager::export2HTML () {
    // Export to every language supported
    Glib::ustring statMsg (_("Exporting (language %1) ..."));
    while ((lang = langs.getNextNode (' ')).size ()) {
-      TRACE8 ("CDManager::export2HTML () - Lang: " << lang);
+      TRACE6 ("CDManager::export2HTML () - Lang: " << lang);
       Glib::ustring stat (statMsg);
       stat.replace (stat.find ("%1"), 2, Language::findInternational (lang));
       status.push (stat);
@@ -723,7 +724,7 @@ void CDManager::export2HTML () {
 	 for (unsigned int i (0); i < (WITH_RECORDS + WITH_MOVIES); ++i) {
 	    setenv ("LANGUAGE", lang.c_str (), true);
 	    args[11] = lang.c_str ();
-	    TRACE5 ("CDManager::export2HTML () - Parms: " << args[11] << ' ' << args[12]);
+	    TRACE3 ("CDManager::export2HTML () - Parms: " << args[11] << ' ' << args[12]);
 
 	    pipe (pipes);
 	    pid = YGP::Process::execIOConnected ("CDWriter", args, pipes);
@@ -776,7 +777,7 @@ void CDManager::export2HTML () {
 /// \param file: Name of file to analzye
 //-----------------------------------------------------------------------------
 void CDManager::parseFileInfo (const std::string& file) {
-   TRACE9 ("CDManager::parseFileInfo (const std::string&) - " << file);
+   TRACE8 ("CDManager::parseFileInfo (const std::string&) - " << file);
    Check2 (file.size ());
 
    std::ifstream stream (file.c_str ());
@@ -795,7 +796,7 @@ void CDManager::parseFileInfo (const std::string& file) {
 	&& parseMP3Info (stream, artist, record, song, track))
        || ((file.substr (file.size () - 4) == ".ogg")
 	   && parseOGGCommentHeader (stream, artist, record, song, track))) {
-      TRACE9 ("CDManager::parseFileInfo (const std::string&) - " << artist
+      TRACE8 ("CDManager::parseFileInfo (const std::string&) - " << artist
 	      << '/' << record << '/' << song << '/' << track);
       Check1 (typeid (**pages) == typeid (PRecords));
       ((PRecords*)*pages)->addEntry (artist, record, song, track);
@@ -818,7 +819,7 @@ bool CDManager::parseMP3Info (std::istream& stream, Glib::ustring& artist,
    std::string value;
 
    std::getline (stream, value, '\xff');
-   TRACE9 ("CDManager::parseMP3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Found: "
+   TRACE8 ("CDManager::parseMP3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Found: "
 	   << value << "; Length: " << value.size ());
    if ((value.size () > 3) && (value[0] == 'T') && (value[1] == 'A') && (value[2] == 'G')) {
       song = Glib::locale_to_utf8 (stripString (value, 3, 29));
@@ -850,12 +851,12 @@ bool CDManager::parseOGGCommentHeader (std::istream& stream, Glib::ustring& arti
    stream.seekg (0x69, std::ios::cur);
    unsigned int len (0);
    stream.read ((char*)&len, 4);                // Read the vendorstring-length
-   TRACE9 ("CDManager::parseOGGCommentHeader (std::istream&, 3x Glib::ustring&, unsigned&) - Length: " << len);
+   TRACE8 ("CDManager::parseOGGCommentHeader (std::istream&, 3x Glib::ustring&, unsigned&) - Length: " << len);
    stream.seekg (len, std::ios::cur);
 
    unsigned int cComments (0);
    stream.read ((char*)&cComments, 4);               // Read number of comments
-   TRACE9 ("CDManager::parseOGGCommentHeader (std::istream&, 3x Glib::ustring&, unsigned&) - Comments: " << cComments);
+   TRACE8 ("CDManager::parseOGGCommentHeader (std::istream&, 3x Glib::ustring&, unsigned&) - Comments: " << cComments);
    if (!cComments)
       return false;
 
@@ -866,7 +867,7 @@ bool CDManager::parseOGGCommentHeader (std::istream& stream, Glib::ustring& arti
 
       std::getline (stream, key, '=');
       len -= key.size () + 1;
-      TRACE9 ("CDManager::parseOGGCommentHeader (std::stream&, 3x Glib::ustring&, unsigned&) - Key: " << key);
+      TRACE8 ("CDManager::parseOGGCommentHeader (std::stream&, 3x Glib::ustring&, unsigned&) - Key: " << key);
 
       if (key == "TITLE")
 	 value = &song;

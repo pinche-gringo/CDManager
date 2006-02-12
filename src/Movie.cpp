@@ -1,11 +1,11 @@
-//$Id: Movie.cpp,v 1.12 2006/01/28 08:03:24 markus Exp $
+//$Id: Movie.cpp,v 1.13 2006/02/12 03:23:56 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movie
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.12 $
+//REVISION    : $Revision: 1.13 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 29.11.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -151,8 +151,8 @@ bool Movie::compByMedia (const HMovie& a, const HMovie& b) {
 /// \param b: Second movie
 /// \returns bool: True, if a->type < b->type
 //-----------------------------------------------------------------------------
-const Glib::ustring& Movie::getName (const std::string& lang) const {
+const Glib::ustring& Movie::getName (const std::string& lang) {
    Check2 (name.find ("") != name.end ());
    std::map<std::string, Glib::ustring>::const_iterator i (name.find (lang));
-   return ((i != name.end ()) ? i->second : name.find ("")->second);
+   return ((i != name.end ()) ? i->second : name[""]);
 }

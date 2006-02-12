@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.20 2006/02/02 00:08:59 markus Exp $
+//$Id: OOList.cpp,v 1.21 2006/02/12 04:24:39 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.20 $
+//REVISION    : $Revision: 1.21 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -271,8 +271,8 @@ void OwnerObjectList::updateGenres () {
 HEntity OwnerObjectList::getObjectAt (const Gtk::TreeIter iter) const {
    Check2 ((*iter)->parent ());
    Check2 (colOwnerObjects);
-   HEntity hRec ((*iter)[colOwnerObjects->entry]); Check3 (hRec.isDefined ());
-   return hRec;
+   HEntity hEntity ((*iter)[colOwnerObjects->entry]); Check3 (hEntity.isDefined ());
+   return hEntity;
 }
 
 //-----------------------------------------------------------------------------

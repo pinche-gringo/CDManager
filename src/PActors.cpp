@@ -1,11 +1,11 @@
-//$Id: PActors.cpp,v 1.9 2006/02/11 03:17:06 markus Exp $
+//$Id: PActors.cpp,v 1.10 2006/02/12 04:26:13 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actors
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.9 $
+//REVISION    : $Revision: 1.10 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -101,7 +101,8 @@ void PActors::actorChanged (const Gtk::TreeIter& row, unsigned int column, Glib:
    TRACE9 ("PActors::actorChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&)");
 
    Gtk::TreePath path (actors.getModel ()->get_path (row));
-   aUndo.push (Undo (Undo::CHANGED, ACTOR, column, actors.getObjectAt (row), path, oldValue));
+   aUndo.push (Undo (Undo::CHANGED, ACTOR, column,
+		     YGP::HEntity::cast (actors.getCelebrityAt (row)), path, oldValue));
 
    apMenus[UNDO]->set_sensitive ();
    enableSave ();

@@ -1,11 +1,11 @@
-//$Id: PRecords.cpp,v 1.12 2006/02/11 03:18:19 markus Exp $
+//$Id: PRecords.cpp,v 1.13 2006/02/12 04:26:13 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Records
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.12 $
+//REVISION    : $Revision: 1.13 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -300,7 +300,8 @@ void PRecords::interpretChanged (const Gtk::TreeIter& row, unsigned int column, 
    TRACE9 ("PRecords::interpretChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&) - " << column);
 
    Gtk::TreePath path (records.getModel ()->get_path (row));
-   aUndo.push (Undo (Undo::CHANGED, INTERPRET, column, records.getObjectAt (row), path, oldValue));
+   aUndo.push (Undo (Undo::CHANGED, INTERPRET, column,
+		     YGP::HEntity::cast (records.getCelebrityAt (row)), path, oldValue));
 
    apMenus[UNDO]->set_sensitive ();
    enableSave ();

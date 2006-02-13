@@ -1,11 +1,11 @@
-//$Id: RelateMovie.cpp,v 1.2 2005/10/26 20:42:19 markus Rel $
+//$Id: RelateMovie.cpp,v 1.3 2006/02/13 22:25:31 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actor
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 2005-10-18
 //COPYRIGHT   : Copyright (C) 2005
@@ -61,6 +61,7 @@ RelateMovie::RelateMovie (const HActor& actor, const std::vector<HMovie>& movies
      lstAllMovies (*manage (new Gtk::TreeView)),
      actor (actor) {
    TRACE9 ("RelateMovie::RelateMovie (const HActor&, const std::vector<HMovie>&, const Glib::RefPtr<Gtk::TreeStore>)");
+   Check3 (actor.isDefined ());
 
    for (std::vector<HMovie>::const_iterator i (movies.begin ()); i != movies.end (); ++i)
       insertMovie (*i);
@@ -97,6 +98,8 @@ RelateMovie::~RelateMovie () {
 /// Handling of the OK button; closes the dialog with commiting data
 //-----------------------------------------------------------------------------
 void RelateMovie::okEvent () {
+   Check3 (actor.isDefined ());
+
    std::vector<HMovie> movies;
    for (Gtk::TreeModel::const_iterator i (mMovies->children ().begin ());
 	i != mMovies->children ().end (); ++i)

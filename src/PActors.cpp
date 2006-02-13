@@ -1,11 +1,11 @@
-//$Id: PActors.cpp,v 1.10 2006/02/12 04:26:13 markus Exp $
+//$Id: PActors.cpp,v 1.11 2006/02/13 22:24:12 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actors
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.10 $
+//REVISION    : $Revision: 1.11 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -165,6 +165,7 @@ void PActors::relateMovies (const HActor& actor, const std::vector<HMovie>& movi
    }
    else {
       HMovie movie;
+      movie.define ();
       relActors.relate (actor, movie);
    }
    aUndo.push (Undo (Undo::CHANGED, MOVIES, actor->getId (), YGP::HEntity::cast (hOldRel), path, ""));
@@ -361,10 +362,11 @@ void PActors::deleteSelection () {
 /// Undoes the changes on the page
 //-----------------------------------------------------------------------------
 void PActors::undo () {
-   TRACE9 ("PActors::undo ()");
+   TRACE4 ("PActors::undo () - " << aUndo.size ());
    Check3 (aUndo.size ());
 
    Undo last (aUndo.top ());
+   TRACE9 ("PActors::undo () - Undoing " << last.what () << ": " << last.how ());
    switch (last.what ()) {
    case ACTOR:
       undoActor (last);
@@ -381,12 +383,12 @@ void PActors::undo () {
       HActor actor (HActor::cast (delRel->second));
 
       TRACE5 ("PActors::undo () - Relate to " << relActor->getRelatedMovies ().size () << " movies");
-      if (relActors.isRelated (actor))
-	 relActors.getObjects (actor) = relActor->getRelatedMovies ();
+      if (!relActors.isRelated (actor))
+	 relActors.relate (actor, *relActor->getRelatedMovies ().begin ());
+      relActors.getObjects (actor) = relActor->getRelatedMovies ();
+      delRelation.erase (delRel);
 
       showMovies (actors.getModel ()->get_iter (last.getPath ()));
-
-      delRelation.erase (delRel);
       break; }
 
    default:
@@ -480,7 +482,9 @@ void PActors::saveData () throw (Glib::ustring) {
 	    switch (last.what ()) {
 	    case MOVIES:
 	    case ACTOR: {
-	       HActor actor (HActor::cast (last.getEntity ()));
+	       HActor actor (HActor::cast ((last.what () == ACTOR)
+					   ? last.getEntity ()
+					   : delRelation[last.getEntity ()]));
 	       if (last.how () == Undo::DELETE) {
 		  if (actor->getId ()) {
 		     Check3 (actor->getId () == last.column ());
@@ -491,10 +495,11 @@ void PActors::saveData () throw (Glib::ustring) {
 		  StorageActor::saveActor (actor);
 
 		  // Check if the related movies have been changed
+		  YGP::HEntity entityActor (YGP::HEntity::cast (actor));
 		  for (std::map<YGP::HEntity, YGP::HEntity>::iterator i (delRelation.begin ());
 		       i != delRelation.end (); ++i)
-		     if (i->second == last.getEntity ()) {
-			saveRelatedMovies (HActor::cast (last.getEntity ()));
+		     if (i->second == entityActor) {
+			saveRelatedMovies (actor);
 			delRelation.erase (i);
 		     }
 	       }
@@ -525,6 +530,7 @@ void PActors::saveData () throw (Glib::ustring) {
 /// \throw std::exception in case of an error
 //-----------------------------------------------------------------------------
 void PActors::saveRelatedMovies (const HActor& actor) throw (std::exception) {
+   TRACE9 ("PActors::saveRelatedMovies (const HActor&)");
    StorageActor::startTransaction ();
    StorageActor::deleteActorMovies (actor->getId ());
 

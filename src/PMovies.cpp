@@ -1,11 +1,11 @@
-//$Id: PMovies.cpp,v 1.9 2006/02/11 03:17:06 markus Exp $
+//$Id: PMovies.cpp,v 1.10 2006/02/13 22:24:41 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movies
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.9 $
+//REVISION    : $Revision: 1.10 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -156,7 +156,8 @@ void PMovies::directorChanged (const Gtk::TreeIter& row, unsigned int column, Gl
    TRACE9 ("PDirectors::directorChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&)\n\t- " << column << '/' << oldValue);
 
    Gtk::TreePath path (movies.getModel ()->get_path (row));
-   aUndo.push (Undo (Undo::CHANGED, DIRECTOR, column, movies.getObjectAt (row), path, oldValue));
+   aUndo.push (Undo (Undo::CHANGED, DIRECTOR, column,
+		     YGP::HEntity::cast (movies.getCelebrityAt (row)), path, oldValue));
 
    enableSave ();
    apMenus[UNDO]->set_sensitive ();
@@ -222,6 +223,7 @@ void PMovies::addLanguageMenus (Glib::ustring& menu, Glib::RefPtr<Gtk::ActionGro
 /// \param grpActions: Added actions
 //-----------------------------------------------------------------------------
 void PMovies::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAction) {
+   TRACE9 ("PMovies::addMenu (Glib::ustring&, Glib::RefPtr<Gtk::ActionGroup>");
    Check3 (!imgLang);
    imgLang = new LanguageImg (Movie::currLang.c_str ());
    imgLang->show ();
@@ -264,6 +266,7 @@ void PMovies::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActi
 /// Removes page-related menus
 //-----------------------------------------------------------------------------
 void PMovies::removeMenu () {
+   TRACE9 ("PMovies::removeMenu ()");
    if (imgLang) {
       statusbar.remove (*imgLang);
       delete imgLang;
@@ -404,7 +407,6 @@ void PMovies::loadData () {
       Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
       dlg.run ();
    }
-   TRACE1 ("Finished!");
 }
 
 //-----------------------------------------------------------------------------
@@ -467,7 +469,9 @@ void PMovies::saveData () throw (Glib::ustring) {
 		     Check3 (delRelation.find (YGP::HEntity::cast (director)) == delRelation.end ());
 
 		     StorageMovie::saveDirector (director);
-		     aSaved.insert (posSaved, YGP::HEntity::cast (director));
+		     aSaved.insert (lower_bound (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (director)),
+				    YGP::HEntity::cast (director));
+		     posSaved = lower_bound (aSaved.begin (), aSaved.end (), last.getEntity ());
 		  }
 		  StorageMovie::saveMovie (movie, relMovies.getParent (movie)->getId ());
 	       }

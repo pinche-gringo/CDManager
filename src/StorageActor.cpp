@@ -1,11 +1,11 @@
-//$Id: StorageActor.cpp,v 1.3 2006/01/28 07:49:00 markus Exp $
+//$Id: StorageActor.cpp,v 1.4 2006/02/13 22:21:38 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Storage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 21.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -71,7 +71,8 @@ void StorageActor::StorageActor::loadActorsInMovies (std::map<unsigned int, std:
 /// \param actor: Actor to save
 //-----------------------------------------------------------------------------
 void StorageActor::saveActor (const HActor actor) throw (std::exception) {
-   TRACE9 ("StorageActor::saveActor (const HActor)");
+   TRACE2 ("StorageActor::saveActor (const HActor)");
+   Check3 (actor.isDefined ());
 
    std::stringstream query;
    std::string tmp (Database::escapeDBValue (actor->getName ()));
@@ -97,6 +98,9 @@ void StorageActor::saveActor (const HActor actor) throw (std::exception) {
 /// \param idActor: Actor to remove
 //-----------------------------------------------------------------------------
 void StorageActor::deleteActor (unsigned int idActor) throw (std::exception) {
+   TRACE9 ("StorageActor::deleteActor (unsigned int)");
+   Check3 (idActor);
+
    std::stringstream query;
    query << "DELETE FROM Actors WHERE id=" << idActor;
    Database::execute (query.str ().c_str ());
@@ -111,6 +115,9 @@ void StorageActor::deleteActor (unsigned int idActor) throw (std::exception) {
 /// \param idActor: Actor to remove
 //-----------------------------------------------------------------------------
 void StorageActor::deleteActorMovies (unsigned int idActor) throw (std::exception) {
+   TRACE9 ("StorageActor::deleteActorMovies (unsigned int)");
+   Check3 (idActor);
+
    std::stringstream del;
    del << "DELETE FROM ActorsInMovies WHERE idActor=" << idActor;
    Database::execute (del.str ().c_str ());

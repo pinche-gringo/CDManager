@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.69 2006/02/12 04:27:44 markus Exp $
+//$Id: CDManager.cpp,v 1.70 2006/02/13 22:23:25 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.69 $
+//REVISION    : $Revision: 1.70 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -519,14 +519,7 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
    TRACE6 ("CDManager::pageSwitched (GtkNotebookPage*, guint) - " << iPage);
    Check1 (iPage < 3);
 
-   Check3 (pages[iPage]);
-   if (!pages[iPage]->isLoaded ())
-      pages[iPage]->loadData ();
-
    static Gtk::UIManager::ui_merge_id idPageMrg (-1U);
-   if (idPageMrg != -1U)
-      mgrUI->remove_ui (idPageMrg);
-
    Glib::ustring ui ("<menubar name='Menu'>"
 		     "  <menu action='Edit'>"
 		     "    <placeholder name='EditAction'>");
@@ -535,12 +528,19 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
       Check3 (pages[nb.get_current_page ()]);
       pages[nb.get_current_page ()]->removeMenu ();
    }
+   if (idPageMrg != -1U)
+      mgrUI->remove_ui (idPageMrg);
+
    Glib::RefPtr<Gtk::ActionGroup> grpAction (Gtk::ActionGroup::create ());
    pages[iPage]->addMenu (ui, grpAction);
 
    ui += "</menubar>";
    mgrUI->insert_action_group (grpAction);
    idPageMrg = mgrUI->add_ui_from_string (ui);
+
+   Check3 (pages[iPage]);
+   if (!pages[iPage]->isLoaded ())
+      pages[iPage]->loadData ();
    pages[iPage]->getFocus ();
 }
 

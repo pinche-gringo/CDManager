@@ -1,11 +1,11 @@
-//$Id: PRecords.cpp,v 1.13 2006/02/12 04:26:13 markus Exp $
+//$Id: PRecords.cpp,v 1.14 2006/02/13 22:25:11 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Records
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.13 $
+//REVISION    : $Revision: 1.14 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -357,6 +357,8 @@ void PRecords::recordChanged (const Gtk::TreeIter& row, unsigned int column, Gli
 /// \param grpActions: Added actions
 //-----------------------------------------------------------------------------
 void PRecords::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAction) {
+   TRACE7 ("PRecords::addMenu");
+
    ui += ("<menuitem action='RUndo'/>"
 	  "<separator/>"
 	  "<menuitem action='NInterpret'/>"

@@ -1,3 +1,292 @@
+2006-02-14  Markus Schwab  <g17m0@lycos.com>
+
+	* ChangeLog, NEWS: Changes of V0.8.10 documented
+
+	* configure.ac: Needing libYGP 0.7.40
+
+	* po/de.po, po/en.po, po/es.po: Actualized for V0.8.10
+
+	* src/CDManager.cpp, src/CDWriter.cpp: Improved exception-handling
+
+	* src/Words.cpp, src/Words.h:
+	  Now storing both values and info about values on a per-process basis
+
+	* src/WordDlg.cpp:
+	  Adapted to new Words-interface; Fixed calculating end of word/articles
+
+2006-02-13  Markus Schwab  <g17m0@lycos.com>
+
+	* src/RelateMovie.cpp: Checks added
+
+	* src/PRecords.cpp: Trace added
+
+	* src/PMovies.cpp: Fixed save
+
+	* src/PActors.cpp: Fixed undo and save
+
+	* src/CDManager.cpp: Loading paga-data after creating menu
+
+	* src/StorageActor.cpp: Traces and checks added
+
+2006-02-12  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDManager.cpp:
+	  Binding to NB-page switch before default-handler to be able to unmanage old page
+
+	* src/PActors.cpp, src/PRecords.cpp:
+	  Using getCelebrityAt() instead of getObjectAt() to get owner
+
+	* src/OOList.cpp: Renamed hRec to hEntity in getObjectAt()
+
+2006-02-11  Markus Schwab  <g17m0@lycos.com>
+
+	* src/Movie.cpp, src/Movie.h:
+	  getName()-methods are not const anymore, as they can create the intl. name
+
+	* src/ActorList.cpp, src/ActorList.h: Removed methods to change movies
+
+2006-02-10  Markus Schwab  <g17m0@lycos.com>
+
+	* src/PRecords.cpp, src/NBPage.cpp, src/NBPage.h, src/PActors.cpp, src/PMovies.cpp, src/PRecords.h:
+	  Storing handle to changed entity for undo
+
+	* src/SongList.cpp, src/SongList.h: Added a getSongAt()-method
+
+2006-02-09  Markus Schwab  <g17m0@lycos.com>
+
+	* src/StorageRecord.cpp: Always setting track when saving song
+
+	* src/PMovies.cpp: Saving dependend values before saving entries
+
+	* src/PRecords.h: Storing changed songs for undo
+
+	* src/PRecords.cpp: Saving dependend values before saving entries
+
+	* src/Words.cpp: When access() gets a key of 0 passed, it fails
+
+2006-02-07  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDManager.cpp:
+	  Fixed passing key for export; Traces added; Catching Glib-errors when exporting
+
+	* src/PRecords.cpp: Fixes
+
+	* src/PMovies.cpp: Loading translation of movies before export; Fixes
+
+	* src/Words.cpp: Fixed acces()
+
+2006-02-03  Markus Schwab  <g17m0@lycos.com>
+
+	* po/POTFILES.in: Added dependencies
+
+	* src/Makefile.am: Fixed dependencies
+
+	* src/PRecords.h: Removed including map
+
+	* src/PMovies.cpp, src/PRecords.cpp: Added checks after saving
+
+	* src/PActors.cpp, src/PActors.h:
+	  Implemented undo of connecting movies to actors
+
+2006-02-01  Markus Schwab  <g17m0@lycos.com>
+
+	* src/OOList.cpp: Fixed setLifeSpan()
+
+	* src/PActors.cpp: Only save changed entries once
+
+	* src/CDManager.cpp: Only saving changed pages
+
+	* src/StorageRecord.cpp: Fixed updating records
+
+	* src/PMovies.cpp, src/PRecords.cpp:
+	  Implemented clear(); Save entries only once
+
+	* src/NBPage.h: Implemented isChanged
+
+	* src/CDManager.cpp: Reordered startup-code; Saving all NB-pages
+
+	* src/PRecords.cpp: Made menu-identifiers unique, Fixes
+
+	* src/PActors.cpp, src/PActors.h, src/PMovies.cpp, src/PMovies.h:
+	  Implemented undo; Adapted to new OOList-style
+
+	* src/ActorList.cpp, src/ActorList.h, src/MovieList.cpp, src/MovieList.h:
+	  Adapted to new OOList-style
+
+2006-01-31  Markus Schwab  <g17m0@lycos.com>
+
+	* src/PRecords.cpp, src/PRecords.h:
+	  Implemented undo of records and interprets
+
+	* src/CDManagerUndo.cpp: Deleted
+
+	* src/OOList.cpp, src/OOList.h:
+	  signal*Changed emits changed line/column with old value
+
+	* src/RecordList.cpp, src/RecordList.h:
+	  Added insert() and prepend(); Declaring thrown exceptions
+
+	* src/Celebrity.cpp, src/Celebrity.h:
+	  Added setLifespan(); Declaring thrown exceptions
+
+	* src/SongList.cpp: Removed line-hint; Fixed storing genre for undo
+
+	* src/StorageRecord.cpp: Fixed saveSong/Record()
+
+	* src/PRecords.h, src/PRecords.cpp:
+	  Fixed undoing songs; De-selecting all songs disables Delete-menu
+
+	* src/SongList.cpp:
+	  Added insert() and prepend(); Passing genre-nr as char
+
+	* src/SongList.h: Added insert() and prepend()
+
+	* src/PRecords.cpp, src/PRecords.h:
+	  First draft of undo (only for songs)
+
+	* src/NBPage.h: Added entries for undo
+
+	* src/Song.h:
+	  Added declaration of thrown exception to setTrack()/setDuration() from string
+
+	* src/SongList.cpp, src/SongList.h:
+	  Changing an entry emits signal with info about changed row/col and old value
+
+2006-01-28  Markus Schwab  <g17m0@lycos.com>
+
+	* src/NBPage.cpp: Disabled checks and traces
+
+	* src/Movie.cpp, src/Movie.h, src/Record.h, src/Song.h:
+	  All get*-methods return const-references
+
+	* src/StorageActor.cpp: Traces added; Optimized loadActorsInMovies()
+
+	* src/PActors.cpp, src/PActors.h:
+	  Passed PMovie is not const (to enable loading, before loading actors; Fixes
+
+	* src/MovieList.cpp, src/MovieList.h, src/OOList.cpp, src/OOList.h, src/RecordList.cpp, src/RecordList.h, src/SongList.cpp, src/SongList.h:
+	  Made const-correct
+
+2006-01-27  Markus Schwab  <g17m0@lycos.com>
+
+	* src/SongList.cpp, src/SongList.h: Track is stored as string
+
+	* src/PRecords.cpp, src/PRecords.h:
+	  Added exporting to HTML, importing from file-info; Implemented cleanup
+
+	* src/Storage.cpp: loadCelebrities() throws errors
+
+	* src/StorageMovie.cpp:
+	  loadMovies() returns the number of loaded movies
+
+	* src/PMovies.cpp, src/PMovies.h: Added export2HTML(); Fixes
+
+	* src/StorageMovie.h: loadMovies() returns the number of loaded movies
+
+	* src/StorageRecord.cpp, src/StorageRecord.h:
+	  loadRecords() returns number of loaded records; Fixes
+
+	* src/CDManager.h: Removed unneeded includes
+
+	* src/StorageActor.cpp:
+	  Only compiling when WITH_ACTORS == 1; Including YGP::StatusObject
+
+	* src/StorageActor.h: Only foreward-declaring YGP::StatusObject
+
+	* src/PActors.cpp, src/PActors.h:
+	  Constructing with reference to PMovie (instead of its sub-parts
+
+	* src/NBPage.cpp, src/NBPage.h:
+	  Added removeMenu (), isChanged () and export2HTML (); Fixes
+
+	* src/CDAppl.cpp: Changed copyright-info (to include 2006)
+
+	* src/Storage.h: loadCelebrities throws errors
+
+	* configure.ac: Added --enable-flags for records, movies and actors
+
+	* INSTALL: Refering to configure.ac (not configure.in)
+
+	* po/Makevars: New file.
+
+2006-01-26  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDManagerDB.cpp, src/CDManagerDel.cpp, src/CDManagerEI.cpp:
+	  Deleted
+
+	* src/Record.cpp, src/Record.h: Renamed areSongsLoaded to needsLoading
+
+	* src/Makefile.am: Added new files caused by seperation of pages
+
+	* src/CDManager.h: Moved stuff to page-specific classes
+
+	* src/CDManager.cpp: Using new page-separated design
+
+	* src/PActors.cpp: Handling undo and delete in menu
+
+	* src/PMovies.cpp, src/PMovies.h: Added delting movies
+
+	* src/PRecords.cpp, src/PRecords.h: Added deleting selection
+
+	* src/StorageRecord.cpp, src/StorageRecord.h, src/PRecords.cpp, src/PRecords.h:
+	  New file.
+
+2006-01-24  Markus Schwab  <g17m0@lycos.com>
+
+	* src/Storage.cpp, src/Storage.h:
+	  Added methods for login/handling special words
+
+	* src/Words.h: Offering forEach* with function as callback
+
+2006-01-23  Markus Schwab  <g17m0@lycos.com>
+
+	* src/PActors.cpp:
+	  saveData() changed, so that after an error no more entries are written
+
+	* src/PMovies.cpp, src/PMovies.h, src/StorageMovie.cpp, src/StorageMovie.h:
+	  New file.
+
+2006-01-22  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDWriter.cpp: Catching exception Genres::loadFromFile might throw
+
+	* src/Genres.cpp, src/Genres.h:
+	  loadFromFile() declares exception it might throw
+
+	* src/ActorList.cpp, src/ActorList.h, src/MovieList.cpp, src/MovieList.h, src/OOList.cpp, src/OOList.h, src/RecordList.cpp, src/RecordList.h, src/SongList.cpp, src/SongList.h:
+	  Using Genres-class
+
+	* src/DB.cpp, src/DB.h: Added escapeDBValue
+
+	* src/NBPage.cpp, src/NBPage.h, src/PActors.cpp, src/PActors.h, src/Storage.cpp, src/Storage.h, src/StorageActor.cpp, src/StorageActor.h:
+	  New file.
+
+2006-01-19  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDManagerDB.cpp, src/CDAppl.cpp, src/Options.h: afCmdLine removed
+
+	* po/de.po, po/en.po, po/es.po:
+	  Changed copyright to include 2006; Added new CDAppl messages
+
+	* doc/CDManager.html.es: Translated from english version
+
+	* doc/CDManager.html.de, doc/CDManager.html.en: Actualized
+
+	* configure.ac: Version to 0.8.10; needing libXGP 0.7.40
+
+	* src/CDManagerDB.cpp: Writing also Database-section to INI-file
+
+	* src/CDWriter.cpp: Actualized copyright in output of --version
+
+2006-01-18  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDAppl.cpp: Reading DB-user/pwd from INIFile or from options
+
+	* src/CDManager.cpp:
+	  Using new LoginDlg; automatically login, if user is passed
+
+	* src/Options.h: Added user/password
+
 2006-01-17  Markus Schwab  <g17m0@lycos.com>
 
 	* ChangeLog, NEWS: Changes of V0.8.02 documented

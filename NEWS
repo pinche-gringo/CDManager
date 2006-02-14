@@ -1,3 +1,16 @@
+Overview of changes in version 0.8.10:
+
+  - Accepts user/password from command-line and/or INI-file
+  - Undo is now on a per-notebook-page basis and undes all steps
+  - Documentation updated
+  - Preparations to disable notebook-pages individually at configure-time
+
+
+Overview of changes in version 0.8.03:
+
+  - Using new YGP::LoginDialog from libYGP 0.7.40
+
+
 Overview of changes in version 0.8.02:
 
   - Added flags/language entries for finish, norwegian and swedish movies

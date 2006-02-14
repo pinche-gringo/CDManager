@@ -5,7 +5,7 @@
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.4.2005
 //COPYRIGHT   : Copyright (C) 2005, 2006
@@ -155,13 +155,13 @@ WordDialog::~WordDialog () {
 void WordDialog::entryChanged (unsigned int which) {
    TRACE8 ("WordDialog::entryChanged (unsigned int) - " << which);
 
-   Words::values* shMem (Words::getValues ()); Check2 (shMem);
+   Words::values* shMem (Words::getInfo ()); Check2 (shMem);
 
    Gtk::Entry* fields[] = { &txtName, &txtArticle };
    Gtk::Button* buttons[] = { &addName, &addArticle };
 
    unsigned int starts[] = { 0, shMem->maxEntries - shMem->cArticles };
-   unsigned int ends[] = { Words::cNames (),  shMem->maxEntries };
+   unsigned int ends[] = { Words::cNames () - 1,  shMem->maxEntries - 1 };
 
    Check1 (which < 2);
    Check3 ((sizeof (fields) / sizeof (*fields)) > which);
@@ -284,7 +284,7 @@ void WordDialog::commit () {
    Check3 ((sizeof (models) / sizeof (*models))
 	   == (sizeof (fnInsert) / sizeof (*fnInsert)));
 
-   Words::values* shMem (Words::getValues ()); Check2 (shMem);
+   Words::values* shMem (Words::getInfo ()); Check2 (shMem);
    shMem->cArticles = shMem->cNames = 0;
 
    Glib::ustring value;

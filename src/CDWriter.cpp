@@ -1,11 +1,11 @@
-//$Id: CDWriter.cpp,v 1.18 2006/01/23 03:15:38 markus Exp $
+//$Id: CDWriter.cpp,v 1.19 2006/02/14 20:05:00 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDWriter
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.18 $
+//REVISION    : $Revision: 1.19 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
 //COPYRIGHT   : Copyright (C) 2005, 2006
@@ -221,6 +221,9 @@ int CDWriter::perform (int argc, const char** argv) {
       if (!atoi (argv[1]))
 	 throw Glib::ustring (_("Invalid memory-key (0)!"));
       Words::access (atoi (argv[1]));
+      TRACE9 ("Words: " << Words::getMemoryKey () << ": " << Words::cArticles () << '/' << Words::cNames ());
+      // Words::forEachArticle (0, 5, &printWord);
+      // Words::forEachName (0, 5, &printWord);
 
       Genres::loadFromFile (DATADIR "Genres.dat", recGenres, movieGenres, *argv);
    }
@@ -234,6 +237,7 @@ int CDWriter::perform (int argc, const char** argv) {
       std::string msg (_("Can't read datafile containing the genres!\n\nReason: %1"));
       msg.replace (msg.find ("%1"), 2, e);
       std::cerr << name () << msg << '\n';
+      return -3;
    }
 
    Glib::ustring transTitleMovie (_("Movies (by %1)"));
@@ -248,21 +252,28 @@ int CDWriter::perform (int argc, const char** argv) {
 	{ opt.getRHeader () },
 	{ opt.getRFooter () } };
 
-   for (unsigned int i (0); i < (sizeof (htmlData) / sizeof (*htmlData)); ++i) {
-      if (htmlData[i].name.size ()
-	  && (htmlData[i].name[0] != YGP::File::DIRSEPARATOR))
-	 htmlData[i].name = DATADIR + htmlData[i].name;
-      if (htmlData[i].target.size ()
-	  && (htmlData[i].target[0] != YGP::File::DIRSEPARATOR))
-	 htmlData[i].target = DATADIR + htmlData[i].target;
+   try {
+      for (unsigned int i (0); i < (sizeof (htmlData) / sizeof (*htmlData)); ++i) {
+	 if (htmlData[i].name.size ()
+	     && (htmlData[i].name[0] != YGP::File::DIRSEPARATOR))
+	    htmlData[i].name = DATADIR + htmlData[i].name;
+	 if (htmlData[i].target.size ()
+	     && (htmlData[i].target[0] != YGP::File::DIRSEPARATOR))
+	    htmlData[i].target = DATADIR + htmlData[i].target;
 
-      if (!readHeaderFile (htmlData[i].name.c_str (), argv[0], htmlData[i].target,
-			   (i < 2) ? transTitleMovie : transTitleRecord)) {
-	 std::string error ( (_("Error reading header file `%1'!\n\nReason: %2")));
-	 error.replace (error.find ("%1"), 2, htmlData[i].name);
-	 error.replace (error.find ("%2"), 2, strerror (errno));
-	 throw error;
+	 if (!readHeaderFile (htmlData[i].name.c_str (), argv[0], htmlData[i].target,
+			      (i < 2) ? transTitleMovie : transTitleRecord)) {
+	    std::string error ( (_("Error reading header file `%1'!\n\nReason: %2")));
+	    error.replace (error.find ("%1"), 2, htmlData[i].name);
+	    error.replace (error.find ("%2"), 2, strerror (errno));
+	    throw error;
+	 }
       }
+   }
+   catch (std::string& msg) {
+      TRACE1 ("CDWriter::perform (int, const char**) - Error reading HTML-header/footer:\n\t" << msg);
+      std::cerr << name () << ": " << msg << '\n';
+      return -4;
    }
 
    std::ofstream fileMovie, fileRec;

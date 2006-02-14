@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.70 2006/02/13 22:23:25 markus Exp $
+//$Id: CDManager.cpp,v 1.71 2006/02/14 20:05:00 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.70 $
+//REVISION    : $Revision: 1.71 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -349,38 +349,6 @@ CDManager::CDManager (Options& options)
       }
       Genres::loadFromFile (DATADIR "Genres.dat", recGenres, movieGenres, pLang);
       TRACE8 ("Genres: " << recGenres.size () << '/' << movieGenres.size ());
-
-      if (opt.getUser ().size ())
-	 login (opt.getUser (), opt.getPassword ());
-      else
-	 Glib::signal_idle ().connect
-	    (bind_return (mem_fun (*this, &CDManager::showLogin), false));
-
-      TRACE8 ("CDManager::CDManager (Options&) - Add NB");
-#if WITH_RECORDS == 1
-      NBPage* pgRecords = (new PRecords (status, apMenus[SAVE], recGenres));
-      pages[0] = pgRecords;
-      nb.append_page (*manage (pgRecords->getWindow ()), _("_Records"), true);
-#endif
-
-#if WITH_MOVIES == 1
-      PMovies* pgMovies = (new PMovies (status, apMenus[SAVE], movieGenres));
-      pages[WITH_RECORDS] = pgMovies;
-      nb.append_page (*manage (pgMovies->getWindow ()), _("_Movies"), true);
-#endif
-
-#if WITH_ACTORS == 1
-      NBPage* pgActor = (new PActors (status, apMenus[SAVE], movieGenres, *pgMovies));
-      pages[WITH_RECORDS + WITH_MOVIES] = pgActor;
-      nb.append_page (*manage (pgActor->getWindow ()), _("_Actors"), true);
-#endif
-      nb.signal_switch_page ().connect (mem_fun (*this, &CDManager::pageSwitched), false);
-      status.push (_("Connect to a database ..."));
-      apMenus[SAVE]->set_sensitive (false);
-
-      TRACE8 ("CDManager::CDManager (Options&) - Show");
-      show_all_children ();
-      show ();
    }
    catch (std::string& e) {
       Glib::ustring msg (_("Can't read datafile containing the genres!\n\nReason: %1"));
@@ -388,6 +356,38 @@ CDManager::CDManager (Options& options)
       Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
       dlg.run ();
    }
+
+   if (opt.getUser ().size ())
+      login (opt.getUser (), opt.getPassword ());
+   else
+      Glib::signal_idle ().connect
+	 (bind_return (mem_fun (*this, &CDManager::showLogin), false));
+
+   TRACE8 ("CDManager::CDManager (Options&) - Add NB");
+#if WITH_RECORDS == 1
+   NBPage* pgRecords = (new PRecords (status, apMenus[SAVE], recGenres));
+   pages[0] = pgRecords;
+   nb.append_page (*manage (pgRecords->getWindow ()), _("_Records"), true);
+#endif
+
+#if WITH_MOVIES == 1
+   PMovies* pgMovies = (new PMovies (status, apMenus[SAVE], movieGenres));
+   pages[WITH_RECORDS] = pgMovies;
+   nb.append_page (*manage (pgMovies->getWindow ()), _("_Movies"), true);
+#endif
+
+#if WITH_ACTORS == 1
+   NBPage* pgActor = (new PActors (status, apMenus[SAVE], movieGenres, *pgMovies));
+   pages[WITH_RECORDS + WITH_MOVIES] = pgActor;
+   nb.append_page (*manage (pgActor->getWindow ()), _("_Actors"), true);
+#endif
+   nb.signal_switch_page ().connect (mem_fun (*this, &CDManager::pageSwitched), false);
+   status.push (_("Connect to a database ..."));
+   apMenus[SAVE]->set_sensitive (false);
+
+   TRACE8 ("CDManager::CDManager (Options&) - Show");
+   show_all_children ();
+   show ();
 }
 
 //-----------------------------------------------------------------------------

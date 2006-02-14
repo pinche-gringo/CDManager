@@ -1,7 +1,7 @@
 #ifndef WORDS_H
 #define WORDS_H
 
-//$Id: Words.h,v 1.8 2006/01/24 18:01:44 markus Exp $
+//$Id: Words.h,v 1.9 2006/02/14 16:31:45 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -48,42 +48,41 @@ class Words {
    /// Call a callback for each specified name
    static void forEachName (unsigned int start, unsigned int end,
 			    void (*cb) (const char*)) {
-      values* shMem (getValues ());
+      values* shMem (getInfo ());
       for (unsigned int i (start); i < end; ++i)
-	 cb (shMem->values + shMem->aOffsets[i]);
+	 cb (getValues () + shMem->aOffsets[i]);
    }
    template <class T>
    static void forEachName (unsigned int start, unsigned int end, T& obj,
 			    void (T::* cb) (const char*)) {
-      values* shMem (getValues ());
+      values* shMem (getInfo ());
       for (unsigned int i (start); i < end; ++i)
-	 (obj.*cb) (shMem->values + shMem->aOffsets[i]);
+	 (obj.*cb) (getValues () + shMem->aOffsets[i]);
    }
    /// Call a callback for each specified article
    static void forEachArticle (unsigned int start, unsigned int end,
 			       void (*cb) (const char*)) {
-      values* shMem (getValues ());
+      values* shMem (getInfo ());
       for (unsigned int i (start); i < end; ++i)
-	 cb (shMem->values + shMem->aOffsets[shMem->maxEntries - shMem->cArticles + i]);
+	 cb (getValues () + shMem->aOffsets[shMem->maxEntries - shMem->cArticles + i]);
    }
    /// Call a callback for each specified article
    template <class T>
    static void forEachArticle (unsigned int start, unsigned int end, T& obj,
 			       void (T::* cb) (const char*)) {
-      values* shMem (getValues ());
+      values* shMem (getInfo ());
       for (unsigned int i (start); i < end; ++i)
-	 (obj.*cb) (shMem->values + shMem->aOffsets[shMem->maxEntries - shMem->cArticles + i]);
+	 (obj.*cb) (getValues () + shMem->aOffsets[shMem->maxEntries - shMem->cArticles + i]);
    }
 
    static int getMemoryKey () { return _key; }
 
    typedef struct {
-      char*          values;
       int            valuesKey;
       unsigned int   cNames;
       unsigned int   cArticles;
       unsigned int   maxEntries;
-      char*          endValues;
+      unsigned int   used;
       unsigned short aOffsets[];
    } values;
 
@@ -95,9 +94,10 @@ class Words {
 
    static int   _key;
 
-   static values* getValues ();
+   static values* getInfo ();
+   static const char* getValues ();
 
-   static unsigned int binarySearch (values* values, unsigned int start, unsigned int end, const char* word);
+   static unsigned int binarySearch (values* values, char* data, unsigned int start, unsigned int end, const char* word);
    static void moveValues (unsigned int start, unsigned int end, unsigned int target);
 
    static Glib::ustring Words::getWord (const Glib::ustring& text);

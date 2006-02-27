@@ -1,11 +1,11 @@
-//$Id: CDAppl.cpp,v 1.11 2006/01/28 01:15:16 markus Rel $
+//$Id: CDAppl.cpp,v 1.12 2006/02/27 20:46:26 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Application
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.11 $
+//REVISION    : $Revision: 1.12 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.12.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -139,9 +139,11 @@ void CDAppl::readINIFile (const char* pFile) {
       // Export-otions
       INIOBJ (options, Export);
 
+#ifdef WITH_MOVIES
       // Language in which to show the movies
       INISECTION (Movies);
       INIATTR2 (Movies, std::string, Movie::currLang, Language);
+#endif
 
       INIFILE_READ ();
       options.pINIFile = pFile;

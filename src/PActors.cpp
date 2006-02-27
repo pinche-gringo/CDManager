@@ -1,11 +1,11 @@
-//$Id: PActors.cpp,v 1.11 2006/02/13 22:24:12 markus Rel $
+//$Id: PActors.cpp,v 1.12 2006/02/27 20:45:35 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actors
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.11 $
+//REVISION    : $Revision: 1.12 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -26,8 +26,6 @@
 
 
 #include <cdmgr-cfg.h>
-
-#if WITH_ACTORS == 1
 
 #include <gtkmm/stock.h>
 #include <gtkmm/scrolledwindow.h>
@@ -545,5 +543,3 @@ void PActors::saveRelatedMovies (const HActor& actor) throw (std::exception) {
       throw e;
    }
 }
-
-#endif // WITH_ACTORS

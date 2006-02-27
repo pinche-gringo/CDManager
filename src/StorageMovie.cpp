@@ -1,11 +1,11 @@
-//$Id: StorageMovie.cpp,v 1.2 2006/01/28 03:28:49 markus Rel $
+//$Id: StorageMovie.cpp,v 1.3 2006/02/27 20:45:35 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Storage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.2 $
+//REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -26,8 +26,6 @@
 
 
 #include <cdmgr-cfg.h>
-
-#if WITH_MOVIES == 1
 
 #include <sstream>
 
@@ -201,5 +199,3 @@ void StorageMovie::deleteMovie (unsigned int idMovie) throw (std::exception) {
    query << "DELETE FROM Movies WHERE id=" << idMovie;
    Database::execute (query.str ().c_str ());
 }
-
-#endif

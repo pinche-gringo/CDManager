@@ -1,11 +1,11 @@
-//$Id: StorageActor.cpp,v 1.4 2006/02/13 22:21:38 markus Rel $
+//$Id: StorageActor.cpp,v 1.5 2006/02/27 20:45:35 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Storage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 21.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -24,10 +24,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-
-#include <cdmgr-cfg.h>
-
-#if WITH_ACTORS == 1
 
 #include <sstream>
 
@@ -133,5 +129,3 @@ void StorageActor::saveActorMovie (unsigned int idActor, unsigned int idMovie) t
    query << "INSERT INTO ActorsInMovies SET idActor=" << idActor << ", idMovie=" << idMovie;
    Database::execute (query.str ().c_str ());
 }
-
-#endif

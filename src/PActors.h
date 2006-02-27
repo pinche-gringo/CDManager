@@ -1,7 +1,7 @@
 #ifndef PACTORS_H
 #define PACTORS_H
 
-//$Id: PActors.h,v 1.5 2006/02/03 18:00:35 markus Rel $
+//$Id: PActors.h,v 1.6 2006/02/27 20:45:35 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,10 +17,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-
-#include <cdmgr-cfg.h>
-
-#if WITH_ACTORS == 1
 
 #include <vector>
 
@@ -103,8 +99,5 @@ class PActors : public NBPage {
       std::vector<HMovie> movies;
    };
 };
-
-
-#endif // WITH_ACTORS
 
 #endif

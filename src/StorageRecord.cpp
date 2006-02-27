@@ -1,11 +1,11 @@
-//$Id: StorageRecord.cpp,v 1.5 2006/02/10 02:07:22 markus Rel $
+//$Id: StorageRecord.cpp,v 1.6 2006/02/27 20:45:35 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : <FILLIN>
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -27,11 +27,8 @@
 
 #include <cdmgr-cfg.h>
 
-#if WITH_RECORDS == 1
-
 #include <sstream>
 
-#define CHECK 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/StatusObj.h>
@@ -222,5 +219,3 @@ void StorageRecord::deleteInterpret (unsigned int idInterpret) throw (std::excep
    query << "DELETE FROM Interprets WHERE id=" << idInterpret;
    Database::execute (query.str ().c_str ());
 }
-
-#endif

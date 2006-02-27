@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.71 2006/02/14 20:05:00 markus Rel $
+//$Id: CDManager.cpp,v 1.72 2006/02/27 20:46:35 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.71 $
+//REVISION    : $Revision: 1.72 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -639,7 +639,9 @@ void CDManager::savePreferences () {
 
       YGP::INIFile::write (inifile, "Export", opt);
 
+#ifdef HAVE_MOVIES
       inifile << "[Movies]\nLanguage=" << Movie::currLang << '\n';
+#endif
    }
    else {
       Glib::ustring msg (_("Can't create file `%1'!\n\nReason: %2."));
@@ -692,7 +694,7 @@ void CDManager::export2HTML () {
 
    YGP::Tokenize langs (LANGUAGES);
    std::string lang;
-   std::string tmpLang (Movie::currLang);
+
    const char* envLang (getenv ("LANGUAGE"));
    std::string oldLang;
    if (envLang)
@@ -729,9 +731,7 @@ void CDManager::export2HTML () {
 	    pipe (pipes);
 	    pid = YGP::Process::execIOConnected ("CDWriter", args, pipes);
 
-	    Movie::currLang = lang;
-	    pages[i]->export2HTML (pipes[1]);
-	    Movie::currLang = tmpLang;
+	    pages[i]->export2HTML (pipes[1], lang);
 	 }
 	 close (pipes[1]);
 

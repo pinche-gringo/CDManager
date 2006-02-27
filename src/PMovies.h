@@ -1,7 +1,7 @@
 #ifndef PMOVIES_H
 #define PMOVIES_H
 
-//$Id: PMovies.h,v 1.4 2006/02/01 18:00:58 markus Rel $
+//$Id: PMovies.h,v 1.5 2006/02/27 20:44:34 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,10 +17,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-
-#include <cdmgr-cfg.h>
-
-#if WITH_MOVIES == 1
 
 #include <map>
 #include <vector>
@@ -55,7 +51,7 @@ class PMovies : public NBPage {
    virtual void deleteSelection ();
    virtual void undo ();
    virtual void clear ();
-   virtual void export2HTML (unsigned int fd);
+   virtual void export2HTML (unsigned int fd, const std::string& lang);
 
    void addLanguageMenus (Glib::ustring& menu, Glib::RefPtr<Gtk::ActionGroup> grpAction);
 
@@ -105,8 +101,5 @@ class PMovies : public NBPage {
 
    std::map<std::string, bool> loadedLangs;
 };
-
-
-#endif // WITH_MOVIES
 
 #endif

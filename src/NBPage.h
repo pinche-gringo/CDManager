@@ -1,7 +1,7 @@
 #ifndef NBPAGE_H
 #define NBPAGE_H
 
-//$Id: NBPage.h,v 1.5 2006/02/11 03:17:06 markus Rel $
+//$Id: NBPage.h,v 1.6 2006/02/27 20:44:35 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ class NBPage : public sigc::trackable {
    virtual void deleteSelection () = 0;
    virtual void undo () = 0;
    virtual void clear () = 0;
-   virtual void export2HTML (unsigned int fd);
+   virtual void export2HTML (unsigned int fd, const std::string& lang);
 
    bool isChanged () const { return aUndo.size (); }
 

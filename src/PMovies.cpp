@@ -1,11 +1,11 @@
-//$Id: PMovies.cpp,v 1.10 2006/02/13 22:24:41 markus Rel $
+//$Id: PMovies.cpp,v 1.11 2006/02/27 20:44:34 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movies
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.10 $
+//REVISION    : $Revision: 1.11 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -27,11 +27,9 @@
 
 #include <cdmgr-cfg.h>
 
-#if WITH_ACTORS == 1
-
 #include <sstream>
 
-#include <cstdlib>
+#include <unistd.h>
 
 #include <gtkmm/main.h>
 #include <gtkmm/menu.h>
@@ -569,8 +567,12 @@ void PMovies::deleteMovie (const Gtk::TreeIter& movie) {
 //-----------------------------------------------------------------------------
 /// Exports the contents of the page to HTML
 /// \param fd: File-descriptor for exporting
+/// \param lang: Language, in which to export
 //-----------------------------------------------------------------------------
-void PMovies::export2HTML (unsigned int fd) {
+void PMovies::export2HTML (unsigned int fd, const std::string& lang) {
+   std::string oldLang (Movie::currLang);
+   Movie::currLang = lang;
+
    // Load the names of the movies in the actual language
    if (!loadedLangs[Movie::currLang])
       loadData (Movie::currLang);
@@ -594,6 +596,8 @@ void PMovies::export2HTML (unsigned int fd) {
 	 TRACE9 ("PMovies::export2HTML (unsinged int) - Writing: " << output.str ());
 	 ::write (fd, output.str ().data (), output.str ().size ());
       }
+
+   Movie::currLang = oldLang;
 }
 
 //-----------------------------------------------------------------------------
@@ -767,5 +771,3 @@ void PMovies::clear () {
    directors.clear ();
    movies.clear ();
 }
-
-#endif

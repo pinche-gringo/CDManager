@@ -1,7 +1,7 @@
 #ifndef PRECORDS_H
 #define PRECORDS_H
 
-//$Id: PRecords.h,v 1.9 2006/02/11 03:17:06 markus Rel $
+//$Id: PRecords.h,v 1.10 2006/02/27 20:44:35 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,9 +18,6 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 
-#include <cdmgr-cfg.h>
-
-#if WITH_RECORDS == 1
 
 #include <vector>
 
@@ -55,7 +52,7 @@ class PRecords : public NBPage {
    virtual void undo ();
    virtual void clear ();
 
-   virtual void export2HTML (unsigned int fd);
+   virtual void export2HTML (unsigned int fd, const std::string& lang);
    void addEntry (const Glib::ustring&artist, const Glib::ustring& record,
 		  const Glib::ustring& song, unsigned int track);
 
@@ -100,8 +97,5 @@ class PRecords : public NBPage {
    YGP::Relation1_N<HInterpret, HRecord> relRecords;
    YGP::Relation1_N<HRecord, HSong>      relSongs;
 };
-
-
-#endif // WITH_RECORDS
 
 #endif

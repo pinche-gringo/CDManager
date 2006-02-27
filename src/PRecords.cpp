@@ -1,11 +1,11 @@
-//$Id: PRecords.cpp,v 1.14 2006/02/13 22:25:11 markus Rel $
+//$Id: PRecords.cpp,v 1.15 2006/02/27 20:44:34 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Records
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.14 $
+//REVISION    : $Revision: 1.15 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -27,9 +27,7 @@
 
 #include <cdmgr-cfg.h>
 
-#if WITH_RECORDS == 1
-
-#include <cstdlib>
+#include <unistd.h>
 
 #include <sstream>
 
@@ -698,7 +696,7 @@ void PRecords::deleteSelectedSongs () {
 /// Exports the contents of the page to HTML
 /// \param fd: File-descriptor for exporting
 //-----------------------------------------------------------------------------
-void PRecords::export2HTML (unsigned int fd) {
+void PRecords::export2HTML (unsigned int fd, const std::string&) {
    std::sort (interprets.begin (), interprets.end (), &Interpret::compByName);
 
    // Write record-information
@@ -1021,5 +1019,3 @@ void PRecords::clear () {
    songs.getModel ()->clear ();
    records.getModel ()->clear ();
 }
-
-#endif

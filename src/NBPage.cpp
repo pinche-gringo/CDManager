@@ -1,11 +1,11 @@
-//$Id: NBPage.cpp,v 1.4 2006/02/11 03:17:06 markus Rel $
+//$Id: NBPage.cpp,v 1.5 2006/02/27 20:44:35 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : NBPage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -73,8 +73,9 @@ void NBPage::removeMenu () {
 //-----------------------------------------------------------------------------
 /// Exports the contents of the page to HTML
 /// \param fd: File-descriptor for exporting
+/// \param lang: Language, in which to export
 //-----------------------------------------------------------------------------
-void NBPage::export2HTML (unsigned int fd) {
+void NBPage::export2HTML (unsigned int fd, const std::string& lang) {
 }
 
 

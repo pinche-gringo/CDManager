@@ -1,9 +1,9 @@
-dnl $Id: configure.ac,v 1.19 2006/02/14 20:06:22 markus Rel $
+dnl $Id: configure.ac,v 1.20 2006/03/03 22:24:38 markus Rel $
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.52)
-AC_REVISION($Revision: 1.19 $)
-AC_INIT(CDManager, 0.8.10, [g17m0@lycos.com], CDManager)
+AC_REVISION($Revision: 1.20 $)
+AC_INIT(CDManager, 0.8.11, [g17m0@lycos.com], CDManager)
 
 RELEASE=${PACKAGE_VERSION%.*}
 AC_DEFINE_UNQUOTED(PRG_RELEASE, "$RELEASE", [Define to the release of the program])
@@ -32,7 +32,7 @@ AC_DEFINE_UNQUOTED(CATALOGS, "$ALL_LINGUAS", [Translations])
 dnl Checks for libraries.
 AC_CHECK_LIB(stdc++, main)
 
-PKG_CHECK_MODULES(DEPS, glibmm-2.4 >= 2.4.0 YGP >= 0.7.40)
+PKG_CHECK_MODULES(DEPS, glibmm-2.4 >= 2.4.0 YGP >= 0.7.41)
 PKG_CHECK_MODULES(XGP, gtkmm-2.4 >= 2.6.0 gthread-2.0 > 2.2.0 XGP >= 0.7.40)
 
 #
@@ -235,9 +235,21 @@ if test "$enable_records" != "no"; then
    RECORDS=1
 fi
 
+PAGES=$(($ACTORS+$MOVIES+$RECORDS))
+AC_MSG_CHECKING([the number of enabled pages])
+AC_MSG_RESULT([$PAGES])
+if test $PAGES -eq 0; then
+  AC_MSG_ERROR([Disabling all features makes the program quite useless, innit?])
+fi
+
+
 AC_DEFINE_UNQUOTED(WITH_ACTORS, $ACTORS, [Define if actors should be handled])
 AC_DEFINE_UNQUOTED(WITH_MOVIES, $MOVIES, [Define if movies should be handled])
 AC_DEFINE_UNQUOTED(WITH_RECORDS, $RECORDS, [Define if records should be handled])
+
+AM_CONDITIONAL(WITH_ACTORS, test $ACTORS -eq 1)
+AM_CONDITIONAL(WITH_MOVIES, test $MOVIES -eq 1)
+AM_CONDITIONAL(WITH_RECORDS, test $RECORDS -eq 1)
 
 
 AC_OUTPUT(Makefile intl/Makefile po/Makefile.in src/Makefile doc/Makefile\
@@ -248,7 +260,7 @@ dnl Settings for autoheader
 AH_TOP([#ifndef CDMANAGER_CFG_H
 #define CDMANAGER_CFG_H
 
-//$Id: configure.ac,v 1.19 2006/02/14 20:06:22 markus Rel $
+//$Id: configure.ac,v 1.20 2006/03/03 22:24:38 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

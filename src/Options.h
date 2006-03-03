@@ -1,7 +1,7 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
-//$Id: Options.h,v 1.5 2006/01/20 00:30:45 markus Rel $
+//$Id: Options.h,v 1.6 2006/03/03 21:24:49 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,8 +20,6 @@
 
 #include <string>
 #include <vector>
-
-#include <cdmgr-cfg.h>
 
 #include <YGP/Entity.h>
 

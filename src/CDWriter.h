@@ -1,7 +1,7 @@
 #ifndef CDWRITER_H
 #define CDWRITER_H
 
-//$Id: CDWriter.h,v 1.5 2005/08/02 01:54:43 markus Rel $
+//$Id: CDWriter.h,v 1.6 2006/03/03 21:24:31 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,8 +17,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-
-#include <cdmgr-cfg.h>
 
 #include "Options.h"
 
@@ -47,6 +45,12 @@ class CDWriter : public YGP::IVIOApplication {
    // Help-handling
    virtual void showHelp () const;
 
+ private:
+   // Prohobited manager functions
+   CDWriter ();
+   CDWriter (const CDWriter&);
+   const CDWriter& operator= (const CDWriter&);
+
    static void createFile (const std::string& name, const char* lang, std::ofstream& file) throw (std::string);
    static bool readHeaderFile (const char* file, const char* lang,
 			       std::string& target, const Glib::ustring& title);
@@ -54,12 +58,6 @@ class CDWriter : public YGP::IVIOApplication {
    static void writeHeader (const char* lang, const char* format,
 			    std::ostream& stream, bool upSorted = true,
 			    const char* lead = "Movies");
-
- private:
-   // Prohobited manager functions
-   CDWriter ();
-   CDWriter (const CDWriter&);
-   const CDWriter& operator= (const CDWriter&);
 
    static const longOptions lo[];
 

@@ -1,11 +1,11 @@
-//$Id: PMovies.cpp,v 1.11 2006/02/27 20:44:34 markus Exp $
+//$Id: PMovies.cpp,v 1.12 2006/03/03 20:36:12 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movies
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.11 $
+//REVISION    : $Revision: 1.12 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -119,7 +119,7 @@ void PMovies::newMovie () {
    HMovie movie;
    movie.define ();
    Gtk::TreeIter i (movies.append (movie, *p));
-   Gtk::TreePath path (movies.getModel ()->get_path (p));
+   Gtk::TreePath path (movies.getModel ()->get_path (i));
    movies.expand_row (path, false);
    movies.selectRow (i);
 
@@ -678,7 +678,8 @@ void PMovies::undoMovie (const Undo& last) {
 
    case Undo::INSERT:
       Check3 (iter->parent ());
-      Check3 (!relMovies.isRelated (movie));
+      Check3 (relMovies.isRelated (movie));
+      relMovies.unrelate (movies.getDirectorAt (iter->parent ()), movie);
       movies.getModel ()->erase (iter);
       iter = movies.getModel ()->children ().end ();
       break;

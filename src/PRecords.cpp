@@ -1,11 +1,11 @@
-//$Id: PRecords.cpp,v 1.15 2006/02/27 20:44:34 markus Exp $
+//$Id: PRecords.cpp,v 1.16 2006/03/03 20:36:27 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Records
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.15 $
+//REVISION    : $Revision: 1.16 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -841,7 +841,9 @@ void PRecords::undoRecord (const Undo& last) {
       break;
 
    case Undo::INSERT:
-      Check3 (!relRecords.isRelated (record));
+      Check3 (iter->parent ());
+      Check3 (relRecords.isRelated (record));
+      relRecords.unrelate (records.getInterpretAt (iter->parent ()), record);
       records.getModel ()->erase (iter);
       iter = records.getModel ()->children ().end ();
       break;

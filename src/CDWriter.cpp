@@ -1,11 +1,11 @@
-//$Id: CDWriter.cpp,v 1.20 2006/03/03 22:25:18 markus Exp $
+//$Id: CDWriter.cpp,v 1.21 2006/03/05 18:35:05 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDWriter
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.20 $
+//REVISION    : $Revision: 1.21 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
 //COPYRIGHT   : Copyright (C) 2005, 2006
@@ -311,22 +311,22 @@ int CDWriter::perform (int argc, const char** argv) {
       return -4;
    }
 
-   std::ofstream fileOut;
    unsigned int pos (0);
 #if WITH_MOVIES == 1
-   createFile (opt.getDirOutput () + "Movies.html", argv[0], fileOut);
+   std::ofstream fileMovie;
+   createFile (opt.getDirOutput () + "Movies.html", argv[0], fileMovie);
 
    // Writing the title for movies
    std::string titleMovie (htmlData[0].target);
    pos = 0;
    while ((pos = titleMovie.find ("%1", pos)) != std::string::npos)
       titleMovie.replace (pos, 2, _("Director"));
-   fileOut << titleMovie;
+   fileMovie << titleMovie;
 
-   writeHeader (argv[0], "[d-n-y-g-m-l]", fileOut);
+   writeHeader (argv[0], "[d-n-y-g-m-l]", fileMovie);
 
    MovieWriter movieWriter ("%n|%y|%g|%t|%l", movieGenres);
-   movieWriter.printStart (fileOut, "");
+   movieWriter.printStart (fileMovie, "");
 
    HMovie movie;
    HDirector director;
@@ -334,23 +334,23 @@ int CDWriter::perform (int argc, const char** argv) {
    std::vector<HDirector> directors;
    YGP::Relation1_N<HDirector, HMovie> relMovies ("movies");
    std::string usedLanguages;
-
 #endif
 
 #if WITH_RECORDS == 1
-   createFile (opt.getDirOutput () + "Records.html", argv[0], fileOut);
+   std::ofstream fileRec;
+   createFile (opt.getDirOutput () + "Records.html", argv[0], fileRec);
 
    // Writing the title for records
-   std::string titleRec (htmlData[2].target);
+   std::string titleRec (htmlData[WITH_MOVIES << 1].target);
    pos = 0;
    while ((pos = titleRec.find ("%1", pos)) != std::string::npos)
       titleRec.replace (pos, 2, _("Interpret"));
-   fileOut << titleRec;
+   fileRec << titleRec;
 
-   writeHeader (argv[0], "[a-n-y-g]", fileOut, true, "Records");
+   writeHeader (argv[0], "[a-n-y-g]", fileRec, true, "Records");
 
    RecordWriter recWriter ("%n|%y|%g", recGenres);
-   recWriter.printStart (fileOut, "");
+   recWriter.printStart (fileRec, "");
 
    HRecord record;
    HInterpret artist;
@@ -380,10 +380,10 @@ int CDWriter::perform (int argc, const char** argv) {
 	    std::cin >> *movie;
 	    TRACE9 ("CDWriter::perform (int, char**) - Movie: " << movie->getName ());
 	    if (!relMovies.isRelated (director))
-	       movieWriter.writeDirector (director, fileOut);
+	       movieWriter.writeDirector (director, fileMovie);
 
 	    relMovies.relate (director, movie);
-	    movieWriter.writeMovie (movie, director, fileOut);
+	    movieWriter.writeMovie (movie, director, fileMovie);
 	    movies.push_back (movie);
 
 	    YGP::Tokenize langs (movie->getLanguage ());
@@ -410,10 +410,10 @@ int CDWriter::perform (int argc, const char** argv) {
 	    std::cin >> *record;
 	    TRACE9 ("CDWriter::perform (int, char**) - Record: " << record->getName ());
 	    if (!relRecords.isRelated (artist))
-	       recWriter.writeInterpret (artist, fileOut);
+	       recWriter.writeInterpret (artist, fileRec);
 
 	    relRecords.relate (artist, record);
-	    recWriter.writeRecord (record, artist, fileOut);
+	    recWriter.writeRecord (record, artist, fileRec);
 	    records.push_back (record);
 	    break;
 #endif
@@ -439,57 +439,58 @@ int CDWriter::perform (int argc, const char** argv) {
    } // end-while not eof
 
 #if WITH_MOVIES == 1
-   movieWriter.printEnd (fileOut);
-   fileOut << htmlData[1].target;
-   fileOut.close ();
+   movieWriter.printEnd (fileMovie);
+   fileMovie << htmlData[1].target;
+   fileMovie.close ();
 
    // Write reverse file
-   createFile (opt.getDirOutput () + "Moviesdown.html", argv[0], fileOut);
-   fileOut << titleMovie;
-   writeHeader (argv[0], "[d-n-y-g-m-l]", fileOut, false);
+   createFile (opt.getDirOutput () + "Moviesdown.html", argv[0], fileMovie);
+   fileMovie << titleMovie;
+   writeHeader (argv[0], "[d-n-y-g-m-l]", fileMovie, false);
 
-   movieWriter.printStart (fileOut, "");
+   movieWriter.printStart (fileMovie, "");
    for (std::vector<HDirector>::reverse_iterator i (directors.rbegin ());
 	i != directors.rend (); ++i)
       if (relMovies.isRelated (*i)) {
-	 movieWriter.writeDirector (*i, fileOut);
+	 movieWriter.writeDirector (*i, fileMovie);
 
 	 std::vector<HMovie>& dirMovies (relMovies.getObjects (*i));
 	 Check3 (dirMovies.size ());
 	 for (std::vector<HMovie>::const_iterator m (dirMovies.begin ());
 	      m != dirMovies.end (); ++m)
-	    movieWriter.writeMovie (*m, *i, fileOut);
+	    movieWriter.writeMovie (*m, *i, fileMovie);
       }
-   movieWriter.printEnd (fileOut);
-   fileOut << htmlData[1].target;
-   fileOut.close ();
+   movieWriter.printEnd (fileMovie);
+   fileMovie << htmlData[1].target;
+   fileMovie.close ();
 #endif
 
 #if WITH_RECORDS == 1
-   recWriter.printEnd (fileOut);
-   fileOut << htmlData[3].target;
-   fileOut.close ();
+   recWriter.printEnd (fileRec);
+   fileRec.flush ();
+   fileRec << htmlData[(WITH_MOVIES << 1) + 1].target;
+   fileRec.close ();
 
    // Write reverse file
-   createFile (opt.getDirOutput () + "Recordsdown.html", argv[0], fileOut);
-   fileOut << titleRec;
-   writeHeader (argv[0], "[a-n-y-g]", fileOut, false, "Records");
+   createFile (opt.getDirOutput () + "Recordsdown.html", argv[0], fileRec);
+   fileRec << titleRec;
+   writeHeader (argv[0], "[a-n-y-g]", fileRec, false, "Records");
 
-   recWriter.printStart (fileOut, "");
+   recWriter.printStart (fileRec, "");
    for (std::vector<HInterpret>::reverse_iterator i (artists.rbegin ());
 	i != artists.rend (); ++i)
       if (relRecords.isRelated (*i)) {
-	 recWriter.writeInterpret (*i, fileOut);
+	 recWriter.writeInterpret (*i, fileRec);
 
 	 std::vector<HRecord>& dirRecords (relRecords.getObjects (*i));
 	 Check3 (dirRecords.size ());
 	 for (std::vector<HRecord>::const_iterator m (dirRecords.begin ());
 	      m != dirRecords.end (); ++m)
-	    recWriter.writeRecord (*m, *i, fileOut);
+	    recWriter.writeRecord (*m, *i, fileRec);
       }
-   recWriter.printEnd (fileOut);
-   fileOut << htmlData[3].target;
-   fileOut.close ();
+   recWriter.printEnd (fileRec);
+   fileRec << htmlData[(WITH_MOVIES << 1) + 1].target;
+   fileRec.close ();
 #endif
 
    typedef bool (*PFNCMPMOVIE) (const HMovie&, const HMovie&);
@@ -529,6 +530,7 @@ int CDWriter::perform (int argc, const char** argv) {
 #endif
  };
 
+   std::ofstream fileOut;
    std::string strTitle;
    // This combines writing movies and records
    for (unsigned int i (0); i < (sizeof (aOutputs) / sizeof (*aOutputs)); ++i) {
@@ -539,13 +541,16 @@ int CDWriter::perform (int argc, const char** argv) {
 	 strTitle.replace (pos, 2, _(aOutputs[i].sorted));
 
       fileOut << strTitle;
+
+      std::stringstream header;
+      writeHeader (argv[0], aOutputs[i].title, header, true, aOutputs[i].lead);
+
 #if WITH_RECORDS == 1
       if (aOutputs[i].type) {
 	 std::sort (records.begin (), records.end (), (PFNCMPRECORD)aOutputs[i].fnCompare);
 
-	 writeHeader (argv[0], aOutputs[i].title, fileOut, true, aOutputs[i].lead);
 	 RecordWriter writer (aOutputs[i].format, recGenres);
-	 writer.printStart (fileOut, "");
+	 writer.printStart (fileOut, header.str ());
 
 	 HInterpret interpret;
 	 for (std::vector<HRecord>::const_iterator m (records.begin ());
@@ -561,12 +566,10 @@ int CDWriter::perform (int argc, const char** argv) {
       {
 	 std::sort (movies.begin (), movies.end (), (PFNCMPMOVIE)aOutputs[i].fnCompare);
 
-	 writeHeader (argv[0], aOutputs[i].title, fileOut, true, aOutputs[i].lead);
 	 MovieWriter writer (aOutputs[i].format, movieGenres);
-	 writer.printStart (fileOut, "");
+	 writer.printStart (fileOut, header.str ());
 
 	 HDirector director;
-	 writer.printStart (fileOut, "");
 	 for (std::vector<HMovie>::const_iterator m (movies.begin ());
 	      m != movies.end (); ++m) {
 	    director = relMovies.getParent (*m); Check3 (director.isDefined ());
@@ -577,16 +580,18 @@ int CDWriter::perform (int argc, const char** argv) {
 #endif
 
       fileOut << htmlData[(aOutputs[i].type << 1) + 1 ].target;
-
       fileOut.close ();
+
       createFile (opt.getDirOutput () + aOutputs[i].filedown, argv[0], fileOut);
       fileOut << strTitle;
+
+      std::stringstream rheader;
+      writeHeader (argv[0], aOutputs[i].title, rheader, false, aOutputs[i].lead);
 
 #if WITH_RECORDS == 1
       if (aOutputs[i].type) {
 	 RecordWriter writer (aOutputs[i].format, recGenres);
-	 writeHeader (argv[0], aOutputs[i].title, fileOut, false, aOutputs[i].lead);
-	 writer.printStart (fileOut, "");
+	 writer.printStart (fileOut, rheader.str ());
 
 	 for (std::vector<HRecord>::reverse_iterator m (records.rbegin ());
 	      m != records.rend (); ++m) {
@@ -601,8 +606,7 @@ int CDWriter::perform (int argc, const char** argv) {
 #if WITH_MOVIES == 1
       {
 	 MovieWriter writer (aOutputs[i].format, movieGenres);
-	 writeHeader (argv[0], aOutputs[i].title, fileOut, false, aOutputs[i].lead);
-	 writer.printStart (fileOut, "");
+	 writer.printStart (fileOut, rheader.str ());
 
 	 for (std::vector<HMovie>::reverse_iterator m (movies.rbegin ());
 	      m != movies.rend (); ++m) {
@@ -696,7 +700,7 @@ const char* CDWriter::description () const {
 /// \throws std::string: A describing text in case of an error
 //-----------------------------------------------------------------------------
 void CDWriter::createFile (const std::string& name, const char* lang,
-			   std::ofstream& file) throw (std::string) {
+			   std::ofstream& file) throw (Glib::ustring) {
    TRACE9 ("CDWriter::createFile (const std::string&, const char*, std::ofstream&) - " << name);
    Check1 (name.size ());
    Check1 (lang);

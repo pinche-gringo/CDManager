@@ -1,11 +1,11 @@
-//$Id: CDWriter.cpp,v 1.21 2006/03/05 18:35:05 markus Exp $
+//$Id: CDWriter.cpp,v 1.22 2006/03/05 21:51:13 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDWriter
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.21 $
+//REVISION    : $Revision: 1.22 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
 //COPYRIGHT   : Copyright (C) 2005, 2006
@@ -51,6 +51,7 @@
 #include "Words.h"
 #include "Genres.h"
 #include "Writer.h"
+#include "Language.h"
 
 #if WITH_MOVIES == 1
 #  include "Movie.h"
@@ -463,6 +464,8 @@ int CDWriter::perform (int argc, const char** argv) {
    movieWriter.printEnd (fileMovie);
    fileMovie << htmlData[1].target;
    fileMovie.close ();
+
+   typedef bool (*PFNCMPMOVIE) (const HMovie&, const HMovie&);
 #endif
 
 #if WITH_RECORDS == 1
@@ -491,10 +494,10 @@ int CDWriter::perform (int argc, const char** argv) {
    recWriter.printEnd (fileRec);
    fileRec << htmlData[(WITH_MOVIES << 1) + 1].target;
    fileRec.close ();
+
+   typedef bool (*PFNCMPRECORD) (const HRecord&, const HRecord&);
 #endif
 
-   typedef bool (*PFNCMPMOVIE) (const HMovie&, const HMovie&);
-   typedef bool (*PFNCMPRECORD) (const HRecord&, const HRecord&);
    struct {
       const char* title;
       const char* file;

@@ -1,11 +1,11 @@
-//$Id: Storage.cpp,v 1.3 2006/01/28 03:29:48 markus Rel $
+//$Id: Storage.cpp,v 1.4 2006/03/05 22:28:02 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Storage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 21.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -52,6 +52,14 @@ void Storage::login (const char* db, const char* user, const char* pwd) throw (s
 //-----------------------------------------------------------------------------
 void Storage::logout () {
    Database::close ();
+}
+
+//-----------------------------------------------------------------------------
+/// Checks if the connection to the database is established
+/// \returns bool: True, if connections is established
+//-----------------------------------------------------------------------------
+bool Storage::connected () {
+   return Database::connected ();
 }
 
 //-----------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 #ifndef STORAGE_H
 #define STORAGE_H
 
-//$Id: Storage.h,v 1.3 2006/01/28 01:14:44 markus Rel $
+//$Id: Storage.h,v 1.4 2006/03/05 22:28:02 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ class Storage {
  public:
    static void login (const char* db, const char* user, const char* pwd) throw (std::exception);
    static void logout ();
+   static bool connected ();
 
    //{ \name handling of special words
    static void loadSpecialWords () throw (std::exception);

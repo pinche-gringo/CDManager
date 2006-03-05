@@ -1,7 +1,7 @@
 #ifndef DB_H
 #define DB_H
 
-//$Id: DB.h,v 1.5 2006/01/22 18:35:31 markus Rel $
+//$Id: DB.h,v 1.6 2006/03/05 22:28:02 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ class Database {
    static void connect (const char* db, const char* user, const char* pwd)
       throw (std::exception&);
    static void close () throw (std::exception&);
+   static bool connected ();
 
    static void execute (const char* query) throw (std::exception&);
    static unsigned int resultSize ();

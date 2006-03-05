@@ -1,11 +1,11 @@
-//$Id: DB.cpp,v 1.7 2006/01/22 18:35:31 markus Rel $
+//$Id: DB.cpp,v 1.8 2006/03/05 22:28:02 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Database
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 16.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -66,6 +66,10 @@ void Database::connect (const char* db, const char* user, const char* pwd) throw
 void Database::close () throw (std::exception&) {
    TRACE9 ("Database::close ()");
    con.close ();
+}
+
+bool Database::connected () {
+   return con.connected ();
 }
 
 void Database::execute (const char* query) throw (std::exception&) {
@@ -134,6 +138,11 @@ void Database::connect (const char* db, const char* user, const char* pwd) throw
 void Database::close () throw (std::exception&) {
    TRACE9 ("Database::close ()");
    mysql_close (mysql);
+   mysql = NULL;
+}
+
+bool Database::connected () {
+   return mysql != NULL;
 }
 
 void Database::execute (const char* query) throw (std::exception&) {

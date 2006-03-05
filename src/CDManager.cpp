@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.73 2006/03/05 18:33:10 markus Exp $
+//$Id: CDManager.cpp,v 1.74 2006/03/05 22:37:36 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.73 $
+//REVISION    : $Revision: 1.74 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -68,9 +68,12 @@
 #  include "PMovies.h"
 #endif
 #if WITH_RECORDS == 1
+#  include "PRecords.h"
+#endif
+
+#if (WITH_RECORDS == 1) || (WITH_MOVIES == 1)
 #  include <YGP/Process.h>
 #  include <YGP/Tokenize.h>
-#  include "PRecords.h"
 #endif
 
 #include "CDManager.h"
@@ -334,6 +337,8 @@ CDManager::CDManager (Options& options)
 
    enableMenus (false);
 
+   nb.set_show_tabs (WITH_ACTORS + WITH_RECORDS + WITH_MOVIES - 1);
+
    getClient ()->pack_start (*mgrUI->get_widget("/Menu"), Gtk::PACK_SHRINK);
    getClient ()->pack_start (nb, Gtk::PACK_EXPAND_WIDGET);
    getClient ()->pack_end (status, Gtk::PACK_SHRINK);
@@ -357,9 +362,8 @@ CDManager::CDManager (Options& options)
       dlg.run ();
    }
 
-   if (opt.getUser ().size ())
-      login (opt.getUser (), opt.getPassword ());
-   else
+   if (opt.getUser ().empty ()
+       || !login (opt.getUser (), opt.getPassword ()))
       Glib::signal_idle ().connect
 	 (bind_return (mem_fun (*this, &CDManager::showLogin), false));
 
@@ -416,6 +420,7 @@ void CDManager::save () {
    }
 }
 
+#if WITH_RECORDS == 1
 //-----------------------------------------------------------------------------
 /// Imports information from audio file (e.g. MP3-ID3 tag or OGG-commentheader)
 //-----------------------------------------------------------------------------
@@ -426,6 +431,7 @@ void CDManager::importFromFileInfo () {
 					XGP::IFileDialog::MUST_EXIST
 					| XGP::IFileDialog::MULTIPLE);
 }
+#endif
 
 //-----------------------------------------------------------------------------
 /// Edits the preferences
@@ -483,7 +489,9 @@ void CDManager::enableMenus (bool enable) {
 #if (WITH_RECORDS == 1) || (WITH_MOVIES == 1)
    apMenus[EXPORT]->set_sensitive (enable);
 #endif
+#if WITH_RECORDS == 1
    apMenus[IMPORT_MP3]->set_sensitive (enable);
+#endif
    apMenus[SAVE_PREFS]->set_sensitive (enable);
 
    nb.set_sensitive (enable);
@@ -539,7 +547,7 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
    idPageMrg = mgrUI->add_ui_from_string (ui);
 
    Check3 (pages[iPage]);
-   if (!pages[iPage]->isLoaded ())
+   if (!pages[iPage]->isLoaded () && Storage::connected ())
       pages[iPage]->loadData ();
    pages[iPage]->getFocus ();
 }
@@ -590,8 +598,6 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
       Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
       dlg.set_title (_("Login error"));
       dlg.run ();
-
-      showLogin ();
       return false;
    }
 

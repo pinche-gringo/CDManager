@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.72 2006/02/27 20:46:35 markus Exp $
+//$Id: CDManager.cpp,v 1.73 2006/03/05 18:33:10 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.72 $
+//REVISION    : $Revision: 1.73 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -702,12 +702,17 @@ void CDManager::export2HTML () {
 
    std::string key (memKey.str ());
    const char* args[] = { "CDWriter", "--outputDir", opt.getDirOutput ().c_str (),
+#if WITH_RECORDS == 1
 			  "--recHeader", opt.getRHeader ().c_str (),
 			  "--recFooter", opt.getRFooter ().c_str (),
+#endif
+#if WITH_MOVIES == 1
 			  "--movieHeader", opt.getMHeader ().c_str (),
 			  "--movieFooter", opt.getMFooter ().c_str (),
+#endif
 			  NULL, key.c_str (), NULL };
-   Check2 (!args[11]);
+   const unsigned int POS_LANG ((sizeof (args) / sizeof (*args)) - 3);
+   Check2 (!args[POS_LANG]);
 
    // Export to every language supported
    Glib::ustring statMsg (_("Exporting (language %1) ..."));
@@ -723,16 +728,15 @@ void CDManager::export2HTML () {
       pid_t pid (-1);
       int pipes[2];
       try {
-	 for (unsigned int i (0); i < (WITH_RECORDS + WITH_MOVIES); ++i) {
-	    setenv ("LANGUAGE", lang.c_str (), true);
-	    args[11] = lang.c_str ();
-	    TRACE3 ("CDManager::export2HTML () - Parms: " << args[11] << ' ' << args[12]);
+	 setenv ("LANGUAGE", lang.c_str (), true);
+	 args[POS_LANG] = lang.c_str ();
+	 TRACE3 ("CDManager::export2HTML () - Parms: " << args[POS_LANG] << ' ' << args[POS_LANG + 1]);
 
-	    pipe (pipes);
-	    pid = YGP::Process::execIOConnected ("CDWriter", args, pipes);
+	 pipe (pipes);
+	 pid = YGP::Process::execIOConnected ("CDWriter", args, pipes);
 
+	 for (unsigned int i (0); i < (WITH_RECORDS + WITH_MOVIES); ++i)
 	    pages[i]->export2HTML (pipes[1], lang);
-	 }
 	 close (pipes[1]);
 
 	 char output[128] = "";
@@ -748,9 +752,6 @@ void CDManager::export2HTML () {
 	    dlg.set_title (_("Export Warning!"));
 	    dlg.run ();
 	 }
-	 close (pipes[0]);
-	 status.pop ();
-
 	 Check3 (pid != -1);
 	 YGP::Process::waitForProcess (pid);
       }
@@ -766,6 +767,8 @@ void CDManager::export2HTML () {
 	 Gtk::MessageDialog dlg (e.what (), Gtk::MESSAGE_ERROR);
 	 dlg.run ();
       }
+      close (pipes[0]);
+      status.pop ();
    } // end-while
    setenv ("LANGUAGE", oldLang.c_str (), true);
 }

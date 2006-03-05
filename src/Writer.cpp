@@ -1,14 +1,14 @@
-//$Id: Writer.cpp,v 1.13 2005/10/28 21:41:00 markus Rel $
+//$Id: Writer.cpp,v 1.14 2006/03/05 18:33:42 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Writer
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.13 $
+//REVISION    : $Revision: 1.14 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 27.11.2004
-//COPYRIGHT   : Copyright (C) 2004, 2005
+//COPYRIGHT   : Copyright (C) 2004 - 2006
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@
 #include "Writer.h"
 
 
+#if WITH_MOVIES == 1
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------
@@ -150,8 +151,10 @@ std::string MovieWriter::addLanguageLinks (const std::string& languages) {
    } // endwhile
    return output;
 }
+#endif
 
 
+#if WITH_RECORDS == 1
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------
@@ -233,3 +236,4 @@ void RecordWriter::writeInterpret (const HInterpret& interpret, std::ostream& ou
 
    oddLine = true;
 }
+#endif

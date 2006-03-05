@@ -1,7 +1,7 @@
 #ifndef WRITER_H
 #define WRITER_H
 
-//$Id: Writer.h,v 1.9 2005/10/18 06:23:56 markus Rel $
+//$Id: Writer.h,v 1.10 2006/03/05 18:33:42 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,19 +18,27 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 
+#include <cdmgr-cfg.h>
+
 #include <map>
 #include <vector>
 #include <string>
 
-#include "Movie.h"
-#include "Record.h"
+#if WITH_MOVIES == 1
+#  include "Movie.h"
+#  include "Director.h"
+#endif
+#if WITH_RECORDS == 1
+#  include "Record.h"
+#  include "Interpret.h"
+#endif
+
 #include "Options.h"
-#include "Director.h"
-#include "Interpret.h"
 
 #include <YGP/TableWriter.h>
 
 
+#if WITH_MOVIES == 1
 /**Class to write movies as HTML-tables
  */
 class MovieWriter : public YGP::TableWriter {
@@ -58,8 +66,10 @@ class MovieWriter : public YGP::TableWriter {
    bool oddLine;
    std::map<unsigned int, Glib::ustring> genres;
 };
+#endif
 
 
+#if WITH_RECORDS == 1
 /**Class to write records as HTML-tables
  */
 class RecordWriter : public YGP::TableWriter {
@@ -85,5 +95,6 @@ class RecordWriter : public YGP::TableWriter {
    bool oddLine;
    std::map<unsigned int, Glib::ustring> genres;
 };
+#endif
 
 #endif

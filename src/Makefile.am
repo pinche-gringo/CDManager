@@ -49,6 +49,8 @@ CDWriter_SOURCES=CDWriter.cpp CDWriter.h Writer.cpp Writer.h \
 		 Language.cpp Language.h
 CDWriter_LDFLAGS=-lCDMgr @DEPS_LIBS@ @LTLIBINTL@
 
+AllMetaInfo: Options.meta Celebrity.meta Movie.meta Record.meta
+
 Options.meta: Options.h
 	mgeni.pl Options.h > Options.meta
 
@@ -61,5 +63,5 @@ Movie.meta: Movie.h
 Record.meta: Record.h
 	mgeni.pl Record.h > Record.meta
 
-EXTRA_DIST=Options.meta Celebrity.meta Movie.meta Record.meta $SRC_MOVIE \
-$SRC_GENMOVIE $SRC_RECORD $SRC_GENREC $SRC_ACTOR $SRC_GENACTOR
+EXTRA_DIST=Options.meta Celebrity.meta Movie.meta Record.meta $(SRC_MOVIE) \
+$(SRC_GENMOVIE) $(SRC_RECORD) $(SRC_GENREC) $(SRC_ACTOR) $(SRC_GENACTOR)

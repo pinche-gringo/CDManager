@@ -1,7 +1,7 @@
 #ifndef CDMANAGER_H
 #define CDMANAGER_H
 
-//$Id: CDManager.h,v 1.43 2006/01/28 01:34:15 markus Rel $
+//$Id: CDManager.h,v 1.44 2006/03/05 22:37:15 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -65,7 +65,9 @@ class CDManager : public XGP::XApplication {
    void save ();
    void showLogin ();
    void logout ();
+#if WITH_RECORDS == 1
    void importFromFileInfo ();
+#endif
 #if (WITH_RECORDS == 1) || (WITH_MOVIES == 1)
    void export2HTML ();
 #endif
@@ -114,8 +116,8 @@ class CDManager : public XGP::XApplication {
 #endif
 #if WITH_RECORDS == 1
 	  IMPORT_MP3,
-	  LAST };
 #endif
+   	  LAST };
    Glib::RefPtr<Gtk::Action> apMenus[LAST];
    Options& opt;
 

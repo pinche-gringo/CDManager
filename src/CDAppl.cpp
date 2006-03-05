@@ -1,11 +1,11 @@
-//$Id: CDAppl.cpp,v 1.12 2006/02/27 20:46:26 markus Exp $
+//$Id: CDAppl.cpp,v 1.13 2006/03/05 21:51:36 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Application
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.12 $
+//REVISION    : $Revision: 1.13 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.12.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -32,7 +32,9 @@
 
 #include <YGP/INIFile.h>
 
-#include "Movie.h"
+#if WITH_MOVIES == 1
+#  include "Movie.h"
+#endif
 #include "CDManager.h"
 
 #include "CDAppl.h"
@@ -74,9 +76,12 @@ void CDAppl::showHelp () const {
 		  "  MovieFoot=Movies.foot\n"
 		  "  RecordHead=Records.head\n"
 		  "  RecordFoot=Records.foot\n"
-		  "  OutputDir=/var/www/cds/\n\n"
-		  "  [Movies]\n"
-		  "  Language=de\n");
+		  "  OutputDir=/var/www/cds/\n"
+#if WITH_MOVIES == 1
+		  "  \n[Movies]\n"
+		  "  Language=de\n"
+#endif
+);
 }
 
 //-----------------------------------------------------------------------------
@@ -139,7 +144,7 @@ void CDAppl::readINIFile (const char* pFile) {
       // Export-otions
       INIOBJ (options, Export);
 
-#ifdef WITH_MOVIES
+#if WITH_MOVIES == 1
       // Language in which to show the movies
       INISECTION (Movies);
       INIATTR2 (Movies, std::string, Movie::currLang, Language);

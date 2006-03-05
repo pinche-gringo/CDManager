@@ -1,7 +1,7 @@
 #ifndef CDWRITER_H
 #define CDWRITER_H
 
-//$Id: CDWriter.h,v 1.6 2006/03/03 21:24:31 markus Exp $
+//$Id: CDWriter.h,v 1.7 2006/03/05 18:34:41 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ class CDWriter : public YGP::IVIOApplication {
    CDWriter (const CDWriter&);
    const CDWriter& operator= (const CDWriter&);
 
-   static void createFile (const std::string& name, const char* lang, std::ofstream& file) throw (std::string);
+   static void createFile (const std::string& name, const char* lang, std::ofstream& file) throw (Glib::ustring);
    static bool readHeaderFile (const char* file, const char* lang,
 			       std::string& target, const Glib::ustring& title);
 

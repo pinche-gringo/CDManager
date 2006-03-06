@@ -1,11 +1,11 @@
-//$Id: DB.cpp,v 1.8 2006/03/05 22:28:02 markus Exp $
+//$Id: DB.cpp,v 1.9 2006/03/06 03:03:48 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Database
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.8 $
+//REVISION    : $Revision: 1.9 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 16.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -125,6 +125,7 @@ long Database::getIDOfInsert () {
 static MYSQL* mysql (NULL);
 static MYSQL_RES* result (NULL);
 static MYSQL_ROW row (NULL);
+static unsigned int sizeResult (0);
 
 
 void Database::connect (const char* db, const char* user, const char* pwd) throw (std::exception&) {
@@ -153,16 +154,20 @@ void Database::execute (const char* query) throw (std::exception&) {
    if (!result)
       mysql_free_result (result);
 
-   if ((result = mysql_store_result (mysql)) != NULL)
+   if ((result = mysql_store_result (mysql)) != NULL) {
       row = mysql_fetch_row (result);
-   else
+      sizeResult = mysql_num_rows (result);
+   }
+   else {
       if (mysql_errno (mysql))
 	 throw std::runtime_error (mysql_error (mysql));
+      sizeResult = 0;
+   }
 }
 
 unsigned int Database::resultSize () {
-   TRACE9 ("Database::resultSize () - " << mysql_num_rows (result));
-   return mysql_num_rows (result);
+   TRACE9 ("Database::resultSize () - " << sizeResult);
+   return sizeResult;
 }
 
 bool Database::hasData () {

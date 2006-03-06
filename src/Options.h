@@ -1,7 +1,7 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
-//$Id: Options.h,v 1.6 2006/03/03 21:24:49 markus Exp $
+//$Id: Options.h,v 1.7 2006/03/06 03:04:03 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ class Options : public YGP::Entity {
    void setRFooter (const std::string& value) { rFooter = value; }
    void setDirOutput (const std::string& value) { dirOutput = value; }
 
-   const char* pINIFile;
+   const char* pINIFile;           // %attrib%;; NULL
 
  private:
    Options (const Options& other);

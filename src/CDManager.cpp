@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.74 2006/03/05 22:37:36 markus Exp $
+//$Id: CDManager.cpp,v 1.75 2006/03/06 03:05:16 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.74 $
+//REVISION    : $Revision: 1.75 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -638,23 +638,26 @@ void CDManager::logout () {
 /// Edits dthe preferences
 //-----------------------------------------------------------------------------
 void CDManager::savePreferences () {
-   std::ofstream inifile (opt.pINIFile);
-   if (inifile) {
-      inifile << "[Database]\nUser=" << opt.getUser () << "\nPassword="
-	      << opt.getPassword () << "\n\n";
+   if (opt.pINIFile) {
+      TRACE5 ("CDManager::savePreferences () - " << opt.pINIFile);
+      std::ofstream inifile (opt.pINIFile);
+      if (inifile) {
+	 inifile << "[Database]\nUser=" << opt.getUser () << "\nPassword="
+		 << opt.getPassword () << "\n\n";
 
-      YGP::INIFile::write (inifile, "Export", opt);
+	 YGP::INIFile::write (inifile, "Export", opt);
 
-#ifdef HAVE_MOVIES
-      inifile << "[Movies]\nLanguage=" << Movie::currLang << '\n';
+#ifdef WITH_MOVIES
+	 inifile << "[Movies]\nLanguage=" << Movie::currLang << '\n';
 #endif
-   }
-   else {
-      Glib::ustring msg (_("Can't create file `%1'!\n\nReason: %2."));
-      msg.replace (msg.find ("%1"), 2, opt.pINIFile);
-      msg.replace (msg.find ("%2"), 2, strerror (errno));
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.run ();
+      }
+      else {
+	 Glib::ustring msg (_("Can't create file `%1'!\n\nReason: %2."));
+	 msg.replace (msg.find ("%1"), 2, opt.pINIFile);
+	 msg.replace (msg.find ("%2"), 2, strerror (errno));
+	 Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+	 dlg.run ();
+      }
    }
 
    // Storing the special/first names and the articles

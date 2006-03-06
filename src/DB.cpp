@@ -1,11 +1,11 @@
-//$Id: DB.cpp,v 1.9 2006/03/06 03:03:48 markus Exp $
+//$Id: DB.cpp,v 1.10 2006/03/06 03:31:43 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Database
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.9 $
+//REVISION    : $Revision: 1.10 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 16.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -132,8 +132,11 @@ void Database::connect (const char* db, const char* user, const char* pwd) throw
    TRACE9 ("Database::connect (const char* (3x) - " << db << " from " << user);
    Check2 (!mysql);
    mysql = mysql_init (NULL);
-   if (!mysql_real_connect (mysql, NULL, user, pwd, db, 0, NULL, 0))
-      throw std::runtime_error (mysql_error (mysql));
+   if (!mysql_real_connect (mysql, NULL, user, pwd, db, 0, NULL, 0)) {
+      std::runtime_error error (mysql_error (mysql));
+      close ();
+      throw error;
+   }
 }
 
 void Database::close () throw (std::exception&) {

@@ -1,3 +1,14 @@
+Overview of changes in version 0.8.11:
+
+  - Works with (Open)BSD
+  - Needs libYGP 0.7.41
+  - Notebook-pages can be disabled individually at configure-time
+  - Fixed undoing the creation of records or movies
+  - Fixed exporting to HTML
+  - Fixed usage of libmysql (and not libmysql++)
+  - Fixed startup without INI-file or unset values
+
+
 Overview of changes in version 0.8.10:
 
   - Accepts user/password from command-line and/or INI-file

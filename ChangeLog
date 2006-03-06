@@ -1,3 +1,77 @@
+2006-03-05  Markus Schwab  <g17m0@lycos.com>
+
+	* ChangeLog, NEWS: Changes of V0.8.11 documented
+
+	* po/de.po, po/en.po, po/es.po: Actualized line-numbers
+
+	* src/DB.cpp: Cleanup if connect fails (using libmysql)
+
+	* src/CDManager.cpp: Only writing INI-file if a file-name is stored
+
+	* src/WordDlg.cpp:
+	  Fixed setting the end-value for words to check (for equality)
+
+	* src/Options.h: Initializing pINIFile
+
+	* src/DB.cpp: Fixed usage of plain libmysql
+
+	* src/Words.cpp: Fixed check in containsWord()
+
+	* src/CDAppl.cpp: Setting name of INI-file also on read-errors
+
+	* src/CDManager.cpp:
+	  Fixed startup without user/pwd passed; Fixed compilation with records disabled
+
+	* src/CDManager.h: Fixed compilation-problem with records disabled
+
+	* src/DB.cpp, src/DB.h, src/Storage.cpp, src/Storage.h:
+	  Added connected()
+
+	* src/CDAppl.cpp: Fixed compile-problem when movies are disabled
+
+	* src/CDWriter.cpp:
+	  Fixed compile-problems, when records/movies are disabled
+
+	* src/Makefile.am: Fixed creating version (setting EXTRA_DIST-variable)
+
+	* src/CDWriter.cpp: Fixed creating HTML-pages
+
+	* src/CDWriter.h: Correctly declaring thrown exception for createFile()
+
+	* src/Writer.cpp, src/Writer.h:
+	  Only compiling record/movie-support, when enabled
+
+	* src/CDManager.cpp: Only starting CDWriter once for every language
+
+2006-03-03  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDWriter.cpp: Only exporting movies/records, when enabled
+
+	* configure.ac:
+	  Conditionally compiling pages (at least 1); Version to 0.8.11
+
+	* src/Options.h: Don't include cdmgr-cfg.h
+
+	* src/CDWriter.h: Made some protected methods private
+
+	* src/PRecords.cpp: Fixed undoing of creating record
+
+	* src/PMovies.cpp: Fixed undoing of creating movie
+
+2006-02-27  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDManager.cpp: Writing movie-related section only when enabling
+
+	* src/CDAppl.cpp: Reading movie-related section only when enabling
+
+	* src/PActors.cpp, src/PActors.h, src/StorageActor.cpp, src/StorageMovie.cpp, src/StorageRecord.cpp:
+	  Removed conditional compiling
+
+	* src/NBPage.cpp, src/NBPage.h, src/PMovies.cpp, src/PMovies.h, src/PRecords.cpp, src/PRecords.h:
+	  export2HTML() recieves language
+
+	* src/Makefile.am: Only compiling  sources, when enabled
+
 2006-02-14  Markus Schwab  <g17m0@lycos.com>
 
 	* ChangeLog, NEWS: Changes of V0.8.10 documented

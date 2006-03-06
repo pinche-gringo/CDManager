@@ -5,7 +5,7 @@
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.4.2005
 //COPYRIGHT   : Copyright (C) 2005, 2006
@@ -154,14 +154,13 @@ WordDialog::~WordDialog () {
 //-----------------------------------------------------------------------------
 void WordDialog::entryChanged (unsigned int which) {
    TRACE8 ("WordDialog::entryChanged (unsigned int) - " << which);
-
    Words::values* shMem (Words::getInfo ()); Check2 (shMem);
 
    Gtk::Entry* fields[] = { &txtName, &txtArticle };
    Gtk::Button* buttons[] = { &addName, &addArticle };
 
    unsigned int starts[] = { 0, shMem->maxEntries - shMem->cArticles };
-   unsigned int ends[] = { Words::cNames () - 1,  shMem->maxEntries - 1 };
+   unsigned int ends[] = { Words::cNames (),  shMem->maxEntries };
 
    Check1 (which < 2);
    Check3 ((sizeof (fields) / sizeof (*fields)) > which);

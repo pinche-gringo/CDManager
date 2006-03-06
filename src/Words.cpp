@@ -1,11 +1,11 @@
-//$Id: Words.cpp,v 1.16 2006/02/14 16:31:45 markus Rel $
+//$Id: Words.cpp,v 1.17 2006/03/06 03:03:33 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Words
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.16 $
+//REVISION    : $Revision: 1.17 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -357,7 +357,7 @@ bool Words::containsWord (unsigned int start, unsigned int end, const Glib::ustr
 
    WordPtrs* shMem (ptrs[YGP::Process::getPID ()]);
    Check2 (end <= shMem->info->maxEntries);
-   Check2 (start <= end);
+   Check2 (start < end);
    TRACE9 ("Words::containsWord (2x unsigned int, const Glib::ustring& word) - " << shMem->values + shMem->info->aOffsets[start]);
    TRACE9 ("Words::containsWord (2x unsigned int, const Glib::ustring& word) - " << shMem->values + shMem->info->aOffsets[end]);
    if (start < end) {

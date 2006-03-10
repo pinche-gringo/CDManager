@@ -1,7 +1,7 @@
 #ifndef STORAGE_H
 #define STORAGE_H
 
-//$Id: Storage.h,v 1.4 2006/03/05 22:28:02 markus Rel $
+//$Id: Storage.h,v 1.5 2006/03/10 21:05:40 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ class Storage {
    static void logout ();
    static bool connected ();
 
-   //{ \name handling of special words
+   //{ \name Handling of special words
    static void loadSpecialWords () throw (std::exception);
    static void storeWord (const char* word) throw (std::exception);
    static void storeArticle (const char* article) throw (std::exception);
@@ -43,9 +43,13 @@ class Storage {
    static void deleteArticles () throw (std::exception);
    //}
 
+   //{ \name Transaction-handling
    static void startTransaction ();
    static void abortTransaction ();
    static void commitTransaction ();
+   //}
+
+   static bool saveCelebrity (const HCelebrity celeb) throw (std::exception);
    static void loadCelebrities (std::vector<HCelebrity>& target, const std::string& table,
 				YGP::StatusObject& stat) throw (std::exception);
 

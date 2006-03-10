@@ -1,11 +1,11 @@
-//$Id: StorageMovie.cpp,v 1.3 2006/02/27 20:45:35 markus Rel $
+//$Id: StorageMovie.cpp,v 1.4 2006/03/10 21:05:40 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Storage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.3 $
+//REVISION    : $Revision: 1.4 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -115,22 +115,8 @@ unsigned int StorageMovie::loadMovies (std::map<unsigned int, std::vector<HMovie
 /// \param director: Director to save
 //-----------------------------------------------------------------------------
 void StorageMovie::saveDirector (const HDirector director) throw (std::exception) {
-   std::stringstream query;
-   query << (director->getId () ? "UPDATE Celebrities" : "INSERT INTO Celebrities")
-	 << " SET name=\"" << Database::escapeDBValue (director->getName ())
-	 << "\", born="
-	 << (director->getBorn ().isDefined () ? director->getBorn () : YGP::AYear (0))
-	 << ", died="
-	 << (director->getDied ().isDefined () ? director->getDied () : YGP::AYear (0));
-
-   if (director->getId ())
-      query << " WHERE id=" << director->getId ();
-   Database::execute (query.str ().c_str ());
-
-   if (!director->getId ()) {
-      director->setId (Database::getIDOfInsert ());
+   if (Storage::saveCelebrity (director))
       Database::execute ("INSERT INTO Directors set id=LAST_INSERT_ID()");
-   }
 }
 
 //-----------------------------------------------------------------------------

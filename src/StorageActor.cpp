@@ -1,11 +1,11 @@
-//$Id: StorageActor.cpp,v 1.5 2006/02/27 20:45:35 markus Rel $
+//$Id: StorageActor.cpp,v 1.6 2006/03/10 21:05:40 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Storage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 21.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -68,25 +68,8 @@ void StorageActor::StorageActor::loadActorsInMovies (std::map<unsigned int, std:
 //-----------------------------------------------------------------------------
 void StorageActor::saveActor (const HActor actor) throw (std::exception) {
    TRACE2 ("StorageActor::saveActor (const HActor)");
-   Check3 (actor.isDefined ());
-
-   std::stringstream query;
-   std::string tmp (Database::escapeDBValue (actor->getName ()));
-   query << (actor->getId () ? "UPDATE Celebrities" : "INSERT INTO Celebrities")
-	 << " SET name=\"" << tmp
-	 << "\", born="
-	 << (actor->getBorn ().isDefined () ? actor->getBorn () : YGP::AYear (0))
-	 << ", died="
-	 << (actor->getDied ().isDefined () ? actor->getDied () : YGP::AYear (0));
-
-   if (actor->getId ())
-      query << " WHERE id=" << actor->getId ();
-   Database::execute (query.str ().c_str ());
-
-   if (!actor->getId ()) {
-      actor->setId (Database::getIDOfInsert ());
+   if (Storage::saveCelebrity (actor))
       Database::execute ("INSERT INTO Actors set id=LAST_INSERT_ID()");
-   }
 }
 
 //-----------------------------------------------------------------------------

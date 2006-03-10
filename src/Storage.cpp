@@ -1,11 +1,11 @@
-//$Id: Storage.cpp,v 1.4 2006/03/05 22:28:02 markus Rel $
+//$Id: Storage.cpp,v 1.5 2006/03/10 21:05:39 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Storage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 21.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -26,6 +26,8 @@
 
 
 #include <cdmgr-cfg.h>
+
+#include <sstream>
 
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
@@ -186,4 +188,30 @@ void Storage::abortTransaction () {
 //-----------------------------------------------------------------------------
 void Storage::commitTransaction () {
    Database::execute ("COMMIT");
+}
+
+//-----------------------------------------------------------------------------
+/// Saves the passed interpret.
+/// \param interpret: Interpret to save
+/// \returns bool: True, if entry was created, false if updated
+/// \throw std::exception: In case of error
+//-----------------------------------------------------------------------------
+bool Storage::saveCelebrity (const HCelebrity celeb) throw (std::exception) {
+   std::stringstream query;
+   query << (celeb->getId () ? "UPDATE Celebrities" : "INSERT INTO Celebrities")
+	 << " SET name=\"" << Database::escapeDBValue (celeb->getName ())
+	 << "\", born="
+	 << (celeb->getBorn ().isDefined () ? celeb->getBorn () : YGP::AYear (0))
+	 << ", died="
+	 << (celeb->getDied ().isDefined () ? celeb->getDied () : YGP::AYear (0));
+
+   if (celeb->getId ())
+      query << " WHERE id=" << celeb->getId ();
+   Database::execute (query.str ().c_str ());
+
+   if (!celeb->getId ()) {
+      celeb->setId (Database::getIDOfInsert ());
+      return true;
+   }
+   return false;
 }

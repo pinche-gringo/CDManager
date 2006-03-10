@@ -1,11 +1,11 @@
-//$Id: StorageRecord.cpp,v 1.6 2006/02/27 20:45:35 markus Rel $
+//$Id: StorageRecord.cpp,v 1.7 2006/03/10 21:05:40 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : <FILLIN>
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -120,22 +120,8 @@ void StorageRecord::loadSongs (unsigned int idRecord, std::vector<HSong>& songs)
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
 void StorageRecord::saveInterpret (const HInterpret interpret) throw (std::exception) {
-   std::stringstream query;
-   query << (interpret->getId () ? "UPDATE Celebrities" : "INSERT INTO Celebrities")
-	 << " SET name=\"" << Database::escapeDBValue (interpret->getName ())
-	 << "\", born="
-	 << (interpret->getBorn ().isDefined () ? interpret->getBorn () : YGP::AYear (0))
-	 << ", died="
-	 << (interpret->getDied ().isDefined () ? interpret->getDied () : YGP::AYear (0));
-
-   if (interpret->getId ())
-      query << " WHERE id=" << interpret->getId ();
-   Database::execute (query.str ().c_str ());
-
-   if (!interpret->getId ()) {
-      interpret->setId (Database::getIDOfInsert ());
+   if (Storage::saveCelebrity (interpret))
       Database::execute ("INSERT INTO Interprets set id=LAST_INSERT_ID()");
-   }
 }
 
 //-----------------------------------------------------------------------------

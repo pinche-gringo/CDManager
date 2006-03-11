@@ -5,7 +5,7 @@
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.4.2005
 //COPYRIGHT   : Copyright (C) 2005, 2006
@@ -60,6 +60,7 @@ WordDialog::WordDialog ()
      deleteArticle (*manage (new Gtk::Button (Gtk::Stock::DELETE))),
      lstNames (*manage (new Gtk::TreeView (names))),
      lstArticles (*manage (new Gtk::TreeView (articles))) {
+   TRACE9 ("WordDialog::WordDialog ()");
    Gtk::ScrolledWindow& scrlNames (*manage (new Gtk::ScrolledWindow));
    Gtk::ScrolledWindow& scrlArticles (*manage (new Gtk::ScrolledWindow));
 
@@ -120,24 +121,26 @@ WordDialog::WordDialog ()
 
    show_all_children ();
 
-   addName.signal_clicked ().connect (bind (mem_fun (*this, &WordDialog::onAdd), 0));
-   deleteName.signal_clicked ().connect (bind (mem_fun (*this, &WordDialog::onDelete), 0));
-   addArticle.signal_clicked ().connect (bind (mem_fun (*this, &WordDialog::onAdd), 1));
-   deleteArticle.signal_clicked ().connect (bind (mem_fun (*this, &WordDialog::onDelete), 1));
+   if (Words::areAvailable ()) {
+      addName.signal_clicked ().connect (bind (mem_fun (*this, &WordDialog::onAdd), 0));
+      deleteName.signal_clicked ().connect (bind (mem_fun (*this, &WordDialog::onDelete), 0));
+      addArticle.signal_clicked ().connect (bind (mem_fun (*this, &WordDialog::onAdd), 1));
+      deleteArticle.signal_clicked ().connect (bind (mem_fun (*this, &WordDialog::onDelete), 1));
 
-   txtName.signal_changed ().connect
-      (bind (mem_fun (*this, &WordDialog::entryChanged), 0));
-   txtArticle.signal_changed ().connect
-      (bind (mem_fun (*this, &WordDialog::entryChanged), 1));
+      txtName.signal_changed ().connect (bind (mem_fun (*this, &WordDialog::entryChanged), 0));
+      txtArticle.signal_changed ().connect (bind (mem_fun (*this, &WordDialog::entryChanged), 1));
 
-   // Fill listboxes
-   TRACE3 ("WordDialog::WordDialog () - Words: " << Words::cNames ()
-	   << "; Articles: " << Words::cArticles ());
-   Words::forEachName (0U, Words::cNames (), *this, &WordDialog::appendWord);
-   Words::forEachArticle (0, Words::cArticles (), *this, &WordDialog::appendArticle);
+      // Fill listboxes
+      TRACE3 ("WordDialog::WordDialog () - Words: " << Words::cNames ()
+	      << "; Articles: " << Words::cArticles ());
+      Words::forEachName (0U, Words::cNames (), *this, &WordDialog::appendWord);
+      Words::forEachArticle (0, Words::cArticles (), *this, &WordDialog::appendArticle);
 
-   names->set_sort_column (colWords.word, Gtk::SORT_ASCENDING);
-   articles->set_sort_column (colWords.word, Gtk::SORT_ASCENDING);
+      names->set_sort_column (colWords.word, Gtk::SORT_ASCENDING);
+      articles->set_sort_column (colWords.word, Gtk::SORT_ASCENDING);
+   }
+   else
+      set_sensitive (false);
 }
 
 //-----------------------------------------------------------------------------
@@ -280,8 +283,7 @@ void WordDialog::commit () {
    Glib::RefPtr<Gtk::ListStore> models[] = { names, articles };
    void (*fnInsert[]) (const Glib::ustring& word, unsigned int pos)  =
       { &Words::addName2Ignore, &Words::addArticle };
-   Check3 ((sizeof (models) / sizeof (*models))
-	   == (sizeof (fnInsert) / sizeof (*fnInsert)));
+   Check3 ((sizeof (models) / sizeof (*models)) == (sizeof (fnInsert) / sizeof (*fnInsert)));
 
    Words::values* shMem (Words::getInfo ()); Check2 (shMem);
    shMem->cArticles = shMem->cNames = 0;

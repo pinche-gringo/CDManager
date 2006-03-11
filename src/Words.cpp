@@ -1,11 +1,11 @@
-//$Id: Words.cpp,v 1.17 2006/03/06 03:03:33 markus Rel $
+//$Id: Words.cpp,v 1.18 2006/03/11 03:28:00 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Words
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.17 $
+//REVISION    : $Revision: 1.18 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -63,7 +63,7 @@ static std::map<pid_t, WordPtrs*> ptrs;
 //-----------------------------------------------------------------------------
 void Words::create (unsigned int words) throw (Glib::ustring) {
    TRACE8 ("Words::create (unsigned int) - " << words);
-   if ((_key != -1) || (ptrs.find (YGP::Process::getPID ()) != ptrs.end ()))
+   if ((_key != -1) || areAvailable ())
       return;
 
    WordPtrs* shMem (new WordPtrs);
@@ -95,7 +95,7 @@ void Words::create (unsigned int words) throw (Glib::ustring) {
 //-----------------------------------------------------------------------------
 void Words::access (unsigned int key) throw (Glib::ustring) {
    TRACE8 ("Words::access (unsigned int) - " << key);
-   if (!key || (ptrs.find (YGP::Process::getPID ()) != ptrs.end ()))
+   if (!key || areAvailable ())
       return;
 
    WordPtrs* shMem (new WordPtrs);
@@ -111,10 +111,18 @@ void Words::access (unsigned int key) throw (Glib::ustring) {
 }
 
 //-----------------------------------------------------------------------------
+/// Checks if the Words are already available for the actual process
+/// \returns bool: True, if the Words are available
+//-----------------------------------------------------------------------------
+bool Words::areAvailable () {
+   return ptrs.find (YGP::Process::getPID ()) != ptrs.end ();
+}
+
+//-----------------------------------------------------------------------------
 /// Frees the used shared memory
 //-----------------------------------------------------------------------------
 void Words::destroy () {
-   Check3 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+   Check3 (areAvailable ());
    WordPtrs* shMem (ptrs[YGP::Process::getPID ()]);
 
    if (shMem->info && shMem->info != (values*)-1) {
@@ -140,7 +148,7 @@ void Words::destroy () {
 void Words::moveValues (unsigned int start, unsigned int end, unsigned int target) {
    TRACE9 ("Words::moveValues (3x unsigned int start) - [" << start << '-' << end
 	   << "] -> " << target << "; Bytes: " << (end - start + 1) * sizeof (char*));
-   Check2 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+   Check2 (areAvailable ());
 
    Words::values* shMem (ptrs[YGP::Process::getPID ()]->info);
    Check2 (start <= end);
@@ -185,7 +193,7 @@ unsigned int Words::binarySearch (values* values, char* data, unsigned int start
 /// \param pos: Hint of position, where to insert
 //-----------------------------------------------------------------------------
 void Words::addName2Ignore (const Glib::ustring& word, unsigned int pos) {
-   Check2 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+   Check2 (areAvailable ());
 
    WordPtrs* shMem (ptrs[YGP::Process::getPID ()]);
    TRACE2 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - " << word << " to " << shMem->info->cNames);
@@ -234,7 +242,7 @@ void Words::addName2Ignore (const Glib::ustring& word, unsigned int pos) {
 /// \param pos: Hint of position, where to insert
 //-----------------------------------------------------------------------------
 void Words::addArticle (const Glib::ustring& word, unsigned int pos) {
-   Check2 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+   Check2 (areAvailable ());
 
    WordPtrs* shMem (ptrs[YGP::Process::getPID ()]);
    TRACE2 ("Words::addArticle (const Glib::ustring&, unsigned int) - " << word << " to " << shMem->info->cArticles);
@@ -286,7 +294,7 @@ void Words::addArticle (const Glib::ustring& word, unsigned int pos) {
 //-----------------------------------------------------------------------------
 Glib::ustring Words::removeArticle (const Glib::ustring& name) {
    TRACE9 ("Words::removeArticles (const Glib::ustring&) - " << name);
-   Check2 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+   Check2 (areAvailable ());
 
    WordPtrs* shMem (ptrs[YGP::Process::getPID ()]);
 
@@ -311,7 +319,7 @@ Glib::ustring Words::removeArticle (const Glib::ustring& name) {
 //-----------------------------------------------------------------------------
 Glib::ustring Words::removeNames (const Glib::ustring& name) {
    TRACE9 ("Words::removeNames (const Glib::ustring&) - " << name);
-   Check2 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+   Check2 (areAvailable ());
 
    WordPtrs* shMem (ptrs[YGP::Process::getPID ()]);
    Glib::ustring work (name);
@@ -353,7 +361,7 @@ Glib::ustring Words::getWord (const Glib::ustring& text) {
 //-----------------------------------------------------------------------------
 bool Words::containsWord (unsigned int start, unsigned int end, const Glib::ustring& word) {
    TRACE9 ("Words::containsWord (2x unsigned int, const Glib::ustring& word) - [" << start << '-' << end << ']');
-   Check2 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+   Check2 (areAvailable ());
 
    WordPtrs* shMem (ptrs[YGP::Process::getPID ()]);
    Check2 (end <= shMem->info->maxEntries);
@@ -374,7 +382,7 @@ bool Words::containsWord (unsigned int start, unsigned int end, const Glib::ustr
 /// \returns unsigned int: Number of articles stored
 //-----------------------------------------------------------------------------
 unsigned int Words::cArticles () {
-   Check2 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+   Check2 (areAvailable ());
    return ptrs[YGP::Process::getPID ()]->info->cArticles;
 }
 
@@ -383,7 +391,7 @@ unsigned int Words::cArticles () {
 /// \returns unsigned int: Number of names stored
 //-----------------------------------------------------------------------------
 unsigned int Words::cNames () {
-   Check2 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+   Check2 (areAvailable ());
    return ptrs[YGP::Process::getPID ()]->info->cNames;
 }
 
@@ -392,7 +400,7 @@ unsigned int Words::cNames () {
 /// \returns unsigned int: Stored words
 //-----------------------------------------------------------------------------
 const char* Words::getValues () {
-   Check2 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+   Check2 (areAvailable ());
    return ptrs[YGP::Process::getPID ()]->values;
 }
 
@@ -401,6 +409,6 @@ const char* Words::getValues () {
 /// \returns unsigned int: Stored values
 //-----------------------------------------------------------------------------
 Words::values* Words::getInfo () {
-   Check2 (ptrs.find (YGP::Process::getPID ()) != ptrs.end ());
+   Check2 (areAvailable ());
    return ptrs[YGP::Process::getPID ()]->info;
 }

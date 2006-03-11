@@ -1,7 +1,7 @@
 #ifndef WORDS_H
 #define WORDS_H
 
-//$Id: Words.h,v 1.9 2006/02/14 16:31:45 markus Rel $
+//$Id: Words.h,v 1.10 2006/03/11 03:28:00 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ class Words {
    //@{
    static void create (unsigned int words = 1000) throw (Glib::ustring);
    static void access (unsigned int key) throw (Glib::ustring);
+   static bool areAvailable ();
    static void destroy ();
    //@}
 

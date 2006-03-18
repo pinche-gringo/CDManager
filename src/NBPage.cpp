@@ -1,11 +1,11 @@
-//$Id: NBPage.cpp,v 1.5 2006/02/27 20:44:35 markus Rel $
+//$Id: NBPage.cpp,v 1.6 2006/03/18 18:13:25 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : NBPage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -95,4 +95,11 @@ NBPage::Undo::Undo (CHGSPEC chg, unsigned int what, unsigned int col, YGP::HEnti
    chgSpec.how = chg;
    chgSpec.what = what;
    chgSpec.column = col;
+}
+
+//-----------------------------------------------------------------------------
+/// Resets the loaded-flag
+//-----------------------------------------------------------------------------
+void NBPage::clear () {
+   loaded = false;
 }

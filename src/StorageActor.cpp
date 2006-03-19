@@ -1,11 +1,11 @@
-//$Id: StorageActor.cpp,v 1.6 2006/03/10 21:05:40 markus Exp $
+//$Id: StorageActor.cpp,v 1.7 2006/03/19 02:21:12 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Storage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 21.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -63,16 +63,6 @@ void StorageActor::StorageActor::loadActorsInMovies (std::map<unsigned int, std:
 }
 
 //-----------------------------------------------------------------------------
-/// Saves the passed actor to the databas
-/// \param actor: Actor to save
-//-----------------------------------------------------------------------------
-void StorageActor::saveActor (const HActor actor) throw (std::exception) {
-   TRACE2 ("StorageActor::saveActor (const HActor)");
-   if (Storage::saveCelebrity (actor))
-      Database::execute ("INSERT INTO Actors set id=LAST_INSERT_ID()");
-}
-
-//-----------------------------------------------------------------------------
 /// Deletes the actor with the passed ID from the database
 /// \param idActor: Actor to remove
 //-----------------------------------------------------------------------------
@@ -85,7 +75,7 @@ void StorageActor::deleteActor (unsigned int idActor) throw (std::exception) {
    Database::execute (query.str ().c_str ());
 
    std::stringstream query2;
-   query2 << "DELETE FROM ActorsInMovies WHERE id=" << idActor;
+   query2 << "DELETE FROM ActorsInMovies WHERE idActor=" << idActor;
    Database::execute (query2.str ().c_str ());
 }
 

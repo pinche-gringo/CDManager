@@ -1,3 +1,51 @@
+2006-03-19  Markus Schwab  <g17m0@lycos.com>
+
+	* ChangeLog, NEWS: Changes of V0.8.20 added
+
+	* po/de.po, po/en.po, po/es.po:
+	  Added new messages from SaveCeleb-dialog
+
+	* src/CDManager.cpp: Added checks and traces
+
+2006-03-18  Markus Schwab  <g17m0@lycos.com>
+
+	* configure.ac:
+	  Version to 0.8.20; renamed --enable-{actors,movies,records} to --disable-*
+
+	* po/POTFILES.in: Added SaveCeleb.cpp
+
+	* src/Storage.cpp, src/Storage.h:
+	  Added insert/updateCelebrity(); added has/setRole; Removed saveCelebrity()
+
+	* src/PActors.cpp, src/PMovies.cpp, src/PRecords.cpp:
+	  Using SaveCelebrity to save celebrity; Clear calls NBPage::clear()
+
+	* src/StorageActor.h: Removed saveActor()
+
+	* src/Celebrity.h:
+	  All get-methods return const references to stored value instead of copy
+
+	* src/StorageMovie.cpp, src/StorageMovie.h, src/StorageRecord.cpp, src/StorageRecord.h:
+	  Removed saving of celebrity
+
+	* src/StorageActor.cpp: Removed saveActor(); Fixed deleteActor()
+
+	* src/Makefile.am: Added SaveCeleb
+
+	* src/SaveCeleb.cpp, src/SaveCeleb.h: New file.
+
+	* src/NBPage.cpp, src/NBPage.h: Implemented clean(); to reset load-flag
+
+2006-03-10  Markus Schwab  <g17m0@lycos.com>
+
+	* src/WordDlg.cpp:
+	  Only initializing/filling controls, if words are available
+
+	* src/Words.cpp, src/Words.h: Added areCreated()
+
+	* src/Storage.h, src/StorageActor.cpp, src/StorageMovie.cpp, src/StorageRecord.cpp, src/Storage.cpp:
+	  Moved saving of celebrity to Storage
+
 2006-03-05  Markus Schwab  <g17m0@lycos.com>
 
 	* ChangeLog, NEWS: Changes of V0.8.11 documented

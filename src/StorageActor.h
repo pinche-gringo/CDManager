@@ -1,7 +1,7 @@
 #ifndef STORAGEACTOR_H
 #define STORAGEACTOR_H
 
-//$Id: StorageActor.h,v 1.2 2006/01/28 01:18:00 markus Rel $
+//$Id: StorageActor.h,v 1.3 2006/03/19 02:22:43 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -40,7 +40,6 @@ class StorageActor : public Storage {
    static void loadActors (std::vector<HActor>& target, YGP::StatusObject& stat) {
       loadCelebrities (target, "Actors", stat); }
    static void loadActorsInMovies (std::map<unsigned int, std::vector<unsigned int> >& aActors) throw (std::exception);
-   static void saveActor (const HActor actor) throw (std::exception);
    static void deleteActor (unsigned int idActor) throw (std::exception);
    static void deleteActorMovies (unsigned int idActor) throw (std::exception);
    static void saveActorMovie (unsigned int idActor, unsigned int idMovie) throw (std::exception);

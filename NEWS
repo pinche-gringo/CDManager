@@ -1,3 +1,12 @@
+Overview of changes in version 0.8.20:
+
+  - Implement persons having different roles (e.g. actor and director)
+  - Renmaed --enable-{actors,movies,records} to --disable-*
+  - Fixed crash when showing settings without being logged in
+  - Fixed cleanup when logging out
+  - Fixed deleting actor (didn't remove its movies from the database)
+
+
 Overview of changes in version 0.8.11:
 
   - Works with (Open)BSD

@@ -1,7 +1,7 @@
 #ifndef STORAGE_H
 #define STORAGE_H
 
-//$Id: Storage.h,v 1.5 2006/03/10 21:05:40 markus Exp $
+//$Id: Storage.h,v 1.6 2006/03/19 02:24:15 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 
 #include <vector>
 #include <string>
+#include <stdexcept>
 
 #include <YGP/StatusObj.h>
 
@@ -49,9 +50,17 @@ class Storage {
    static void commitTransaction ();
    //}
 
-   static bool saveCelebrity (const HCelebrity celeb) throw (std::exception);
+   //{ \name Handling of celebrities
+   static void insertCelebrity (const HCelebrity celeb, const char* role) throw (std::exception);
+   static void updateCelebrity (const HCelebrity celeb) throw (std::exception);
+
+   static void getCelebrities (const std::string& name, std::vector<HCelebrity>& target) throw (std::exception);
    static void loadCelebrities (std::vector<HCelebrity>& target, const std::string& table,
 				YGP::StatusObject& stat) throw (std::exception);
+
+   static void setRole (unsigned int idCeleb, const char* role) throw (std::exception);
+   static bool hasRole (unsigned int idCeleb, const char* role) throw (std::exception);
+   //}
 
  private:
    Storage ();
@@ -59,6 +68,8 @@ class Storage {
    virtual ~Storage ();
 
    const Storage& operator= (const Storage& other);
+
+   static void fillCelebrities (std::vector<HCelebrity>& target, YGP::StatusObject& stat);
 };
 
 #endif

@@ -1,11 +1,11 @@
-//$Id: Storage.cpp,v 1.5 2006/03/10 21:05:39 markus Exp $
+//$Id: Storage.cpp,v 1.6 2006/03/19 02:24:15 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Storage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 21.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -139,10 +139,18 @@ void Storage::loadCelebrities (std::vector<HCelebrity>& target, const std::strin
    cmd += table;
    cmd += " x WHERE c.id = x.id";
    Database::execute (cmd.c_str ());
+   fillCelebrities (target, stat);
+}
 
+//-----------------------------------------------------------------------------
+/// Fills the celebrities into the passed vector
+/// \param target: Vector to fill with celebrities
+/// \param stat: Object to hold status-information
+//-----------------------------------------------------------------------------
+void Storage::fillCelebrities (std::vector<HCelebrity>& target, YGP::StatusObject& stat) {
    HCelebrity hCeleb;
    while (Database::hasData ()) {
-      TRACE5 ("Storage::laodCelebrities () - Adding " << Database::getResultColumnAsUInt (0) << '/' << Database::getResultColumnAsString (1));
+      TRACE5 ("Storage::fillCelebrities (std::vector<HCelebrity>&, YGP::StatusObject&)) - Adding " << Database::getResultColumnAsUInt (0) << '/' << Database::getResultColumnAsString (1));
 
       // Fill and store entry from DB-values
       try {
@@ -196,22 +204,82 @@ void Storage::commitTransaction () {
 /// \returns bool: True, if entry was created, false if updated
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
-bool Storage::saveCelebrity (const HCelebrity celeb) throw (std::exception) {
+void Storage::insertCelebrity (const HCelebrity celeb, const char* role) throw (std::exception) {
+   Check1 (celeb.isDefined ());
+   TRACE8 ("Storage::updateCelebrity (const HCelebrity) - " << role << ": " << celeb->getName ());
+   Check1 (!celeb->getId ());
+
    std::stringstream query;
-   query << (celeb->getId () ? "UPDATE Celebrities" : "INSERT INTO Celebrities")
-	 << " SET name=\"" << Database::escapeDBValue (celeb->getName ())
+   query << "INSERT INTO Celebrities  SET name=\"" << Database::escapeDBValue (celeb->getName ())
 	 << "\", born="
 	 << (celeb->getBorn ().isDefined () ? celeb->getBorn () : YGP::AYear (0))
 	 << ", died="
 	 << (celeb->getDied ().isDefined () ? celeb->getDied () : YGP::AYear (0));
-
-   if (celeb->getId ())
-      query << " WHERE id=" << celeb->getId ();
    Database::execute (query.str ().c_str ());
+   celeb->setId (Database::getIDOfInsert ());
+   setRole (celeb->getId (), role);
+}
 
-   if (!celeb->getId ()) {
-      celeb->setId (Database::getIDOfInsert ());
-      return true;
-   }
-   return false;
+//-----------------------------------------------------------------------------
+/// Updates the passed interpret.
+/// \param interpret: Interpret to save
+/// \returns bool: True, if entry was created, false if updated
+/// \throw std::exception: In case of error
+//-----------------------------------------------------------------------------
+void Storage::updateCelebrity (const HCelebrity celeb) throw (std::exception) {
+   Check1 (celeb.isDefined ());
+   TRACE8 ("Storage::updateCelebrity (const HCelebrity) - " << celeb->getName ());
+   Check1 (celeb->getId ());
+
+   std::stringstream query;
+   query << "UPDATE Celebrities  SET name=\"" << Database::escapeDBValue (celeb->getName ())
+	 << "\", born="
+	 << (celeb->getBorn ().isDefined () ? celeb->getBorn () : YGP::AYear (0))
+	 << ", died="
+	 << (celeb->getDied ().isDefined () ? celeb->getDied () : YGP::AYear (0))
+	 << " WHERE id=" << celeb->getId ();
+   Database::execute (query.str ().c_str ());
+}
+
+//-----------------------------------------------------------------------------
+/// Gets the celebrities with the passed name
+/// \param name: Name of celebrity to query
+/// \param target: Vector to store the found celebrities
+/// \returns unsigned long: Id of found celebrity or 0, if not found
+/// \throw std::exception: In case of error
+//-----------------------------------------------------------------------------
+void Storage::getCelebrities (const std::string& name, std::vector<HCelebrity>& target) throw (std::exception) {
+   YGP::StatusObject stat;
+   std::stringstream query;
+   query << "SELECT id, name, born, died FROM Celebrities WHERE name=\"" << Database::escapeDBValue (name) << '"';
+   Database::execute (query.str ().c_str ());
+   fillCelebrities (target, stat);
+}
+
+//-----------------------------------------------------------------------------
+/// Checks if the passed celebrity has a certain role
+/// \param idCeleb: ID of celebrity
+/// \param role: Role of celebrity
+/// \returns bool: True, if the celebrity has the passed role
+/// \throw std::exception: In case of an error
+/// \remarks The roles are the name of the DB-tables
+//-----------------------------------------------------------------------------
+bool Storage::hasRole (unsigned int idCeleb, const char* role) throw (std::exception) {
+   std::stringstream query;
+   query << "SELECT id FROM " << role << " WHERE id=" << idCeleb;
+   Database::execute (query.str ().c_str ());
+   return Database::hasData ();
+}
+
+//-----------------------------------------------------------------------------
+/// Sets a role for a celebrity
+/// \param idCeleb: ID of celebrity
+/// \param role: Role to set for celebrity
+/// \throw std::exception: In case of an error
+/// \remarks The roles are the name of the DB-tables
+//-----------------------------------------------------------------------------
+void Storage::setRole (unsigned int idCeleb, const char* role) throw (std::exception) {
+   std::stringstream query;
+   query << "INSERT INTO " << role << " set id="<< idCeleb;
+   Database::execute (query.str ().c_str ());
 }

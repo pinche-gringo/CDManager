@@ -37,10 +37,10 @@ $(USE_GENREC) $(USE_GENACTOR)
 libCDMgr_la_LIBADD=@DEPS_LIBS@
 
 CDManager_SOURCES=NBPage.cpp Storage.cpp NBPage.h Storage.h		\
-Settings.cpp Settings.h CDAppl.cpp CDAppl.h LangDlg.cpp LangDlg.h	\
-OOList.cpp OOList.h LangImg.cpp LangImg.h WordDlg.cpp WordDlg.h		\
-Language.cpp Language.h DB.cpp DB.h CDManager.h CDManager.cpp		\
-$(USE_MOVIE) $(USE_RECORD) $(USE_ACTOR)
+SaveCeleb.cpp SaveCeleb.h Settings.cpp Settings.h CDAppl.cpp CDAppl.h	\
+LangDlg.cpp LangDlg.h OOList.cpp OOList.h LangImg.cpp LangImg.h		\
+WordDlg.cpp WordDlg.h Language.cpp Language.h DB.cpp DB.h CDManager.h	\
+CDManager.cpp $(USE_MOVIE) $(USE_RECORD) $(USE_ACTOR)
 
 CDManager_CPPFLAGS=@INCLUDES@ -I../Common @DEPS_CFLAGS@ @XGP_CFLAGS@ -DUSE_LANGUAGEPIXMAPS -Wall
 CDManager_LDFLAGS=-lCDMgr @DEPS_LIBS@ @XGP_LIBS@ @LTLIBINTL@ @MYSQLLIBS@

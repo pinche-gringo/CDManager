@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.75 2006/03/06 03:05:16 markus Rel $
+//$Id: CDManager.cpp,v 1.76 2006/03/19 20:46:44 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.75 $
+//REVISION    : $Revision: 1.76 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -407,11 +407,13 @@ CDManager::~CDManager () {
 /// Saves the DB
 //-----------------------------------------------------------------------------
 void CDManager::save () {
+   TRACE9 ("CDManager::save ()");
    try {
       for (unsigned int i (0); i < (sizeof (pages) / sizeof (*pages)); ++i)
 	 if (pages[i]->isChanged ())
 	    pages[i]->saveData ();
 
+      Check3 (apMenus[SAVE]);
       apMenus[SAVE]->set_sensitive (false);
    }
    catch (Glib::ustring& msg) {
@@ -514,6 +516,7 @@ void CDManager::loadDatabase () {
       status.push (_("Reading database ..."));
 
       Check3 (pages[nb.get_current_page ()]);
+      Check3 (!pages[nb.get_current_page ()]->isLoaded ());
       pages[nb.get_current_page ()]->loadData ();
       pages[nb.get_current_page ()]->getFocus ();
    }
@@ -638,6 +641,8 @@ void CDManager::logout () {
 /// Edits dthe preferences
 //-----------------------------------------------------------------------------
 void CDManager::savePreferences () {
+   TRACE9 ("CDManager::savePreferences ()");
+
    if (opt.pINIFile) {
       TRACE5 ("CDManager::savePreferences () - " << opt.pINIFile);
       std::ofstream inifile (opt.pINIFile);

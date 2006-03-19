@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2006-03-05 23:07-0400\n"
+"POT-Creation-Date: 2006-03-19 19:26-0400\n"
 "PO-Revision-Date: 2005-05-21 15:16-0400\n"
 "Last-Translator: Markus Schwab <g17m0@lycos.com>\n"
 "Language-Team: German <g17m0@lycos.com>\n"
@@ -98,11 +98,11 @@ msgstr "_Schauspieler"
 msgid "Connect to a database ..."
 msgstr "Verbinde zur Datenbank"
 
-#: src/CDManager.cpp:428
+#: src/CDManager.cpp:430
 msgid "Select file(s) to import"
 msgstr "Wähle Datei(en) zum Importieren"
 
-#: src/CDManager.cpp:447
+#: src/CDManager.cpp:449
 msgid ""
 "Copyright (C) 2004 - 2006 Markus Schwab\n"
 "e-mail: <g17m0@lycos.com>\n"
@@ -114,19 +114,19 @@ msgstr ""
 "\n"
 "Übersetzt am %1 um %2"
 
-#: src/CDManager.cpp:471
+#: src/CDManager.cpp:473
 msgid "Database login"
 msgstr "Datenbank-Anmeldung"
 
-#: src/CDManager.cpp:514
+#: src/CDManager.cpp:516
 msgid "Reading database ..."
 msgstr "Lese von der Datenbank ..."
 
-#: src/CDManager.cpp:573
+#: src/CDManager.cpp:576
 msgid "The data has been modified! Save those changes?"
 msgstr "Die Daten wurden geändert! Sollen diese Änderungen gespeichert werden?"
 
-#: src/CDManager.cpp:596
+#: src/CDManager.cpp:599
 msgid ""
 "Can't connect to database!\n"
 "\n"
@@ -136,11 +136,11 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManager.cpp:599
+#: src/CDManager.cpp:602
 msgid "Login error"
 msgstr "Fehler bei der Anmeldung"
 
-#: src/CDManager.cpp:609
+#: src/CDManager.cpp:612
 msgid ""
 "Can't query needed information!\n"
 "\n"
@@ -150,11 +150,11 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManager.cpp:634
+#: src/CDManager.cpp:637
 msgid "Disconnected!"
 msgstr "Abgemeldet!"
 
-#: src/CDManager.cpp:655 src/CDWriter.cpp:717
+#: src/CDManager.cpp:660 src/CDWriter.cpp:717
 msgid ""
 "Can't create file `%1'!\n"
 "\n"
@@ -164,7 +164,7 @@ msgstr ""
 "\n"
 "Ursache: %2."
 
-#: src/CDManager.cpp:677
+#: src/CDManager.cpp:682
 msgid ""
 "Can't store special names!\n"
 "\n"
@@ -174,15 +174,15 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManager.cpp:727
+#: src/CDManager.cpp:732
 msgid "Exporting (language %1) ..."
 msgstr "Exportiere (Sprache %1) ..."
 
-#: src/CDManager.cpp:761
+#: src/CDManager.cpp:766
 msgid "Export Warning!"
 msgstr "Warnung beim Exportieren!"
 
-#: src/CDManager.cpp:799
+#: src/CDManager.cpp:804
 msgid ""
 "Can't open file `%1'!\n"
 "\n"
@@ -456,11 +456,11 @@ msgstr "_Exportieren"
 msgid "Reserved _words"
 msgstr "Reservierte _Wörter"
 
-#: src/WordDlg.cpp:69
+#: src/WordDlg.cpp:70
 msgid "First names"
 msgstr "Vornamen"
 
-#: src/WordDlg.cpp:70
+#: src/WordDlg.cpp:71
 msgid "Articles"
 msgstr "Artikel"
 
@@ -517,6 +517,7 @@ msgid "Director"
 msgstr "Regisseur"
 
 #: src/CDWriter.cpp:199 src/CDWriter.cpp:514 src/CDWriter.cpp:528
+#: src/SaveCeleb.cpp:73
 msgid "Name"
 msgstr ""
 
@@ -576,23 +577,23 @@ msgstr ""
 "Copyright © 2005, 2006 Markus Schwab; E-Mail: g17m0@lycoscom\n"
 "Vertrieben unter den Bedingungen der GNU General Public License"
 
-#: src/PRecords.cpp:137
+#: src/PRecords.cpp:138
 msgid "Loaded %1 record"
 msgid_plural "Loaded %1 records"
 msgstr[0] "%1 Platte"
 msgstr[1] "%1 Platten"
 
-#: src/PRecords.cpp:140
+#: src/PRecords.cpp:141
 msgid " from %1 artist"
 msgid_plural " from %1 artists"
 msgstr[0] " von %1 Interpreten geladen"
 msgstr[1] " von %1 Interpreten geladen"
 
-#: src/PRecords.cpp:146
+#: src/PRecords.cpp:147
 msgid "Warnings loading records"
 msgstr "Warnungen beim Laden der Platten"
 
-#: src/PRecords.cpp:151
+#: src/PRecords.cpp:152
 msgid ""
 "Can't query available records!\n"
 "\n"
@@ -602,7 +603,7 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/PRecords.cpp:180
+#: src/PRecords.cpp:181
 msgid ""
 "Can't query the songs for record %1!\n"
 "\n"
@@ -612,43 +613,43 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/PRecords.cpp:370 src/PActors.cpp:305 src/PMovies.cpp:242
+#: src/PRecords.cpp:371 src/PActors.cpp:306 src/PMovies.cpp:243
 msgid "<ctl>Z"
 msgstr ""
 
-#: src/PRecords.cpp:373
+#: src/PRecords.cpp:374
 msgid "New _interpret"
 msgstr "Neuer _Interpret"
 
-#: src/PRecords.cpp:374 src/PActors.cpp:309 src/PMovies.cpp:246
+#: src/PRecords.cpp:375 src/PActors.cpp:310 src/PMovies.cpp:247
 msgid "<ctl>N"
 msgstr ""
 
-#: src/PRecords.cpp:376
+#: src/PRecords.cpp:377
 msgid "_New record"
 msgstr "_Neues Album"
 
-#: src/PRecords.cpp:377 src/PActors.cpp:312 src/PMovies.cpp:249
+#: src/PRecords.cpp:378 src/PActors.cpp:313 src/PMovies.cpp:250
 msgid "<ctl><alt>N"
 msgstr ""
 
-#: src/PRecords.cpp:379
+#: src/PRecords.cpp:380
 msgid "New _song"
 msgstr "Neues _Lied"
 
-#: src/PRecords.cpp:380
+#: src/PRecords.cpp:381
 msgid "<ctl><shft>N"
 msgstr ""
 
-#: src/PRecords.cpp:382 src/PActors.cpp:314 src/PMovies.cpp:251
+#: src/PRecords.cpp:383 src/PActors.cpp:315 src/PMovies.cpp:252
 msgid "_Delete"
 msgstr "_Löschen"
 
-#: src/PRecords.cpp:383 src/PActors.cpp:315 src/PMovies.cpp:252
+#: src/PRecords.cpp:384 src/PActors.cpp:316 src/PMovies.cpp:253
 msgid "<ctl>Delete"
 msgstr ""
 
-#: src/PRecords.cpp:570 src/PActors.cpp:519 src/PMovies.cpp:504
+#: src/PRecords.cpp:571 src/PActors.cpp:523 src/PMovies.cpp:505
 msgid ""
 "Error saving data!\n"
 "\n"
@@ -658,21 +659,21 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/PActors.cpp:236
+#: src/PActors.cpp:237
 msgid "The database contains an invalid reference (%1) to a movie!"
 msgstr "Die Datenbank enthält eine ungültige Referenz (%1) zu einem Film!"
 
-#: src/PActors.cpp:255
+#: src/PActors.cpp:256
 msgid "Loaded %1 actor"
 msgid_plural "Loaded %1 actors"
 msgstr[0] "%1 Schauspieler"
 msgstr[1] "%1 Schauspieler"
 
-#: src/PActors.cpp:262
+#: src/PActors.cpp:263
 msgid "Warnings loading actors!"
 msgstr "Warnungen beim Laden der Schauspieler"
 
-#: src/PActors.cpp:267
+#: src/PActors.cpp:268
 msgid ""
 "Can't query the actors1!\n"
 "\n"
@@ -682,41 +683,41 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/PActors.cpp:308
+#: src/PActors.cpp:309
 msgid "New _actor"
 msgstr "Neuer _Schauspieler"
 
-#: src/PActors.cpp:311
+#: src/PActors.cpp:312
 msgid "_Plays in movie..."
 msgstr "Spielt in _Film..."
 
-#: src/PMovies.cpp:191
+#: src/PMovies.cpp:192
 msgid "_Original name"
 msgstr "Name (_Original)"
 
-#: src/PMovies.cpp:245
+#: src/PMovies.cpp:246
 msgid "New _director"
 msgstr "Neuer _Regiseur"
 
-#: src/PMovies.cpp:248
+#: src/PMovies.cpp:249
 msgid "_New movie"
 msgstr "_Neuer Film"
 
-#: src/PMovies.cpp:255
+#: src/PMovies.cpp:256
 msgid "_Language"
 msgstr "_Sprache"
 
-#: src/PMovies.cpp:391
+#: src/PMovies.cpp:392
 msgid "Loaded %1 movie"
 msgid_plural "Loaded %1 movies"
 msgstr[0] "%1 Film geladen"
 msgstr[1] "%1 Filme geladen"
 
-#: src/PMovies.cpp:398
+#: src/PMovies.cpp:399
 msgid "Warnings loading movies"
 msgstr "Warnungen beim Laden der Filme"
 
-#: src/PMovies.cpp:403 src/PMovies.cpp:424
+#: src/PMovies.cpp:404 src/PMovies.cpp:425
 msgid ""
 "Can't query available movies!\n"
 "\n"
@@ -726,7 +727,7 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/Storage.cpp:159
+#: src/Storage.cpp:169
 msgid "Warning loading celebrity `%1': %2"
 msgstr "Warnung beim Laden von Person/Gruppe '%1' : %2"
 
@@ -753,3 +754,31 @@ msgstr "Filme"
 #: src/RelateMovie.cpp:231
 msgid "Available directors/movies"
 msgstr "Vorhandene Regisseure/Filme"
+
+#: src/SaveCeleb.cpp:48
+msgid "A celebrity with the same name already exists! Are they identic?"
+msgstr "Eine Person/Gruppe mit diesem Namen gibt es bereits! Sind sie identisch?"
+
+#: src/SaveCeleb.cpp:51
+msgid "Choose matching celebrity"
+msgstr "Auswählen von passenden Personen/Gruppen"
+
+#: src/SaveCeleb.cpp:74
+msgid "Born"
+msgstr "Geboren"
+
+#: src/SaveCeleb.cpp:75
+msgid "Died"
+msgstr "Gestorben"
+
+#: src/SaveCeleb.cpp:86
+msgid "actor"
+msgstr "Schauspieler"
+
+#: src/SaveCeleb.cpp:87
+msgid "interpret"
+msgstr "Interpret"
+
+#: src/SaveCeleb.cpp:88
+msgid "director"
+msgstr "Regisseur"

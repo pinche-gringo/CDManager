@@ -1,7 +1,7 @@
 #ifndef STORAGEMOVIE_H
 #define STORAGEMOVIE_H
 
-//$Id: StorageMovie.h,v 1.2 2006/01/28 03:26:44 markus Rel $
+//$Id: StorageMovie.h,v 1.3 2006/03/19 02:21:51 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -44,7 +44,6 @@ class StorageMovie : public Storage {
    static unsigned int loadMovies (std::map<unsigned int, std::vector<HMovie> >& aMovies,
 				   YGP::StatusObject& stat) throw (std::exception);
    static void saveMovie (const HMovie movie, unsigned int idDirector) throw (std::exception);
-   static void saveDirector (const HDirector director) throw (std::exception);
    static void deleteMovie (unsigned int idMovie) throw (std::exception);
    static void deleteDirector (unsigned int idDirector) throw (std::exception);
    static void deleteMovieNames (unsigned int idMovie) throw (std::exception);

@@ -1,11 +1,11 @@
-//$Id: StorageMovie.cpp,v 1.4 2006/03/10 21:05:40 markus Exp $
+//$Id: StorageMovie.cpp,v 1.5 2006/03/19 02:21:51 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Storage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -107,16 +107,6 @@ unsigned int StorageMovie::loadMovies (std::map<unsigned int, std::vector<HMovie
       } // end-while has movies
    } // endif movies found
    return Database::resultSize ();
-}
-
-
-//-----------------------------------------------------------------------------
-/// Saves the passed director to the databas
-/// \param director: Director to save
-//-----------------------------------------------------------------------------
-void StorageMovie::saveDirector (const HDirector director) throw (std::exception) {
-   if (Storage::saveCelebrity (director))
-      Database::execute ("INSERT INTO Directors set id=LAST_INSERT_ID()");
 }
 
 //-----------------------------------------------------------------------------

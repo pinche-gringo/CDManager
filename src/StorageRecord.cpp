@@ -1,11 +1,11 @@
-//$Id: StorageRecord.cpp,v 1.7 2006/03/10 21:05:40 markus Exp $
+//$Id: StorageRecord.cpp,v 1.8 2006/03/19 02:21:51 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : <FILLIN>
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -112,16 +112,6 @@ void StorageRecord::loadSongs (unsigned int idRecord, std::vector<HSong>& songs)
       songs.push_back (song);
       Database::getNextResultRow ();
    } // end-while
-}
-
-//-----------------------------------------------------------------------------
-/// Saves the passed interpret.
-/// \param interpret: Interpret to save
-/// \throw std::exception: In case of error
-//-----------------------------------------------------------------------------
-void StorageRecord::saveInterpret (const HInterpret interpret) throw (std::exception) {
-   if (Storage::saveCelebrity (interpret))
-      Database::execute ("INSERT INTO Interprets set id=LAST_INSERT_ID()");
 }
 
 //-----------------------------------------------------------------------------

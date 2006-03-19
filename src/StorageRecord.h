@@ -1,7 +1,7 @@
 #ifndef STORAGERECORD_H
 #define STORAGERECORD_H
 
-//$Id: StorageRecord.h,v 1.2 2006/01/28 01:35:41 markus Rel $
+//$Id: StorageRecord.h,v 1.3 2006/03/19 02:21:51 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -48,7 +48,6 @@ class StorageRecord : public Storage {
 
    static void saveSong (const HSong song, unsigned int idRecord) throw (std::exception);
    static void saveRecord (const HRecord record, unsigned int idInterpret) throw (std::exception);
-   static void saveInterpret (const HInterpret interpret) throw (std::exception);
    static void deleteSong (unsigned int idSong) throw (std::exception);
    static void deleteRecord (unsigned int idRecord) throw (std::exception);
    static void deleteInterpret (unsigned int idInterpret) throw (std::exception);

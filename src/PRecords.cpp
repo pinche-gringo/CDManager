@@ -1,11 +1,11 @@
-//$Id: PRecords.cpp,v 1.16 2006/03/03 20:36:27 markus Rel $
+//$Id: PRecords.cpp,v 1.17 2006/03/19 02:23:32 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Records
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.16 $
+//REVISION    : $Revision: 1.17 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -44,6 +44,7 @@
 
 #include <XGP/MessageDlg.h>
 
+#include "SaveCeleb.h"
 #include "StorageRecord.h"
 
 #include "PRecords.h"
@@ -497,7 +498,7 @@ void PRecords::saveData () throw (Glib::ustring) {
 			Check3 (std::find (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (interpret)) == aSaved.end ());
 			Check3 (delRelation.find (YGP::HEntity::cast (interpret)) == delRelation.end ());
 
-			StorageRecord::saveInterpret (interpret);
+			SaveCelebrity::store (interpret, "Interprets", *getWindow ());
 			aSaved.insert (lower_bound (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (interpret)),
 				       YGP::HEntity::cast (interpret));
 		     }
@@ -531,7 +532,7 @@ void PRecords::saveData () throw (Glib::ustring) {
 		     Check3 (std::find (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (interpret)) == aSaved.end ());
 		     Check3 (delRelation.find (YGP::HEntity::cast (interpret)) == delRelation.end ());
 
-		     StorageRecord::saveInterpret (interpret);
+		     SaveCelebrity::store (interpret, "Interprets", *getWindow ());
 		     aSaved.insert (lower_bound (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (interpret)),
 				    YGP::HEntity::cast (interpret));
 		     posSaved = lower_bound (aSaved.begin (), aSaved.end (), last.getEntity ());
@@ -550,7 +551,7 @@ void PRecords::saveData () throw (Glib::ustring) {
 		  }
 	       }
 	       else
-		  StorageRecord::saveInterpret (interpret);
+		  SaveCelebrity::store (interpret, "Interprets", *getWindow ());
 	       break; }
 
 	    default:
@@ -1020,4 +1021,5 @@ void PRecords::clear () {
 
    songs.getModel ()->clear ();
    records.getModel ()->clear ();
+   NBPage::clear ();
 }

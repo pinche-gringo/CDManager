@@ -1,11 +1,11 @@
-//$Id: PActors.cpp,v 1.12 2006/02/27 20:45:35 markus Rel $
+//$Id: PActors.cpp,v 1.13 2006/03/19 02:23:32 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actors
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.12 $
+//REVISION    : $Revision: 1.13 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -40,6 +40,7 @@
 #include "Genres.h"
 #include "PMovies.h"
 #include "MovieList.h"
+#include "SaveCeleb.h"
 #include "StorageActor.h"
 
 #include "PActors.h"
@@ -457,8 +458,11 @@ void PActors::undoActor (const Undo& last) {
 /// Removes all information from the page
 //-----------------------------------------------------------------------------
 void PActors::clear () {
+   aActors.clear ();
    actors.clear ();
+   actors.getModel ()->clear ();
    relActors.unrelateAll ();
+   NBPage::clear ();
 }
 
 //-----------------------------------------------------------------------------
@@ -490,7 +494,7 @@ void PActors::saveData () throw (Glib::ustring) {
 		  }
 	       }
 	       else {
-		  StorageActor::saveActor (actor);
+		  SaveCelebrity::store (actor, "Actors", *getWindow ());
 
 		  // Check if the related movies have been changed
 		  YGP::HEntity entityActor (YGP::HEntity::cast (actor));

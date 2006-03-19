@@ -1,11 +1,11 @@
-//$Id: PMovies.cpp,v 1.12 2006/03/03 20:36:12 markus Rel $
+//$Id: PMovies.cpp,v 1.13 2006/03/19 02:23:32 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movies
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.12 $
+//REVISION    : $Revision: 1.13 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -48,6 +48,7 @@
 #include <XGP/MessageDlg.h>
 
 #include "LangImg.h"
+#include "SaveCeleb.h"
 #include "StorageMovie.h"
 
 #include "PMovies.h"
@@ -466,7 +467,7 @@ void PMovies::saveData () throw (Glib::ustring) {
 		     Check3 (std::find (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (director)) == aSaved.end ());
 		     Check3 (delRelation.find (YGP::HEntity::cast (director)) == delRelation.end ());
 
-		     StorageMovie::saveDirector (director);
+		     SaveCelebrity::store (director, "Directors", *getWindow ());
 		     aSaved.insert (lower_bound (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (director)),
 				    YGP::HEntity::cast (director));
 		     posSaved = lower_bound (aSaved.begin (), aSaved.end (), last.getEntity ());
@@ -485,7 +486,7 @@ void PMovies::saveData () throw (Glib::ustring) {
 		  }
 	       }
 	       else
-		  StorageMovie::saveDirector (director);
+		  SaveCelebrity::store (director, "Directors", *getWindow ());
 	       break; }
 
 	    default:
@@ -771,4 +772,6 @@ void PMovies::clear () {
    relMovies.unrelateAll ();
    directors.clear ();
    movies.clear ();
+   movies.getModel ()->clear ();
+   NBPage::clear ();
 }

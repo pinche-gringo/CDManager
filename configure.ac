@@ -1,9 +1,9 @@
-dnl $Id: configure.ac,v 1.20 2006/03/03 22:24:38 markus Rel $
+dnl $Id: configure.ac,v 1.21 2006/03/19 02:31:12 markus Rel $
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.52)
-AC_REVISION($Revision: 1.20 $)
-AC_INIT(CDManager, 0.8.11, [g17m0@lycos.com], CDManager)
+AC_REVISION($Revision: 1.21 $)
+AC_INIT(CDManager, 0.8.20, [g17m0@lycos.com], CDManager)
 
 RELEASE=${PACKAGE_VERSION%.*}
 AC_DEFINE_UNQUOTED(PRG_RELEASE, "$RELEASE", [Define to the release of the program])
@@ -213,8 +213,8 @@ AC_ARG_ENABLE(checks,
               else
                   CXXFLAGS="$CXXFLAGS -DNDEBUG -UCHECK"; fi)
 AC_ARG_ENABLE(actors,
-              AC_HELP_STRING([--enable-actors],
-                             [Enables handling of actors]))
+              AC_HELP_STRING([--disable-actors],
+                             [Disables handling of actors]))
 if test "$enable_actors" != "no"; then
    if test "$enable_movies" = "no"; then
       AC_MSG_WARN([--enable-actors needs the movies enabled! Enabling both ...])
@@ -223,14 +223,14 @@ if test "$enable_actors" != "no"; then
    ACTORS=1
 fi
 AC_ARG_ENABLE(movies,
-              AC_HELP_STRING([--enable-movies],
-                             [Enables handling of movies]))
+              AC_HELP_STRING([--Disable-movies],
+                             [Disables handling of movies]))
 if test "$enable_movies" != "no"; then
    MOVIES=1
 fi
 AC_ARG_ENABLE(records,
-              AC_HELP_STRING([--enable-records],
-                             [Enables handling of records]))
+              AC_HELP_STRING([--disable-records],
+                             [Disables handling of records]))
 if test "$enable_records" != "no"; then
    RECORDS=1
 fi
@@ -259,8 +259,6 @@ AC_OUTPUT(Makefile intl/Makefile po/Makefile.in src/Makefile doc/Makefile\
 dnl Settings for autoheader
 AH_TOP([#ifndef CDMANAGER_CFG_H
 #define CDMANAGER_CFG_H
-
-//$Id: configure.ac,v 1.20 2006/03/03 22:24:38 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

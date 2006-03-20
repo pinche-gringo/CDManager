@@ -5,7 +5,7 @@
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.4.2005
 //COPYRIGHT   : Copyright (C) 2005, 2006
@@ -280,21 +280,24 @@ void WordDialog::onDelete (unsigned int which) {
 //-----------------------------------------------------------------------------
 void WordDialog::commit () {
    TRACE9 ("WordDialog::commit ()");
-   Glib::RefPtr<Gtk::ListStore> models[] = { names, articles };
-   void (*fnInsert[]) (const Glib::ustring& word, unsigned int pos)  =
-      { &Words::addName2Ignore, &Words::addArticle };
-   Check3 ((sizeof (models) / sizeof (*models)) == (sizeof (fnInsert) / sizeof (*fnInsert)));
 
-   Words::values* shMem (Words::getInfo ()); Check2 (shMem);
-   shMem->cArticles = shMem->cNames = 0;
+   if (Words::areAvailable ()) {
+      Glib::RefPtr<Gtk::ListStore> models[] = { names, articles };
+      void (*fnInsert[]) (const Glib::ustring& word, unsigned int pos)  =
+	 { &Words::addName2Ignore, &Words::addArticle };
+      Check3 ((sizeof (models) / sizeof (*models)) == (sizeof (fnInsert) / sizeof (*fnInsert)));
 
-   Glib::ustring value;
-   for (unsigned int i (0); i < (sizeof (models) / sizeof (*models)); ++i)
-      for (Gtk::TreeModel::const_iterator l (models[i]->children ().begin ());
-	   l != models[i]->children ().end (); ++l) {
-	 value = (*l)[colWords.word];
-	 fnInsert[i] (value, Words::POS_END);
-      }
+      Words::values* shMem (Words::getInfo ()); Check2 (shMem);
+      shMem->cArticles = shMem->cNames = 0;
+
+      Glib::ustring value;
+      for (unsigned int i (0); i < (sizeof (models) / sizeof (*models)); ++i)
+	 for (Gtk::TreeModel::const_iterator l (models[i]->children ().begin ());
+	      l != models[i]->children ().end (); ++l) {
+	    value = (*l)[colWords.word];
+	    fnInsert[i] (value, Words::POS_END);
+	 }
+   }
 }
 
 //-----------------------------------------------------------------------------

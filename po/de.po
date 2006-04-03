@@ -757,7 +757,8 @@ msgstr "Vorhandene Regisseure/Filme"
 
 #: src/SaveCeleb.cpp:48
 msgid "A celebrity with the same name already exists! Are they identic?"
-msgstr "Eine Person/Gruppe mit diesem Namen gibt es bereits! Sind sie identisch?"
+msgstr ""
+"Eine Person/Gruppe mit diesem Namen gibt es bereits! Sind sie identisch?"
 
 #: src/SaveCeleb.cpp:51
 msgid "Choose matching celebrity"

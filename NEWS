@@ -1,3 +1,9 @@
+Overview of changes in version 0.8.21:
+
+  - Fixed crash commiting settings (closing with OK) without being logged in
+  - Can be compiled with GCC 4.1
+
+
 Overview of changes in version 0.8.20:
 
   - Implement persons having different roles (e.g. actor and director)

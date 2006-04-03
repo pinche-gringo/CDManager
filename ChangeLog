@@ -1,3 +1,18 @@
+2006-04-03  Markus Schwab  <g17m0@lycos.com>
+
+	* ChangeLog, NEWS: Changes of V0.8.21 added
+
+	* po/de.po: Formatting changed
+
+	* configure.ac: Version to 0.8.21
+
+	* src/LangDlg.cpp, src/Movie.cpp, src/Options.h, src/SongList.h, src/Words.h:
+	  Fixed compile-errors when compiling with GCC 4.1
+
+2006-03-20  Markus Schwab  <g17m0@lycos.com>
+
+	* src/WordDlg.cpp: Only commiting settings, if Words do exist
+
 2006-03-19  Markus Schwab  <g17m0@lycos.com>
 
 	* ChangeLog, NEWS: Changes of V0.8.20 added

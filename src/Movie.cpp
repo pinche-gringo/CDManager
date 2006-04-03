@@ -1,11 +1,11 @@
-//$Id: Movie.cpp,v 1.13 2006/02/12 03:23:56 markus Rel $
+//$Id: Movie.cpp,v 1.14 2006/04/03 21:06:47 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movie
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.13 $
+//REVISION    : $Revision: 1.14 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 29.11.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -38,18 +38,22 @@
 
 
 // Specialization of YGP::Attribute for the name-map
+namespace YGP {
+
 template <> inline
-bool YGP::Attribute<std::map<std::string, Glib::ustring> >::assignFromString (const char* value) const {
+bool Attribute<std::map<std::string, Glib::ustring> >::assignFromString (const char* value) const {
    Check3 (value);
    attr_[Movie::currLang] = value;
    return true;
 }
 template <> inline
-std::string YGP::Attribute<std::map<std::string, Glib::ustring> >::getValue () const {
+std::string Attribute<std::map<std::string, Glib::ustring> >::getValue () const {
    return (attr_.find (Movie::currLang) == attr_.end ()) ? attr_[""] : attr_[Movie::currLang]; }
 template <> inline
-std::string YGP::Attribute<std::map<std::string, Glib::ustring> >::getFormattedValue () const {
+std::string Attribute<std::map<std::string, Glib::ustring> >::getFormattedValue () const {
    return getValue (); }
+
+}
 
 
 #include "Movie.meta"

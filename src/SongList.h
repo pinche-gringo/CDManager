@@ -1,7 +1,7 @@
 #ifndef SONGLIST_H
 #define SONGLIST_H
 
-//$Id: SongList.h,v 1.17 2006/02/11 03:16:24 markus Rel $
+//$Id: SongList.h,v 1.18 2006/04/03 21:06:47 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -92,10 +92,8 @@ class SongList : public Gtk::TreeView {
    void valueChanged (const Glib::ustring& path, const Glib::ustring& value,
 		      unsigned int column);
 
-   int SongList::sortByTrack (const Gtk::TreeModel::iterator& a,
-			      const Gtk::TreeModel::iterator& b) const;
-   int SongList::sortByName (const Gtk::TreeModel::iterator& a,
-			     const Gtk::TreeModel::iterator& b) const;
+   int sortByTrack (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) const;
+   int sortByName (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) const;
 
  private:
    SongList (const SongList& other);

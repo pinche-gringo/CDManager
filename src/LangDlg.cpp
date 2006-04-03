@@ -1,11 +1,11 @@
-//$Id: LangDlg.cpp,v 1.6 2005/04/28 19:37:51 markus Rel $
+//$Id: LangDlg.cpp,v 1.7 2006/04/03 21:06:47 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Language
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 11.12.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -64,14 +64,14 @@ class LanguageModel : public Gtk::ListStore {
 	      << '=' << lines[lang]);
       erase (children ()[lines[lang]]);
    }
-   void LanguageModel::insertLanguage (const std::string& lang, const LanguageColumns& cols) {
+   void insertLanguage (const std::string& lang, const LanguageColumns& cols) {
       insertLanguage (lang, Language::findLanguage (lang), cols); }
 
 protected:
    LanguageModel (const LanguageColumns& cols, bool withUndefined = false);
 
-   void LanguageModel::insertLanguage (const std::string& name, const Language& lang,
-				       const LanguageColumns& cols);
+   void insertLanguage (const std::string& name, const Language& lang,
+			const LanguageColumns& cols);
 
  private:
    LanguageModel ();

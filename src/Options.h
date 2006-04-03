@@ -1,7 +1,7 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
-//$Id: Options.h,v 1.7 2006/03/06 03:04:03 markus Rel $
+//$Id: Options.h,v 1.8 2006/04/03 21:06:47 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ class Options : public YGP::Entity {
    Options ();
    virtual ~Options ();
 
-   const std::string& Options::getMHeader () const { return mHeader; }
+   const std::string& getMHeader () const { return mHeader; }
    const std::string& getMFooter () const { return mFooter; }
    const std::string& getRHeader () const { return rHeader; }
    const std::string& getRFooter () const { return rFooter; }

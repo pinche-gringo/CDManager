@@ -1,7 +1,7 @@
 #ifndef WORDS_H
 #define WORDS_H
 
-//$Id: Words.h,v 1.10 2006/03/11 03:28:00 markus Rel $
+//$Id: Words.h,v 1.11 2006/04/03 21:06:47 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -101,7 +101,7 @@ class Words {
    static unsigned int binarySearch (values* values, char* data, unsigned int start, unsigned int end, const char* word);
    static void moveValues (unsigned int start, unsigned int end, unsigned int target);
 
-   static Glib::ustring Words::getWord (const Glib::ustring& text);
+   static Glib::ustring getWord (const Glib::ustring& text);
    static bool containsWord (unsigned int start, unsigned int end, const Glib::ustring& word);
 };
 

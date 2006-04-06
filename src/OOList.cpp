@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.21 2006/02/12 04:24:39 markus Rel $
+//$Id: OOList.cpp,v 1.22 2006/04/06 00:05:56 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.21 $
+//REVISION    : $Revision: 1.22 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -101,6 +101,8 @@ void OwnerObjectList::init (const OwnerObjectColumns& cols) {
 				      (_("Genre"), *Gtk::manage (renderer)));
    append_column (*Gtk::manage (column));
    column->add_attribute (renderer->property_text (), cols.genre);
+   column->add_attribute (renderer->property_visible(), cols.chgAll);
+
    column->set_sort_column (cols.genre.index ());
    column->set_resizable ();
 
@@ -236,7 +238,8 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 	    break;
 	 } // end-switch
 
-	 signalOwnerChanged.emit (row, column, oldValue);
+	 if (column < 2)
+	    signalOwnerChanged.emit (row, column, oldValue);
       } // end-else director edited
    } // end-try
    catch (std::exception& e) {
@@ -576,5 +579,8 @@ void OwnerObjectList::update (Gtk::TreeModel::Row& row) {
       HCelebrity owner (getCelebrityAt (row));
       row[colOwnerObjects->name] = owner->getName ();
       row[colOwnerObjects->year] = getLiveSpan (owner);
+      row[colOwnerObjects->chgAll] = false;
    }
+   else
+      row[colOwnerObjects->chgAll] = true;
 }

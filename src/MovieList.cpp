@@ -1,11 +1,11 @@
-//$Id: MovieList.cpp,v 1.23 2006/02/01 17:59:30 markus Rel $
+//$Id: MovieList.cpp,v 1.24 2006/04/06 00:05:56 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.23 $
+//REVISION    : $Revision: 1.24 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -68,6 +68,7 @@ MovieList::MovieList (const Genres& genres)
 				(_("Type"), *Gtk::manage (renderer)));
    append_column (*Gtk::manage (column));
    column->add_attribute (renderer->property_text (), colMovies.type);
+   column->add_attribute (renderer->property_visible(), colMovies.chgAll);
    column->set_resizable ();
 
    renderer->signal_edited ().connect
@@ -89,6 +90,8 @@ MovieList::MovieList (const Genres& genres)
 
    append_column (*Gtk::manage (column));
    column->set_resizable ();
+   column->add_attribute (column->get_first_cell_renderer ()
+			  ->property_visible(), colMovies.chgAll);
 
    // Add column "Subtitles"
    column = new Gtk::TreeViewColumn (_("Subtitles(s)"));
@@ -101,6 +104,9 @@ MovieList::MovieList (const Genres& genres)
 
    append_column (*Gtk::manage (column));
    column->set_resizable ();
+   column->add_attribute (column->get_first_cell_renderer ()
+			  ->property_visible(), colMovies.chgAll);
+
    set_rules_hint ();
 }
 

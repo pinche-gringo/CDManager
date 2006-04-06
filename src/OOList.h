@@ -1,7 +1,7 @@
 #ifndef OOLIST_H
 #define OOLIST_H
 
-//$Id: OOList.h,v 1.13 2006/02/01 03:03:44 markus Rel $
+//$Id: OOList.h,v 1.14 2006/04/06 00:05:56 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -45,12 +45,13 @@ class GenreColumns : public Gtk::TreeModel::ColumnRecord {
 class OwnerObjectColumns : public Gtk::TreeModel::ColumnRecord {
  public:
    OwnerObjectColumns () {
-      add (entry); add (name); add (year); add (genre); }
+      add (entry); add (name); add (year); add (genre); add (chgAll); }
 
    Gtk::TreeModelColumn<HEntity>       entry;
    Gtk::TreeModelColumn<Glib::ustring> name;
    Gtk::TreeModelColumn<Glib::ustring> year;
    Gtk::TreeModelColumn<Glib::ustring> genre;
+   Gtk::TreeModelColumn<bool>          chgAll;
 };
 
 

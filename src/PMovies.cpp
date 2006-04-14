@@ -1,11 +1,11 @@
-//$Id: PMovies.cpp,v 1.14 2006/04/14 05:56:36 markus Exp $
+//$Id: PMovies.cpp,v 1.15 2006/04/14 15:36:21 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movies
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.14 $
+//REVISION    : $Revision: 1.15 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -281,14 +281,9 @@ void PMovies::removeMenu () {
 void PMovies::changeLanguage (const std::string& lang) {
    Check3 (lang.empty () || (lang.size () == 2));
 
-   static bool ignore (false);                  // Ignore de-selecting an entry
-   ignore = !ignore;
-   TRACE1 ("PMovies::changeLanguage (const std::string&) - " << lang << ": "
-	   << (ignore ? "True" : "False"));
-   if (ignore)
-      return;
-
-   setLanguage (lang);
+   TRACE1 ("PMovies::changeLanguage (const std::string&) - " << lang);
+   if (lang != Movie::currLang)
+      setLanguage (lang);
 }
 
 //-----------------------------------------------------------------------------

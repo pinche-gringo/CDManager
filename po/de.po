@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2006-03-19 19:26-0400\n"
+"POT-Creation-Date: 2006-04-14 11:36-0400\n"
 "PO-Revision-Date: 2005-05-21 15:16-0400\n"
 "Last-Translator: Markus Schwab <g17m0@lycos.com>\n"
 "Language-Team: German <g17m0@lycos.com>\n"
@@ -196,27 +196,27 @@ msgstr ""
 msgid "Type"
 msgstr "Typ"
 
-#: src/MovieList.cpp:83 src/CDWriter.cpp:200
+#: src/MovieList.cpp:84 src/CDWriter.cpp:200
 msgid "Language(s)"
 msgstr "Sprache(n)"
 
-#: src/MovieList.cpp:94
+#: src/MovieList.cpp:97
 msgid "Subtitles(s)"
 msgstr "Untertitel"
 
-#: src/MovieList.cpp:183
+#: src/MovieList.cpp:189
 msgid "Director/Movie"
 msgstr "Regisseur/Film"
 
-#: src/MovieList.cpp:222
+#: src/MovieList.cpp:228
 msgid "Unknown type of media!"
 msgstr "Unbekannter Medientyp!"
 
-#: src/MovieList.cpp:251 src/SongList.cpp:198 src/OOList.cpp:244
+#: src/MovieList.cpp:257 src/SongList.cpp:198 src/OOList.cpp:247
 msgid "Invalid value!"
 msgstr "Ungültiger Wert!"
 
-#: src/MovieList.cpp:304
+#: src/MovieList.cpp:310
 msgid "Select subtitles"
 msgstr "Auswählen der Untertitel"
 
@@ -245,7 +245,7 @@ msgstr ""
 msgid "Song `%1' already exists!"
 msgstr "Das Lied '%1' existiert bereits!"
 
-#: src/SongList.cpp:189 src/OOList.cpp:208
+#: src/SongList.cpp:189 src/OOList.cpp:210
 msgid "Unknown genre!"
 msgstr "Unbekanntes Genre!"
 
@@ -254,7 +254,7 @@ msgstr "Unbekanntes Genre!"
 msgid "Year"
 msgstr "Jahr"
 
-#: src/OOList.cpp:178 src/OOList.cpp:222
+#: src/OOList.cpp:180 src/OOList.cpp:224
 msgid "Entry `%1' already exists!"
 msgstr "Der Eintrag '%1' exisiert bereits!"
 
@@ -476,9 +476,9 @@ msgstr ""
 
 #: src/CDWriter.cpp:98
 msgid ""
-" [OPTIONS] [LANGUAGE-ID]\n"
+" [OPTIONS] [LANGUAGE-ID] [MEMORY-ID]\n"
 "\n"
-msgstr "[OPTIONEN] [SPRACH-CODE]\n"
+msgstr "[OPTIONEN] [SPRACH-CODE] [SPEICHER-ID]\n"
 
 #: src/CDWriter.cpp:99
 msgid "Directory to export data to\n"
@@ -649,7 +649,7 @@ msgstr "_Löschen"
 msgid "<ctl>Delete"
 msgstr ""
 
-#: src/PRecords.cpp:571 src/PActors.cpp:523 src/PMovies.cpp:505
+#: src/PRecords.cpp:571 src/PActors.cpp:523 src/PMovies.cpp:500
 msgid ""
 "Error saving data!\n"
 "\n"
@@ -707,17 +707,17 @@ msgstr "_Neuer Film"
 msgid "_Language"
 msgstr "_Sprache"
 
-#: src/PMovies.cpp:392
+#: src/PMovies.cpp:387
 msgid "Loaded %1 movie"
 msgid_plural "Loaded %1 movies"
 msgstr[0] "%1 Film geladen"
 msgstr[1] "%1 Filme geladen"
 
-#: src/PMovies.cpp:399
+#: src/PMovies.cpp:394
 msgid "Warnings loading movies"
 msgstr "Warnungen beim Laden der Filme"
 
-#: src/PMovies.cpp:404 src/PMovies.cpp:425
+#: src/PMovies.cpp:399 src/PMovies.cpp:420
 msgid ""
 "Can't query available movies!\n"
 "\n"

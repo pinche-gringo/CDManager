@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2006-03-19 19:26-0400\n"
+"POT-Creation-Date: 2006-04-14 11:36-0400\n"
 "PO-Revision-Date: 2005-04-22 11:53-0400\n"
 "Last-Translator: Markus Schwab <g17m0@lycos.com>\n"
 "Language-Team: English <g17m0@lycos.com>\n"
@@ -178,27 +178,27 @@ msgstr ""
 msgid "Type"
 msgstr ""
 
-#: src/MovieList.cpp:83 src/CDWriter.cpp:200
+#: src/MovieList.cpp:84 src/CDWriter.cpp:200
 msgid "Language(s)"
 msgstr ""
 
-#: src/MovieList.cpp:94
+#: src/MovieList.cpp:97
 msgid "Subtitles(s)"
 msgstr ""
 
-#: src/MovieList.cpp:183
+#: src/MovieList.cpp:189
 msgid "Director/Movie"
 msgstr ""
 
-#: src/MovieList.cpp:222
+#: src/MovieList.cpp:228
 msgid "Unknown type of media!"
 msgstr ""
 
-#: src/MovieList.cpp:251 src/SongList.cpp:198 src/OOList.cpp:244
+#: src/MovieList.cpp:257 src/SongList.cpp:198 src/OOList.cpp:247
 msgid "Invalid value!"
 msgstr ""
 
-#: src/MovieList.cpp:304
+#: src/MovieList.cpp:310
 msgid "Select subtitles"
 msgstr ""
 
@@ -227,7 +227,7 @@ msgstr ""
 msgid "Song `%1' already exists!"
 msgstr ""
 
-#: src/SongList.cpp:189 src/OOList.cpp:208
+#: src/SongList.cpp:189 src/OOList.cpp:210
 msgid "Unknown genre!"
 msgstr ""
 
@@ -236,7 +236,7 @@ msgstr ""
 msgid "Year"
 msgstr ""
 
-#: src/OOList.cpp:178 src/OOList.cpp:222
+#: src/OOList.cpp:180 src/OOList.cpp:224
 msgid "Entry `%1' already exists!"
 msgstr ""
 
@@ -444,7 +444,7 @@ msgstr ""
 
 #: src/CDWriter.cpp:98
 msgid ""
-" [OPTIONS] [LANGUAGE-ID]\n"
+" [OPTIONS] [LANGUAGE-ID] [MEMORY-ID]\n"
 "\n"
 msgstr ""
 
@@ -603,7 +603,7 @@ msgstr ""
 msgid "<ctl>Delete"
 msgstr ""
 
-#: src/PRecords.cpp:571 src/PActors.cpp:523 src/PMovies.cpp:505
+#: src/PRecords.cpp:571 src/PActors.cpp:523 src/PMovies.cpp:500
 msgid ""
 "Error saving data!\n"
 "\n"
@@ -655,17 +655,17 @@ msgstr ""
 msgid "_Language"
 msgstr ""
 
-#: src/PMovies.cpp:392
+#: src/PMovies.cpp:387
 msgid "Loaded %1 movie"
 msgid_plural "Loaded %1 movies"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/PMovies.cpp:399
+#: src/PMovies.cpp:394
 msgid "Warnings loading movies"
 msgstr ""
 
-#: src/PMovies.cpp:404 src/PMovies.cpp:425
+#: src/PMovies.cpp:399 src/PMovies.cpp:420
 msgid ""
 "Can't query available movies!\n"
 "\n"

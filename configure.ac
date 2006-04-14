@@ -1,9 +1,9 @@
-dnl $Id: configure.ac,v 1.22 2006/04/03 21:20:34 markus Rel $
+dnl $Id: configure.ac,v 1.23 2006/04/14 15:38:15 markus Rel $
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.52)
-AC_REVISION($Revision: 1.22 $)
-AC_INIT(CDManager, 0.8.21, [g17m0@lycos.com], CDManager)
+AC_REVISION($Revision: 1.23 $)
+AC_INIT(CDManager, 0.8.22, [g17m0@lycos.com], CDManager)
 
 RELEASE=${PACKAGE_VERSION%.*}
 AC_DEFINE_UNQUOTED(PRG_RELEASE, "$RELEASE", [Define to the release of the program])

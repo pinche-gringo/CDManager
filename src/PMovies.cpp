@@ -1,11 +1,11 @@
-//$Id: PMovies.cpp,v 1.13 2006/03/19 02:23:32 markus Rel $
+//$Id: PMovies.cpp,v 1.14 2006/04/14 05:56:36 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movies
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.13 $
+//REVISION    : $Revision: 1.14 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -774,4 +774,5 @@ void PMovies::clear () {
    movies.clear ();
    movies.getModel ()->clear ();
    NBPage::clear ();
+   loadedLangs.clear ();
 }

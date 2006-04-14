@@ -1,7 +1,7 @@
                        CDManager
 
 Utility to manage CDs/DVDs (audio and video)
-Copyright (C) 2004, 2005 Markus Schwab <g17m0@lycos.com>
+Copyright (C) 2004 - 2006 Markus Schwab <g17m0@lycos.com>
 -----------------------------------------------------------------------
 
 The package is distributed under the GNU General Public License; in the hope
@@ -101,7 +101,7 @@ Exporting the database to HTML documents
 
   This table is surrounded by header and footer information which are
   read from files which can be specified in the settings dialog
-  (either with and absolut path; or else relative to the
+  (either with an absolut path; or else relative to the
   data-directory (which is /usr/local/share/CDManager unless other
   specified during configuring)).
 

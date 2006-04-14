@@ -1,3 +1,10 @@
+Overview of changes in version 0.8.22:
+
+  - Values which celebrities don't have (genre, ...) can't be changed anymore
+  - Fixed saving translated names of movies
+  - Fixed changing the language in which movies are displayed
+
+
 Overview of changes in version 0.8.21:
 
   - Fixed crash commiting settings (closing with OK) without being logged in

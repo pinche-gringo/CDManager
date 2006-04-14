@@ -1,3 +1,29 @@
+2006-04-14  Markus Schwab  <g17m0@lycos.com>
+
+	* ChangeLog, NEWS: Changes of V0.8.22 added
+
+	* configure.ac: Vesion to 0.8.22
+
+	* po/de.po, po/en.po, po/es.po: Changed help-message for CDWriter
+
+	* src/PMovies.cpp:
+	  Setting language for movies, only when it has changed
+
+	* README: Minor fix
+
+	* src/StorageMovie.cpp: saveMovie() saves/updates also translations
+
+	* src/PMovies.cpp: Clearing flag of loaded languages at logout
+
+	* src/Movie.h: getNames() returns const map of names
+
+	* src/CDWriter.cpp: Fixed help-text
+
+2006-04-05  Markus Schwab  <g17m0@lycos.com>
+
+	* src/MovieList.cpp, src/OOList.cpp, src/OOList.h:
+	  Values celebrity don't have (genre, ...) can't be changed anymore
+
 2006-04-03  Markus Schwab  <g17m0@lycos.com>
 
 	* ChangeLog, NEWS: Changes of V0.8.21 added

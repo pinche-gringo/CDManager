@@ -1,11 +1,11 @@
-//$Id: ActorList.cpp,v 1.4 2006/02/11 22:02:38 markus Rel $
+//$Id: ActorList.cpp,v 1.5 2006/04/18 20:44:06 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actor
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.4 $
+//REVISION    : $Revision: 1.5 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.09.2005
 //COPYRIGHT   : Copyright (C) 2005, 2006
@@ -30,6 +30,8 @@
 #include <cerrno>
 #include <cstdlib>
 
+#include <gtkmm/cellrenderercombo.h>
+
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 
@@ -48,8 +50,24 @@ ActorList::ActorList (const Genres& genres)
    mOwnerObjects = Gtk::TreeStore::create (colOwnerObjects);
    init (colOwnerObjects);
 
-   Check3 (get_selection ());
-   get_selection ()->set_select_function (sigc::ptr_fun (&ActorList::isParent));
+   Check3 (get_columns ().size () == 3);
+   for (unsigned int i (0); i < 2; ++i) {
+      Gtk::TreeViewColumn* column (get_column (i));
+
+      Check3 (get_column_cell_renderer (i));
+      Check3 (typeid (*get_column_cell_renderer (i)) == typeid (Gtk::CellRendererText));
+      Gtk::CellRendererText* rText (dynamic_cast<Gtk::CellRendererText*> (get_column_cell_renderer (i)));
+      column->add_attribute (rText->property_editable(), colOwnerObjects.chgAll);
+   }
+
+   Gtk::TreeViewColumn* column (get_column (2));
+   Check3 (get_column_cell_renderer (2));
+   Check3 (typeid (*get_column_cell_renderer (2))
+	   == typeid (Gtk::CellRendererCombo));
+   Gtk::CellRendererCombo* renderer (dynamic_cast<Gtk::CellRendererCombo*> (get_column_cell_renderer (2)));
+   column->clear_attributes (*renderer);
+   column->add_attribute (renderer->property_text (), colOwnerObjects.genre);
+   renderer->property_editable () = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -115,17 +133,6 @@ int ActorList::sortEntity (const Gtk::TreeModel::iterator& a,
 }
 
 //-----------------------------------------------------------------------------
-/// Checks if the passed path is a parent (first level node)
-/// \param model: Model to check
-/// \param path: Path to row to check
-/// \returns bool: True, if row is a first level node
-//-----------------------------------------------------------------------------
-bool ActorList::isParent (const Glib::RefPtr<Gtk::TreeModel>& model,
-			  const Gtk::TreeModel::Path& path, bool) {
-   return !model->get_iter (path)->parent ();
-}
-
-//-----------------------------------------------------------------------------
 /// Updates the displayed record; actualizes the displayed values with the
 /// values stored in the object in the entity-column
 /// \param row: Row to update
@@ -138,4 +145,5 @@ void ActorList::update (Gtk::TreeModel::Row& row) {
       changeGenre (row, movie->getGenre ());
    }
    OwnerObjectList::update (row);
+   row[colOwnerObjects.chgAll] = !row[colOwnerObjects.chgAll];
 }

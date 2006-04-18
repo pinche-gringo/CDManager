@@ -1,7 +1,7 @@
 #ifndef ACTORLIST_H
 #define ACTORLIST_H
 
-//$Id: ActorList.h,v 1.4 2006/02/11 22:02:39 markus Rel $
+//$Id: ActorList.h,v 1.5 2006/04/18 20:44:07 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -49,9 +49,6 @@ class ActorList : public OwnerObjectList {
  protected:
    virtual Glib::ustring getColumnName () const;
    virtual int sortEntity (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
-
-   static bool isParent (const Glib::RefPtr<Gtk::TreeModel>& model,
-			 const Gtk::TreeModel::Path& path, bool);
 
  private:
    ActorList (const ActorList& other);

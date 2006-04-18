@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.22 2006/04/06 00:05:56 markus Rel $
+//$Id: OOList.cpp,v 1.23 2006/04/18 20:42:37 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.22 $
+//REVISION    : $Revision: 1.23 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -79,7 +79,7 @@ void OwnerObjectList::init (const OwnerObjectColumns& cols) {
    append_column (_("Year"), cols.year);
 
    unsigned int index[] = { cols.name.index (), cols.year.index () };
-   for (unsigned int i (0); i < (sizeof (index) / sizeof (index[0])); ++i) {
+   for (unsigned int i (0); i < (sizeof (index) / sizeof (*index)); ++i) {
       Gtk::TreeViewColumn* column (get_column (i));
       column->set_sort_column (index[i]);
       column->set_resizable ();
@@ -93,15 +93,14 @@ void OwnerObjectList::init (const OwnerObjectColumns& cols) {
 	 (bind (mem_fun (*this, &OwnerObjectList::valueChanged), i));
    }
 
-   Gtk::CellRendererCombo* const renderer (new Gtk::CellRendererCombo ());
+   Gtk::CellRendererCombo* renderer (new Gtk::CellRendererCombo ());
    renderer->property_text_column () = 0;
    renderer->property_model () = mGenres;
-   renderer->property_editable () = true;
-   Gtk::TreeViewColumn* const column (new Gtk::TreeViewColumn
-				      (_("Genre"), *Gtk::manage (renderer)));
+   Gtk::TreeViewColumn* column (new Gtk::TreeViewColumn
+				(_("Genre"), *Gtk::manage (renderer)));
    append_column (*Gtk::manage (column));
    column->add_attribute (renderer->property_text (), cols.genre);
-   column->add_attribute (renderer->property_visible(), cols.chgAll);
+   column->add_attribute (renderer->property_editable(), cols.chgAll);
 
    column->set_sort_column (cols.genre.index ());
    column->set_resizable ();
@@ -575,12 +574,12 @@ void OwnerObjectList::set (Gtk::TreeModel::Row& row, const HEntity& obj) {
 /// \param row: Row to update
 //-----------------------------------------------------------------------------
 void OwnerObjectList::update (Gtk::TreeModel::Row& row) {
-   if (!row->parent ()) {
+   if (row->parent ())
+      row[colOwnerObjects->chgAll] = true;
+   else {
       HCelebrity owner (getCelebrityAt (row));
       row[colOwnerObjects->name] = owner->getName ();
       row[colOwnerObjects->year] = getLiveSpan (owner);
       row[colOwnerObjects->chgAll] = false;
    }
-   else
-      row[colOwnerObjects->chgAll] = true;
 }

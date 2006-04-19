@@ -1,11 +1,11 @@
-//$Id: StorageMovie.cpp,v 1.6 2006/04/14 05:57:08 markus Rel $
+//$Id: StorageMovie.cpp,v 1.7 2006/04/19 16:30:11 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Storage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -154,23 +154,24 @@ void StorageMovie::deleteMovieNames (unsigned int idMovie) throw (std::exception
 /// \param lang: Identification of the language
 //-----------------------------------------------------------------------------
 void StorageMovie::saveMovieName (const HMovie movie, const std::string& lang) throw (std::exception) {
-   try {
-      std::stringstream cmd;
-      if (movie->getName (lang).size ())
-	 cmd << "UPDATE MovieNames SET name=\"" << Database::escapeDBValue (movie->getName (lang)) << '"';
-      else
-	 cmd << "DELETE FROM MovieNames";
-      cmd << " WHERE id=" << movie->getId () << " AND language='" << lang << '\'';
-      Database::execute (cmd.str ().c_str ());
-   }
-   catch (...) {
-      if (movie->getName (lang).size ()) {
-	 std::stringstream ins;
-	 ins << "INSERT INTO MovieNames SET id=" << movie->getId ()
-	     << ", name=\"" << Database::escapeDBValue (movie->getName (lang))
-	     << "\", language='" << lang << '\'';
-	 Database::execute (ins.str ().c_str ());
+   std::stringstream cmd;
+   if (movie->getName (lang).size ()) {
+      cmd << "INSERT INTO MovieNames SET id=" << movie->getId ()
+	  << ", name=\"" << Database::escapeDBValue (movie->getName (lang))
+	  << "\", language='" << lang << '\'';
+      try {
+	 Database::execute (cmd.str ().c_str ());
       }
+      catch (...) {
+	 std::stringstream upd;
+	 upd << "UPDATE MovieNames SET name=\"" << Database::escapeDBValue (movie->getName (lang)) << '"'
+	     << " WHERE id=" << movie->getId () << " AND language='" << lang << '\'';
+	 Database::execute (upd.str ().c_str ());
+      }
+   }
+   else {
+      cmd << "DELETE FROM MovieNames" << " WHERE id=" << movie->getId () << " AND language='" << lang << '\'';
+      Database::execute (cmd.str ().c_str ());
    }
 }
 

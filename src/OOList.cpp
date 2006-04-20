@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.23 2006/04/18 20:42:37 markus Exp $
+//$Id: OOList.cpp,v 1.24 2006/04/20 20:44:57 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.23 $
+//REVISION    : $Revision: 1.24 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -233,7 +233,7 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 	 case 1:
 	    celeb->setLifespan (value);
 	    oldValue = row[colOwnerObjects->year];
-	    row[colOwnerObjects->year] = getLiveSpan (celeb);
+	    row[colOwnerObjects->year] = celeb->getLifespan ();
 	    break;
 	 } // end-switch
 
@@ -293,27 +293,6 @@ HCelebrity OwnerObjectList::getCelebrityAt (const Gtk::TreeIter iter) const {
    return owner;
 }
 
-
-//-----------------------------------------------------------------------------
-/// Shows the time of live of the passed director
-/// \param director: Director to display
-/// \returns Glib::ustring: Text to display
-//-----------------------------------------------------------------------------
-Glib::ustring OwnerObjectList::getLiveSpan (const HCelebrity& owner) const {
-   TRACE9 ("OwnerObjectList::getLiveSpan (const HCelebrity&) - "
-	   << (owner.isDefined () ? owner->getName ().c_str () : "None"));
-   Check1 (owner.isDefined ());
-
-   Glib::ustring tmp (owner->getBorn ().toString ());
-   if (owner->getDied ().isDefined ()) {
-      if (owner->getBorn ().isDefined ())
-	 tmp.append (1, ' ');
-      tmp.append ("- ");
-      tmp.append (owner->getDied ().toString ());
-   }
-   return tmp;
-}
-
 //-----------------------------------------------------------------------------
 /// Sets the name of the object
 /// \param object: Object to change
@@ -351,8 +330,7 @@ void OwnerObjectList::changeGenre (Gtk::TreeModel::Row& row, unsigned int value)
    TRACE9 ("OwnerObjectList::changeGenre (Gtk::TreeModel::Row&, unsigned int) - " << value);
    Check2 (colOwnerObjects);
 
-   Genres::const_iterator g
-      (genres.find (value));
+   Genres::const_iterator g (genres.find (value));
    if (g == genres.end ())
       g = genres.begin ();
    row[colOwnerObjects->genre] = g->second;
@@ -554,9 +532,10 @@ Gtk::TreeModel::iterator OwnerObjectList::getObject (const HEntity& object) cons
 //-----------------------------------------------------------------------------
 void OwnerObjectList::selectRow (const Gtk::TreeModel::const_iterator& i) {
    Glib::RefPtr<Gtk::TreeSelection> sel (get_selection ());
-   sel->unselect_all ();
-   sel->select (i);
-   scroll_to_row (mOwnerObjects->get_path (i), 0.5);
+   Gtk::TreePath path (mOwnerObjects->get_path (i));
+   scroll_to_row (path, 0.5);
+   set_cursor (path);
+   sel->select (path);
 }
 
 //-----------------------------------------------------------------------------
@@ -579,7 +558,7 @@ void OwnerObjectList::update (Gtk::TreeModel::Row& row) {
    else {
       HCelebrity owner (getCelebrityAt (row));
       row[colOwnerObjects->name] = owner->getName ();
-      row[colOwnerObjects->year] = getLiveSpan (owner);
+      row[colOwnerObjects->year] = owner->getLifespan ();
       row[colOwnerObjects->chgAll] = false;
    }
 }

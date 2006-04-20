@@ -1,7 +1,7 @@
 #ifndef CELIBRITY_H
 #define CELIBRITY_H
 
-//$Id: Celebrity.h,v 1.13 2006/03/19 02:22:20 markus Rel $
+//$Id: Celebrity.h,v 1.14 2006/04/20 20:35:04 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ class Celebrity : public YGP::Entity {
    const Glib::ustring& getName () const {return name; }
    const YGP::AYear&    getBorn () const { return born; }
    const YGP::AYear&    getDied () const { return died; }
+   Glib::ustring getLifespan () const;
 
    void undefineBorn () { born.undefine (); }
    void undefineDied () { died.undefine (); }

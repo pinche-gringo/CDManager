@@ -1,11 +1,11 @@
-//$Id: Celebrity.cpp,v 1.9 2006/02/01 03:01:57 markus Rel $
+//$Id: Celebrity.cpp,v 1.10 2006/04/20 20:35:04 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Celebrity
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.9 $
+//REVISION    : $Revision: 1.10 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -119,4 +119,22 @@ void Celebrity::setLifespan (const Glib::ustring& value) throw (std::invalid_arg
       setBorn (value.substr (0, pos - 1));
    else
       born.undefine ();
+}
+
+//-----------------------------------------------------------------------------
+/// Returns the time of live of the passed celebrity
+/// \returns Glib::ustring: Text to display
+//-----------------------------------------------------------------------------
+Glib::ustring Celebrity::getLifespan () const {
+   TRACE9 ("Celebrity::getLiveSpan () - " << (isDefined () ? name.c_str () : "None"));
+   Check1 (isDefined ());
+
+   Glib::ustring tmp (born.toString ());
+   if (died.isDefined ()) {
+      if (tmp.size ())
+	 tmp.append (1, ' ');
+      tmp.append ("- ");
+      tmp.append (died.toString ());
+   }
+   return tmp;
 }

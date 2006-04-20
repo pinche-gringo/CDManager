@@ -1,7 +1,7 @@
 #ifndef OOLIST_H
 #define OOLIST_H
 
-//$Id: OOList.h,v 1.14 2006/04/06 00:05:56 markus Rel $
+//$Id: OOList.h,v 1.15 2006/04/20 20:36:27 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -121,8 +121,6 @@ class OwnerObjectList : public Gtk::TreeView {
  private:
    OwnerObjectList (const OwnerObjectList& other);
    const OwnerObjectList& operator= (const OwnerObjectList& other);
-
-   Glib::ustring getLiveSpan (const HCelebrity& owner) const;
 };
 
 

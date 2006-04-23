@@ -1,7 +1,7 @@
 #ifndef PACTORS_H
 #define PACTORS_H
 
-//$Id: PActors.h,v 1.6 2006/02/27 20:45:35 markus Rel $
+//$Id: PActors.h,v 1.7 2006/04/23 03:24:00 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 
 
 #include <vector>
+
+#include <gtkmm/radioaction.h>
 
 #include <YGP/Relation.h>
 
@@ -69,6 +71,9 @@ class PActors : public NBPage {
    void relateMovies (const HActor& actor, const std::vector<HMovie>& movies);
    void showMovies (const Gtk::TreeIter& row);
 
+   void viewByActor ();
+   void viewByMovie ();
+
    void saveRelatedMovies (const HActor& actor) throw (std::exception);
 
    ActorList actors;                              // GUI-element holding actors
@@ -76,11 +81,16 @@ class PActors : public NBPage {
    // Model
    enum { ACTOR, MOVIES };
 
+   std::vector<HMovie> aMovies;
    std::vector<HActor> aActors;
    YGP::RelationN_M<HActor, HMovie> relActors;
 
    // Reference to movie-page
    PMovies& movies;
+
+   // Menus for switching view
+   unsigned int actView;
+   Glib::RefPtr<Gtk::RadioAction> menuView[2];
 
    // Info for undoing relating actors and movies
    class RelUndo : public YGP::Entity {

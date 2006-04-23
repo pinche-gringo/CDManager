@@ -1,11 +1,11 @@
-//$Id: PActors.cpp,v 1.13 2006/03/19 02:23:32 markus Rel $
+//$Id: PActors.cpp,v 1.14 2006/04/23 03:24:00 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actors
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.13 $
+//REVISION    : $Revision: 1.14 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -30,6 +30,8 @@
 #include <gtkmm/stock.h>
 #include <gtkmm/scrolledwindow.h>
 
+#define CHECK 9
+#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ANumeric.h>
@@ -56,7 +58,7 @@
 PActors::PActors (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave,
 		  const Genres& genres, PMovies& movies)
    : NBPage (status, menuSave), actors (genres), relActors ("actors"),
-     movies (movies) {
+     movies (movies), actView (0) {
    TRACE9 ("PActors::PActors (Gtk::Statusbar&, Glib::RefPtr<Gtk::Action>, const Genres&, PMovies&)");
 
    Gtk::ScrolledWindow* scrl (new Gtk::ScrolledWindow);
@@ -66,7 +68,7 @@ PActors::PActors (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave,
 
    Glib::RefPtr<Gtk::TreeSelection> sel (actors.get_selection ());
    sel->signal_changed ().connect (mem_fun (*this, &PActors::actorSelected));
-   actors.signalOwnerChanged.connect (mem_fun (*this, &PActors::actorChanged));
+   actors.signalActorChanged.connect (mem_fun (*this, &PActors::actorChanged));
 
    widget = scrl;
 }
@@ -99,9 +101,8 @@ void PActors::actorSelected () {
 void PActors::actorChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue) {
    TRACE9 ("PActors::actorChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&)");
 
-   Gtk::TreePath path (actors.getModel ()->get_path (row));
-   aUndo.push (Undo (Undo::CHANGED, ACTOR, column,
-		     YGP::HEntity::cast (actors.getCelebrityAt (row)), path, oldValue));
+   Gtk::TreePath path (actors.get_model ()->get_path (row));
+   aUndo.push (Undo (Undo::CHANGED, ACTOR, column, actors.getEntityAt (row), path, oldValue));
 
    apMenus[UNDO]->set_sensitive ();
    enableSave ();
@@ -113,8 +114,8 @@ void PActors::actorChanged (const Gtk::TreeIter& row, unsigned int column, Glib:
 void PActors::newActor () {
    HActor actor;
    actor.define ();
-   Gtk::TreeModel::iterator i (actors.append (actor));
-   Gtk::TreePath path (actors.getModel ()->get_path (i));
+   Gtk::TreeModel::iterator i (actors.append (YGP::HEntity::cast (actor)));
+   Gtk::TreePath path (actors.get_model ()->get_path (i));
    actors.selectRow (i);
    actors.set_cursor (path);
 
@@ -131,10 +132,19 @@ void PActors::actorPlaysInMovie () {
    TRACE9 ("PActors::actorPlaysInMovie ()");
    Check3 (actors.get_selection ());
    Gtk::TreeIter p (actors.get_selection ()->get_selected ()); Check3 (p);
-   Check3 (!(*p)->parent ());
 
-   HActor actor (actors.getActorAt (p)); Check3 (actor.isDefined ());
-   TRACE9 ("void PActors::actorPlaysInMovie () - Founding actor " << actor->getName ());
+   YGP::HEntity h (actors.getEntityAt (p));
+   HActor actor (HActor::castDynamic (h));
+   if (!actor.isDefined ()) {
+      Check3 ((*p)->parent ());
+      p = (*p)->parent ();
+
+      h = actors.getEntityAt (p);
+      actor = HActor::castDynamic (h);
+   }
+   Check2 (!(*p)->parent ());
+   Check3 (actor.isDefined ());
+   TRACE9 ("void PActors::actorPlaysInMovie () - Found actor " << actor->getName ());
 
    RelateMovie* dlg (relActors.isRelated (actor)
 		     ? RelateMovie::create (actor, relActors.getObjects (actor),
@@ -154,7 +164,7 @@ void PActors::relateMovies (const HActor& actor, const std::vector<HMovie>& movi
    Check2 (actor.isDefined ());
 
    Glib::RefPtr<Gtk::TreeStore> model (actors.getModel ());
-   Gtk::TreeIter i (actors.getOwner (actor)); Check3 (i);
+   Gtk::TreeIter i (actors.findEntity (YGP::HEntity::cast (actor))); Check3 (i);
    Gtk::TreePath path (model->get_path (i));
 
    YGP::Handle<RelUndo> hOldRel; hOldRel.define ();
@@ -184,13 +194,21 @@ void PActors::relateMovies (const HActor& actor, const std::vector<HMovie>& movi
 void PActors::showMovies (const Gtk::TreeIter& row) {
    Glib::RefPtr<Gtk::TreeStore> model (actors.getModel ());
 
-   while (row->children ().size ())
-      model->erase (row->children ().begin ());
+   YGP::HEntity h (actors.getEntityAt (row));
+   HActor actor (HActor::castDynamic (h)); Check3 (actor.isDefined ());
+   if ((*row)->parent ()) {
+      // TODO
+   }
+   else {
+      while (row->children ().size ())
+	 model->erase (row->children ().begin ());
 
-   HActor actor (actors.getActorAt (row)); Check3 (actor.isDefined ());
-   for (std::vector<HMovie>::iterator m (relActors.getObjects (actor).begin ());
-	m != relActors.getObjects (actor).end (); ++m)
-      actors.append (*m, *row);
+      YGP::HEntity h (actors.getEntityAt (row));
+      HActor actor (HActor::cast (h)); Check3 (actor.isDefined ());
+      for (std::vector<HMovie>::iterator m (relActors.getObjects (actor).begin ());
+	   m != relActors.getObjects (actor).end (); ++m)
+	 actors.append (YGP::HEntity::cast (*m), *row);
+   }
 }
 
 //-----------------------------------------------------------------------------
@@ -206,20 +224,19 @@ void PActors::PActors::loadData () {
 
    try {
       YGP::StatusObject stat;
-      std::vector<HActor> actrs;
-      StorageActor::loadActors (actrs, stat);
-      TRACE9 ("PActors::loadData () - Actors: " << actrs.size ());
+      StorageActor::loadActors (aActors, stat);
+      TRACE9 ("PActors::loadData () - Actors: " << aActors.size ());
 
-      if (actrs.size ()) {
-	 std::sort (actrs.begin (), actrs.end (), &Actor::compByName);
+      if (aActors.size ()) {
+	 std::sort (aActors.begin (), aActors.end (), &Actor::compByName);
 
 	 std::map<unsigned int, std::vector<unsigned int> > actorMovies;
 	 StorageActor::loadActorsInMovies (actorMovies);
 
 	 // Iterate over all actors
-	 for (std::vector<HActor>::const_iterator i (actrs.begin ()); i != actrs.end (); ++i) {
+	 for (std::vector<HActor>::const_iterator i (aActors.begin ()); i != aActors.end (); ++i) {
 	    Check3 (i->isDefined ());
-	    Gtk::TreeModel::Row actor (actors.append (*i));
+	    Gtk::TreeModel::Row actor (actors.append (YGP::HEntity::cast (*i)));
 
 	    // Get the movies the actor played in
 	    std::map<unsigned int, std::vector<unsigned int> >::iterator iActor
@@ -244,7 +261,7 @@ void PActors::PActors::loadData () {
 	       std::sort (movies.begin (), movies.end (), Movie::compByName);
 	       for (std::vector<HMovie>::iterator m (movies.begin ()); m != movies.end (); ++m) {
 		  Check (m->isDefined ());
-		  actors.append (*m, actor);
+		  actors.append (YGP::HEntity::cast (*m), actor);
 		  relActors.relate (*i, *m);
 	       } // end-for all movies for an actor
 	       actorMovies.erase (iActor);
@@ -253,8 +270,8 @@ void PActors::PActors::loadData () {
 	 actors.expand_all ();
       } // endif actors available
 
-      Glib::ustring msg (Glib::locale_to_utf8 (ngettext ("Loaded %1 actor", "Loaded %1 actors", actrs.size ())));
-      msg.replace (msg.find ("%1"), 2, YGP::ANumeric::toString (actrs.size ()));
+      Glib::ustring msg (Glib::locale_to_utf8 (ngettext ("Loaded %1 actor", "Loaded %1 actors", aActors.size ())));
+      msg.replace (msg.find ("%1"), 2, YGP::ANumeric::toString (aActors.size ()));
       showStatus (msg);
 
       loaded = true;
@@ -300,8 +317,13 @@ void PActors::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActi
 	  "<menuitem action='AddMovie'/>"
 	  "<separator/>"
 	  "<menuitem action='ADelete'/>"
-	  "</placeholder></menu>");
+	  "</placeholder></menu>"
+	  "<placeholder name='Other'><menu action='View'>"
+	  "<menuitem action='ByActor'/>"
+	  "<menuitem action='ByMovie'/>"
+	  "</menu></placeholder>");
 
+   // Add edit-menu
    grpAction->add (apMenus[UNDO] = Gtk::Action::create ("AUndo", Gtk::Stock::UNDO),
 		   Gtk::AccelKey (_("<ctl>Z")),
 		   mem_fun (*this, &PActors::undo));
@@ -317,6 +339,30 @@ void PActors::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActi
 		   mem_fun (*this, &PActors::deleteSelection));
 
    apMenus[UNDO]->set_sensitive (false);
+
+   // Add view-menu
+   grpAction->add (Gtk::Action::create ("View", _("_View")));
+   Gtk::RadioButtonGroup grpOrder;
+   grpAction->add (menuView[0] = Gtk::RadioAction::create (grpOrder, "ByActor", _("By _actor")),
+		   Gtk::AccelKey ("<ctl>1"), mem_fun (*this, &PActors::viewByActor));
+   grpAction->add (menuView[1] = Gtk::RadioAction::create (grpOrder, "ByMovie", _("By _movie")),
+		   Gtk::AccelKey ("<ctl>2"), mem_fun (*this, &PActors::viewByMovie));
+
+   Check2 (actView < (sizeof (menuView) / sizeof (*menuView)));
+   menuView[actView]->set_active ();
+
+   aMovies.clear ();
+   const YGP::Relation1_N<HDirector, HMovie>& relMovies (movies.getRelMovies ());
+   for (std::vector<HDirector>::const_iterator d (movies.getDirectors ().begin ());
+	d != movies.getDirectors ().end (); ++d) {
+      const std::vector<HMovie> mov (relMovies.getObjects (*d));
+      for (std::vector<HMovie>::const_iterator m (mov.begin ()); m != mov.end (); ++m)
+	 aMovies.push_back (*m);
+   }
+   std::sort (aMovies.begin (), aMovies.end (), &Movie::compByName);
+
+   actView ? viewByMovie () : viewByActor ();
+
    actorSelected ();
 }
 
@@ -333,7 +379,7 @@ void PActors::deleteSelection () {
 
    if (selRow) {
       Check3 (!selRow->parent ());
-      HActor actor (actors.getActorAt (selRow)); Check3 (actor.isDefined ());
+      HActor actor (HActor::cast (actors.getEntityAt (selRow))); Check3 (actor.isDefined ());
       TRACE9 ("PActors::deleteSelectedActor () - Deleting " << actor->getName ());
 
       YGP::Handle<RelUndo> hOldRel; hOldRel.define ();
@@ -438,7 +484,7 @@ void PActors::undoActor (const Undo& last) {
       break;
 
    case Undo::DELETE:
-      iter = actors.insert (actor, iter);
+      iter = actors.insert (YGP::HEntity::cast (actor), iter);
       path = actors.getModel ()->get_path (iter);
       break;
 
@@ -459,10 +505,12 @@ void PActors::undoActor (const Undo& last) {
 //-----------------------------------------------------------------------------
 void PActors::clear () {
    aActors.clear ();
+   aMovies.clear ();
    actors.clear ();
    actors.getModel ()->clear ();
    relActors.unrelateAll ();
    NBPage::clear ();
+   actView = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -545,5 +593,49 @@ void PActors::saveRelatedMovies (const HActor& actor) throw (std::exception) {
    catch (std::exception& e) {
       StorageActor::abortTransaction ();
       throw e;
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Views the list sorted by actor
+//-----------------------------------------------------------------------------
+void PActors::viewByActor () {
+   if (menuView[0]->get_active ()) {
+      TRACE9 ("PActors::viewByActor () - Actors: " << aActors.size ());
+      actView = 0;
+
+      // Fill list sorted by actors with their movies as child
+      actors.clear ();
+      for (std::vector<HActor>::const_iterator a (aActors.begin ()); a != aActors.end (); ++a) {
+	 Gtk::TreeModel::Row actor (actors.append (YGP::HEntity::cast (*a)));
+
+	 if (relActors.isRelated (*a))
+	    for (std::vector<HMovie>::iterator m (relActors.getObjects (*a).begin ());
+		 m != relActors.getObjects (*a).end (); ++m)
+	       actors.append (YGP::HEntity::cast (*m), actor);
+      }
+      actors.expand_all ();
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Views the list sorted by movie
+//-----------------------------------------------------------------------------
+void PActors::viewByMovie () {
+   if (menuView[1]->get_active ()) {
+      TRACE9 ("PActors::viewByMovie () - Movies: " << aMovies.size ());
+      actView = 1;
+
+      // Fill list sorted by actors with their movies as child
+      actors.clear ();
+      for (std::vector<HMovie>::const_iterator m (aMovies.begin ()); m != aMovies.end (); ++m) {
+	 Gtk::TreeModel::Row movie (actors.append (YGP::HEntity::cast (*m)));
+
+	 if (relActors.isRelated (*m))
+	    for (std::vector<HActor>::iterator a (relActors.getParents (*m).begin ());
+		 a != relActors.getParents (*m).end (); ++a)
+	       actors.append (YGP::HEntity::cast (*a), movie);
+      }
+      actors.expand_all ();
    }
 }

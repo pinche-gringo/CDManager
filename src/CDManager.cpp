@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.76 2006/03/19 20:46:44 markus Rel $
+//$Id: CDManager.cpp,v 1.77 2006/04/23 03:21:49 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.76 $
+//REVISION    : $Revision: 1.77 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -290,7 +290,7 @@ CDManager::CDManager (Options& options)
 		     "  <menu action='Edit'>"
 		     "    <placeholder name='EditAction'/>"
 		     "  </menu>"
-		     "  <placeholder name='Lang'/>"
+		     "  <placeholder name='Other'/>"
 		     "  <menu action='Options'>"
 		     "    <menuitem action='Prefs'/>"
 		     "    <menuitem action='SavePrefs'/>"
@@ -542,6 +542,10 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
    if (idPageMrg != -1U)
       mgrUI->remove_ui (idPageMrg);
 
+   Check3 (pages[iPage]);
+   if (!pages[iPage]->isLoaded () && Storage::connected ())
+      pages[iPage]->loadData ();
+
    Glib::RefPtr<Gtk::ActionGroup> grpAction (Gtk::ActionGroup::create ());
    pages[iPage]->addMenu (ui, grpAction);
 
@@ -549,9 +553,6 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
    mgrUI->insert_action_group (grpAction);
    idPageMrg = mgrUI->add_ui_from_string (ui);
 
-   Check3 (pages[iPage]);
-   if (!pages[iPage]->isLoaded () && Storage::connected ())
-      pages[iPage]->loadData ();
    pages[iPage]->getFocus ();
 }
 

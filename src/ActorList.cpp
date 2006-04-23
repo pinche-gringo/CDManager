@@ -1,11 +1,11 @@
-//$Id: ActorList.cpp,v 1.5 2006/04/18 20:44:06 markus Exp $
+//$Id: ActorList.cpp,v 1.6 2006/04/23 02:18:39 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actor
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.09.2005
 //COPYRIGHT   : Copyright (C) 2005, 2006
@@ -32,10 +32,17 @@
 
 #include <gtkmm/cellrenderercombo.h>
 
+#define CHECK 9
+#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
+#include <YGP/StatusObj.h>
 
 #include <XGP/XValue.h>
+#include <XGP/MessageDlg.h>
+
+#include "Movie.h"
+#include "Actor.h"
 
 #include "ActorList.h"
 
@@ -44,30 +51,29 @@
 /// Default constructor
 /// \param genres: Genres which should be displayed in the 3rd column
 //-----------------------------------------------------------------------------
-ActorList::ActorList (const Genres& genres)
-   : OwnerObjectList (genres) {
+ActorList::ActorList (const Genres& genres) : genres (genres) {
    TRACE9 ("ActorList::ActorList (const Genres&)");
-   mOwnerObjects = Gtk::TreeStore::create (colOwnerObjects);
-   init (colOwnerObjects);
+   mOwnerObjects = Gtk::TreeStore::create (colActors);
+
+   set_model (mOwnerObjects);
+
+   append_column (_("Actors/Movies"), colActors.name);
+   append_column (_("Year"), colActors.year);
+   append_column (_("Genre"), colActors.genre);
 
    Check3 (get_columns ().size () == 3);
-   for (unsigned int i (0); i < 2; ++i) {
+   unsigned int index[] = { colActors.name.index (), colActors.year.index () };
+   for (unsigned int i (0); i < (sizeof (index) / sizeof (*index)); ++i) {
       Gtk::TreeViewColumn* column (get_column (i));
+      column->set_sort_column (index[i]);
+      column->set_resizable ();
 
       Check3 (get_column_cell_renderer (i));
       Check3 (typeid (*get_column_cell_renderer (i)) == typeid (Gtk::CellRendererText));
       Gtk::CellRendererText* rText (dynamic_cast<Gtk::CellRendererText*> (get_column_cell_renderer (i)));
-      column->add_attribute (rText->property_editable(), colOwnerObjects.chgAll);
+      column->add_attribute (rText->property_editable(), colActors.editable);
+      rText->signal_edited ().connect (bind (mem_fun (*this, &ActorList::valueChanged), i));
    }
-
-   Gtk::TreeViewColumn* column (get_column (2));
-   Check3 (get_column_cell_renderer (2));
-   Check3 (typeid (*get_column_cell_renderer (2))
-	   == typeid (Gtk::CellRendererCombo));
-   Gtk::CellRendererCombo* renderer (dynamic_cast<Gtk::CellRendererCombo*> (get_column_cell_renderer (2)));
-   column->clear_attributes (*renderer);
-   column->add_attribute (renderer->property_text (), colOwnerObjects.genre);
-   renderer->property_editable () = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -79,43 +85,58 @@ ActorList::~ActorList () {
 
 
 //-----------------------------------------------------------------------------
+/// Appends a line to the list
+/// \param entity: Entity to add
+/// \param pos: Position in model for insert
+/// \returns Gtk::TreeModel::Row: Inserted row
+//-----------------------------------------------------------------------------
+Gtk::TreeRow ActorList::insert (const YGP::HEntity& entity, const Gtk::TreeIter& pos) {
+   TRACE7 ("ActorList::insert (const YGP::HEntity&, const Gtk::TreeIter&)");
+   Check1 (entity.isDefined ());
+
+   Gtk::TreeRow newRow (*mOwnerObjects->insert (pos));
+   newRow[colActors.entry] = entity;
+   update (newRow);
+   return newRow;
+}
+
+//-----------------------------------------------------------------------------
 /// Appends a actor to the list
-/// \param actor: Movie to add
+/// \param entity: Entity to add
 /// \param artist: Actor starring in the movie
 /// \returns Gtk::TreeModel::Row: Inserted row
 //-----------------------------------------------------------------------------
-Gtk::TreeModel::Row ActorList::append (HMovie& movie,
-				       const Gtk::TreeModel::Row& actor) {
-   TRACE3 ("ActorList::append (HMovie&, Gtk::TreeModel::Row) - "
-	   << (movie.isDefined () ? movie->getName ().c_str () : "None"));
-   Check1 (movie.isDefined ());
+Gtk::TreeRow ActorList::append (const YGP::HEntity& entity, const Gtk::TreeIter& pos) {
+   TRACE7 ("ActorList::append (const YGP::HEntity&, const Gtk::TreeRow&)");
+   Check1 (entity.isDefined ());
 
-   HEntity obj (HEntity::cast (movie));
-   Gtk::TreeModel::Row newMovie (OwnerObjectList::append (obj, actor));
-   update (newMovie);
-   return newMovie;
+   Gtk::TreeRow newLine (*mOwnerObjects->append (pos->children ()));
+   newLine[colActors.entry] = entity;
+   update (newLine);
+   return newLine;
 }
 
 //-----------------------------------------------------------------------------
-/// Returns the handle (casted to a HMovie) at the passed position
-/// \param iter: Iterator to position in the list
-/// \returns HMovie: Handle of the selected line
+/// Sets the values of the line to the values of the stored entity
+/// \param row: Row to update
 //-----------------------------------------------------------------------------
-HMovie ActorList::getMovieAt (const Gtk::TreeIter iter) const {
-   Check2 ((*iter)->parent ());
-   HEntity hMovie (getObjectAt (iter)); Check3 (hMovie.isDefined ());
-   HMovie movie (HMovie::cast (hMovie));
-   TRACE7 ("CDManager::getMovieAt (const Gtk::TreeIter&) - Selected movie: " <<
-	   movie->getId () << '/' << movie->getName ());
-   return movie;
-}
+void ActorList::update (Gtk::TreeRow& row) {
+   YGP::HEntity entity (row[colActors.entry]);
+   HMovie movie (HMovie::castDynamic (entity));
+   if (movie.isDefined ()) {
+      row[colActors.name] = movie->getName ();
+      row[colActors.year] = movie->getYear ().toString ();
 
-//-----------------------------------------------------------------------------
-/// Returns the name of the first column
-/// \returns Glib::ustring: The name of the first colum
-//-----------------------------------------------------------------------------
-Glib::ustring ActorList::getColumnName () const {
-   return _("Actors/Movies");
+      Genres::const_iterator g (genres.find (movie->getGenre ()));
+      if (g == genres.end ())
+	 g = genres.begin ();
+      row[colActors.genre] = g->second;
+   }
+   else {
+      HActor actor (HActor::cast (entity)); Check3 (actor.isDefined ());
+      row[colActors.name] = actor->getName ();
+      row[colActors.year] = actor->getLifespan ();
+   }
 }
 
 //-----------------------------------------------------------------------------
@@ -126,24 +147,137 @@ Glib::ustring ActorList::getColumnName () const {
 //-----------------------------------------------------------------------------
 int ActorList::sortEntity (const Gtk::TreeModel::iterator& a,
 			   const Gtk::TreeModel::iterator& b) {
-   HMovie ha (getMovieAt (a));
-   HMovie hb (getMovieAt (b));
-   int rc (Movie::removeIgnored (ha->getName ()).compare (Movie::removeIgnored (hb->getName ())));
-   return rc ? rc : (ha->getName () < hb->getName ());
+   YGP::HEntity hEntity ((*a)[colActors.entry]);
+   HMovie ha (HMovie::castDynamic (hEntity));
+   if (ha) {
+      hEntity = ((*b)[colActors.entry]);
+      HMovie hb (HMovie::cast (hEntity)); Check3 (hb);
+
+      int rc (Movie::removeIgnored (ha->getName ()).compare (Movie::removeIgnored (hb->getName ())));
+      return rc ? rc : (ha->getName () < hb->getName ());
+   }
+   else {
+      HActor ha (HActor::cast (hEntity)); Check3 (ha);
+      hEntity = ((*b)[colActors.entry]);
+      HActor hb (HActor::cast (hEntity)); Check3 (hb);
+
+      int rc (Actor::removeIgnored (ha->getName ()).compare (Actor::removeIgnored (hb->getName ())));
+      return rc ? rc : (ha->getName () < hb->getName ());
+   }
 }
 
 //-----------------------------------------------------------------------------
-/// Updates the displayed record; actualizes the displayed values with the
-/// values stored in the object in the entity-column
-/// \param row: Row to update
+/// Callback after changing a value in the listbox
+/// \param path: Path to changed line
+/// \param value: New value of entry
+/// \param column: Changed column
 //-----------------------------------------------------------------------------
-void ActorList::update (Gtk::TreeModel::Row& row) {
-   if (row->parent ()) {
-      HMovie movie (getMovieAt (row));
-      row[colOwnerObjects.name] = movie->getName ();
-      row[colOwnerObjects.year] = movie->getYear ().toString ();
-      changeGenre (row, movie->getGenre ());
+void ActorList::valueChanged (const Glib::ustring& path,
+			      const Glib::ustring& value, unsigned int column) {
+   TRACE9 ("ActorList::valueChanged (2x const Glib::ustring&, unsigned int) - "
+	   << path << "->" << value);
+   Check2 (column < 3);
+
+   Gtk::TreeModel::Row row (*mOwnerObjects->get_iter (Gtk::TreeModel::Path (path)));
+   Glib::ustring oldValue;
+
+   try {
+      YGP::HEntity hEntity (row[colActors.entry]);
+      HActor actor (HActor::castDynamic (hEntity)); Check3 (actor.isDefined ());
+
+      switch (column) {
+      case 0: {
+	 Gtk::TreeModel::const_iterator i (findName (value));
+	 if ((i != row) && (i != mOwnerObjects->children ().end ())) {
+	    Glib::ustring e (_("Entry `%1' already exists!"));
+	    e.replace (e.find ("%1"), 2, value);
+	    throw (std::runtime_error (e));
+	 }
+	 actor->setName (value);
+	 oldValue = row[colActors.name];
+	 row[colActors.name] = value;
+	 break; }
+
+      case 1:
+	 actor->setLifespan (value);
+	 oldValue = row[colActors.year];
+	 row[colActors.year] = value;
+	 break;
+
+	 signalActorChanged.emit (row, column, oldValue);
+      } // end-switch
+   } // end-try
+   catch (std::exception& e) {
+      YGP::StatusObject obj (YGP::StatusObject::ERROR, e.what ());
+      obj.generalize (_("Invalid value!"));
+
+      XGP::MessageDlg* dlg (XGP::MessageDlg::create (obj));
+      dlg->set_title (PACKAGE);
+      dlg->get_window ()->set_transient_for (this->get_window ());
    }
-   OwnerObjectList::update (row);
-   row[colOwnerObjects.chgAll] = !row[colOwnerObjects.chgAll];
+}
+
+//-----------------------------------------------------------------------------
+/// Selects the passed row (as only one) and centers it
+/// \param i: Iterator to row to select
+//-----------------------------------------------------------------------------
+void ActorList::selectRow (const Gtk::TreeModel::const_iterator& i) {
+   Glib::RefPtr<Gtk::TreeSelection> sel (get_selection ());
+   Gtk::TreePath path (mOwnerObjects->get_path (i));
+   scroll_to_row (path, 0.5);
+   set_cursor (path);
+   sel->select (path);
+}
+
+//-----------------------------------------------------------------------------
+/// Returns an iterator to the line having the name stored. Only editable lines
+/// are considered
+/// \param name: Name of object to find
+/// \param level: Level of recursion (0: None)
+/// \param begin: Start object
+/// \param end: End object
+/// \returns Gtk::TreeModel::iterator: Iterator to found entry or mOwnerObjects->children ().end ().
+//-----------------------------------------------------------------------------
+Gtk::TreeIter ActorList::findName (const Glib::ustring& name, unsigned int level,
+				   Gtk::TreeIter begin, Gtk::TreeIter end) const {
+   while (begin != end) {
+      Gtk::TreeModel::Row actRow (*begin);
+      if ((actRow[colActors.editable] == true) && (name == actRow[colActors.name]))
+	 return begin;
+
+      if (level && begin->children ().size ()) {
+	 Gtk::TreeIter res (findName (name, level - 1, begin->children ().begin (),
+				      begin->children ().end ()));
+	 if (res != mOwnerObjects->children ().end ())
+	    return res;
+      }
+      ++begin;
+   } // end-while
+   return mOwnerObjects->children ().end ();
+}
+
+//-----------------------------------------------------------------------------
+/// Returns an iterator to the line having entry stored
+/// \param entry: Entry to find
+/// \param level: Level of recursion (0: None)
+/// \param begin: Start object
+/// \param end: End object
+/// \returns Gtk::TreeModel::iterator: Iterator to found entry or mOwnerObjects->children ().end ().
+//-----------------------------------------------------------------------------
+Gtk::TreeIter ActorList::findEntity (const YGP::HEntity& entry, unsigned int level,
+				     Gtk::TreeIter begin, Gtk::TreeIter end) const {
+   while (begin != end) {
+      Gtk::TreeModel::Row actRow (*begin);
+      if (entry == actRow[colActors.entry])
+	 return begin;
+
+      if (level && begin->children ().size ()) {
+	 Gtk::TreeIter res (findEntity (entry, level - 1, begin->children ().begin (),
+					begin->children ().end ()));
+	 if (res != mOwnerObjects->children ().end ())
+	    return res;
+      }
+      ++begin;
+   } // end-while
+   return mOwnerObjects->children ().end ();
 }

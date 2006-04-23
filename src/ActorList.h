@@ -1,7 +1,7 @@
 #ifndef ACTORLIST_H
 #define ACTORLIST_H
 
-//$Id: ActorList.h,v 1.5 2006/04/18 20:44:07 markus Exp $
+//$Id: ActorList.h,v 1.6 2006/04/23 02:18:39 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,43 +18,85 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 
-#include <gtkmm/treeview.h>
+#include <YGP/Entity.h>
 
-#include "Movie.h"
-#include "Actor.h"
+#include "Genres.h"
 
-#include "OOList.h"
+#include "gtkmm/treeview.h"
+#include "gtkmm/treestore.h"
 
 
-class CellRendererList;
+/**Class describing the columns in the Object-Owner list
+ */
+class ActorColumns : public Gtk::TreeModel::ColumnRecord {
+ public:
+   ActorColumns () {
+      add (entry); add (name); add (year); add (genre); add (editable); }
 
+   Gtk::TreeModelColumn<YGP::HEntity>  entry;
+   Gtk::TreeModelColumn<Glib::ustring> name;
+   Gtk::TreeModelColumn<Glib::ustring> year;
+   Gtk::TreeModelColumn<Glib::ustring> genre;
+   Gtk::TreeModelColumn<bool>          editable;
+};
 
 /**Class to hold a list of actors (with the movies, they have played in)
  */
-class ActorList : public OwnerObjectList {
+class ActorList : public Gtk::TreeView {
  public:
    ActorList (const Genres& genres);
    virtual ~ActorList ();
 
-   Gtk::TreeModel::Row append (const HActor& actor) {
-      return OwnerObjectList::append (actor); }
-   Gtk::TreeModel::Row append (HMovie& movie, const Gtk::TreeModel::Row& actor);
+   Gtk::TreeRow insert (const YGP::HEntity& entity, const Gtk::TreeIter& pos);
+   Gtk::TreeRow append (const YGP::HEntity& entity) { return insert (entity, mOwnerObjects->children ().end ()); }
+   Gtk::TreeRow prepend (const YGP::HEntity& entity) { return insert (entity, mOwnerObjects->children ().begin ()); }
 
-   HActor getActorAt (const Gtk::TreeIter iterator) const {
-      return getCelebrityAt (iterator); }
-   HMovie getMovieAt (const Gtk::TreeIter iterator) const;
+   Gtk::TreeRow append (const YGP::HEntity& object, const Gtk::TreeIter& owner);
+   void clear () { mOwnerObjects->clear (); }
 
-   virtual void update (Gtk::TreeModel::Row& row);
+   void update (Gtk::TreeRow& row);
+
+   Glib::RefPtr<Gtk::TreeStore> getModel () const { return mOwnerObjects; }
+
+   /// Returns the handle at the passed position
+   /// \param iter: Iterator to position in the list
+   /// \returns HMovie: Handle of the selected line
+   YGP::HEntity getEntityAt (const Gtk::TreeIter iter) const {
+      YGP::HEntity hEntity ((*iter)[colActors.entry]);
+      return hEntity;
+   }
+
+   Gtk::TreeIter findEntity (const YGP::HEntity& entry, unsigned int level,
+			     Gtk::TreeIter begin, Gtk::TreeIter end) const;
+   Gtk::TreeIter findEntity (const YGP::HEntity& entry, unsigned int level = -1U) const {
+      return findEntity (entry, level, mOwnerObjects->children ().begin (),
+			 mOwnerObjects->children ().end ());
+   }
+   Gtk::TreeIter findName (const Glib::ustring& name,  unsigned int level = -1U) const {
+      return findName (name, level, mOwnerObjects->children ().begin (),
+		       mOwnerObjects->children ().end ());
+   }
+   Gtk::TreeIter findName (const Glib::ustring& name, unsigned int level,
+			   Gtk::TreeIter begin, Gtk::TreeIter end) const;
+
+   void selectRow (const Gtk::TreeModel::const_iterator& i);
+
+   sigc::signal<void, const Gtk::TreeIter&, unsigned int, Glib::ustring&> signalActorChanged;
 
  protected:
-   virtual Glib::ustring getColumnName () const;
+   void valueChanged (const Glib::ustring& path, const Glib::ustring& value,
+		      unsigned int column);
+
    virtual int sortEntity (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
 
  private:
    ActorList (const ActorList& other);
    const ActorList& operator= (const ActorList& other);
 
-   OwnerObjectColumns colOwnerObjects;
+   ActorColumns colActors;
+   Glib::RefPtr<Gtk::TreeStore> mOwnerObjects;
+
+   const Genres& genres;
 };
 
 

@@ -1,11 +1,11 @@
-//$Id: StorageMovie.cpp,v 1.7 2006/04/19 16:30:11 markus Exp $
+//$Id: StorageMovie.cpp,v 1.8 2006/04/23 02:20:03 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Storage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -53,7 +53,7 @@ void StorageMovie::loadNames (const std::vector<HDirector>& directors,
    Database::execute (cmd.c_str ());
 
    while (Database::hasData ()) {
-      TRACE9 ("PMovies::loadNames (const std::string&) - " << Database::getResultColumnAsUInt (0) << '/'
+      TRACE9 ("StorageMovie::loadNames (const std::string&) - " << Database::getResultColumnAsUInt (0) << '/'
 	      << Database::getResultColumnAsString (1));
 
       HMovie movie (PMovies::findMovie (directors, relMovies,
@@ -78,7 +78,7 @@ unsigned int StorageMovie::loadMovies (std::map<unsigned int, std::vector<HMovie
       unsigned int tmp;
       while (Database::hasData ()) {
 	 // Fill and store movie entry from DB-values
-	 TRACE8 ("PMovies::loadData () - Adding movie "
+	 TRACE8 ("StorageMovie::loadData () - Adding movie "
 		 << Database::getResultColumnAsUInt (0) << '/'
 		 << Database::getResultColumnAsString (1));
 

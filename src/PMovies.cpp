@@ -1,11 +1,11 @@
-//$Id: PMovies.cpp,v 1.15 2006/04/14 15:36:21 markus Rel $
+//$Id: PMovies.cpp,v 1.16 2006/04/23 02:19:36 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movies
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.15 $
+//REVISION    : $Revision: 1.16 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -237,7 +237,7 @@ void PMovies::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActi
 	  "<separator/>"
 	  "<menuitem action='MDelete'/>"
 	  "</placeholder></menu>"
-	  "<placeholder name='Lang'><menu action='Lang'>");
+	  "<placeholder name='Other'><menu action='Lang'>");
 
    grpAction->add (apMenus[UNDO] = Gtk::Action::create ("MUndo", Gtk::Stock::UNDO),
 		   Gtk::AccelKey (_("<ctl>Z")),

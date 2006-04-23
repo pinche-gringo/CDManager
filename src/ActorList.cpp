@@ -1,11 +1,11 @@
-//$Id: ActorList.cpp,v 1.6 2006/04/23 02:18:39 markus Exp $
+//$Id: ActorList.cpp,v 1.7 2006/04/23 23:00:00 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actor
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.09.2005
 //COPYRIGHT   : Copyright (C) 2005, 2006
@@ -32,8 +32,6 @@
 
 #include <gtkmm/cellrenderercombo.h>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/StatusObj.h>
@@ -131,11 +129,13 @@ void ActorList::update (Gtk::TreeRow& row) {
       if (g == genres.end ())
 	 g = genres.begin ();
       row[colActors.genre] = g->second;
+      row[colActors.editable] = false;
    }
    else {
       HActor actor (HActor::cast (entity)); Check3 (actor.isDefined ());
       row[colActors.name] = actor->getName ();
       row[colActors.year] = actor->getLifespan ();
+      row[colActors.editable] = true;
    }
 }
 
@@ -186,26 +186,29 @@ void ActorList::valueChanged (const Glib::ustring& path,
       HActor actor (HActor::castDynamic (hEntity)); Check3 (actor.isDefined ());
 
       switch (column) {
-      case 0: {
-	 Gtk::TreeModel::const_iterator i (findName (value));
-	 if ((i != row) && (i != mOwnerObjects->children ().end ())) {
-	    Glib::ustring e (_("Entry `%1' already exists!"));
-	    e.replace (e.find ("%1"), 2, value);
-	    throw (std::runtime_error (e));
+      case 0:
+	 if (value.size ()) {
+	    Gtk::TreeModel::const_iterator i (findName (value));
+	    if ((i != row) && (i != mOwnerObjects->children ().end ())) {
+	       Glib::ustring e (_("Entry `%1' already exists!"));
+	       e.replace (e.find ("%1"), 2, value);
+	       throw (std::runtime_error (e));
+	    }
 	 }
 	 actor->setName (value);
 	 oldValue = row[colActors.name];
 	 row[colActors.name] = value;
-	 break; }
+	 break;
 
       case 1:
 	 actor->setLifespan (value);
 	 oldValue = row[colActors.year];
 	 row[colActors.year] = value;
 	 break;
-
-	 signalActorChanged.emit (row, column, oldValue);
       } // end-switch
+
+      if (value != oldValue)
+	 signalActorChanged.emit (row, column, oldValue);
    } // end-try
    catch (std::exception& e) {
       YGP::StatusObject obj (YGP::StatusObject::ERROR, e.what ());

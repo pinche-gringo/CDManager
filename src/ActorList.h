@@ -1,7 +1,7 @@
 #ifndef ACTORLIST_H
 #define ACTORLIST_H
 
-//$Id: ActorList.h,v 1.6 2006/04/23 02:18:39 markus Exp $
+//$Id: ActorList.h,v 1.7 2006/04/24 02:16:44 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -87,7 +87,8 @@ class ActorList : public Gtk::TreeView {
    void valueChanged (const Glib::ustring& path, const Glib::ustring& value,
 		      unsigned int column);
 
-   virtual int sortEntity (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b);
+   int sortByName (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) const;
+   int sortByYear (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) const;
 
  private:
    ActorList (const ActorList& other);

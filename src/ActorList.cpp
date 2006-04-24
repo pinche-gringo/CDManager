@@ -1,11 +1,11 @@
-//$Id: ActorList.cpp,v 1.7 2006/04/23 23:00:00 markus Exp $
+//$Id: ActorList.cpp,v 1.8 2006/04/24 02:16:44 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actor
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.09.2005
 //COPYRIGHT   : Copyright (C) 2005, 2006
@@ -72,6 +72,9 @@ ActorList::ActorList (const Genres& genres) : genres (genres) {
       column->add_attribute (rText->property_editable(), colActors.editable);
       rText->signal_edited ().connect (bind (mem_fun (*this, &ActorList::valueChanged), i));
    }
+
+   mOwnerObjects->set_sort_func (colActors.name, mem_fun (*this, &ActorList::sortByName));
+   mOwnerObjects->set_sort_func (colActors.year, mem_fun (*this, &ActorList::sortByYear));
 }
 
 //-----------------------------------------------------------------------------
@@ -136,33 +139,6 @@ void ActorList::update (Gtk::TreeRow& row) {
       row[colActors.name] = actor->getName ();
       row[colActors.year] = actor->getLifespan ();
       row[colActors.editable] = true;
-   }
-}
-
-//-----------------------------------------------------------------------------
-/// Sorts the entries in the listbox according to the name (ignoring articles)
-/// \param a: First entry to compare
-/// \param a: Second entry to compare
-/// \returns int: Value as strcmp
-//-----------------------------------------------------------------------------
-int ActorList::sortEntity (const Gtk::TreeModel::iterator& a,
-			   const Gtk::TreeModel::iterator& b) {
-   YGP::HEntity hEntity ((*a)[colActors.entry]);
-   HMovie ha (HMovie::castDynamic (hEntity));
-   if (ha) {
-      hEntity = ((*b)[colActors.entry]);
-      HMovie hb (HMovie::cast (hEntity)); Check3 (hb);
-
-      int rc (Movie::removeIgnored (ha->getName ()).compare (Movie::removeIgnored (hb->getName ())));
-      return rc ? rc : (ha->getName () < hb->getName ());
-   }
-   else {
-      HActor ha (HActor::cast (hEntity)); Check3 (ha);
-      hEntity = ((*b)[colActors.entry]);
-      HActor hb (HActor::cast (hEntity)); Check3 (hb);
-
-      int rc (Actor::removeIgnored (ha->getName ()).compare (Actor::removeIgnored (hb->getName ())));
-      return rc ? rc : (ha->getName () < hb->getName ());
    }
 }
 
@@ -283,4 +259,52 @@ Gtk::TreeIter ActorList::findEntity (const YGP::HEntity& entry, unsigned int lev
       ++begin;
    } // end-while
    return mOwnerObjects->children ().end ();
+}
+
+//-----------------------------------------------------------------------------
+/// Sorts the entries in the listbox according to the name (ignoring first names,
+/// articles, ...)
+/// \param a: First entry to compare
+/// \param a: Second entry to compare
+/// \returns int: Value as strcmp
+//-----------------------------------------------------------------------------
+int ActorList::sortByName (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) const {
+   Check2 (a->parent () == b->parent ());
+   Gtk::TreeRow ra (*a);
+   Gtk::TreeRow rb (*b);
+
+   YGP::HEntity entity (ra[colActors.entry]);
+   int rc (HActor::castDynamic (entity).isDefined ()
+	   ? Actor::removeIgnored (ra[colActors.name]).compare (Actor::removeIgnored (rb[colActors.name]))
+	   : Movie::removeIgnored (ra[colActors.name]).compare (Movie::removeIgnored (rb[colActors.name])));
+   if (!rc)
+      rc = ((Glib::ustring)ra[colActors.name]).compare ((Glib::ustring)rb[colActors.name]);
+   return rc;
+}
+
+//-----------------------------------------------------------------------------
+/// Sorts the entries in the listbox according to the year
+/// \param a: First entry to compare
+/// \param a: Second entry to compare
+/// \returns int: Value as strcmp
+//-----------------------------------------------------------------------------
+int ActorList::sortByYear (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) const {
+   Check2 (a->parent () == b->parent ());
+   Gtk::TreeRow ra (*a);
+   Gtk::TreeRow rb (*b);
+   YGP::AYear ya;
+   YGP::AYear yb;
+
+   YGP::HEntity entity (ra[colActors.entry]);
+   if (typeid (*entity) == typeid (Actor)) {
+      ya = HActor::cast (entity)->getBorn ();
+      entity = rb[colActors.entry];
+      yb = HActor::cast (entity)->getBorn ();
+   }
+   else {
+      ya = HMovie::cast (entity)->getYear ();
+      entity = rb[colActors.entry];
+      yb = HMovie::cast (entity)->getYear ();
+   }
+   return ya.compare (yb);
 }

@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.24 2006/04/20 20:44:57 markus Exp $
+//$Id: OOList.cpp,v 1.25 2006/04/24 01:07:34 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.24 $
+//REVISION    : $Revision: 1.25 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -173,17 +173,19 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 
 	 // First check, if value is valid
 	 switch (column) {
-	 case 0: {
-	    Gtk::TreeModel::const_iterator i (getObject (row.parent (), value));
-	    if ((i != row) && (i != row.parent ()->children ().end ())) {
-	       Glib::ustring e (_("Entry `%1' already exists!"));
-	       e.replace (e.find ("%1"), 2, value);
-	       throw (std::runtime_error (e));
+	 case 0:
+	    if (value.size ()) {
+	       Gtk::TreeModel::const_iterator i (getObject (row.parent (), value));
+	       if ((i != row) && (i != row.parent ()->children ().end ())) {
+		  Glib::ustring e (_("Entry `%1' already exists!"));
+		  e.replace (e.find ("%1"), 2, value);
+		  throw (std::runtime_error (e));
+	       }
 	    }
 	    oldValue = row[colOwnerObjects->name];
 	    row[colOwnerObjects->name] = value;
 	    setName (object, value);
-	    break; }
+	    break;
 
 	 case 1:
 	    setYear (object, value);
@@ -210,25 +212,27 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 	    break; }
 	 } // endswitch
 
-	 signalObjectChanged.emit (row, column, oldValue);
+	 if (value != oldValue)
+	    signalObjectChanged.emit (row, column, oldValue);
       } // endif object edited
       else {
 	 HCelebrity celeb (getCelebrityAt (row)); Check3 (celeb.isDefined ());
 
 	 switch (column) {
-	 case 0: {
-	    // Check if changes are valid
-	    Gtk::TreeModel::const_iterator i (getOwner (value));
-	    if ((i != row) && (i != mOwnerObjects->children ().end ())) {
-	       Glib::ustring e (_("Entry `%1' already exists!"));
-	       e.replace (e.find ("%1"), 2, value);
-	       throw (std::runtime_error (e));
+	 case 0:
+	    if (value.size ()) {
+	       // Check if changes are valid
+	       Gtk::TreeModel::const_iterator i (getOwner (value));
+	       if ((i != row) && (i != mOwnerObjects->children ().end ())) {
+		  Glib::ustring e (_("Entry `%1' already exists!"));
+		  e.replace (e.find ("%1"), 2, value);
+		  throw (std::runtime_error (e));
+	       }
 	    }
-
 	    oldValue = row[colOwnerObjects->name];
 	    celeb->setName (value);
 	    row[colOwnerObjects->name] = celeb->getName ();
-	    break; }
+	    break;
 
 	 case 1:
 	    celeb->setLifespan (value);
@@ -237,7 +241,7 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 	    break;
 	 } // end-switch
 
-	 if (column < 2)
+	 if ((value != oldValue) && (column < 2))
 	    signalOwnerChanged.emit (row, column, oldValue);
       } // end-else director edited
    } // end-try

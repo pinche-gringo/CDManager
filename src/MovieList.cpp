@@ -1,11 +1,11 @@
-//$Id: MovieList.cpp,v 1.24 2006/04/06 00:05:56 markus Rel $
+//$Id: MovieList.cpp,v 1.25 2006/04/24 01:07:34 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.24 $
+//REVISION    : $Revision: 1.25 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -249,7 +249,8 @@ void MovieList::valueChanged (const Glib::ustring& path,
 	    Check3 (0);
 	 } // end-switch
 
-	 signalObjectChanged.emit (row, column + 3, oldValue);
+	 if (value != oldValue)
+	    signalObjectChanged.emit (row, column + 3, oldValue);
       } // endif object edited
    } // end-try
    catch (std::exception& e) {

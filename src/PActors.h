@@ -1,7 +1,7 @@
 #ifndef PACTORS_H
 #define PACTORS_H
 
-//$Id: PActors.h,v 1.7 2006/04/23 03:24:00 markus Exp $
+//$Id: PActors.h,v 1.8 2006/04/24 02:49:13 markus Exp $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -74,6 +74,7 @@ class PActors : public NBPage {
    void viewByActor ();
    void viewByMovie ();
 
+   void changeAllEntries (const YGP::HEntity& entry, Gtk::TreeIter begin, Gtk::TreeIter end);
    void saveRelatedMovies (const HActor& actor) throw (std::exception);
 
    ActorList actors;                              // GUI-element holding actors
@@ -81,7 +82,6 @@ class PActors : public NBPage {
    // Model
    enum { ACTOR, MOVIES };
 
-   std::vector<HMovie> aMovies;
    std::vector<HActor> aActors;
    YGP::RelationN_M<HActor, HMovie> relActors;
 

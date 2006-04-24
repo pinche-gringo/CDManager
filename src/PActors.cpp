@@ -1,11 +1,11 @@
-//$Id: PActors.cpp,v 1.14 2006/04/23 03:24:00 markus Exp $
+//$Id: PActors.cpp,v 1.15 2006/04/24 02:49:13 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actors
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.14 $
+//REVISION    : $Revision: 1.15 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -30,8 +30,6 @@
 #include <gtkmm/stock.h>
 #include <gtkmm/scrolledwindow.h>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ANumeric.h>
@@ -89,7 +87,15 @@ void PActors::actorSelected () {
    Check3 (actors.get_selection ());
 
    Gtk::TreeIter s (actors.get_selection ()->get_selected ());
-   enableEdit (s ? OWNER_SELECTED : NONE_SELECTED);
+   if (actView) {
+      enableEdit (NONE_SELECTED);
+      apMenus[NEW1]->set_sensitive (false);
+   }
+   else {
+      enableEdit (s ? OWNER_SELECTED : NONE_SELECTED);
+      if (s && (*s)->parent ())
+	 apMenus[DELETE]->set_sensitive (false);
+   }
 }
 
 //----------------------------------------------------------------------------
@@ -102,7 +108,12 @@ void PActors::actorChanged (const Gtk::TreeIter& row, unsigned int column, Glib:
    TRACE9 ("PActors::actorChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&)");
 
    Gtk::TreePath path (actors.get_model ()->get_path (row));
-   aUndo.push (Undo (Undo::CHANGED, ACTOR, column, actors.getEntityAt (row), path, oldValue));
+   YGP::HEntity entity (actors.getEntityAt (row));
+   aUndo.push (Undo (Undo::CHANGED, ACTOR, column, entity, path, oldValue));
+
+   if (actView)
+      changeAllEntries (entity, actors.getModel ()->children ().begin (), actors.getModel ()->children ().end ());
+   std::sort (aActors.begin (), aActors.end (), &Actor::compByName);
 
    apMenus[UNDO]->set_sensitive ();
    enableSave ();
@@ -114,10 +125,18 @@ void PActors::actorChanged (const Gtk::TreeIter& row, unsigned int column, Glib:
 void PActors::newActor () {
    HActor actor;
    actor.define ();
-   Gtk::TreeModel::iterator i (actors.append (YGP::HEntity::cast (actor)));
+   Gtk::TreeModel::iterator i;
+   if (actView) {
+      Check3 (actors.get_selection ()->get_selected ());
+      i = actors.append (YGP::HEntity::cast (actor), actors.get_selection ()->get_selected ());
+   }
+   else
+      i = actors.append (YGP::HEntity::cast (actor));
+   aActors.insert (lower_bound (aActors.begin (), aActors.end (), actor,
+				&Actor::compByName), actor);
+
    Gtk::TreePath path (actors.get_model ()->get_path (i));
    actors.selectRow (i);
-   actors.set_cursor (path);
 
    aUndo.push (Undo (Undo::INSERT, ACTOR, 0, YGP::HEntity::cast (actor), path, ""));
 
@@ -142,7 +161,6 @@ void PActors::actorPlaysInMovie () {
       h = actors.getEntityAt (p);
       actor = HActor::castDynamic (h);
    }
-   Check2 (!(*p)->parent ());
    Check3 (actor.isDefined ());
    TRACE9 ("void PActors::actorPlaysInMovie () - Found actor " << actor->getName ());
 
@@ -167,22 +185,22 @@ void PActors::relateMovies (const HActor& actor, const std::vector<HMovie>& movi
    Gtk::TreeIter i (actors.findEntity (YGP::HEntity::cast (actor))); Check3 (i);
    Gtk::TreePath path (model->get_path (i));
 
+   // Unrelate old movies and relate with newly selected ones
    YGP::Handle<RelUndo> hOldRel; hOldRel.define ();
    if (relActors.isRelated (actor)) {
-      TRACE5 ("PActors::relateMovies (...) - Storing " << relActors.getObjects (actor).size () << " related movies");
       hOldRel->setRelatedMovies (relActors.getObjects (actor));
+      relActors.unrelateAll (actor);
    }
-   else {
-      HMovie movie;
-      movie.define ();
-      relActors.relate (actor, movie);
-   }
-   aUndo.push (Undo (Undo::CHANGED, MOVIES, actor->getId (), YGP::HEntity::cast (hOldRel), path, ""));
+   for (std::vector<HMovie>::const_iterator m (movies.begin ()); m != movies.end (); ++m)
+      relActors.relate (actor, *m);
 
+   aUndo.push (Undo (Undo::CHANGED, MOVIES, actor->getId (), YGP::HEntity::cast (hOldRel), path, ""));
    delRelation[YGP::HEntity::cast (hOldRel)] = YGP::HEntity::cast (actor);
-   relActors.getObjects (actor) = movies;
 
    showMovies (i);
+   actors.expand_row (path, false);
+   actors.selectRow (i);
+
    apMenus[UNDO]->set_sensitive ();
    enableSave ();
 }
@@ -195,20 +213,13 @@ void PActors::showMovies (const Gtk::TreeIter& row) {
    Glib::RefPtr<Gtk::TreeStore> model (actors.getModel ());
 
    YGP::HEntity h (actors.getEntityAt (row));
-   HActor actor (HActor::castDynamic (h)); Check3 (actor.isDefined ());
-   if ((*row)->parent ()) {
-      // TODO
-   }
-   else {
-      while (row->children ().size ())
-	 model->erase (row->children ().begin ());
+   HActor actor (HActor::cast (h)); Check3 (actor.isDefined ());
+   while (row->children ().size ())
+      model->erase (row->children ().begin ());
 
-      YGP::HEntity h (actors.getEntityAt (row));
-      HActor actor (HActor::cast (h)); Check3 (actor.isDefined ());
-      for (std::vector<HMovie>::iterator m (relActors.getObjects (actor).begin ());
-	   m != relActors.getObjects (actor).end (); ++m)
-	 actors.append (YGP::HEntity::cast (*m), *row);
-   }
+   for (std::vector<HMovie>::iterator m (relActors.getObjects (actor).begin ());
+	m != relActors.getObjects (actor).end (); ++m)
+      actors.append (YGP::HEntity::cast (*m), *row);
 }
 
 //-----------------------------------------------------------------------------
@@ -351,19 +362,7 @@ void PActors::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActi
    Check2 (actView < (sizeof (menuView) / sizeof (*menuView)));
    menuView[actView]->set_active ();
 
-   aMovies.clear ();
-   const YGP::Relation1_N<HDirector, HMovie>& relMovies (movies.getRelMovies ());
-   for (std::vector<HDirector>::const_iterator d (movies.getDirectors ().begin ());
-	d != movies.getDirectors ().end (); ++d) {
-      const std::vector<HMovie> mov (relMovies.getObjects (*d));
-      for (std::vector<HMovie>::const_iterator m (mov.begin ()); m != mov.end (); ++m)
-	 aMovies.push_back (*m);
-   }
-   std::sort (aMovies.begin (), aMovies.end (), &Movie::compByName);
-
    actView ? viewByMovie () : viewByActor ();
-
-   actorSelected ();
 }
 
 //-----------------------------------------------------------------------------
@@ -385,7 +384,6 @@ void PActors::deleteSelection () {
       YGP::Handle<RelUndo> hOldRel; hOldRel.define ();
       if (relActors.isRelated (actor)) {
 	 hOldRel->setRelatedMovies (relActors.getObjects (actor));
-
 	 relActors.unrelateAll (actor);
 
 	 while (selRow->children ().size ())
@@ -455,7 +453,7 @@ void PActors::undoActor (const Undo& last) {
    TRACE7 ("PActors::undoActor (const Undo&)");
 
    Gtk::TreePath path (last.getPath ());
-   Gtk::TreeIter iter (actors.getModel ()->get_iter (path)); Check3 (!iter->parent ());
+   Gtk::TreeIter iter (actors.getModel ()->get_iter (path));
 
    Check3 (typeid (*last.getEntity ()) == typeid (Actor));
    HActor actor (HActor::cast (last.getEntity ()));
@@ -466,6 +464,9 @@ void PActors::undoActor (const Undo& last) {
       switch (last.column ()) {
       case 0:
 	 actor->setName (last.getValue ());
+	 if (actView)
+	    changeAllEntries (YGP::HEntity::cast (actor),
+			      actors.getModel ()->children ().begin (), actors.getModel ()->children ().end ());
 	 break;
 
       case 1:
@@ -505,7 +506,6 @@ void PActors::undoActor (const Undo& last) {
 //-----------------------------------------------------------------------------
 void PActors::clear () {
    aActors.clear ();
-   aMovies.clear ();
    actors.clear ();
    actors.getModel ()->clear ();
    relActors.unrelateAll ();
@@ -604,6 +604,9 @@ void PActors::viewByActor () {
       TRACE9 ("PActors::viewByActor () - Actors: " << aActors.size ());
       actView = 0;
 
+      Check3 (actors.get_column (0));
+      actors.get_column (0)->set_title (_("Actors/Movies"));
+
       // Fill list sorted by actors with their movies as child
       actors.clear ();
       for (std::vector<HActor>::const_iterator a (aActors.begin ()); a != aActors.end (); ++a) {
@@ -615,6 +618,7 @@ void PActors::viewByActor () {
 	       actors.append (YGP::HEntity::cast (*m), actor);
       }
       actors.expand_all ();
+      actorSelected ();
    }
 }
 
@@ -623,8 +627,21 @@ void PActors::viewByActor () {
 //-----------------------------------------------------------------------------
 void PActors::viewByMovie () {
    if (menuView[1]->get_active ()) {
-      TRACE9 ("PActors::viewByMovie () - Movies: " << aMovies.size ());
       actView = 1;
+
+      Check3 (actors.get_column (0));
+      actors.get_column (0)->set_title (_("Movies/Actors"));
+
+      std::vector<HMovie> aMovies;
+      for (std::vector<HActor>::const_iterator a (aActors.begin ()); a != aActors.end (); ++a)
+	 if (relActors.isRelated (*a))
+	    for (std::vector<HMovie>::iterator m (relActors.getObjects (*a).begin ());
+		 m != relActors.getObjects (*a).end (); ++m) {
+	       std::vector<HMovie>::iterator pos (lower_bound (aMovies.begin (), aMovies.end (), YGP::HEntity::cast (*m)));
+	       if ((pos == aMovies.end ()) || (*pos != *m))
+		  aMovies.insert (pos, *m);
+	    }
+      std::sort (aMovies.begin (), aMovies.end (), &Movie::compByName);
 
       // Fill list sorted by actors with their movies as child
       actors.clear ();
@@ -637,5 +654,26 @@ void PActors::viewByMovie () {
 	       actors.append (YGP::HEntity::cast (*a), movie);
       }
       actors.expand_all ();
+      actorSelected ();
    }
+}
+
+//-----------------------------------------------------------------------------
+/// Updates all entries showing the passed entry
+/// \param entry: Entry to find
+/// \param begin: Start object
+/// \param end: End object
+//-----------------------------------------------------------------------------
+void PActors::changeAllEntries (const YGP::HEntity& entry, Gtk::TreeIter begin, Gtk::TreeIter end) {
+   Check1 (entry.isDefined ());
+
+   while (begin != end) {
+      Gtk::TreeModel::Row row (*begin);
+      if (entry == actors.getEntityAt (row))
+	 actors.update (row);
+
+      if (begin->children ().size ())
+	 changeAllEntries (entry, begin->children ().begin (), begin->children ().end ());
+      ++begin;
+   } // end-while
 }

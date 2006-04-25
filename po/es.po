@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2006-04-14 11:36-0400\n"
+"POT-Creation-Date: 2006-04-25 00:05-0400\n"
 "PO-Revision-Date: 2005-05-21 15:17-0400\n"
 "Last-Translator: Markus Schwab <g17m0@lycos.com>\n"
 "Language-Team: Spanish <g17m0@lycos.com>\n"
@@ -122,11 +122,11 @@ msgstr "Conectar a base de datos "
 msgid "Reading database ..."
 msgstr "Leyendo de base de datos ..."
 
-#: src/CDManager.cpp:576
+#: src/CDManager.cpp:577
 msgid "The data has been modified! Save those changes?"
 msgstr "¡Los datos han estado modificado! ¿Quiere guardar esos cambios?"
 
-#: src/CDManager.cpp:599
+#: src/CDManager.cpp:600
 msgid ""
 "Can't connect to database!\n"
 "\n"
@@ -136,11 +136,11 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/CDManager.cpp:602
+#: src/CDManager.cpp:603
 msgid "Login error"
 msgstr "Falla de conección"
 
-#: src/CDManager.cpp:612
+#: src/CDManager.cpp:613
 msgid ""
 "Can't query needed information!\n"
 "\n"
@@ -150,11 +150,11 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/CDManager.cpp:637
+#: src/CDManager.cpp:638
 msgid "Disconnected!"
 msgstr "¡Desconectado!"
 
-#: src/CDManager.cpp:660 src/CDWriter.cpp:717
+#: src/CDManager.cpp:661 src/CDWriter.cpp:717
 msgid ""
 "Can't create file `%1'!\n"
 "\n"
@@ -164,7 +164,7 @@ msgstr ""
 "\n"
 "Causa: %2"
 
-#: src/CDManager.cpp:682
+#: src/CDManager.cpp:683
 msgid ""
 "Can't store special names!\n"
 "\n"
@@ -174,15 +174,15 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/CDManager.cpp:732
+#: src/CDManager.cpp:733
 msgid "Exporting (language %1) ..."
 msgstr "Exportando (idioma %1) ..."
 
-#: src/CDManager.cpp:766
+#: src/CDManager.cpp:767
 msgid "Export Warning!"
 msgstr "¡Aviso exportando!"
 
-#: src/CDManager.cpp:804
+#: src/CDManager.cpp:805
 msgid ""
 "Can't open file `%1'!\n"
 "\n"
@@ -212,11 +212,12 @@ msgstr "Director/Película"
 msgid "Unknown type of media!"
 msgstr "¡Tipo de media desconocido!"
 
-#: src/MovieList.cpp:257 src/SongList.cpp:198 src/OOList.cpp:247
+#: src/MovieList.cpp:258 src/SongList.cpp:198 src/OOList.cpp:250
+#: src/ActorList.cpp:191
 msgid "Invalid value!"
 msgstr "¡Valor inválida!"
 
-#: src/MovieList.cpp:310
+#: src/MovieList.cpp:311
 msgid "Select subtitles"
 msgstr "Elige subtitulos"
 
@@ -236,8 +237,8 @@ msgstr "Canción"
 msgid "Duration"
 msgstr "Duración"
 
-#: src/SongList.cpp:77 src/OOList.cpp:101 src/CDWriter.cpp:199
-#: src/CDWriter.cpp:518 src/CDWriter.cpp:532
+#: src/SongList.cpp:77 src/OOList.cpp:100 src/CDWriter.cpp:199
+#: src/CDWriter.cpp:518 src/CDWriter.cpp:532 src/ActorList.cpp:60
 msgid "Genre"
 msgstr "Tipo"
 
@@ -245,16 +246,16 @@ msgstr "Tipo"
 msgid "Song `%1' already exists!"
 msgstr "¡Canción '%1' ya existe!"
 
-#: src/SongList.cpp:189 src/OOList.cpp:210
+#: src/SongList.cpp:189 src/OOList.cpp:211
 msgid "Unknown genre!"
 msgstr "¡Tipo desconocido!"
 
 #: src/OOList.cpp:79 src/CDWriter.cpp:199 src/CDWriter.cpp:516
-#: src/CDWriter.cpp:530
+#: src/CDWriter.cpp:530 src/ActorList.cpp:59
 msgid "Year"
 msgstr "Año"
 
-#: src/OOList.cpp:180 src/OOList.cpp:224
+#: src/OOList.cpp:180 src/OOList.cpp:227 src/ActorList.cpp:169
 msgid "Entry `%1' already exists!"
 msgstr "¡Objecto '%1' ya existe!"
 
@@ -482,7 +483,9 @@ msgstr ""
 msgid ""
 " [OPTIONS] [LANGUAGE-ID] [MEMORY-ID]\n"
 "\n"
-msgstr " [OPCIONES] [ID DEL IDIOMA] [ID DE LA MEMORIA]\n\n"
+msgstr ""
+" [OPCIONES] [ID DEL IDIOMA] [ID DE LA MEMORIA]\n"
+"\n"
 
 #: src/CDWriter.cpp:99
 msgid "Directory to export data to\n"
@@ -618,7 +621,7 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/PRecords.cpp:371 src/PActors.cpp:306 src/PMovies.cpp:243
+#: src/PRecords.cpp:371 src/PActors.cpp:382 src/PMovies.cpp:243
 msgid "<ctl>Z"
 msgstr ""
 
@@ -626,7 +629,7 @@ msgstr ""
 msgid "New _interpret"
 msgstr "Nuevo _artista"
 
-#: src/PRecords.cpp:375 src/PActors.cpp:310 src/PMovies.cpp:247
+#: src/PRecords.cpp:375 src/PActors.cpp:386 src/PMovies.cpp:247
 msgid "<ctl>N"
 msgstr ""
 
@@ -634,7 +637,7 @@ msgstr ""
 msgid "_New record"
 msgstr "_Nuevo disco"
 
-#: src/PRecords.cpp:378 src/PActors.cpp:313 src/PMovies.cpp:250
+#: src/PRecords.cpp:378 src/PActors.cpp:389 src/PMovies.cpp:250
 msgid "<ctl><alt>N"
 msgstr ""
 
@@ -646,15 +649,15 @@ msgstr "Nueva canción"
 msgid "<ctl><shft>N"
 msgstr ""
 
-#: src/PRecords.cpp:383 src/PActors.cpp:315 src/PMovies.cpp:252
+#: src/PRecords.cpp:383 src/PActors.cpp:391 src/PMovies.cpp:252
 msgid "_Delete"
 msgstr "_Borrar"
 
-#: src/PRecords.cpp:384 src/PActors.cpp:316 src/PMovies.cpp:253
+#: src/PRecords.cpp:384 src/PActors.cpp:392 src/PMovies.cpp:253
 msgid "<ctl>Delete"
 msgstr ""
 
-#: src/PRecords.cpp:571 src/PActors.cpp:523 src/PMovies.cpp:500
+#: src/PRecords.cpp:571 src/PActors.cpp:610 src/PMovies.cpp:500
 msgid ""
 "Error saving data!\n"
 "\n"
@@ -664,21 +667,21 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/PActors.cpp:237
+#: src/PActors.cpp:308
 msgid "The database contains an invalid reference (%1) to a movie!"
 msgstr "¡La base de datos contiene un vínculo inválido (%1) a una película!"
 
-#: src/PActors.cpp:256
+#: src/PActors.cpp:327
 msgid "Loaded %1 actor"
 msgid_plural "Loaded %1 actors"
 msgstr[0] "Leí %1 actor"
 msgstr[1] "Leí %1 actores"
 
-#: src/PActors.cpp:263
+#: src/PActors.cpp:334
 msgid "Warnings loading actors!"
 msgstr "¡Aviso leyendo los actores!"
 
-#: src/PActors.cpp:268
+#: src/PActors.cpp:339
 msgid ""
 "Can't query the actors1!\n"
 "\n"
@@ -688,13 +691,33 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/PActors.cpp:309
+#: src/PActors.cpp:385
 msgid "New _actor"
 msgstr "Nuevo _actor"
 
-#: src/PActors.cpp:312
+#: src/PActors.cpp:388
 msgid "_Plays in movie..."
 msgstr "_Participa en película..."
+
+#: src/PActors.cpp:398
+msgid "_View"
+msgstr "_Ver"
+
+#: src/PActors.cpp:400
+msgid "By _actor"
+msgstr "Por _actor"
+
+#: src/PActors.cpp:402
+msgid "By _movie"
+msgstr "Por _película"
+
+#: src/PActors.cpp:647 src/ActorList.cpp:58
+msgid "Actors/Movies"
+msgstr "Actores/Películas"
+
+#: src/PActors.cpp:672
+msgid "Movies/Actors"
+msgstr "Pelícualas/Actores"
 
 #: src/PMovies.cpp:192
 msgid "_Original name"
@@ -743,10 +766,6 @@ msgstr "Aviso leyendo película '%1': %2"
 #: src/StorageRecord.cpp:72
 msgid "Warning loading record `%1': %2"
 msgstr "Aviso leyendo disco '%1': %2"
-
-#: src/ActorList.cpp:100
-msgid "Actors/Movies"
-msgstr "Actores/Película"
 
 #: src/RelateMovie.cpp:212
 msgid "Movies starring %1"

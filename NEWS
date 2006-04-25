@@ -1,3 +1,11 @@
+Overview of changes in version 0.8.30:
+
+  - Actor-page can show actors for movies or actor starring in movies
+  - Actor-page allows selection of movies, but not editing them
+  - Optimized marking items as changed
+  - Fixed creating translated names of movies
+
+
 Overview of changes in version 0.8.22:
 
   - Values which celebrities don't have (genre, ...) can't be changed anymore

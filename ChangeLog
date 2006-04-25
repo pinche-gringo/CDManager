@@ -1,3 +1,75 @@
+2006-04-25  Markus Schwab  <g17m0@lycos.com>
+
+	* ChangeLog, NEWS: Changes of V0.8.30 documented
+
+	* configure.ac: Version to 0.8.30; Needs libYGP 0.7.60; Fixed tests
+
+	* po/de.po, po/en.po, po/es.po:
+	  Added messages for new view in actor-page
+
+	* doc/CDManager.html.de, doc/CDManager.html.en, doc/CDManager.html.es:
+	  Explained the view-menu for the Actor-page
+
+2006-04-24  Markus Schwab  <g17m0@lycos.com>
+
+	* src/PActors.cpp, src/PActors.h:
+	  Implemented relating movies in view-by-movie mode; Fixed undo of relating movies
+
+	* src/Movie.cpp: Fixed copyright
+
+2006-04-23  Markus Schwab  <g17m0@lycos.com>
+
+	* src/PActors.cpp, src/PActors.h:
+	  Disable relating movies in view-by-movies mode; Fixes
+
+	* src/ActorList.cpp, src/ActorList.h:
+	  Added sort-methods for name and year
+
+	* src/MovieList.cpp, src/OOList.cpp: Optimized emitting changed-signal
+
+	* src/ActorList.cpp:
+	  Allowing actor-lines to be changed; Fixed emitting singal after changes
+
+2006-04-22  Markus Schwab  <g17m0@lycos.com>
+
+	* src/PActors.cpp, src/PActors.h: First draft with two views
+
+	* src/CDManager.cpp:
+	  Loading data before creating page-menu; Named lang-placeholder more general
+
+	* src/StorageMovie.cpp: Fixed traces
+
+	* src/PMovies.cpp:
+	  Renamed lang-placeholder in menu to more general Other
+
+	* src/ActorList.cpp, src/ActorList.h:
+	  Re-written, so actors/movies can be at any level of the tree
+
+2006-04-20  Markus Schwab  <g17m0@lycos.com>
+
+	* src/Makefile.am:
+	  Reordered dependencies to build depending files first
+
+	* src/OOList.cpp:
+	  Removed getLifeSpan() (is now part of Celebrity); Improved selectRow()
+
+	* src/OOList.h: Removed getLifeSpan() (is now part of Celebrity)
+
+	* src/Celebrity.cpp, src/Celebrity.h: Added getLifespan()
+
+2006-04-19  Markus Schwab  <g17m0@lycos.com>
+
+	* src/StorageMovie.cpp:
+	  Fixed creating a translation for a movie (do first insert, when fail update)
+
+2006-04-18  Markus Schwab  <g17m0@lycos.com>
+
+	* src/ActorList.cpp, src/ActorList.h:
+	  Don't disable selection of movie-lines; but set enable-property accordingly
+
+	* src/OOList.cpp:
+	  Don't change visible-property for genres, but editable-property
+
 2006-04-14  Markus Schwab  <g17m0@lycos.com>
 
 	* ChangeLog, NEWS: Changes of V0.8.22 added

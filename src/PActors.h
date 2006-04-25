@@ -1,7 +1,7 @@
 #ifndef PACTORS_H
 #define PACTORS_H
 
-//$Id: PActors.h,v 1.8 2006/04/24 02:49:13 markus Exp $
+//$Id: PActors.h,v 1.9 2006/04/25 03:16:52 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ class PActors : public NBPage {
 
    void actorPlaysInMovie ();
    void relateMovies (const HActor& actor, const std::vector<HMovie>& movies);
-   void showMovies (const Gtk::TreeIter& row);
+   void showMovies (const HActor& actor, const std::vector<HMovie>& newMovies);
 
    void viewByActor ();
    void viewByMovie ();

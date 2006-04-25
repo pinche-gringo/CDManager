@@ -1,9 +1,9 @@
-dnl $Id: configure.ac,v 1.23 2006/04/14 15:38:15 markus Rel $
+dnl $Id: configure.ac,v 1.24 2006/04/25 04:10:57 markus Rel $
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.52)
-AC_REVISION($Revision: 1.23 $)
-AC_INIT(CDManager, 0.8.22, [g17m0@lycos.com], CDManager)
+AC_REVISION($Revision: 1.24 $)
+AC_INIT(CDManager, 0.8.30, [g17m0@lycos.com], CDManager)
 
 RELEASE=${PACKAGE_VERSION%.*}
 AC_DEFINE_UNQUOTED(PRG_RELEASE, "$RELEASE", [Define to the release of the program])
@@ -32,7 +32,7 @@ AC_DEFINE_UNQUOTED(CATALOGS, "$ALL_LINGUAS", [Translations])
 dnl Checks for libraries.
 AC_CHECK_LIB(stdc++, main)
 
-PKG_CHECK_MODULES(DEPS, glibmm-2.4 >= 2.4.0 YGP >= 0.7.41)
+PKG_CHECK_MODULES(DEPS, glibmm-2.4 >= 2.4.0 YGP >= 0.7.60)
 PKG_CHECK_MODULES(XGP, gtkmm-2.4 >= 2.6.0 gthread-2.0 > 2.2.0 XGP >= 0.7.40)
 
 #
@@ -200,7 +200,7 @@ AC_ARG_ENABLE(debug,
               AC_HELP_STRING([[[[[--enable-debug[=LEVEL]]]]]],
                              [Enables additional traces]),
               if test "$enableval" != "no"; then
-                  test "$enableval" == "yes" && enableval=0
+                  test "$enableval" = "yes" && enableval=0
                   CXXFLAGS="-g -O2 -DTRACELEVEL=$enableval";
               else
                   CXXFLAGS="-O2 -UTRACELEVEL"; fi)
@@ -208,7 +208,7 @@ AC_ARG_ENABLE(checks,
               AC_HELP_STRING([[[[[--enable-checks[=LEVEL]]]]]],
                              [Enables additional (internal) checks]),
               if test "$enableval" != "no"; then
-                  test "$enableval" == "yes" && enableval=0
+                  test "$enableval" = "yes" && enableval=0
                   CXXFLAGS="$CXXFLAGS -DCHECK=$enableval";
               else
                   CXXFLAGS="$CXXFLAGS -DNDEBUG -UCHECK"; fi)

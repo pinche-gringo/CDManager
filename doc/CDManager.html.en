@@ -1,5 +1,5 @@
 <!-- -*-HTML-*- -->
-<!-- $Id: CDManager.html.en,v 1.4 2006/01/19 23:06:40 markus Rel $ -->
+<!-- $Id: CDManager.html.en,v 1.5 2006/04/25 04:05:16 markus Rel $ -->
 
 <!--
   Copyright (C) 2004 - 2006 Markus Schwab (g17m0@lycos.com)
@@ -113,7 +113,7 @@
 
     <h3>Actors page</h3>
 
-    <p>This page contains the actors, sorted by name. As with the
+    <p>This page contains the actors, by default sorted by name. As with the
       records, its contents can be edited &ldquo;inline&rdquo; (see
       above).</p>
 
@@ -122,6 +122,9 @@
 
     <p>Equal to the record pages, it is possible to searched for
       Entries (see above).</p>
+
+    <p>The menu <tt>View</tt> allows to switch between showing movies
+      for each actor or all actors of a movie.</p>
 
     <h2><a name="Dialogs"></a>Dialogs</h2>
 
@@ -163,7 +166,8 @@
 
     <p>An overview of the available options can be displayed with</p>
 
-    <pre>   CDManager --help</pre>
+    <pre>   CDManager --help
+</pre>
 
     <h2>Credits</h2>
     <p>Thanks to the folks at MySQL for their great database and the

@@ -1,5 +1,5 @@
 <!-- -*-HTML-*- -->
-<!-- $Id: CDManager.html.de,v 1.3 2006/01/19 23:06:40 markus Rel $ -->
+<!-- $Id: CDManager.html.de,v 1.4 2006/04/25 04:05:16 markus Rel $ -->
 
 <!--
   Copyright (C) 2004 - 2006 Markus Schwab (g17m0@lycos.com)
@@ -122,9 +122,10 @@
 
     <h3>Schauspieler-Reiter</h3>
 
-    <p>Dieser Reiter enth&auml;hlt die Schauspieler; sortiert nach
-      Namen. Genau wie die Platten kann der Inhalt dieser Liste
-      &ldquo;inline&rdquo; (siehe oben) bearbeitet werden.</p>
+    <p>Dieser Reiter enth&auml;hlt die Schauspieler; sortiert
+      (standardm&auml;&szlig;ig) nach Namen. Genau wie die Platten kann
+      der Inhalt dieser Liste &ldquo;inline&rdquo; (siehe oben)
+      bearbeitet werden.</p>
 
     <p>Neue Eintr&auml;ge k&ouml;nnen durch Ausw&auml;hlen des
       entsprechenden Eintrags im <tt>Bearbeiten</tt> Men&uuml;
@@ -132,6 +133,10 @@
 
     <p>Genau wie bei den Platten kann innerhalb der (aktiven) Liste
       kann nach Eintr&auml;gen gesucht werden (siehe oben).</p>
+
+    <p>Das Men&uuml; <tt>Ansicht</tt> erm&ouml;glicht das Umschalten
+      zwischen einer der Anzeige von allen Filmen zu den Schauspielern
+      oder aller Schauspieler eines Filmes.</p>
 
     <h2><a name="Dialogs"></a>Dialoge</h2>
 
@@ -165,7 +170,7 @@
       der speziellen Worte (f&uuml;r das Sortieren)).</p>
 
     <h2>Autor</h2>
-    <p>Sowohl die Dokumentation als auch das Spiel wurden von Markus Schwab
+    <p>Sowohl die Dokumentation als auch das Programm wurden von Markus Schwab
       erstellt.</p>
 
     <h2>Aufruf</h2>
@@ -176,7 +181,8 @@
     <p>Eine &Uuml;bersicht &uuml;ber die vorhandenen Optionen
     erh&auml;lt man mit</p>
 
-    <pre>   CDManager --help</pre>
+    <pre>   CDManager --help
+</pre>
 
     <h2>Danksagung</h2>
     <p>Dank an die Leute von MySQL f&uuml;r deren gro&szlig;artige Datenbank

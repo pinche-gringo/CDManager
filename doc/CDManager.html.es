@@ -1,5 +1,5 @@
 <!-- -*-HTML-*- -->
-<!-- $Id: CDManager.html.es,v 1.3 2006/01/19 23:06:52 markus Rel $ -->
+<!-- $Id: CDManager.html.es,v 1.4 2006/04/25 04:05:16 markus Rel $ -->
 
 <!--
   Copyright (C) 2004 - 2006 Markus Schwab (g17m0@lycos.com)
@@ -113,7 +113,7 @@
 
     <h3>P&aacute;gina Actores</h3>
 
-    <p>Esa p&aacute;gina contiene los actores (ordenado por su
+    <p>Esa p&aacute;gina contiene los actores (ordenado por defecto por su
       nombre). Tal cual como los discos se puede cambiar la
       informacion &ldquo;inline&rdquo; (v&eacute;ase arriba).</p>
 
@@ -121,6 +121,9 @@
       en el men&uacute; <tt>Editar</tt>.</p>
 
     <p>Igual a los discos se puede buscar (v&eacute;ase arriba).</p>
+
+    <p>El men&uacute; <tt>Ver</tt> permita cambiar la vista ordenado
+      por actores por pel&iacute;cula o pel&iacute;culas por actor.</p>
 
     <h2><a name="Dialogs"></a>Dialogues</h2>
 
@@ -160,7 +163,8 @@
 
     <p>Las opciones disponibles se muestra con</p>
 
-    <pre>   CDManager --help</pre>
+    <pre>   CDManager --help
+</pre>
 
     <h2>Cr&eacute;ditos</h2>
     <p>Gracias a la gente de MySQL por su base de datos excelente y su

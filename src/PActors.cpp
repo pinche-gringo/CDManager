@@ -1,11 +1,11 @@
-//$Id: PActors.cpp,v 1.16 2006/04/25 03:46:29 markus Rel $
+//$Id: PActors.cpp,v 1.17 2006/06/06 22:02:03 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actors
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.16 $
+//REVISION    : $Revision: 1.17 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -307,7 +307,7 @@ void PActors::PActors::loadData () {
 		  else {
 		     Glib::ustring err (_("The database contains an invalid reference (%1) to a movie!"));
 		     err.replace (err.find ("%1"), 2, YGP::ANumeric::toString (*m));
-		     throw std::runtime_error (err);
+		     throw std::invalid_argument (err);
 		  }
 	       }
 
@@ -556,61 +556,54 @@ void PActors::clear () {
 /// Saves the changed information
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
-void PActors::saveData () throw (Glib::ustring) {
+void PActors::saveData () throw (std::exception) {
    TRACE9 ("PActors::saveData ()");
 
-   try {
-      std::vector<YGP::HEntity> aSaved;
-      std::vector<YGP::HEntity>::iterator posSaved (aSaved.end ());
+   std::vector<YGP::HEntity> aSaved;
+   std::vector<YGP::HEntity>::iterator posSaved (aSaved.end ());
 
-      while (aUndo.size ()) {
-	 Undo last (aUndo.top ());
+   while (aUndo.size ()) {
+      Undo last (aUndo.top ());
 
-	 posSaved = lower_bound (aSaved.begin (), aSaved.end (), last.getEntity ());
-	 if ((posSaved == aSaved.end ()) || (*posSaved != last.getEntity ())) {
-	    switch (last.what ()) {
-	    case MOVIES:
-	    case ACTOR: {
-	       HActor actor (HActor::cast ((last.what () == ACTOR)
-					   ? last.getEntity ()
-					   : delRelation[last.getEntity ()]));
-	       if (last.how () == Undo::DELETE) {
-		  if (actor->getId ()) {
-		     Check3 (actor->getId () == last.column ());
-		     StorageActor::deleteActor (actor->getId ());
+      posSaved = lower_bound (aSaved.begin (), aSaved.end (), last.getEntity ());
+      if ((posSaved == aSaved.end ()) || (*posSaved != last.getEntity ())) {
+	 switch (last.what ()) {
+	 case MOVIES:
+	 case ACTOR: {
+	    HActor actor (HActor::cast ((last.what () == ACTOR)
+					? last.getEntity ()
+					: delRelation[last.getEntity ()]));
+	    if (last.how () == Undo::DELETE) {
+	       if (actor->getId ()) {
+		  Check3 (actor->getId () == last.column ());
+		  StorageActor::deleteActor (actor->getId ());
+	       }
+	    }
+	    else {
+	       SaveCelebrity::store (actor, "Actors", *getWindow ());
+
+	       // Check if the related movies have been changed
+	       YGP::HEntity entityActor (YGP::HEntity::cast (actor));
+	       for (std::map<YGP::HEntity, YGP::HEntity>::iterator i (delRelation.begin ());
+		    i != delRelation.end (); ++i)
+		  if (i->second == entityActor) {
+		     saveRelatedMovies (actor);
+		     delRelation.erase (i);
 		  }
-	       }
-	       else {
-		  SaveCelebrity::store (actor, "Actors", *getWindow ());
+	    }
+	    break; }
 
-		  // Check if the related movies have been changed
-		  YGP::HEntity entityActor (YGP::HEntity::cast (actor));
-		  for (std::map<YGP::HEntity, YGP::HEntity>::iterator i (delRelation.begin ());
-		       i != delRelation.end (); ++i)
-		     if (i->second == entityActor) {
-			saveRelatedMovies (actor);
-			delRelation.erase (i);
-		     }
-	       }
-	       break; }
+	 default:
+	    Check1 (0);
+	 } // end-switch
+	 aSaved.insert (posSaved, last.getEntity ());
+      }
+      aUndo.pop ();
+   } // end-while
+   Check3 (apMenus[UNDO]);
+   apMenus[UNDO]->set_sensitive (false);
 
-	    default:
-	       Check1 (0);
-	    } // end-switch
-	    aSaved.insert (posSaved, last.getEntity ());
-	 }
-	 aUndo.pop ();
-      } // end-while
-      Check3 (apMenus[UNDO]);
-      apMenus[UNDO]->set_sensitive (false);
-
-      delRelation.clear ();
-   }
-   catch (std::exception& err) {
-      Glib::ustring msg (_("Error saving data!\n\nReason: %1"));
-      msg.replace (msg.find ("%1"), 2, err.what ());
-      throw (msg);
-   }
+   delRelation.clear ();
 }
 
 //-----------------------------------------------------------------------------
@@ -651,10 +644,11 @@ void PActors::viewByActor () {
       for (std::vector<HActor>::const_iterator a (aActors.begin ()); a != aActors.end (); ++a) {
 	 Gtk::TreeModel::Row actor (actors.append (YGP::HEntity::cast (*a)));
 
-	 if (relActors.isRelated (*a))
-	    for (std::vector<HMovie>::iterator m (relActors.getObjects (*a).begin ());
-		 m != relActors.getObjects (*a).end (); ++m)
+	 if (relActors.isRelated (*a)) {
+	    const std::vector<HMovie>& am (relActors.getObjects (*a));
+	    for (std::vector<HMovie>::const_iterator m (am.begin ()); m != am.end (); ++m)
 	       actors.append (YGP::HEntity::cast (*m), actor);
+	 }
       }
       actors.expand_all ();
       actorSelected ();
@@ -673,13 +667,14 @@ void PActors::viewByMovie () {
 
       std::vector<HMovie> aMovies;
       for (std::vector<HActor>::const_iterator a (aActors.begin ()); a != aActors.end (); ++a)
-	 if (relActors.isRelated (*a))
-	    for (std::vector<HMovie>::iterator m (relActors.getObjects (*a).begin ());
-		 m != relActors.getObjects (*a).end (); ++m) {
+	 if (relActors.isRelated (*a)) {
+	    const std::vector<HMovie>& am (relActors.getObjects (*a));
+	    for (std::vector<HMovie>::const_iterator m (am.begin ()); m != am.end (); ++m) {
 	       std::vector<HMovie>::iterator pos (lower_bound (aMovies.begin (), aMovies.end (), YGP::HEntity::cast (*m)));
 	       if ((pos == aMovies.end ()) || (*pos != *m))
 		  aMovies.insert (pos, *m);
 	    }
+	 }
       std::sort (aMovies.begin (), aMovies.end (), &Movie::compByName);
 
       // Fill list sorted by actors with their movies as child
@@ -687,10 +682,11 @@ void PActors::viewByMovie () {
       for (std::vector<HMovie>::const_iterator m (aMovies.begin ()); m != aMovies.end (); ++m) {
 	 Gtk::TreeModel::Row movie (actors.append (YGP::HEntity::cast (*m)));
 
-	 if (relActors.isRelated (*m))
-	    for (std::vector<HActor>::iterator a (relActors.getParents (*m).begin ());
-		 a != relActors.getParents (*m).end (); ++a)
+	 if (relActors.isRelated (*m)) {
+	    const std::vector<HActor>& aa (relActors.getParents (*m));
+	    for (std::vector<HActor>::const_iterator a (aa.begin ()); a != aa.end (); ++a)
 	       actors.append (YGP::HEntity::cast (*a), movie);
+	 }
       }
       actors.expand_all ();
       actorSelected ();

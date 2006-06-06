@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.77 2006/04/23 03:21:49 markus Rel $
+//$Id: CDManager.cpp,v 1.78 2006/06/06 22:02:03 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.77 $
+//REVISION    : $Revision: 1.78 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -355,9 +355,9 @@ CDManager::CDManager (Options& options)
       Genres::loadFromFile (DATADIR "Genres.dat", recGenres, movieGenres, pLang);
       TRACE8 ("Genres: " << recGenres.size () << '/' << movieGenres.size ());
    }
-   catch (std::string& e) {
+   catch (std::exception& e) {
       Glib::ustring msg (_("Can't read datafile containing the genres!\n\nReason: %1"));
-      msg.replace (msg.find ("%1"), 2, e);
+      msg.replace (msg.find ("%1"), 2, e.what ());
       Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
       dlg.run ();
    }
@@ -416,7 +416,9 @@ void CDManager::save () {
       Check3 (apMenus[SAVE]);
       apMenus[SAVE]->set_sensitive (false);
    }
-   catch (Glib::ustring& msg) {
+   catch (std::exception& err) {
+      Glib::ustring msg (_("Error saving data!\n\nReason: %1"));
+      msg.replace (msg.find ("%1"), 2, err.what ());
       Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
       dlg.run ();
    }
@@ -427,11 +429,11 @@ void CDManager::save () {
 /// Imports information from audio file (e.g. MP3-ID3 tag or OGG-commentheader)
 //-----------------------------------------------------------------------------
 void CDManager::importFromFileInfo () {
-   XGP::TFileDialog<CDManager>::create (_("Select file(s) to import"), *this,
-					&CDManager::parseFileInfo,
-					Gtk::FILE_CHOOSER_ACTION_OPEN,
-					XGP::IFileDialog::MUST_EXIST
-					| XGP::IFileDialog::MULTIPLE);
+   XGP::FileDialog::create (_("Select file(s) to import"),
+			    Gtk::FILE_CHOOSER_ACTION_OPEN,
+			    XGP::FileDialog::MUST_EXIST
+			    | XGP::FileDialog::MULTIPLE)
+      ->sigSelected.connect (mem_fun (*this, &CDManager::parseFileInfo));
 }
 #endif
 
@@ -770,15 +772,7 @@ void CDManager::export2HTML () {
 	 Check3 (pid != -1);
 	 YGP::Process::waitForProcess (pid);
       }
-      catch (Glib::ustring& e) {
-	 Gtk::MessageDialog dlg (e, Gtk::MESSAGE_ERROR);
-	 dlg.run ();
-      }
-      catch (std::string& e) {
-	 Gtk::MessageDialog dlg (Glib::locale_to_utf8 (e), Gtk::MESSAGE_ERROR);
-	 dlg.run ();
-      }
-      catch (Glib::Error& e) {
+      catch (std::exception& e) {
 	 Gtk::MessageDialog dlg (e.what (), Gtk::MESSAGE_ERROR);
 	 dlg.run ();
       }

@@ -1,7 +1,7 @@
 #ifndef PRECORDS_H
 #define PRECORDS_H
 
-//$Id: PRecords.h,v 1.10 2006/02/27 20:44:35 markus Rel $
+//$Id: PRecords.h,v 1.11 2006/06/06 22:02:03 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 
 
 #include <vector>
+#include <stdexcept>
 
 #include <YGP/Relation.h>
 
@@ -45,7 +46,7 @@ class PRecords : public NBPage {
    virtual ~PRecords ();
 
    virtual void loadData ();
-   virtual void saveData () throw (Glib::ustring);
+   virtual void saveData () throw (std::exception);
    virtual void getFocus ();
    virtual void addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAction);
    virtual void deleteSelection ();

@@ -1,11 +1,11 @@
-//$Id: Words.cpp,v 1.18 2006/03/11 03:28:00 markus Rel $
+//$Id: Words.cpp,v 1.19 2006/06/06 22:02:03 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Words
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.18 $
+//REVISION    : $Revision: 1.19 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -50,6 +50,8 @@ int Words::_key (-1);
 typedef struct WordPtrs {
    Words::values* info;
    char*          values;
+
+   WordPtrs () : info (NULL), values (NULL) { }
 } WordPtrs;
 static std::map<pid_t, WordPtrs*> ptrs;
 
@@ -57,57 +59,57 @@ static std::map<pid_t, WordPtrs*> ptrs;
 //-----------------------------------------------------------------------------
 /// Creates the memory for the reserved words.
 /// \param words: Minimal number of reserved words
-/// \throw Glib::ustring: Describing text in case of error
+/// \throw std::invalid_argument: Describing text in case of error
 /// \remarks The words are stored in shared memory (to be accessible by other
 ///    processes
 //-----------------------------------------------------------------------------
-void Words::create (unsigned int words) throw (Glib::ustring) {
+void Words::create (unsigned int words) throw (std::invalid_argument) {
    TRACE8 ("Words::create (unsigned int) - " << words);
    if ((_key != -1) || areAvailable ())
       return;
 
    WordPtrs* shMem (new WordPtrs);
+   ptrs[YGP::Process::getPID ()] = shMem;
+
    unsigned int size (PAGE_SIZE);
    if ((sizeof (values) + (sizeof (char*) * words)) > size)
       size = ((sizeof (char*) * words) + PAGE_SIZE + sizeof (values)) & ~(PAGE_SIZE - 1);
 
    if (((_key = shmget (IPC_PRIVATE, size, IPC_CREAT | IPC_EXCL | 0600)) == -1)
        || ((shMem->info = (values*)(shmat (_key, 0, 0))) == (values*)-1)
-       || ((shMem->values = NULL),
-	   ((shMem->info->valuesKey = shmget (IPC_PRIVATE, size << 1, IPC_CREAT | IPC_EXCL | 0600)) == -1))
+       || ((shMem->info->valuesKey = shmget (IPC_PRIVATE, size << 1, IPC_CREAT | IPC_EXCL | 0600)) == -1)
        || ((shMem->values = (char*)(shmat (shMem->info->valuesKey, 0, 0))) == (char*)-1)) {
       destroy ();
-      throw (Glib::ustring (strerror (errno)));
+      throw (std::invalid_argument (strerror (errno)));
    }
 
    shMem->info->cNames = shMem->info->cArticles = 0;
    shMem->info->used = 0;
    shMem->info->maxEntries = (size - sizeof (values)) / sizeof (char*);
    TRACE1 ("Words::create (unsigned int) - Key: " << _key);
-   ptrs[YGP::Process::getPID ()] = shMem;
 }
 
 //-----------------------------------------------------------------------------
 /// Gets access to the shared memory with the passed id
 /// \param key: ID of shared memory
 /// \pre Requires the shared memory to be already created
-/// \throw Glib::ustring: Describing text in case of error
+/// \throw std::invalid_argument: Describing text in case of error
 //-----------------------------------------------------------------------------
-void Words::access (unsigned int key) throw (Glib::ustring) {
+void Words::access (unsigned int key) throw (std::invalid_argument) {
    TRACE8 ("Words::access (unsigned int) - " << key);
    if (!key || areAvailable ())
       return;
 
    WordPtrs* shMem (new WordPtrs);
+   ptrs[YGP::Process::getPID ()] = shMem;
+
    if (((shMem->info = (values*)(shmat (key, 0, 0))) == (values*)-1)
-       || ((shMem->values = NULL),
-	   ((shMem->values = (char*)(shmat (shMem->info->valuesKey, 0, 0))) == (char*)-1))) {
+       || ((shMem->values = (char*)(shmat (shMem->info->valuesKey, 0, 0))) == (char*)-1)) {
       destroy ();
-      throw (Glib::ustring (strerror (errno)));
+      throw (std::invalid_argument (strerror (errno)));
    }
    TRACE9 ("Words::access (unsigned int) - Articles: " << shMem->info->cArticles << "; Names: "
 	   << shMem->info->cNames << ": " << *shMem->values);
-   ptrs[YGP::Process::getPID ()] = shMem;
 }
 
 //-----------------------------------------------------------------------------

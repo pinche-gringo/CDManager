@@ -1,7 +1,7 @@
 #ifndef NBPAGE_H
 #define NBPAGE_H
 
-//$Id: NBPage.h,v 1.7 2006/03/18 18:13:25 markus Rel $
+//$Id: NBPage.h,v 1.8 2006/06/06 22:02:03 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 #include <map>
 #include <stack>
 #include <vector>
+#include <stdexcept>
 
 #include <glibmm/ustring.h>
 
@@ -51,7 +52,7 @@ class NBPage : public sigc::trackable {
    bool isLoaded () const { return loaded; }
 
    virtual void loadData () = 0;
-   virtual void saveData () throw (Glib::ustring) = 0;
+   virtual void saveData () throw (std::exception) = 0;
    virtual void getFocus () = 0;
    virtual void addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAction) = 0;
    virtual void removeMenu ();

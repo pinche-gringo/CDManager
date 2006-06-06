@@ -1,7 +1,7 @@
 #ifndef GENRES_H
 #define GENRES_H
 
-//$Id: Genres.h,v 1.3 2006/01/23 03:15:07 markus Rel $
+//$Id: Genres.h,v 1.4 2006/06/06 22:02:03 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 
 #include <glibmm/ustring.h>
 
+#include <YGP/Exception.h>
+
 
 /**Class to handle the genres of both records and movies.
  */
@@ -31,7 +33,7 @@ class Genres : public std::map<unsigned int, Glib::ustring> {
    virtual ~Genres () { }
 
    static void loadFromFile (const char* file, Genres& records, Genres& movies,
-			     const char* languages) throw (std::string);
+			     const char* languages) throw (YGP::ParseError, YGP::FileError);
 
  private:
    Genres (const Genres& other);

@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.25 2006/04/24 01:07:34 markus Rel $
+//$Id: OOList.cpp,v 1.26 2006/06/06 22:02:03 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.25 $
+//REVISION    : $Revision: 1.26 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -93,7 +93,7 @@ void OwnerObjectList::init (const OwnerObjectColumns& cols) {
 	 (bind (mem_fun (*this, &OwnerObjectList::valueChanged), i));
    }
 
-   Gtk::CellRendererCombo* renderer (new Gtk::CellRendererCombo ());
+   Gtk::CellRendererCombo* renderer (new Gtk::CellRendererCombo);
    renderer->property_text_column () = 0;
    renderer->property_model () = mGenres;
    Gtk::TreeViewColumn* column (new Gtk::TreeViewColumn
@@ -179,7 +179,7 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 	       if ((i != row) && (i != row.parent ()->children ().end ())) {
 		  Glib::ustring e (_("Entry `%1' already exists!"));
 		  e.replace (e.find ("%1"), 2, value);
-		  throw (std::runtime_error (e));
+		  throw YGP::InvalidValue (e);
 	       }
 	    }
 	    oldValue = row[colOwnerObjects->name];
@@ -208,7 +208,7 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 		  break;
 	       }
 	    if (g == genres.end ())
-	       throw (std::invalid_argument (_("Unknown genre!")));
+	       throw YGP::InvalidValue (_("Unknown genre!"));
 	    break; }
 	 } // endswitch
 
@@ -226,7 +226,7 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 	       if ((i != row) && (i != mOwnerObjects->children ().end ())) {
 		  Glib::ustring e (_("Entry `%1' already exists!"));
 		  e.replace (e.find ("%1"), 2, value);
-		  throw (std::runtime_error (e));
+		  throw YGP::InvalidValue (e);
 	       }
 	    }
 	    oldValue = row[colOwnerObjects->name];

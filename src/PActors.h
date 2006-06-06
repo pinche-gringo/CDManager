@@ -1,7 +1,7 @@
 #ifndef PACTORS_H
 #define PACTORS_H
 
-//$Id: PActors.h,v 1.9 2006/04/25 03:16:52 markus Rel $
+//$Id: PActors.h,v 1.10 2006/06/06 22:02:03 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 
 
 #include <vector>
+#include <stdexcept>
 
 #include <gtkmm/radioaction.h>
 
@@ -46,7 +47,7 @@ class PActors : public NBPage {
    virtual ~PActors ();
 
    virtual void loadData ();
-   virtual void saveData () throw (Glib::ustring);
+   virtual void saveData () throw (std::exception);
    virtual void getFocus ();
    virtual void addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAction);
    virtual void deleteSelection ();

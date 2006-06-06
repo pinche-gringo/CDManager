@@ -1,14 +1,14 @@
-//$Id: Settings.cpp,v 1.6 2005/05/14 23:32:20 markus Rel $
+//$Id: Settings.cpp,v 1.7 2006/06/06 22:02:03 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Settings
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 23.12.2004
-//COPYRIGHT   : Copyright (C) 2004, 2005
+//COPYRIGHT   : Copyright (C) 2004 - 2006
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ Settings::Settings (Options& options)
      ftrMovie (options.mFooter), hdrRecord (options.rHeader),
      ftrRecord (options.rFooter),
      wordDialog (WordDialog::makeDialog ()) {
-   Check3 (instance == NULL);
+   Check3 (!instance);
    instance =  this;
 
    set_title (_("Preferences"));

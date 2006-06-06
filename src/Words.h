@@ -1,7 +1,7 @@
 #ifndef WORDS_H
 #define WORDS_H
 
-//$Id: Words.h,v 1.11 2006/04/03 21:06:47 markus Rel $
+//$Id: Words.h,v 1.12 2006/06/06 22:02:03 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,6 +18,8 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 
+#include <stdexcept>
+
 #include <glibmm/ustring.h>
 
 
@@ -30,8 +32,8 @@ class Words {
  public:
    /// \name Management methods
    //@{
-   static void create (unsigned int words = 1000) throw (Glib::ustring);
-   static void access (unsigned int key) throw (Glib::ustring);
+   static void create (unsigned int words = 1000) throw (std::invalid_argument);
+   static void access (unsigned int key) throw (std::invalid_argument);
    static bool areAvailable ();
    static void destroy ();
    //@}

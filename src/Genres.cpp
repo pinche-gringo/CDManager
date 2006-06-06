@@ -1,11 +1,11 @@
-//$Id: Genres.cpp,v 1.5 2006/01/23 03:15:07 markus Rel $
+//$Id: Genres.cpp,v 1.6 2006/06/06 22:02:03 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : libCDMgr
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.5 $
+//REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 13.01.2005
 //COPYRIGHT   : Copyright (C) 2005, 2006
@@ -44,13 +44,14 @@
 //-----------------------------------------------------------------------------
 /// Loads the genres from a data-file. The parameter \languages specifies the
 /// language to use.
-/// file: File to load the data from
-/// records: Object, to load the record genres into
-/// movie: Object, to load the movie genres into
-/// languages: Colon-separated list of languages
+/// \param file: File to load the data from
+/// \param records: Object, to load the record genres into
+/// \param movie: Object, to load the movie genres into
+/// \param languages: Colon-separated list of languages
+/// \throw YGP::ParseError, YGP::FileError: In case of an error
 //-----------------------------------------------------------------------------
 void Genres::loadFromFile (const char* file, Genres& records, Genres& movies,
-			   const char* languages) throw (std::string) {
+			   const char* languages) throw (YGP::ParseError, YGP::FileError) {
    Check1 (file); Check1 (languages);
    std::string name (file);
 

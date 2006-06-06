@@ -1,7 +1,7 @@
 #ifndef PMOVIES_H
 #define PMOVIES_H
 
-//$Id: PMovies.h,v 1.5 2006/02/27 20:44:34 markus Rel $
+//$Id: PMovies.h,v 1.6 2006/06/06 22:02:03 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 
 #include <map>
 #include <vector>
+#include <stdexcept>
 
 #include <YGP/Relation.h>
 
@@ -44,7 +45,7 @@ class PMovies : public NBPage {
    virtual ~PMovies ();
 
    virtual void loadData ();
-   virtual void saveData () throw (Glib::ustring);
+   virtual void saveData () throw (std::exception);
    virtual void getFocus ();
    virtual void addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAction);
    virtual void removeMenu ();

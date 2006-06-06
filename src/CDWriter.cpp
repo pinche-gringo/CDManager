@@ -1,11 +1,11 @@
-//$Id: CDWriter.cpp,v 1.23 2006/04/14 05:55:09 markus Rel $
+//$Id: CDWriter.cpp,v 1.24 2006/06/06 22:02:03 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDWriter
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.23 $
+//REVISION    : $Revision: 1.24 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
 //COPYRIGHT   : Copyright (C) 2005, 2006
@@ -46,6 +46,7 @@
 #include <YGP/ATStamp.h>
 #include <YGP/Relation.h>
 #include <YGP/Tokenize.h>
+#include <YGP/Exception.h>
 
 #include "DB.h"
 #include "Words.h"
@@ -243,21 +244,22 @@ int CDWriter::perform (int argc, const char** argv) {
 
    try {
       if (!atoi (argv[1]))
-	 throw Glib::ustring (_("Invalid memory-key (0)!"));
+	 throw std::invalid_argument (_("Invalid memory-key (0)!"));
+
       Words::access (atoi (argv[1]));
       TRACE9 ("Words: " << Words::getMemoryKey () << ": " << Words::cArticles () << '/' << Words::cNames ());
 
       Genres::loadFromFile (DATADIR "Genres.dat", recGenres, movieGenres, *argv);
    }
-   catch (Glib::ustring& e) {
+   catch (std::invalid_argument& e) {
       std::string msg (_("-error: Can't access reserved words!\n\nReason: %1"));
-      msg.replace (msg.find ("%1"), 2, e);
+      msg.replace (msg.find ("%1"), 2, e.what ());
       std::cerr << name () << msg << '\n';
       return -2;
    }
-   catch (std::string& e) {
+   catch (std::exception& e) {
       std::string msg (_("Can't read datafile containing the genres!\n\nReason: %1"));
-      msg.replace (msg.find ("%1"), 2, e);
+      msg.replace (msg.find ("%1"), 2, e.what ());
       std::cerr << name () << msg << '\n';
       return -3;
    }
@@ -288,29 +290,25 @@ int CDWriter::perform (int argc, const char** argv) {
 #endif
  };
 
-   try {
-      for (unsigned int i (0); i < (sizeof (htmlData) / sizeof (*htmlData)); ++i) {
-	 if (htmlData[i].name.size ()
-	     && (htmlData[i].name[0] != YGP::File::DIRSEPARATOR))
-	    htmlData[i].name = DATADIR + htmlData[i].name;
-	 if (htmlData[i].target.size ()
-	     && (htmlData[i].target[0] != YGP::File::DIRSEPARATOR))
-	    htmlData[i].target = DATADIR + htmlData[i].target;
+   for (unsigned int i (0); i < (sizeof (htmlData) / sizeof (*htmlData)); ++i) {
+      if (htmlData[i].name.size ()
+	  && (htmlData[i].name[0] != YGP::File::DIRSEPARATOR))
+	 htmlData[i].name = DATADIR + htmlData[i].name;
+      if (htmlData[i].target.size ()
+	  && (htmlData[i].target[0] != YGP::File::DIRSEPARATOR))
+	 htmlData[i].target = DATADIR + htmlData[i].target;
 
-	 if (!readHeaderFile (htmlData[i].name.c_str (), argv[0], htmlData[i].target,
-			      htmlData[i].source)) {
-	    std::string error ( (_("Error reading header file `%1'!\n\nReason: %2")));
-	    error.replace (error.find ("%1"), 2, htmlData[i].name);
-	    error.replace (error.find ("%2"), 2, strerror (errno));
-	    throw error;
-	 }
+      if (!readHeaderFile (htmlData[i].name.c_str (), argv[0], htmlData[i].target,
+			   htmlData[i].source)) {
+	 std::string error ( (_("Error reading header file `%1'!\n\nReason: %2")));
+	 error.replace (error.find ("%1"), 2, htmlData[i].name);
+	 error.replace (error.find ("%2"), 2, strerror (errno));
+
+	 TRACE1 ("CDWriter::perform (int, const char**) - Error reading HTML-header/footer:\n\t" << msg);
+	 std::cerr << name () << ": " << error << '\n';
+	 return -4;
       }
-   }
-   catch (std::string& msg) {
-      TRACE1 ("CDWriter::perform (int, const char**) - Error reading HTML-header/footer:\n\t" << msg);
-      std::cerr << name () << ": " << msg << '\n';
-      return -4;
-   }
+   } // end-for
 
    unsigned int pos (0);
 #if WITH_MOVIES == 1
@@ -424,16 +422,21 @@ int CDWriter::perform (int argc, const char** argv) {
 	    return -1;
 	 }
       }
-      catch (std::string& error) {
-	 std::cerr << "Error: " << error << '\n';
-	 break;
-      }
       catch (std::exception& error) {
-	 std::cerr << "Error: " << error.what () << '\n';
+	 const char* types ("DMIR");
+	 const char* what[] = { N_("Director"), N_("Movie"), N_("Interpret"), N_("Record") };
+	 Check9 ((sizeof (types) / sizeof (*types)) == (sizeof (what) / sizeof (*what)));
+	 const char* i (strchr (types, type));
+	 Glib::ustring entity (_(i ? what[i - types] : N_("unknown entity")));
+
+	 Glib::ustring msg ( _("-error: Can't read %1: %2"));
+	 msg.replace (msg.find ("%1"), 2, entity);
+	 msg.replace (msg.find ("%2"), 2, error.what ());
+	 std::cerr << name () << msg << '\n';
 	 break;
       }
       catch (...) {
-	 std::cerr << "Unspecified error!\n";
+	 std::cerr << name () << _("-error: Unknown error!\n");
       }
 
       std::cin >> type;
@@ -455,7 +458,7 @@ int CDWriter::perform (int argc, const char** argv) {
       if (relMovies.isRelated (*i)) {
 	 movieWriter.writeDirector (*i, fileMovie);
 
-	 std::vector<HMovie>& dirMovies (relMovies.getObjects (*i));
+	 const std::vector<HMovie>& dirMovies (relMovies.getObjects (*i));
 	 Check3 (dirMovies.size ());
 	 for (std::vector<HMovie>::const_iterator m (dirMovies.begin ());
 	      m != dirMovies.end (); ++m)
@@ -485,7 +488,7 @@ int CDWriter::perform (int argc, const char** argv) {
       if (relRecords.isRelated (*i)) {
 	 recWriter.writeInterpret (*i, fileRec);
 
-	 std::vector<HRecord>& dirRecords (relRecords.getObjects (*i));
+	 const std::vector<HRecord>& dirRecords (relRecords.getObjects (*i));
 	 Check3 (dirRecords.size ());
 	 for (std::vector<HRecord>::const_iterator m (dirRecords.begin ());
 	      m != dirRecords.end (); ++m)
@@ -696,19 +699,17 @@ const char* CDWriter::description () const {
  }
 
 //-----------------------------------------------------------------------------
-/// Creates a file and throws an exception, if it can't be created
-/// \param name: Name of file to create
+/// Creates a file. Errors are reported to std::cerr
+/// \param filename: Name of file to create
 /// \param lang: Language-id
 /// \param file: Created stream
-/// \throws std::string: A describing text in case of an error
 //-----------------------------------------------------------------------------
-void CDWriter::createFile (const std::string& name, const char* lang,
-			   std::ofstream& file) throw (Glib::ustring) {
+void CDWriter::createFile (const std::string& filename, const char* lang, std::ofstream& file) {
    TRACE9 ("CDWriter::createFile (const std::string&, const char*, std::ofstream&) - " << name);
-   Check1 (name.size ());
+   Check1 (filename.size ());
    Check1 (lang);
 
-   std::string utf8file (name);
+   std::string utf8file (filename);
    utf8file += '.';
    utf8file += lang;
    utf8file += ".utf8";
@@ -717,7 +718,7 @@ void CDWriter::createFile (const std::string& name, const char* lang,
       Glib::ustring msg (_("Can't create file `%1'!\n\nReason: %2."));
       msg.replace (msg.find ("%1"), 2, utf8file);
       msg.replace (msg.find ("%2"), 2, strerror (errno));
-      throw msg;
+      std::cerr << name () << _("-error: ") << msg;
    }
 }
 
@@ -788,12 +789,5 @@ int main (int argc, const char* argv[]) {
    CDWriter appl (argc, argv);
 
    Language::init ();
-
-   try {
-      return appl.run ();
-   }
-   catch (std::string& e) {
-      std::cerr << e;
-      return -1;
-   }
+   return appl.run ();
 }

@@ -1,11 +1,11 @@
-//$Id: PMovies.cpp,v 1.16 2006/04/23 02:19:36 markus Rel $
+//$Id: PMovies.cpp,v 1.17 2006/06/06 22:02:03 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movies
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.16 $
+//REVISION    : $Revision: 1.17 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -428,79 +428,72 @@ void PMovies::loadData (const std::string& lang) {
 /// Saves the changed information
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
-void PMovies::saveData () throw (Glib::ustring) {
+void PMovies::saveData () throw (std::exception) {
    TRACE9 ("PMovies::saveData ()");
 
-   try {
-      std::vector<YGP::HEntity> aSaved;
-      std::vector<YGP::HEntity>::iterator posSaved (aSaved.end ());
+   std::vector<YGP::HEntity> aSaved;
+   std::vector<YGP::HEntity>::iterator posSaved (aSaved.end ());
 
-      while (aUndo.size ()) {
-	 Undo last (aUndo.top ());
+   while (aUndo.size ()) {
+      Undo last (aUndo.top ());
 
-	 posSaved = lower_bound (aSaved.begin (), aSaved.end (), last.getEntity ());
-	 if ((posSaved == aSaved.end ()) || (*posSaved != last.getEntity ())) {
-	    switch (last.what ()) {
-	    case MOVIE: {
-	       Check3 (typeid (*last.getEntity ()) == typeid (Movie));
-	       HMovie movie (HMovie::cast (last.getEntity ()));
-	       if (last.how () == Undo::DELETE) {
-		  if (movie->getId ()) {
-		     Check3 (movie->getId () == last.column ());
-		     StorageMovie::deleteMovie (movie->getId ());
-		  }
-
-		  std::map<YGP::HEntity, YGP::HEntity>::iterator delRel
-		     (delRelation.find (last.getEntity ()));
-		  Check3 (delRel != delRelation.end ());
-		  Check3 (typeid (*delRel->second) == typeid (Director));
-		  delRelation.erase (delRel);
+      posSaved = lower_bound (aSaved.begin (), aSaved.end (), last.getEntity ());
+      if ((posSaved == aSaved.end ()) || (*posSaved != last.getEntity ())) {
+	 switch (last.what ()) {
+	 case MOVIE: {
+	    Check3 (typeid (*last.getEntity ()) == typeid (Movie));
+	    HMovie movie (HMovie::cast (last.getEntity ()));
+	    if (last.how () == Undo::DELETE) {
+	       if (movie->getId ()) {
+		  Check3 (movie->getId () == last.column ());
+		  StorageMovie::deleteMovie (movie->getId ());
 	       }
-	       else {
-		  HDirector director  (relMovies.getParent (movie));
-		  if (!director->getId ()) {
-		     Check3 (std::find (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (director)) == aSaved.end ());
-		     Check3 (delRelation.find (YGP::HEntity::cast (director)) == delRelation.end ());
 
-		     SaveCelebrity::store (director, "Directors", *getWindow ());
-		     aSaved.insert (lower_bound (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (director)),
-				    YGP::HEntity::cast (director));
-		     posSaved = lower_bound (aSaved.begin (), aSaved.end (), last.getEntity ());
-		  }
-		  StorageMovie::saveMovie (movie, relMovies.getParent (movie)->getId ());
-	       }
-	       break; }
+	       std::map<YGP::HEntity, YGP::HEntity>::iterator delRel
+		  (delRelation.find (last.getEntity ()));
+	       Check3 (delRel != delRelation.end ());
+	       Check3 (typeid (*delRel->second) == typeid (Director));
+	       delRelation.erase (delRel);
+	    }
+	    else {
+	       HDirector director  (relMovies.getParent (movie));
+	       if (!director->getId ()) {
+		  Check3 (std::find (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (director)) == aSaved.end ());
+		  Check3 (delRelation.find (YGP::HEntity::cast (director)) == delRelation.end ());
 
-	    case DIRECTOR: {
-	       Check3 (typeid (*last.getEntity ()) == typeid (Director));
-	       HDirector director (HDirector::cast (last.getEntity ()));
-	       if (last.how () == Undo::DELETE) {
-		  if (director->getId ()) {
-		     Check3 (director->getId () == last.column ());
-		     StorageMovie::deleteDirector (director->getId ());
-		  }
-	       }
-	       else
 		  SaveCelebrity::store (director, "Directors", *getWindow ());
-	       break; }
+		  aSaved.insert (lower_bound (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (director)),
+				 YGP::HEntity::cast (director));
+		  posSaved = lower_bound (aSaved.begin (), aSaved.end (), last.getEntity ());
+	       }
+	       StorageMovie::saveMovie (movie, relMovies.getParent (movie)->getId ());
+	    }
+	    break; }
 
-	    default:
-	       Check1 (0);
-	    } // end-switch
-	    aSaved.insert (posSaved, last.getEntity ());
+	 case DIRECTOR: {
+	    Check3 (typeid (*last.getEntity ()) == typeid (Director));
+	    HDirector director (HDirector::cast (last.getEntity ()));
+	    if (last.how () == Undo::DELETE) {
+	       if (director->getId ()) {
+		  Check3 (director->getId () == last.column ());
+		  StorageMovie::deleteDirector (director->getId ());
+	       }
+	    }
+	    else
+	       SaveCelebrity::store (director, "Directors", *getWindow ());
+	    break; }
+
+	 default:
+	    Check1 (0);
+	 } // end-switch
+	 aSaved.insert (posSaved, last.getEntity ());
 	 }
-	 aUndo.pop ();
-      } // end-while
-      Check3 (apMenus[UNDO]);
-      apMenus[UNDO]->set_sensitive (false);
+      aUndo.pop ();
+   } // end-while
+   Check3 (apMenus[UNDO]);
+   apMenus[UNDO]->set_sensitive (false);
 
-      Check3 (delRelation.empty ());
-   }
-   catch (std::exception& err) {
-      Glib::ustring msg (_("Error saving data!\n\nReason: %1"));
-      msg.replace (msg.find ("%1"), 2, err.what ());
-      throw (msg);
-   }
+   Check3 (delRelation.empty ());
 }
 
 //-----------------------------------------------------------------------------
@@ -583,7 +576,7 @@ void PMovies::export2HTML (unsigned int fd, const std::string& lang) {
 	 std::stringstream output;
 	 output << 'D' << **i;
 
-	 std::vector<HMovie>& dirMovies (relMovies.getObjects (*i));
+	 const std::vector<HMovie>& dirMovies (relMovies.getObjects (*i));
 	 Check3 (dirMovies.size ());
 	 for (std::vector<HMovie>::const_iterator m (dirMovies.begin ());
 	      m != dirMovies.end (); ++m)

@@ -1,11 +1,11 @@
-//$Id: SongList.cpp,v 1.23 2006/02/11 03:16:24 markus Rel $
+//$Id: SongList.cpp,v 1.24 2006/06/06 22:02:03 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.23 $
+//REVISION    : $Revision: 1.24 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -144,13 +144,13 @@ void SongList::valueChanged (const Glib::ustring& path,
 	 YGP::ANumeric track (value);
 	 if (track.isDefined ()) {
 	    if (track == 0)
-	       throw (std::runtime_error ("Invalid track number: `0'!"));
+	       throw (YGP::InvalidValue ("Invalid track number: `0'!"));
 
 	    Gtk::TreeModel::const_iterator i (getSong (track));
 	    if ((i != row) && (i != mSongs->children ().end ())) {
 	       Glib::ustring e (_("Song `%1' already exists!"));
 	       e.replace (e.find ("%1"), 2, value);
-	       throw (std::runtime_error (e));
+	       throw (YGP::InvalidValue (e));
 	    }
 	 }
 	 song->setTrack (track);
@@ -163,7 +163,7 @@ void SongList::valueChanged (const Glib::ustring& path,
 	 if ((i != row) && (i != mSongs->children ().end ())) {
 	    Glib::ustring e (_("Song `%1' already exists!"));
 	    e.replace (e.find ("%1"), 2, value);
-	    throw (std::runtime_error (e));
+	    throw (YGP::InvalidValue (e));
 	 }
 	 song->setName (value);
 	 oldValue = row[colSongs.colName];
@@ -186,7 +186,7 @@ void SongList::valueChanged (const Glib::ustring& path,
 	       break;
 	    }
 	 if (g == genres.end ())
-	    throw (std::invalid_argument (_("Unknown genre!")));
+	    throw (YGP::InvalidValue (_("Unknown genre!")));
 	 break; }
 
       default:

@@ -1,11 +1,11 @@
-//$Id: MovieList.cpp,v 1.25 2006/04/24 01:07:34 markus Rel $
+//$Id: MovieList.cpp,v 1.26 2006/06/06 22:02:03 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.25 $
+//REVISION    : $Revision: 1.26 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -226,7 +226,7 @@ void MovieList::valueChanged (const Glib::ustring& path,
 	    CDType& type (CDType::getInstance ());
 	    if (!type.exists (value)) {
 	       Glib::ustring e (_("Unknown type of media!"));
-	       throw (std::runtime_error (e));
+	       throw (YGP::InvalidValue (e));
 	    }
 	    movie->setType (value);
 	    oldValue = row[colMovies.type];

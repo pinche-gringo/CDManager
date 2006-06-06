@@ -1,11 +1,11 @@
-//$Id: ActorList.cpp,v 1.8 2006/04/24 02:16:44 markus Rel $
+//$Id: ActorList.cpp,v 1.9 2006/06/06 22:02:02 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actor
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.8 $
+//REVISION    : $Revision: 1.9 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.09.2005
 //COPYRIGHT   : Copyright (C) 2005, 2006
@@ -168,7 +168,7 @@ void ActorList::valueChanged (const Glib::ustring& path,
 	    if ((i != row) && (i != mOwnerObjects->children ().end ())) {
 	       Glib::ustring e (_("Entry `%1' already exists!"));
 	       e.replace (e.find ("%1"), 2, value);
-	       throw (std::runtime_error (e));
+	       throw (YGP::InvalidValue (e));
 	    }
 	 }
 	 actor->setName (value);

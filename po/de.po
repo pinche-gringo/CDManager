@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2006-04-25 00:05-0400\n"
+"POT-Creation-Date: 2006-06-07 21:11-0400\n"
 "PO-Revision-Date: 2005-05-21 15:16-0400\n"
 "Last-Translator: Markus Schwab <g17m0@lycos.com>\n"
 "Language-Team: German <g17m0@lycos.com>\n"
@@ -72,7 +72,7 @@ msgstr "Einstellungen _speichern"
 msgid "<ctl>F9"
 msgstr "<ctl>F9"
 
-#: src/CDManager.cpp:359 src/CDWriter.cpp:259
+#: src/CDManager.cpp:359 src/CDWriter.cpp:261
 msgid ""
 "Can't read datafile containing the genres!\n"
 "\n"
@@ -98,11 +98,21 @@ msgstr "_Schauspieler"
 msgid "Connect to a database ..."
 msgstr "Verbinde zur Datenbank"
 
-#: src/CDManager.cpp:430
+#: src/CDManager.cpp:420
+msgid ""
+"Error saving data!\n"
+"\n"
+"Reason: %1"
+msgstr ""
+"Fehler beim Speichern!\n"
+"\n"
+"Ursache: %2"
+
+#: src/CDManager.cpp:432
 msgid "Select file(s) to import"
 msgstr "Wähle Datei(en) zum Importieren"
 
-#: src/CDManager.cpp:449
+#: src/CDManager.cpp:451
 msgid ""
 "Copyright (C) 2004 - 2006 Markus Schwab\n"
 "e-mail: <g17m0@lycos.com>\n"
@@ -114,19 +124,19 @@ msgstr ""
 "\n"
 "Übersetzt am %1 um %2"
 
-#: src/CDManager.cpp:473
+#: src/CDManager.cpp:475
 msgid "Database login"
 msgstr "Datenbank-Anmeldung"
 
-#: src/CDManager.cpp:516
+#: src/CDManager.cpp:518
 msgid "Reading database ..."
 msgstr "Lese von der Datenbank ..."
 
-#: src/CDManager.cpp:577
+#: src/CDManager.cpp:579
 msgid "The data has been modified! Save those changes?"
 msgstr "Die Daten wurden geändert! Sollen diese Änderungen gespeichert werden?"
 
-#: src/CDManager.cpp:600
+#: src/CDManager.cpp:602
 msgid ""
 "Can't connect to database!\n"
 "\n"
@@ -136,11 +146,11 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManager.cpp:603
+#: src/CDManager.cpp:605
 msgid "Login error"
 msgstr "Fehler bei der Anmeldung"
 
-#: src/CDManager.cpp:613
+#: src/CDManager.cpp:615
 msgid ""
 "Can't query needed information!\n"
 "\n"
@@ -150,11 +160,11 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManager.cpp:638
+#: src/CDManager.cpp:640
 msgid "Disconnected!"
 msgstr "Abgemeldet!"
 
-#: src/CDManager.cpp:661 src/CDWriter.cpp:717
+#: src/CDManager.cpp:663 src/CDWriter.cpp:718
 msgid ""
 "Can't create file `%1'!\n"
 "\n"
@@ -164,7 +174,7 @@ msgstr ""
 "\n"
 "Ursache: %2."
 
-#: src/CDManager.cpp:683
+#: src/CDManager.cpp:685
 msgid ""
 "Can't store special names!\n"
 "\n"
@@ -174,15 +184,15 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManager.cpp:733
+#: src/CDManager.cpp:735
 msgid "Exporting (language %1) ..."
 msgstr "Exportiere (Sprache %1) ..."
 
-#: src/CDManager.cpp:767
+#: src/CDManager.cpp:769
 msgid "Export Warning!"
 msgstr "Warnung beim Exportieren!"
 
-#: src/CDManager.cpp:805
+#: src/CDManager.cpp:799
 msgid ""
 "Can't open file `%1'!\n"
 "\n"
@@ -196,7 +206,7 @@ msgstr ""
 msgid "Type"
 msgstr "Typ"
 
-#: src/MovieList.cpp:84 src/CDWriter.cpp:200
+#: src/MovieList.cpp:84 src/CDWriter.cpp:201
 msgid "Language(s)"
 msgstr "Sprache(n)"
 
@@ -237,8 +247,8 @@ msgstr "Name"
 msgid "Duration"
 msgstr "Dauer"
 
-#: src/SongList.cpp:77 src/OOList.cpp:100 src/CDWriter.cpp:199
-#: src/CDWriter.cpp:518 src/CDWriter.cpp:532 src/ActorList.cpp:60
+#: src/SongList.cpp:77 src/OOList.cpp:100 src/CDWriter.cpp:200
+#: src/CDWriter.cpp:521 src/CDWriter.cpp:535 src/ActorList.cpp:60
 msgid "Genre"
 msgstr ""
 
@@ -250,8 +260,8 @@ msgstr "Das Lied '%1' existiert bereits!"
 msgid "Unknown genre!"
 msgstr "Unbekanntes Genre!"
 
-#: src/OOList.cpp:79 src/CDWriter.cpp:199 src/CDWriter.cpp:516
-#: src/CDWriter.cpp:530 src/ActorList.cpp:59
+#: src/OOList.cpp:79 src/CDWriter.cpp:200 src/CDWriter.cpp:519
+#: src/CDWriter.cpp:533 src/ActorList.cpp:59
 msgid "Year"
 msgstr "Jahr"
 
@@ -363,11 +373,11 @@ msgstr "[PWORT] Paßwort des Datenbankbenutzers\n"
 msgid "[FILE] Use file as INI file\n"
 msgstr "[DATEI] Verwende Datei als Initialisierungsdatei\n"
 
-#: src/CDAppl.cpp:68 src/CDWriter.cpp:108
+#: src/CDAppl.cpp:68 src/CDWriter.cpp:109
 msgid "Output version information and exit\n"
 msgstr "Versionsinformation anzeigen und beenden\n"
 
-#: src/CDAppl.cpp:69 src/CDWriter.cpp:109
+#: src/CDAppl.cpp:69 src/CDWriter.cpp:110
 msgid ""
 "Displays this help and exit\n"
 "\n"
@@ -395,29 +405,20 @@ msgstr "-Warnung: Kein Paßwort angegeben! Die Option 'p' wird ignoriert ...\n"
 msgid "-warning: No file specified! Ignoring option `f'\n"
 msgstr "-Warnung: Keine Datei angegeben! Die Option 'f' wird ignoriert\n"
 
-#: src/CDAppl.cpp:156
-msgid ""
-"-warning: Error reading INI-file `%1'!\n"
-"Reason: %2"
-msgstr ""
-"Fehler beim Lesen der INI-Datei '%1'!\n"
-"\n"
-"Ursache: %2"
-
-#: src/CDAppl.cpp:177
+#: src/CDAppl.cpp:178
 msgid "-warning: Can't convert password to UTF-8! Ignoring ...\n"
 msgstr "-Warnung: Ignoriere das ungültige Paßwort (nicht UTF-8 konform)!\n"
 
-#: src/CDAppl.cpp:186
+#: src/CDAppl.cpp:187
 msgid "-warning: Can't convert username to UTF-8! Ignoring ...\n"
 msgstr ""
 "-Warnung: Ignoriere den ungültigen Benutzernamen (nicht UTF-8 konform)!\n"
 
-#: src/CDAppl.cpp:201 src/CDWriter.cpp:690
+#: src/CDAppl.cpp:202 src/CDWriter.cpp:693
 msgid "Compiled on"
 msgstr "Übersetzt am"
 
-#: src/CDAppl.cpp:203
+#: src/CDAppl.cpp:204
 msgid ""
 "Copyright (C) 2004 - 2006 Markus Schwab; e-mail: g17m0@lycos.com\n"
 "Distributed under the terms of the GNU General Public License"
@@ -465,7 +466,7 @@ msgstr "Vornamen"
 msgid "Articles"
 msgstr "Artikel"
 
-#: src/CDWriter.cpp:97
+#: src/CDWriter.cpp:98
 msgid ""
 "Utitily to write HTML documents from data received\n"
 "\n"
@@ -475,58 +476,58 @@ msgstr ""
 "\n"
 "Aufruf: "
 
-#: src/CDWriter.cpp:98
+#: src/CDWriter.cpp:99
 msgid ""
 " [OPTIONS] [LANGUAGE-ID] [MEMORY-ID]\n"
 "\n"
 msgstr "[OPTIONEN] [SPRACH-CODE] [SPEICHER-ID]\n"
 
-#: src/CDWriter.cpp:99
+#: src/CDWriter.cpp:100
 msgid "Directory to export data to\n"
 msgstr "Verzeichnis in das die Daten exportiert werden sollen\n"
 
-#: src/CDWriter.cpp:101
+#: src/CDWriter.cpp:102
 msgid "File to use as header for records\n"
 msgstr "Headerdatei für Platten\n"
 
-#: src/CDWriter.cpp:102
+#: src/CDWriter.cpp:103
 msgid "File to use as footer for records\n"
 msgstr "Fußdatei für Platten\n"
 
-#: src/CDWriter.cpp:105
+#: src/CDWriter.cpp:106
 msgid "File to use as header for movies\n"
 msgstr "Headerdatei für Filme\n"
 
-#: src/CDWriter.cpp:106
+#: src/CDWriter.cpp:107
 msgid "File to use as footer for movies\n"
 msgstr "Fußdatei für Filme\n"
 
-#: src/CDWriter.cpp:127
+#: src/CDWriter.cpp:128
 msgid "-warning: No directory specified! Ignoring option `d'\n"
 msgstr "-Warnung: Kein Verzeichnis angegeben! Die Option 'd' wird ignoriert\n"
 
-#: src/CDWriter.cpp:137 src/CDWriter.cpp:151
+#: src/CDWriter.cpp:138 src/CDWriter.cpp:152
 msgid "-warning: No file specified! Ignoring option `%1'\n"
 msgstr "-Warnung: Keine Datei angegeben! Die Option '%1' wird ignoriert\n"
 
-#: src/CDWriter.cpp:199 src/CDWriter.cpp:348
+#: src/CDWriter.cpp:200 src/CDWriter.cpp:346 src/CDWriter.cpp:427
 msgid "Interpret"
 msgstr "Interpret"
 
-#: src/CDWriter.cpp:199 src/CDWriter.cpp:324
+#: src/CDWriter.cpp:200 src/CDWriter.cpp:322 src/CDWriter.cpp:427
 msgid "Director"
 msgstr "Regisseur"
 
-#: src/CDWriter.cpp:199 src/CDWriter.cpp:514 src/CDWriter.cpp:528
+#: src/CDWriter.cpp:200 src/CDWriter.cpp:517 src/CDWriter.cpp:531
 #: src/SaveCeleb.cpp:73
 msgid "Name"
 msgstr ""
 
-#: src/CDWriter.cpp:200 src/CDWriter.cpp:520
+#: src/CDWriter.cpp:201 src/CDWriter.cpp:523
 msgid "Media"
 msgstr ""
 
-#: src/CDWriter.cpp:237
+#: src/CDWriter.cpp:238
 msgid ""
 "-error: Need language id and memory-key as parameters\n"
 "(This program is designed to be called by the CDManager-application)\n"
@@ -534,11 +535,11 @@ msgstr ""
 "-Fehler: Benötige Sprachkennung (de, es, ...) und Speicher-ID als Parameter\n"
 "(Dieses Program sollte nur von der CDManager-Anwendung aufgerufen werden)\n"
 
-#: src/CDWriter.cpp:246
+#: src/CDWriter.cpp:247
 msgid "Invalid memory-key (0)!"
 msgstr "Ungültiger Speicher-Schlüssel (0)"
 
-#: src/CDWriter.cpp:253
+#: src/CDWriter.cpp:255
 msgid ""
 "-error: Can't access reserved words!\n"
 "\n"
@@ -548,15 +549,15 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDWriter.cpp:267
+#: src/CDWriter.cpp:269
 msgid "Movies (by %1)"
 msgstr "Filme (sortiert nach %1)"
 
-#: src/CDWriter.cpp:270
+#: src/CDWriter.cpp:272
 msgid "Records (by %1)"
 msgstr "Alben (sortiert nach %1)"
 
-#: src/CDWriter.cpp:302
+#: src/CDWriter.cpp:303
 msgid ""
 "Error reading header file `%1'!\n"
 "\n"
@@ -566,17 +567,41 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/CDWriter.cpp:634
+#: src/CDWriter.cpp:427 src/RelateMovie.cpp:230
+msgid "Movie"
+msgstr "Filme"
+
+#: src/CDWriter.cpp:427
+msgid "Record"
+msgstr "Alben"
+
+#: src/CDWriter.cpp:430
+msgid "unknown entity"
+msgstr "unbekanntes Object!"
+
+#: src/CDWriter.cpp:432
+msgid "-error: Can't read %1: %2"
+msgstr "-Fehler: Kann Datei \"%1\" nicht lesen: %2"
+
+#: src/CDWriter.cpp:439
+msgid "-error: Unknown error!\n"
+msgstr "-Fehler: Unbekannter Fehler!\n"
+
+#: src/CDWriter.cpp:637
 msgid "Language"
 msgstr "Sprache"
 
-#: src/CDWriter.cpp:692
+#: src/CDWriter.cpp:695
 msgid ""
 "Copyright (C) 2005, 2006 Markus Schwab; e-mail: g17m0@lycos.com\n"
 "Distributed under the terms of the GNU General Public License"
 msgstr ""
 "Copyright © 2005, 2006 Markus Schwab; E-Mail: g17m0@lycoscom\n"
 "Vertrieben unter den Bedingungen der GNU General Public License"
+
+#: src/CDWriter.cpp:721
+msgid "-error: "
+msgstr "-Fehler: "
 
 #: src/PRecords.cpp:138
 msgid "Loaded %1 record"
@@ -604,7 +629,7 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/PRecords.cpp:181
+#: src/PRecords.cpp:178
 msgid ""
 "Can't query the songs for record %1!\n"
 "\n"
@@ -614,51 +639,41 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/PRecords.cpp:371 src/PActors.cpp:382 src/PMovies.cpp:243
+#: src/PRecords.cpp:369 src/PActors.cpp:382 src/PMovies.cpp:243
 msgid "<ctl>Z"
 msgstr ""
 
-#: src/PRecords.cpp:374
+#: src/PRecords.cpp:372
 msgid "New _interpret"
 msgstr "Neuer _Interpret"
 
-#: src/PRecords.cpp:375 src/PActors.cpp:386 src/PMovies.cpp:247
+#: src/PRecords.cpp:373 src/PActors.cpp:386 src/PMovies.cpp:247
 msgid "<ctl>N"
 msgstr ""
 
-#: src/PRecords.cpp:377
+#: src/PRecords.cpp:375
 msgid "_New record"
 msgstr "_Neues Album"
 
-#: src/PRecords.cpp:378 src/PActors.cpp:389 src/PMovies.cpp:250
+#: src/PRecords.cpp:376 src/PActors.cpp:389 src/PMovies.cpp:250
 msgid "<ctl><alt>N"
 msgstr ""
 
-#: src/PRecords.cpp:380
+#: src/PRecords.cpp:378
 msgid "New _song"
 msgstr "Neues _Lied"
 
-#: src/PRecords.cpp:381
+#: src/PRecords.cpp:379
 msgid "<ctl><shft>N"
 msgstr ""
 
-#: src/PRecords.cpp:383 src/PActors.cpp:391 src/PMovies.cpp:252
+#: src/PRecords.cpp:381 src/PActors.cpp:391 src/PMovies.cpp:252
 msgid "_Delete"
 msgstr "_Löschen"
 
-#: src/PRecords.cpp:384 src/PActors.cpp:392 src/PMovies.cpp:253
+#: src/PRecords.cpp:382 src/PActors.cpp:392 src/PMovies.cpp:253
 msgid "<ctl>Delete"
 msgstr ""
-
-#: src/PRecords.cpp:571 src/PActors.cpp:610 src/PMovies.cpp:500
-msgid ""
-"Error saving data!\n"
-"\n"
-"Reason: %1"
-msgstr ""
-"Fehler beim Speichern!\n"
-"\n"
-"Ursache: %2"
 
 #: src/PActors.cpp:308
 msgid "The database contains an invalid reference (%1) to a movie!"
@@ -704,11 +719,11 @@ msgstr "Nach _Schauspieler"
 msgid "By _movie"
 msgstr "Nach _Film"
 
-#: src/PActors.cpp:647 src/ActorList.cpp:58
+#: src/PActors.cpp:640 src/ActorList.cpp:58
 msgid "Actors/Movies"
 msgstr "Schauspieler/Filme"
 
-#: src/PActors.cpp:672
+#: src/PActors.cpp:666
 msgid "Movies/Actors"
 msgstr "Filme/Schauspieler"
 
@@ -763,10 +778,6 @@ msgstr "Warnung beim Laden von Platte '%1' : %2"
 #: src/RelateMovie.cpp:212
 msgid "Movies starring %1"
 msgstr "Filme mit %1"
-
-#: src/RelateMovie.cpp:230
-msgid "Movie"
-msgstr "Filme"
 
 #: src/RelateMovie.cpp:231
 msgid "Available directors/movies"

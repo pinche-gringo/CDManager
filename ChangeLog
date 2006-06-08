@@ -1,3 +1,18 @@
+2006-06-07  Markus Schwab  <g17m0@lycos.com>
+
+	* ChangeLog, NEWS: Changes of V0.8.31 commented
+
+	* configure.ac: Version to 0.8.31; Needing libYGP 0.8.00
+
+	* po/de.po, po/en.po, po/es.po: Added error-messages of CDWriter
+
+	* src/CDAppl.cpp: Improved error-handling of reading INI-files
+
+2006-06-06  Markus Schwab  <g17m0@lycos.com>
+
+	* src/ActorList.cpp, src/CDAppl.cpp, src/CDManager.cpp, src/CDWriter.cpp, src/CDWriter.h, src/Genres.cpp, src/Genres.h, src/MovieList.cpp, src/NBPage.h, src/OOList.cpp, src/PActors.cpp, src/PActors.h, src/PMovies.cpp, src/PMovies.h, src/PRecords.cpp, src/PRecords.h, src/Settings.cpp, src/SongList.cpp, src/Words.cpp, src/Words.h:
+	  Adapted to new exception-handling style of libYGP 0.8.00
+
 2006-04-25  Markus Schwab  <g17m0@lycos.com>
 
 	* ChangeLog, NEWS: Changes of V0.8.30 documented

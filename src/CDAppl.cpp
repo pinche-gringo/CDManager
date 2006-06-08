@@ -1,11 +1,11 @@
-//$Id: CDAppl.cpp,v 1.15 2006/06/06 22:02:02 markus Exp $
+//$Id: CDAppl.cpp,v 1.16 2006/06/08 01:11:09 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Application
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.15 $
+//REVISION    : $Revision: 1.16 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.12.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -152,11 +152,12 @@ void CDAppl::readINIFile (const char* pFile) {
 
       INIFILE_READ ();
    }
+   catch (YGP::FileError&) { }
    catch (std::exception& error) {
-      std::string err (_("-warning: Error reading INI-file `%1'!\nReason: %2"));
+      std::string err ("-warning: Error reading INI-file `%1'! %2\n");
       err.replace (err.find ("%1"), 2, pFile);
       err.replace (err.find ("%2"), 2, error.what ());
-      std::cerr << PACKAGE << err << '\n';
+      std::cerr << name () << err;
    }
    options.pINIFile = pFile;
 }

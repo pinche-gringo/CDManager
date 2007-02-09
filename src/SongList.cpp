@@ -1,11 +1,11 @@
-//$Id: SongList.cpp,v 1.25 2007/02/09 12:15:00 markus Exp $
+//$Id: SongList.cpp,v 1.26 2007/02/09 12:53:17 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.25 $
+//REVISION    : $Revision: 1.26 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2007
@@ -314,8 +314,9 @@ void SongList::setGenre (Gtk::TreeIter& iter, unsigned int genre) {
    TRACE9 ("SongList::setGenre (Gtk::TreeIter&, unsigned int) - Genre: " << song->getGenre ());
    if (!song->getGenre ()) {
       TRACE9 ("SongList::setGenre (Gtk::TreeIter&, unsigned int) - Changing " << song->getName ());
+      Glib::ustring oldValue (1, song->getGenre ());
+
       song->setGenre (genre);
-      Glib::ustring oldValue ((*iter)[colSongs.colGenre]);
       signalChanged.emit (iter, 3, oldValue);
 
       if (genre >= genres.size ())

@@ -1,7 +1,7 @@
 #ifndef WRITER_H
 #define WRITER_H
 
-//$Id: Writer.h,v 1.10 2006/03/05 18:33:42 markus Rel $
+//$Id: Writer.h,v 1.11 2007/02/09 12:15:00 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,8 +20,6 @@
 
 #include <cdmgr-cfg.h>
 
-#include <map>
-#include <vector>
 #include <string>
 
 #if WITH_MOVIES == 1
@@ -33,6 +31,7 @@
 #  include "Interpret.h"
 #endif
 
+#include "Genres.h"
 #include "Options.h"
 
 #include <YGP/TableWriter.h>
@@ -43,8 +42,7 @@
  */
 class MovieWriter : public YGP::TableWriter {
  public:
-   MovieWriter (const std::string& format,
-		std::map<unsigned int, Glib::ustring> genres)
+   MovieWriter (const std::string& format, Genres& genres)
       : YGP::TableWriter (format, TBLW_HTML_PARAMS), oddLine (true), genres (genres) { }
    virtual ~MovieWriter ();
 
@@ -64,7 +62,7 @@ class MovieWriter : public YGP::TableWriter {
    HDirector hDirector;
 
    bool oddLine;
-   std::map<unsigned int, Glib::ustring> genres;
+   Genres& genres;
 };
 #endif
 
@@ -74,8 +72,7 @@ class MovieWriter : public YGP::TableWriter {
  */
 class RecordWriter : public YGP::TableWriter {
  public:
-   RecordWriter (const std::string& format,
-		 std::map<unsigned int, Glib::ustring> genres)
+   RecordWriter (const std::string& format, Genres& genres)
       : YGP::TableWriter (format, TBLW_HTML_PARAMS), oddLine (true), genres (genres) { }
    virtual ~RecordWriter ();
 
@@ -93,7 +90,7 @@ class RecordWriter : public YGP::TableWriter {
    HInterpret hInterpret;
 
    bool oddLine;
-   std::map<unsigned int, Glib::ustring> genres;
+   Genres& genres;
 };
 #endif
 

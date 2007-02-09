@@ -1,14 +1,14 @@
-//$Id: SongList.cpp,v 1.24 2006/06/06 22:02:03 markus Rel $
+//$Id: SongList.cpp,v 1.25 2007/02/09 12:15:00 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : src
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.24 $
+//REVISION    : $Revision: 1.25 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006
+//COPYRIGHT   : Copyright (C) 2004 - 2007
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -177,15 +177,14 @@ void SongList::valueChanged (const Glib::ustring& path,
 	 break;
 
       case 3: {
-	 Genres::const_iterator g (genres.begin ());
-	 for (; g != genres.end (); ++g)
-	    if (g->second == value) {
-	       oldValue = Glib::ustring (1, (char)song->getGenre ());
-	       song->setGenre (g->first);
-	       row[colSongs.colGenre] = value;
-	       break;
-	    }
-	 if (g == genres.end ())
+	 Genres::const_iterator g (std::find (genres.begin (), genres.end (), value));
+	 if (g != genres.end ()) {
+	    oldValue = Glib::ustring (1, (char)song->getGenre ());
+	    song->setGenre (g - genres.begin ());
+	    row[colSongs.colGenre] = value;
+	    break;
+	 }
+	 else
 	    throw (YGP::InvalidValue (_("Unknown genre!")));
 	 break; }
 
@@ -250,10 +249,9 @@ void SongList::updateGenres () {
    TRACE9 ("SongList::updateGenres () - Genres: " << genres.size ());
 
    mSongGenres->clear ();
-   for (Genres::const_iterator g (genres.begin ());
-	g != genres.end (); ++g) {
+   for (Genres::const_iterator g (genres.begin ()); g != genres.end (); ++g) {
       Gtk::TreeModel::Row newGenre (*mSongGenres->append ());
-      newGenre[colSongGenres.genre] = (g->second);
+      newGenre[colSongGenres.genre] = (*g);
    }
 }
 
@@ -320,11 +318,9 @@ void SongList::setGenre (Gtk::TreeIter& iter, unsigned int genre) {
       Glib::ustring oldValue ((*iter)[colSongs.colGenre]);
       signalChanged.emit (iter, 3, oldValue);
 
-      Genres::const_iterator g
-	 (genres.find (song->getGenre ()));
-      if (g == genres.end ())
-	 g = genres.begin ();
-      (*iter)[colSongs.colGenre] = g->second;
+      if (genre >= genres.size ())
+	  genre = 0;
+      (*iter)[colSongs.colGenre] = genres[genre];
    }
 }
 
@@ -341,11 +337,8 @@ void SongList::update (Gtk::TreeModel::Row& row) {
    row[colSongs.colName] = song->getName ();
    row[colSongs.colDuration] = song->getDuration ();
 
-   Check3 (genres.size ());
-   Genres::const_iterator g
-      (genres.find (song->getGenre ()));
-   if (g == genres.end ())
-      g = genres.begin ();
-   Check3 (g != genres.end ());
-   row[colSongs.colGenre] = g->second;
+   unsigned int genre (song->getGenre ());
+   if (genre >= genres.size ())
+      genre = 0;
+   row[colSongs.colGenre] = genres[genre];
 }

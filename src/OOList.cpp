@@ -1,14 +1,14 @@
-//$Id: OOList.cpp,v 1.26 2006/06/06 22:02:03 markus Rel $
+//$Id: OOList.cpp,v 1.27 2007/02/09 12:15:00 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.26 $
+//REVISION    : $Revision: 1.27 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006
+//COPYRIGHT   : Copyright (C) 2004 - 2007
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -195,19 +195,17 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 
 	 case 2: {
 	    oldValue = row[colOwnerObjects->genre];
-	    for (Genres::const_iterator g (genres.begin ()); g != genres.end (); ++g)
-	       if (g->second == oldValue) {
-		  oldValue = Glib::ustring (1, (char)g->first);
-		  break;
-	       }
-	    Genres::const_iterator g (genres.end ());
-	    for (g = genres.begin (); g != genres.end (); ++g)
-	       if (g->second == value) {
-		  setGenre (object, g->first);
-		  row[colOwnerObjects->genre] = value;
-		  break;
-	       }
-	    if (g == genres.end ())
+	    Genres::const_iterator g (std::find (genres.begin (), genres.end (), oldValue));
+	    Check3 (g != genres.end ());
+	    oldValue = Glib::ustring (1, (char)(g - genres.end ()));
+
+	    g = std::find (genres.begin (), genres.end (), value);
+	    if (g != genres.end ()) {
+	       setGenre (object, g - genres.begin ());
+	       row[colOwnerObjects->genre] = value;
+	       break;
+	    }
+	    else
 	       throw YGP::InvalidValue (_("Unknown genre!"));
 	    break; }
 	 } // endswitch
@@ -265,7 +263,7 @@ void OwnerObjectList::updateGenres () {
    for (Genres::const_iterator g (genres.begin ());
 	g != genres.end (); ++g) {
       Gtk::TreeModel::Row newGenre (*mGenres->append ());
-      newGenre[colGenres.genre] = (g->second);
+      newGenre[colGenres.genre] = (*g);
    }
 }
 
@@ -334,10 +332,9 @@ void OwnerObjectList::changeGenre (Gtk::TreeModel::Row& row, unsigned int value)
    TRACE9 ("OwnerObjectList::changeGenre (Gtk::TreeModel::Row&, unsigned int) - " << value);
    Check2 (colOwnerObjects);
 
-   Genres::const_iterator g (genres.find (value));
-   if (g == genres.end ())
-      g = genres.begin ();
-   row[colOwnerObjects->genre] = g->second;
+   if (value >= genres.size ())
+      value = 0;
+   row[colOwnerObjects->genre] = genres[value];
 }
 
 //-----------------------------------------------------------------------------

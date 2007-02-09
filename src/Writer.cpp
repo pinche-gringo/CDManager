@@ -1,14 +1,14 @@
-//$Id: Writer.cpp,v 1.14 2006/03/05 18:33:42 markus Rel $
+//$Id: Writer.cpp,v 1.15 2007/02/09 12:15:00 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Writer
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.14 $
+//REVISION    : $Revision: 1.15 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 27.11.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006
+//COPYRIGHT   : Copyright (C) 2004 - 2007
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -67,8 +67,8 @@ std::string MovieWriter::getSubstitute (const char ctrl, bool extend) const {
 	 return hMovie->getYear ().toString ();
 
       case 'g':
-	 Check3 (genres.find (hMovie->getGenre ()) != genres.end ());
-	 return YGP::TableWriter::changeHTMLSpecialChars (genres.find (hMovie->getGenre ())->second);
+	 Check3 (hMovie->getGenre () < genres.size ());
+	 return YGP::TableWriter::changeHTMLSpecialChars (genres[hMovie->getGenre ()]);
 
       case 'd':
 	 return YGP::TableWriter::changeHTMLSpecialChars (hDirector->getName ());
@@ -181,8 +181,8 @@ std::string RecordWriter::getSubstitute (const char ctrl, bool extend) const {
 	 return hRecord->getYear ().toString ();
 
       case 'g':
-	 Check3 (genres.find (hRecord->getGenre ()) != genres.end ());
-	 return YGP::TableWriter::changeHTMLSpecialChars (genres.find (hRecord->getGenre ())->second);
+	 Check3 (hRecord->getGenre () < genres.size ());
+	 return YGP::TableWriter::changeHTMLSpecialChars (genres[hRecord->getGenre ()]);
 
       case 'd':
 	 return YGP::TableWriter::changeHTMLSpecialChars (hInterpret->getName ());

@@ -1,14 +1,14 @@
-//$Id: ActorList.cpp,v 1.9 2006/06/06 22:02:02 markus Rel $
+//$Id: ActorList.cpp,v 1.10 2007/02/09 12:15:00 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Actor
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.9 $
+//REVISION    : $Revision: 1.10 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.09.2005
-//COPYRIGHT   : Copyright (C) 2005, 2006
+//COPYRIGHT   : Copyright (C) 2005 - 2007
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -128,10 +128,10 @@ void ActorList::update (Gtk::TreeRow& row) {
       row[colActors.name] = movie->getName ();
       row[colActors.year] = movie->getYear ().toString ();
 
-      Genres::const_iterator g (genres.find (movie->getGenre ()));
-      if (g == genres.end ())
-	 g = genres.begin ();
-      row[colActors.genre] = g->second;
+      unsigned int g (movie->getGenre ());
+      if (g >= genres.size ())
+	 g = 0;
+      row[colActors.genre] = genres[g];
       row[colActors.editable] = false;
    }
    else {

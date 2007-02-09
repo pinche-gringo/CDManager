@@ -1,14 +1,14 @@
-//$Id: PRecords.cpp,v 1.18 2006/06/06 22:02:03 markus Rel $
+//$Id: PRecords.cpp,v 1.19 2007/02/09 12:54:41 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Records
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.18 $
+//REVISION    : $Revision: 1.19 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
-//COPYRIGHT   : Copyright (C) 2006
+//COPYRIGHT   : Copyright (C) 2006, 2007
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -311,16 +311,17 @@ void PRecords::interpretChanged (const Gtk::TreeIter& row, unsigned int column, 
 /// \param oldValue: Old value of the changed entry
 //-----------------------------------------------------------------------------
 void PRecords::recordChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue) {
-   TRACE9 ("PRecords::songChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&) - " << column);
+   TRACE9 ("PRecords::recordChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&) - " << column);
 
    Gtk::TreePath path (records.getModel ()->get_path (row));
    aUndo.push (Undo (Undo::CHANGED, RECORD, column, records.getObjectAt (row), path, oldValue));
 
    if (column == 2) {     // If the record-genre was changed, copy it for songs
       HRecord rec (records.getRecordAt (row));
-      TRACE9 ("PRecords::recordGenreChanged (const HEntity& record) - "
+      TRACE9 ("PRecords::recordChanged (const HEntity& record) - "
 	      << (rec.isDefined () ? rec->getId () : -1UL) << '/'
 	      << (rec.isDefined () ? rec->getName ().c_str () : "Undefined"));
+      Check3 (oldValue.size () == 1);
 
       if (relSongs.isRelated (rec)) {
 	 unsigned int genre (rec->getGenre ());

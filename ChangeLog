@@ -1,3 +1,57 @@
+2007-02-09  Markus Schwab  <g17m0@lycos.com>
+
+	* ChangeLog, NEWS: Changes of V0.8.32 docommented
+
+	* configure.ac: Version to 0.8.32; Needing libYGP 0.8.21
+
+	* Makefile.am: Removed m4/ChangeLog from EXTRA_DIST
+
+	* po/de.po, po/en.po, po/es.po: Actualized
+
+	* src/PRecords.cpp: Corrected text in traces
+
+	* src/OOList.cpp: Fixed undo-info when changing genre
+
+	* src/SongList.cpp: Fixed storing undo-info when changing genre
+
+	* src/ActorList.cpp, src/OOList.cpp, src/SongList.cpp, src/Writer.cpp, src/Writer.h:
+	  Adapted to new interface of Genres
+
+	* src/Genres.cpp, src/Genres.h: Using a vector to store the genres
+
+2007-02-09  gettextize  <bug-gnu-gettext@gnu.org>
+
+	* m4/gettext.m4: New file, from gettext-0.16.1.
+	* m4/iconv.m4: New file, from gettext-0.16.1.
+	* m4/lib-ld.m4: New file, from gettext-0.16.1.
+	* m4/lib-link.m4: New file, from gettext-0.16.1.
+	* m4/lib-prefix.m4: New file, from gettext-0.16.1.
+	* m4/nls.m4: New file, from gettext-0.16.1.
+	* m4/po.m4: New file, from gettext-0.16.1.
+	* m4/progtest.m4: New file, from gettext-0.16.1.
+	* m4/codeset.m4: New file, from gettext-0.16.1.
+	* m4/glibc2.m4: New file, from gettext-0.16.1.
+	* m4/glibc21.m4: New file, from gettext-0.16.1.
+	* m4/intdiv0.m4: New file, from gettext-0.16.1.
+	* m4/intl.m4: New file, from gettext-0.16.1.
+	* m4/intldir.m4: New file, from gettext-0.16.1.
+	* m4/intmax.m4: New file, from gettext-0.16.1.
+	* m4/inttypes_h.m4: New file, from gettext-0.16.1.
+	* m4/inttypes-pri.m4: New file, from gettext-0.16.1.
+	* m4/lcmessage.m4: New file, from gettext-0.16.1.
+	* m4/lock.m4: New file, from gettext-0.16.1.
+	* m4/longdouble.m4: New file, from gettext-0.16.1.
+	* m4/longlong.m4: New file, from gettext-0.16.1.
+	* m4/printf-posix.m4: New file, from gettext-0.16.1.
+	* m4/size_max.m4: New file, from gettext-0.16.1.
+	* m4/stdint_h.m4: New file, from gettext-0.16.1.
+	* m4/uintmax_t.m4: New file, from gettext-0.16.1.
+	* m4/ulonglong.m4: New file, from gettext-0.16.1.
+	* m4/visibility.m4: New file, from gettext-0.16.1.
+	* m4/wchar_t.m4: New file, from gettext-0.16.1.
+	* m4/wint_t.m4: New file, from gettext-0.16.1.
+	* m4/xsize.m4: New file, from gettext-0.16.1.
+
 2006-06-07  Markus Schwab  <g17m0@lycos.com>
 
 	* ChangeLog, NEWS: Changes of V0.8.31 commented

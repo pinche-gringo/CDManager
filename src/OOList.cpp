@@ -1,11 +1,11 @@
-//$Id: OOList.cpp,v 1.27 2007/02/09 12:15:00 markus Exp $
+//$Id: OOList.cpp,v 1.28 2007/02/09 12:53:49 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : OwnerObjectList
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.27 $
+//REVISION    : $Revision: 1.28 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2007
@@ -197,7 +197,7 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 	    oldValue = row[colOwnerObjects->genre];
 	    Genres::const_iterator g (std::find (genres.begin (), genres.end (), oldValue));
 	    Check3 (g != genres.end ());
-	    oldValue = Glib::ustring (1, (char)(g - genres.end ()));
+	    oldValue = Glib::ustring (1, (char)(g - genres.begin ()));
 
 	    g = std::find (genres.begin (), genres.end (), value);
 	    if (g != genres.end ()) {

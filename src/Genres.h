@@ -1,7 +1,7 @@
 #ifndef GENRES_H
 #define GENRES_H
 
-//$Id: Genres.h,v 1.4 2006/06/06 22:02:03 markus Rel $
+//$Id: Genres.h,v 1.5 2007/02/09 12:14:44 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 
-#include <map>
+#include <vector>
 
 #include <glibmm/ustring.h>
 
@@ -27,7 +27,7 @@
 
 /**Class to handle the genres of both records and movies.
  */
-class Genres : public std::map<unsigned int, Glib::ustring> {
+class Genres : public std::vector<Glib::ustring> {
  public:
    Genres () { }
    virtual ~Genres () { }

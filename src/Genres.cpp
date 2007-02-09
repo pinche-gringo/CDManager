@@ -1,14 +1,14 @@
-//$Id: Genres.cpp,v 1.6 2006/06/06 22:02:03 markus Rel $
+//$Id: Genres.cpp,v 1.7 2007/02/09 12:14:44 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : libCDMgr
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 13.01.2005
-//COPYRIGHT   : Copyright (C) 2005, 2006
+//COPYRIGHT   : Copyright (C) 2005 - 2007
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -82,11 +82,9 @@ void Genres::loadFromFile (const char* file, Genres& records, Genres& movies,
    } // end-while
 
    YGP::INIFile _inifile_ (name.c_str ());
-   YGP::INIList<Glib::ustring, std::map<unsigned int, Glib::ustring> >
-      lstMovies ("Movies", movies);
+   YGP::INIList<Glib::ustring, std::vector<Glib::ustring> > lstMovies ("Movies", movies);
    _inifile_.addSection (lstMovies);
-   YGP::INIList<Glib::ustring, std::map<unsigned int, Glib::ustring> >
-      lstRecords ("Records", records);
+   YGP::INIList<Glib::ustring, std::vector<Glib::ustring> > lstRecords ("Records", records);
    _inifile_.addSection (lstRecords);
 
    _inifile_.read ();

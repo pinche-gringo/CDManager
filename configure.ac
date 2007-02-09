@@ -1,9 +1,9 @@
-dnl $Id: configure.ac,v 1.25 2006/06/08 01:15:22 markus Rel $
+dnl $Id: configure.ac,v 1.26 2007/02/09 13:02:16 markus Rel $
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.52)
-AC_REVISION($Revision: 1.25 $)
-AC_INIT(CDManager, 0.8.31, [g17m0@lycos.com], CDManager)
+AC_REVISION($Revision: 1.26 $)
+AC_INIT(CDManager, 0.8.32, [g17m0@lycos.com], CDManager)
 
 RELEASE=${PACKAGE_VERSION%.*}
 AC_DEFINE_UNQUOTED(PRG_RELEASE, "$RELEASE", [Define to the release of the program])
@@ -32,7 +32,7 @@ AC_DEFINE_UNQUOTED(CATALOGS, "$ALL_LINGUAS", [Translations])
 dnl Checks for libraries.
 AC_CHECK_LIB(stdc++, main)
 
-PKG_CHECK_MODULES(DEPS, glibmm-2.4 >= 2.4.0 YGP >= 0.8.00)
+PKG_CHECK_MODULES(DEPS, glibmm-2.4 >= 2.4.0 YGP >= 0.8.21)
 PKG_CHECK_MODULES(XGP, gtkmm-2.4 >= 2.6.0 gthread-2.0 > 2.2.0 XGP >= 0.8.00)
 
 #
@@ -252,7 +252,7 @@ AM_CONDITIONAL(WITH_MOVIES, test $MOVIES -eq 1)
 AM_CONDITIONAL(WITH_RECORDS, test $RECORDS -eq 1)
 
 
-AC_OUTPUT(Makefile intl/Makefile po/Makefile.in src/Makefile doc/Makefile\
+AC_OUTPUT(Makefile po/Makefile.in src/Makefile doc/Makefile intl/Makefile\
 	  SQL/Makefile data/Makefile)
 
 

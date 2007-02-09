@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2006-06-07 21:11-0400\n"
+"POT-Creation-Date: 2007-02-09 14:00+0100\n"
 "PO-Revision-Date: 2005-04-22 11:53-0400\n"
 "Last-Translator: Markus Schwab <g17m0@lycos.com>\n"
 "Language-Team: English <g17m0@lycos.com>\n"
@@ -201,7 +201,7 @@ msgstr ""
 msgid "Unknown type of media!"
 msgstr ""
 
-#: src/MovieList.cpp:258 src/SongList.cpp:198 src/OOList.cpp:250
+#: src/MovieList.cpp:258 src/SongList.cpp:197 src/OOList.cpp:248
 #: src/ActorList.cpp:191
 msgid "Invalid value!"
 msgstr ""
@@ -235,7 +235,7 @@ msgstr ""
 msgid "Song `%1' already exists!"
 msgstr ""
 
-#: src/SongList.cpp:189 src/OOList.cpp:211
+#: src/SongList.cpp:188 src/OOList.cpp:209
 msgid "Unknown genre!"
 msgstr ""
 
@@ -244,7 +244,7 @@ msgstr ""
 msgid "Year"
 msgstr ""
 
-#: src/OOList.cpp:180 src/OOList.cpp:227 src/ActorList.cpp:169
+#: src/OOList.cpp:180 src/OOList.cpp:225 src/ActorList.cpp:169
 msgid "Entry `%1' already exists!"
 msgstr ""
 
@@ -593,39 +593,39 @@ msgid ""
 "Reason: %2"
 msgstr ""
 
-#: src/PRecords.cpp:369 src/PActors.cpp:382 src/PMovies.cpp:243
+#: src/PRecords.cpp:370 src/PActors.cpp:382 src/PMovies.cpp:243
 msgid "<ctl>Z"
 msgstr ""
 
-#: src/PRecords.cpp:372
+#: src/PRecords.cpp:373
 msgid "New _interpret"
 msgstr ""
 
-#: src/PRecords.cpp:373 src/PActors.cpp:386 src/PMovies.cpp:247
+#: src/PRecords.cpp:374 src/PActors.cpp:386 src/PMovies.cpp:247
 msgid "<ctl>N"
 msgstr ""
 
-#: src/PRecords.cpp:375
+#: src/PRecords.cpp:376
 msgid "_New record"
 msgstr ""
 
-#: src/PRecords.cpp:376 src/PActors.cpp:389 src/PMovies.cpp:250
+#: src/PRecords.cpp:377 src/PActors.cpp:389 src/PMovies.cpp:250
 msgid "<ctl><alt>N"
 msgstr ""
 
-#: src/PRecords.cpp:378
+#: src/PRecords.cpp:379
 msgid "New _song"
 msgstr ""
 
-#: src/PRecords.cpp:379
+#: src/PRecords.cpp:380
 msgid "<ctl><shft>N"
 msgstr ""
 
-#: src/PRecords.cpp:381 src/PActors.cpp:391 src/PMovies.cpp:252
+#: src/PRecords.cpp:382 src/PActors.cpp:391 src/PMovies.cpp:252
 msgid "_Delete"
 msgstr ""
 
-#: src/PRecords.cpp:382 src/PActors.cpp:392 src/PMovies.cpp:253
+#: src/PRecords.cpp:383 src/PActors.cpp:392 src/PMovies.cpp:253
 msgid "<ctl>Delete"
 msgstr ""
 

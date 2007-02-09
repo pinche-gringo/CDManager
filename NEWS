@@ -1,3 +1,9 @@
+Overview of changes in version 0.8.32:
+
+  - Genres are stored as lists (not maps)
+  - Using automake 1.9.6, autoconf 2.61
+
+
 Overview of changes in version 0.8.31:
 
   - Adapted to new exception-handling style of libYGP 0.8.00

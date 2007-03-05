@@ -1,11 +1,11 @@
-//$Id: Genres.cpp,v 1.7 2007/02/09 12:14:44 markus Rel $
+//$Id: Genres.cpp,v 1.8 2007/03/05 19:38:36 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : libCDMgr
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 13.01.2005
 //COPYRIGHT   : Copyright (C) 2005 - 2007
@@ -68,7 +68,7 @@ void Genres::loadFromFile (const char* file, Genres& records, Genres& movies,
 	 if (!::stat (search.c_str (), &sfile) && (sfile.st_mode & S_IFREG))
 	    break;
 
-	 unsigned int pos (extension.rfind ('_'));
+	 size_t pos (extension.rfind ('_'));
 	 if (pos == std::string::npos)
 	    pos = 0;
 	 extension.replace (pos, extension.length (), 0, '\0');

@@ -1,14 +1,14 @@
-//$Id: Celebrity.cpp,v 1.10 2006/04/20 20:35:04 markus Rel $
+//$Id: Celebrity.cpp,v 1.11 2007/03/05 19:38:36 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Celebrity
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.10 $
+//REVISION    : $Revision: 1.11 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006
+//COPYRIGHT   : Copyright (C) 2004 - 2007
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -108,7 +108,7 @@ bool Celebrity::compById (const HCelebrity& a, const HCelebrity& b) {
 /// \throw std::exception in case of error
 //-----------------------------------------------------------------------------
 void Celebrity::setLifespan (const Glib::ustring& value) throw (std::invalid_argument) {
-   unsigned int pos (value.find ("- "));
+   size_t pos (value.find ("- "));
    if (pos != std::string::npos)
       setDied (value.substr (pos + 2));
    else

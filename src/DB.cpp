@@ -1,14 +1,14 @@
-//$Id: DB.cpp,v 1.10 2006/03/06 03:31:43 markus Rel $
+//$Id: DB.cpp,v 1.11 2007/03/05 19:38:36 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Database
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.10 $
+//REVISION    : $Revision: 1.11 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 16.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006
+//COPYRIGHT   : Copyright (C) 2004 - 2007
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@
 /// \returns Glib::ustring: Escaped text
 //-----------------------------------------------------------------------------
 std::string Database::escapeDBValue (const std::string& value) {
-   unsigned int pos (0);
+   size_t pos (0);
    std::string rc (value);
    while ((pos = rc.find ('"', pos)) != Glib::ustring::npos) {
       rc.replace (pos, 1, "\\\"");

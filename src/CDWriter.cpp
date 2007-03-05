@@ -1,14 +1,14 @@
-//$Id: CDWriter.cpp,v 1.24 2006/06/06 22:02:03 markus Rel $
+//$Id: CDWriter.cpp,v 1.25 2007/03/05 19:38:36 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDWriter
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.24 $
+//REVISION    : $Revision: 1.25 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
-//COPYRIGHT   : Copyright (C) 2005, 2006
+//COPYRIGHT   : Copyright (C) 2005 - 2007
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -310,7 +310,7 @@ int CDWriter::perform (int argc, const char** argv) {
       }
    } // end-for
 
-   unsigned int pos (0);
+   size_t pos (0);
 #if WITH_MOVIES == 1
    std::ofstream fileMovie;
    createFile (opt.getDirOutput () + "Movies.html", argv[0], fileMovie);
@@ -757,7 +757,7 @@ bool CDWriter::readHeaderFile (const char* file, const char* lang,
    }
    target.clear ();
 
-   unsigned int i (512);
+   size_t i (512);
    char buffer[i];
    // Read as long as there is data or an error occurs
    while (input.read (buffer, i), input.gcount ())

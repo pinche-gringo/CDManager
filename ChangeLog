@@ -1,3 +1,16 @@
+2007-03-08  Markus Schwab  <g17m0@lycos.com>
+
+	* ChangeLog, NEWS: Changes of V0.8.33 docomented
+
+	* configure.ac: Version to 0.8.33
+
+	* README: Copyright to 2007
+
+2007-03-05  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDWriter.cpp, src/Celebrity.cpp, src/DB.cpp, src/Genres.cpp:
+	  Can be compiled under x86_64
+
 2007-02-09  Markus Schwab  <g17m0@lycos.com>
 
 	* ChangeLog, NEWS: Changes of V0.8.32 docommented

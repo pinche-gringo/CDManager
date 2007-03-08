@@ -1,3 +1,8 @@
+Overview of changes in version 0.8.33:
+
+  - Can be compiled under x86_64
+
+
 Overview of changes in version 0.8.32:
 
   - Genres are stored as lists (not maps)

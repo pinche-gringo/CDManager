@@ -1,11 +1,11 @@
-//$Id: CDWriter.cpp,v 1.25 2007/03/05 19:38:36 markus Rel $
+//$Id: CDWriter.cpp,v 1.26 2007/08/14 22:29:56 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDWriter
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.25 $
+//REVISION    : $Revision: 1.26 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
 //COPYRIGHT   : Copyright (C) 2005 - 2007
@@ -193,10 +193,10 @@ void CDWriter::writeHeader (const char* lang, const char* format,
 	   << lang << "; " << format << "; " << lead);
    Check3 (lang); Check3 (format); Check3 (lead);
 
-   static char formats[] = "adnygml-![]=";
-   static char* docs[] = { "", "", "-Name", "-Year", "-Genre", "-Media",
+   static const char formats[] = "adnygml-![]=";
+   static const char* docs[] = { "", "", "-Name", "-Year", "-Genre", "-Media",
 			   "-Lang", NULL, NULL, NULL, NULL, NULL };
-   static std::string titles[] =
+   static const std::string titles[] =
       { _("Interpret"), _("Director"), _("Name"), _("Year"),_("Genre"),
 	_("Media"), _("Language(s)"), " | ", "</td><td>",
 	"<div class=\"header\">", "</div>", "&nbsp;" };

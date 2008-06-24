@@ -1,11 +1,11 @@
-//$Id: DB.cpp,v 1.11 2007/03/05 19:38:36 markus Rel $
+//$Id: DB.cpp,v 1.12 2008/06/24 18:02:23 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Database
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.11 $
+//REVISION    : $Revision: 1.12 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 16.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2007
@@ -51,6 +51,7 @@ std::string Database::escapeDBValue (const std::string& value) {
 
 
 #if defined HAVE_LIBMYSQLPP
+#  include <cstring>   // Only needed by mysql++.h (when compiled with GCC 4.3)
 #  include <mysql++.h>
 
 static mysqlpp::Connection       con (mysqlpp::use_exceptions);

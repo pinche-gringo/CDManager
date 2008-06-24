@@ -1,7 +1,7 @@
 #ifndef LANGUAGEIMG_H
 #define LANGUAGEIMG_H
 
-//$Id: LangImg.h,v 1.1 2005/02/18 23:52:47 markus Rel $
+//$Id: LangImg.h,v 1.2 2008/06/24 18:03:25 markus Rel $
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ class LanguageImg : public Gtk::EventBox {
    void update (const std::string& file);
    void update (const char* lang = NULL);
 
-   SigC::Signal0<void> signal_clicked () { return clicked_; }
+   sigc::signal0<void> signal_clicked () { return clicked_; }
 
  protected:
   virtual void on_clicked ();
@@ -47,7 +47,7 @@ class LanguageImg : public Gtk::EventBox {
   virtual bool on_button_release_event (GdkEventButton* ev);
 
  private:
-   SigC::Signal0<void> clicked_;
+   sigc::signal0<void> clicked_;
    Gtk::Image img;
 
    static gdouble saveX, saveY;

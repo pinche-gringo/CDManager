@@ -1,14 +1,14 @@
 # English messages for the CD-Manager project.
-# Copyright (C) 2004 - 2006 Markus Schwab
+# Copyright (C) 2004 - 2008 Markus Schwab
 # This file is distributed under the GNU General Public License.
-# Markus Schwab <g17m0@lycos.com>, 2006.
+# Markus Schwab <g17m0@lycos.com>, 2008.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2007-02-09 14:00+0100\n"
-"PO-Revision-Date: 2005-04-22 11:53-0400\n"
+"POT-Creation-Date: 2008-11-20 11:44+0100\n"
+"PO-Revision-Date: 2008-11-20 11:45+0100\n"
 "Last-Translator: Markus Schwab <g17m0@lycos.com>\n"
 "Language-Team: English <g17m0@lycos.com>\n"
 "MIME-Version: 1.0\n"
@@ -108,12 +108,12 @@ msgstr ""
 
 #: src/CDManager.cpp:451
 msgid ""
-"Copyright (C) 2004 - 2006 Markus Schwab\n"
+"Copyright (C) 2004 - 2008 Markus Schwab\n"
 "e-mail: <g17m0@lycos.com>\n"
 "\n"
 "Compiled on %1 at %2"
 msgstr ""
-"Copyright © 2004 - 2006 Markus Schwab\n"
+"Copyright © 2004 - 2008 Markus Schwab\n"
 "e-mail: <g17m0@lycos.com>\n"
 "\n"
 "Compiled on %1 at %2"
@@ -317,10 +317,18 @@ msgid "Norwegian"
 msgstr ""
 
 #: src/Language.cpp:115
-msgid "Portugese"
+msgid "Polish"
 msgstr ""
 
 #: src/Language.cpp:116
+msgid "Portugese"
+msgstr ""
+
+#: src/Language.cpp:117
+msgid "Serbian"
+msgstr ""
+
+#: src/Language.cpp:118
 msgid "Swedish"
 msgstr ""
 
@@ -391,10 +399,10 @@ msgstr ""
 
 #: src/CDAppl.cpp:204
 msgid ""
-"Copyright (C) 2004 - 2006 Markus Schwab; e-mail: g17m0@lycos.com\n"
+"Copyright (C) 2004 - 2008 Markus Schwab; e-mail: g17m0@lycos.com\n"
 "Distributed under the terms of the GNU General Public License"
 msgstr ""
-"Copyright © 2004 - 2006 Markus Schwab; e-mail: g17m0@lycos.com\n"
+"Copyright © 2004 - 2008 Markus Schwab; e-mail: g17m0@lycos.com\n"
 "Distributed under the terms of the GNU General Public License"
 
 #: src/Settings.cpp:62

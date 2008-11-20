@@ -1,11 +1,11 @@
-//$Id: Language.cpp,v 1.10 2005/12/22 02:13:16 markus Rel $
+//$Id: Language.cpp,v 1.11 2008/11/20 10:36:29 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Language
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.10 $
+//REVISION    : $Revision: 1.11 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 6.12.2004
 //COPYRIGHT   : Copyright (C) 2004, 2005
@@ -112,7 +112,9 @@ void Language::init () {
    languages.insert (languages.end (), langValue ("fr", Language (_("French") LOADFLAG(fr))));
    languages.insert (languages.end (), langValue ("it", Language (_("Italian") LOADFLAG(it))));
    languages.insert (languages.end (), langValue ("no", Language (_("Norwegian") LOADFLAG(no))));
+   languages.insert (languages.end (), langValue ("pl", Language (_("Polish") LOADFLAG(pl))));
    languages.insert (languages.end (), langValue ("pt", Language (_("Portugese") LOADFLAG(pt))));
+   languages.insert (languages.end (), langValue ("rs", Language (_("Serbian") LOADFLAG(rs))));
    languages.insert (languages.end (), langValue ("sv", Language (_("Swedish") LOADFLAG(sv))));
 }
 

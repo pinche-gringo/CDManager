@@ -1,6 +1,38 @@
+2008-11-20  author  <author@markus.gizmo.org>
+
+	* NEWS: Changes of V0.8.34 documented
+
+	* src/CDAppl.cpp, src/CDManager.cpp: Changed copyright to 2000
+
+	* po/de.po, po/en.po, po/es.po: Actualised
+
+	* configure.ac: Version to 0.8.34
+
+	* src/Language.cpp: Added polish and serbian as languages
+
+	* data/Genres.dat: Fixed name for Documentary
+
+	* data/Makefile.am: Added rs.png and pl.png
+
+	* README: Copyright includes 2008
+
+	* data/pl.png, data/rs.png: Resized to 28x20
+
+	* data/pl.png, data/rs.png: Added
+
+2008-06-24  Markus Schwab  <g17m0@lycos.com>
+
+	* src/LangImg.h: Replaced deprecated types in SigC-namespace
+
+	* src/DB.cpp: Added include (need by mysql++ with GCC 4.3)
+
+2007-08-15  Markus Schwab  <g17m0@lycos.com>
+
+	* src/CDWriter.cpp: Const-corrected
+
 2007-03-08  Markus Schwab  <g17m0@lycos.com>
 
-	* ChangeLog, NEWS: Changes of V0.8.33 docomented
+	* ChangeLog, NEWS: Changes of V0.8.33 documented
 
 	* configure.ac: Version to 0.8.33
 
@@ -13,7 +45,7 @@
 
 2007-02-09  Markus Schwab  <g17m0@lycos.com>
 
-	* ChangeLog, NEWS: Changes of V0.8.32 docommented
+	* ChangeLog, NEWS: Changes of V0.8.32 docummented
 
 	* configure.ac: Version to 0.8.32; Needing libYGP 0.8.21
 

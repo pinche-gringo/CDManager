@@ -65,7 +65,7 @@ CREATE INDEX songNames ON Songs (name);
 CREATE INDEX songRecord ON Songs (idRecord);
 
 CREATE TABLE Words
-    (word       VARCHAR(32)     NOT NULL,
+    (word       VARCHAR(32)     CHARACTER SET binary NOT NULL COLLATE 'binary',
      PRIMARY KEY (word));
 
 CREATE TABLE Articles

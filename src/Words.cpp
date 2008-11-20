@@ -1,11 +1,11 @@
-//$Id: Words.cpp,v 1.19 2006/06/06 22:02:03 markus Rel $
+//$Id: Words.cpp,v 1.20 2008/11/20 18:09:07 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Words
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.19 $
+//REVISION    : $Revision: 1.20 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -327,7 +327,7 @@ Glib::ustring Words::removeNames (const Glib::ustring& name) {
    Glib::ustring work (name);
    Glib::ustring word (getWord (work));
    while ((word.size () != name.size ())
-	  && containsWord (0, shMem->info->cNames - 1, word)) {
+	  && containsWord (0, shMem->info->cNames, word)) {
       unsigned int pos (word.size ());
       while (!isalnum (name[pos]))
 	 ++pos;

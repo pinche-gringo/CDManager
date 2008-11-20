@@ -1,3 +1,9 @@
+Overview of changes in version 0.8.34:
+
+  - Fixed genre-names
+  - Added a polish and a serbian flag
+
+
 Overview of changes in version 0.8.33:
 
   - Can be compiled under x86_64

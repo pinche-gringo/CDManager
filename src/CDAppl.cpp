@@ -1,14 +1,14 @@
-//$Id: CDAppl.cpp,v 1.17 2008/11/20 10:46:02 markus Rel $
+//$Id: CDAppl.cpp,v 1.18 2009/05/06 09:13:06 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Application
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.17 $
+//REVISION    : $Revision: 1.18 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.12.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006
+//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -201,7 +201,7 @@ const char* CDAppl::description () const {
       (PACKAGE " V" VERSION " - "
        + std::string (_("Compiled on"))
        + std::string (" " __DATE__ " - " __TIME__ "\n\n")
-       + std::string (_("Copyright (C) 2004 - 2008 Markus Schwab; e-mail: g17m0@lycos.com"
+       + std::string (_("Copyright (C) 2004 - 2009 Markus Schwab; e-mail: g17m0@users.sourceforge.net"
 			"\nDistributed under the terms of the GNU General "
 			"Public License")));
    return version.c_str ();

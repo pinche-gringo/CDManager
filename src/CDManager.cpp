@@ -1,14 +1,14 @@
-//$Id: CDManager.cpp,v 1.79 2008/11/20 10:46:02 markus Rel $
+//$Id: CDManager.cpp,v 1.80 2009/05/06 09:13:06 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.79 $
+//REVISION    : $Revision: 1.80 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2008
+//COPYRIGHT   : Copyright (C) 2004 - 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -448,8 +448,8 @@ void CDManager::editPreferences () {
 /// Shows the about box for the program
 //-----------------------------------------------------------------------------
 void CDManager::showAboutbox () {
-   std::string ver (_("Copyright (C) 2004 - 2008 Markus Schwab"
-                      "\ne-mail: <g17m0@lycos.com>\n\nCompiled on %1 at %2"));
+   std::string ver (_("Copyright (C) 2004 - 2009 Markus Schwab"
+                      "\ne-mail: <g17m0@lusers.sourceforge.net>\n\nCompiled on %1 at %2"));
    ver.replace (ver.find ("%1"), 2, __DATE__);
    ver.replace (ver.find ("%2"), 2, __TIME__);
 

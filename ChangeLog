@@ -1,4 +1,20 @@
-2008-11-20  author  <author@markus.gizmo.org>
+2009-05-06  Markus Schwab  <g17m0@users.sourceforge.net>
+
+	* NEWS, ChangeLog: Changes of V0.8.35 documented
+
+	* configure.ac, po/de.po, po/en.po, po/es.po, src/CDAppl.cpp, src/CDManager.cpp, src/CDWriter.cpp:
+	  Actualised contact information
+
+2008-11-21  Markus Schwab  <g17m0@users.sourceforge.net>
+
+	* configure.ac: Version to 0.8.35
+
+	* SQL/createDB.sql: Using binary as type for special words
+
+	* src/Words.cpp:
+	  Fixed off-by-1 error which failed to use the last of the special names
+
+2008-11-20  Markus Schwab  <g17m0@users.sourceforge.net>
 
 	* NEWS: Changes of V0.8.34 documented
 

@@ -1,3 +1,10 @@
+Overview of changes in version 0.8.35:
+
+  - Fixed an off-by-1 error which failed to use the last of the special names
+  - DB-table Words treats special words as binary
+  - Actualised contact information
+
+
 Overview of changes in version 0.8.34:
 
   - Fixed genre-names
@@ -24,7 +31,7 @@ Overview of changes in version 0.8.30:
 
   - Actor-page can show actors for movies or actor starring in movies
   - Actor-page allows selection of movies, but not editing them
-  - Optimized marking items as changed
+  - Optimised marking items as changed
   - Fixed creating translated names of movies
 
 
@@ -44,7 +51,7 @@ Overview of changes in version 0.8.21:
 Overview of changes in version 0.8.20:
 
   - Implement persons having different roles (e.g. actor and director)
-  - Renmaed --enable-{actors,movies,records} to --disable-*
+  - Renamed --enable-{actors,movies,records} to --disable-*
   - Fixed crash when showing settings without being logged in
   - Fixed cleanup when logging out
   - Fixed deleting actor (didn't remove its movies from the database)
@@ -64,7 +71,7 @@ Overview of changes in version 0.8.11:
 Overview of changes in version 0.8.10:
 
   - Accepts user/password from command-line and/or INI-file
-  - Undo is now on a per-notebook-page basis and undes all steps
+  - Undo is now on a per-notebook-page basis and undoes all steps
   - Documentation updated
   - Preparations to disable notebook-pages individually at configure-time
 

@@ -1,14 +1,14 @@
-//$Id: Celebrity.cpp,v 1.11 2007/03/05 19:38:36 markus Rel $
+//$Id: Celebrity.cpp,v 1.12 2009/05/08 23:21:15 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Celebrity
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.11 $
+//REVISION    : $Revision: 1.12 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2007
+//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -126,8 +126,7 @@ void Celebrity::setLifespan (const Glib::ustring& value) throw (std::invalid_arg
 /// \returns Glib::ustring: Text to display
 //-----------------------------------------------------------------------------
 Glib::ustring Celebrity::getLifespan () const {
-   TRACE9 ("Celebrity::getLiveSpan () - " << (isDefined () ? name.c_str () : "None"));
-   Check1 (isDefined ());
+   TRACE9 ("Celebrity::getLiveSpan () - " << name.c_str ());
 
    Glib::ustring tmp (born.toString ());
    if (died.isDefined ()) {

@@ -1,11 +1,11 @@
-//$Id: Storage.cpp,v 1.6 2006/03/19 02:24:15 markus Rel $
+//$Id: Storage.cpp,v 1.7 2009/05/08 23:20:45 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Storage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.6 $
+//REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 21.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -206,7 +206,7 @@ void Storage::commitTransaction () {
 //-----------------------------------------------------------------------------
 void Storage::insertCelebrity (const HCelebrity celeb, const char* role) throw (std::exception) {
    Check1 (celeb.isDefined ());
-   TRACE8 ("Storage::updateCelebrity (const HCelebrity) - " << role << ": " << celeb->getName ());
+   TRACE8 ("Storage::insertCelebrity (const HCelebrity, const char*) - " << role << ": " << celeb->getName ());
    Check1 (!celeb->getId ());
 
    std::stringstream query;

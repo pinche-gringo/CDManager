@@ -1,11 +1,11 @@
-//$Id: Celebrity.cpp,v 1.12 2009/05/08 23:21:15 markus Exp $
+//$Id: Celebrity.cpp,v 1.13 2009/05/09 00:17:25 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Celebrity
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.12 $
+//REVISION    : $Revision: 1.13 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2007, 2009
@@ -25,12 +25,15 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 
+#include <cdmgr-cfg.h>
+
 #include <cctype>
 
 #include <glibmm/ustring.h>
 
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
+#include <YGP/ADate.h>
 
 #include <XGP/XAttribute.h>  // Needed for specialization of YGP::Attribute for Glib::ustring
 
@@ -109,16 +112,27 @@ bool Celebrity::compById (const HCelebrity& a, const HCelebrity& b) {
 //-----------------------------------------------------------------------------
 void Celebrity::setLifespan (const Glib::ustring& value) throw (std::invalid_argument) {
    size_t pos (value.find ("- "));
-   if (pos != std::string::npos)
-      setDied (value.substr (pos + 2));
-   else
-      died.undefine ();
-
    if ((pos == std::string::npos)
-       || ((pos > 0) && (value[pos - 1] == ' ')))
-      setBorn (value.substr (0, pos - 1));
+       || ((pos > 0) && (value[pos - 1] == ' '))) {
+      YGP::AYear tmp (value.substr (0, pos - 1));
+      if (((unsigned int)tmp < 1850U)
+	  || (unsigned int)tmp > (unsigned int)YGP::ADate::today ().getYear ())
+	 throw std::invalid_argument (_("Invalid birth date!"));
+
+      setBorn (tmp);
+   }
    else
       born.undefine ();
+
+   if (pos != std::string::npos) {
+      YGP::AYear tmp (value.substr (pos + 2));
+      if ((tmp < born) || (unsigned int)tmp > (unsigned int)YGP::ADate::today ().getYear ())
+	 throw std::invalid_argument (_("Invalid death date!"));
+
+      setDied (tmp);
+   }
+   else
+      died.undefine ();
 }
 
 //-----------------------------------------------------------------------------

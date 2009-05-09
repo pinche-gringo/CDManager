@@ -1,14 +1,14 @@
-//$Id: Storage.cpp,v 1.7 2009/05/08 23:20:45 markus Exp $
+//$Id: Storage.cpp,v 1.8 2009/05/09 00:17:25 markus Rel $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Storage
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.7 $
+//REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 21.01.2006
-//COPYRIGHT   : Copyright (C) 2006
+//COPYRIGHT   : Copyright (C) 2006, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -158,11 +158,11 @@ void Storage::fillCelebrities (std::vector<HCelebrity>& target, YGP::StatusObjec
 	 hCeleb->setId (Database::getResultColumnAsUInt (0));
 	 hCeleb->setName (Database::getResultColumnAsString (1));
 
-	 std::string tmp (Database::getResultColumnAsString (2));
-	 if (tmp != "0000")
+	 unsigned int tmp (Database::getResultColumnAsUInt (2));
+	 if (tmp != 0)
 	    hCeleb->setBorn (tmp);
-	 tmp = Database::getResultColumnAsString (3);
-	 if (tmp != "0000")
+	 tmp = Database::getResultColumnAsUInt (3);
+	 if (tmp != 0)
 	    hCeleb->setDied (tmp);
       }
       catch (std::exception& e) {

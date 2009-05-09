@@ -1,10 +1,10 @@
 USE CDMedia;
 
 CREATE TABLE Celebrities
-    (name       VARCHAR (64)    NOT NULL,
-     id	        BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-     born       YEAR            NOT NULL DEFAULT 0,
-     died       YEAR            NOT NULL DEFAULT 0,
+    (name       VARCHAR (64)      NOT NULL,
+     id	        BIGINT UNSIGNED   NOT NULL AUTO_INCREMENT,
+     born       SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+     died       SMALLINT UNSIGNED NOT NULL DEFAULT 0,
      PRIMARY KEY (id));
 CREATE INDEX names ON Celebrities (name);
 

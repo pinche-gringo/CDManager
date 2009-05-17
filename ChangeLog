@@ -1,3 +1,34 @@
+2009-05-17  Markus Schwab  <g17m0@users.sourceforge.net>
+
+	* ChangeLog, NEWS: Changes of V0.8.36 documented
+
+	* po/de.po, po/en.po, po/es.po: Actualised
+
+	* configure.ac: Version to 0.8.36
+
+	* src/CDManager.cpp: Using (external) inline images for logos
+
+	* data/Makefile.am: Added CDManager.{desktop,png}
+
+	* src/IconAuthor.h, src/IconProgram.h, data/CDManager.desktop, data/CDManager.png:
+	  New file.
+
+2009-05-09  Markus Schwab  <g17m0@users.sourceforge.net>
+
+	* SQL/createDB.sql, src/Celebrity.cpp, src/Storage.cpp:
+	  Celebrity: Dates are integers; Checking plausibility
+
+	* src/Celebrity.cpp: Fixed trace/check
+
+	* src/Storage.cpp: Fixed params of TRACE)
+
+2009-05-06  Markus Schwab  <g17m0@users.sourceforge.net>
+
+	* ChangeLog, NEWS: Changes of V0.8.35 documented
+
+	* configure.ac, po/de.po, po/en.po, po/es.po, src/CDAppl.cpp, src/CDManager.cpp, src/CDWriter.cpp:
+	  Actualised contact information
+
 2009-05-06  Markus Schwab  <g17m0@users.sourceforge.net>
 
 	* NEWS, ChangeLog: Changes of V0.8.35 documented

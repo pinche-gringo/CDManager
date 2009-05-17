@@ -1,3 +1,10 @@
+Overview of changes in version 0.8.36:
+
+  - Changed type of born/died fields to SMALLINT
+  - Installing menu entry for desktop environments
+  - Improved the author's logo (thanks to Fabian Hernandez; cocoknight.com)
+
+
 Overview of changes in version 0.8.35:
 
   - Fixed an off-by-1 error which failed to use the last of the special names

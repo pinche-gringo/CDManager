@@ -1,9 +1,9 @@
-dnl $Id: configure.ac,v 1.30 2009/05/06 09:13:06 markus Rel $
+dnl $Id: configure.ac,v 1.31 2009/05/17 12:57:02 markus Rel $
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.52)
-AC_REVISION($Revision: 1.30 $)
-AC_INIT(CDManager, 0.8.35, [g17m0@users.sourceforge.net], CDManager)
+AC_REVISION($Revision: 1.31 $)
+AC_INIT(CDManager, 0.8.36, [g17m0@users.sourceforge.net], CDManager)
 
 RELEASE=${PACKAGE_VERSION%.*}
 AC_DEFINE_UNQUOTED(PRG_RELEASE, "$RELEASE", [Define to the release of the program])
@@ -33,7 +33,7 @@ dnl Checks for libraries.
 AC_CHECK_LIB(stdc++, main)
 
 PKG_CHECK_MODULES(DEPS, glibmm-2.4 >= 2.4.0 YGP >= 0.8.21)
-PKG_CHECK_MODULES(XGP, gtkmm-2.4 >= 2.6.0 gthread-2.0 > 2.2.0 XGP >= 0.8.00)
+PKG_CHECK_MODULES(XGP, gtkmm-2.4 >= 2.6.0 gthread-2.0 > 2.2.0 XGP >= 0.9.20)
 
 #
 # Location of MySQL installation

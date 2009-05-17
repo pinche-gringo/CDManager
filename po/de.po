@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2009-05-06 11:05+0200\n"
+"POT-Creation-Date: 2009-05-17 13:54+0200\n"
 "PO-Revision-Date: 2009-05-06 11:08+0200\n"
 "Last-Translator: Markus Schwab <g17m0@users.sourceforge.net>\n"
 "Language-Team: German <g17m0@users.sourceforge.net>\n"
@@ -16,63 +16,63 @@ msgstr ""
 "Content-Transfer-Encoding: 8-bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
-#: src/CDManager.cpp:299
+#: src/CDManager.cpp:132
 msgid "_CD"
 msgstr ""
 
-#: src/CDManager.cpp:300
+#: src/CDManager.cpp:133
 msgid "_Login"
 msgstr "_Anmelden ..."
 
-#: src/CDManager.cpp:301
+#: src/CDManager.cpp:134
 msgid "<ctl>L"
 msgstr "<ctl>A"
 
-#: src/CDManager.cpp:305
+#: src/CDManager.cpp:138
 msgid "Log_out"
 msgstr "A_bmelden"
 
-#: src/CDManager.cpp:306
+#: src/CDManager.cpp:139
 msgid "<ctl>O"
 msgstr "<ctl>B"
 
-#: src/CDManager.cpp:309
+#: src/CDManager.cpp:142
 msgid "_Export to HTML"
 msgstr "_Exportiere HTML-Dateien"
 
-#: src/CDManager.cpp:310
+#: src/CDManager.cpp:143
 msgid "<ctl>E"
 msgstr "<ctl>A"
 
-#: src/CDManager.cpp:314
+#: src/CDManager.cpp:147
 msgid "_Import from file-info ..."
 msgstr "_Importiere Kommentare von Musikdateien ..."
 
-#: src/CDManager.cpp:315
+#: src/CDManager.cpp:148
 msgid "<ctl>I"
 msgstr "<ctl>A"
 
-#: src/CDManager.cpp:320
+#: src/CDManager.cpp:153
 msgid "_Edit"
 msgstr "_Bearbeiten"
 
-#: src/CDManager.cpp:321
+#: src/CDManager.cpp:154
 msgid "_Options"
 msgstr "_Optionen"
 
-#: src/CDManager.cpp:323
+#: src/CDManager.cpp:156
 msgid "F9"
 msgstr ""
 
-#: src/CDManager.cpp:325
+#: src/CDManager.cpp:158
 msgid "_Save preferences"
 msgstr "Einstellungen _speichern"
 
-#: src/CDManager.cpp:326
+#: src/CDManager.cpp:159
 msgid "<ctl>F9"
 msgstr "<ctl>F9"
 
-#: src/CDManager.cpp:359 src/CDWriter.cpp:261
+#: src/CDManager.cpp:192 src/CDWriter.cpp:261
 msgid ""
 "Can't read datafile containing the genres!\n"
 "\n"
@@ -82,23 +82,23 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManager.cpp:374
+#: src/CDManager.cpp:207
 msgid "_Records"
 msgstr "_Alben"
 
-#: src/CDManager.cpp:380
+#: src/CDManager.cpp:213
 msgid "_Movies"
 msgstr "_Filme"
 
-#: src/CDManager.cpp:386
+#: src/CDManager.cpp:219
 msgid "_Actors"
 msgstr "_Schauspieler"
 
-#: src/CDManager.cpp:389
+#: src/CDManager.cpp:222
 msgid "Connect to a database ..."
 msgstr "Verbinde zur Datenbank"
 
-#: src/CDManager.cpp:420
+#: src/CDManager.cpp:253
 msgid ""
 "Error saving data!\n"
 "\n"
@@ -108,11 +108,11 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/CDManager.cpp:432
+#: src/CDManager.cpp:265
 msgid "Select file(s) to import"
 msgstr "Wähle Datei(en) zum Importieren"
 
-#: src/CDManager.cpp:451
+#: src/CDManager.cpp:284
 msgid ""
 "Copyright (C) 2004 - 2009 Markus Schwab\n"
 "e-mail: <g17m0@lusers.sourceforge.net>\n"
@@ -124,19 +124,19 @@ msgstr ""
 "\n"
 "Übersetzt am %1 um %2"
 
-#: src/CDManager.cpp:475
+#: src/CDManager.cpp:308
 msgid "Database login"
 msgstr "Datenbank-Anmeldung"
 
-#: src/CDManager.cpp:518
+#: src/CDManager.cpp:351
 msgid "Reading database ..."
 msgstr "Lese von der Datenbank ..."
 
-#: src/CDManager.cpp:579
+#: src/CDManager.cpp:412
 msgid "The data has been modified! Save those changes?"
 msgstr "Die Daten wurden geändert! Sollen diese Änderungen gespeichert werden?"
 
-#: src/CDManager.cpp:602
+#: src/CDManager.cpp:435
 msgid ""
 "Can't connect to database!\n"
 "\n"
@@ -146,11 +146,11 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManager.cpp:605
+#: src/CDManager.cpp:438
 msgid "Login error"
 msgstr "Fehler bei der Anmeldung"
 
-#: src/CDManager.cpp:615
+#: src/CDManager.cpp:448
 msgid ""
 "Can't query needed information!\n"
 "\n"
@@ -160,11 +160,11 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManager.cpp:640
+#: src/CDManager.cpp:473
 msgid "Disconnected!"
 msgstr "Abgemeldet!"
 
-#: src/CDManager.cpp:663 src/CDWriter.cpp:718
+#: src/CDManager.cpp:496 src/CDWriter.cpp:718
 msgid ""
 "Can't create file `%1'!\n"
 "\n"
@@ -174,7 +174,7 @@ msgstr ""
 "\n"
 "Ursache: %2."
 
-#: src/CDManager.cpp:685
+#: src/CDManager.cpp:518
 msgid ""
 "Can't store special names!\n"
 "\n"
@@ -184,15 +184,15 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManager.cpp:735
+#: src/CDManager.cpp:568
 msgid "Exporting (language %1) ..."
 msgstr "Exportiere (Sprache %1) ..."
 
-#: src/CDManager.cpp:769
+#: src/CDManager.cpp:602
 msgid "Export Warning!"
 msgstr "Warnung beim Exportieren!"
 
-#: src/CDManager.cpp:799
+#: src/CDManager.cpp:632
 msgid ""
 "Can't open file `%1'!\n"
 "\n"

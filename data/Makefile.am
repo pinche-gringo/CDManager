@@ -5,4 +5,11 @@ pkgdata_DATA=Movies.foot Movies.head Records.foot Records.head de.png	\
 	     Genres.dat.de Genres.dat.es in.png fi.png no.png rs.png	\
 	     sv.png
 
-EXTRA_DIST=$(pkgdata_DATA)
+desktopdir=$(datadir)/applications
+icondir=$(datadir)/icons
+
+desktop_DATA = CDManager.desktop
+icon_DATA = CDManager.png
+
+
+EXTRA_DIST=$(pkgdata_DATA) $(desktop_DATA) $(icon_DATA)

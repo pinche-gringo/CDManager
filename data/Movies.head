@@ -24,9 +24,9 @@
     <table cellpadding="0" cellspacing="0" width="100%" border="0">
 
       <tbody>
-        <tr><td class="header"><img src="images/logo.gif" width="42" height="100" alt="Logo"></td>
+        <tr><td class="header"><img src="images/logo.png" width="51" height="96" alt="Logo"></td>
           <td class="header">@TITLE@</td>
-          <td class="header"><img src="images/cds.png" width="100" height="100" alt="Foto"></td></tr>
+          <td class="header"><img src="images/cds.png" width="96" height="96" alt="Foto"></td></tr>
         <tr><td class="separator" colspan="4"><br></td></tr>
       </tbody>
     </table>

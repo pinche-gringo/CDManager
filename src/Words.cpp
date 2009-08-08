@@ -1,11 +1,11 @@
-//$Id: Words.cpp,v 1.20 2008/11/20 18:09:07 markus Rel $
+//$Id: Words.cpp,v 1.21 2009/08/08 13:23:45 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Words
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.20 $
+//REVISION    : $Revision: 1.21 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2006
@@ -220,13 +220,14 @@ void Words::addName2Ignore (const Glib::ustring& word, unsigned int pos) {
    }
 
    // Hint didn't work or wasn't passed: Search for position to insert
-   if (pos == POS_UNKNOWN)
+   if (pos == POS_UNKNOWN) {
       if (shMem->info->cNames) {
 	 TRACE9 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Search: " << word);
 	 pos = binarySearch (shMem->info, shMem->values, 0, shMem->info->cNames - 1, word.c_str ());
       }
       else
 	 pos = 0;
+   }
 
    if (pos < shMem->info->cNames)
       moveValues (pos, shMem->info->cNames, pos + 1);
@@ -269,7 +270,7 @@ void Words::addArticle (const Glib::ustring& word, unsigned int pos) {
    }
 
    // Hint didn't work or wasn't passed: Search for position to insert
-   if (pos == POS_UNKNOWN)
+   if (pos == POS_UNKNOWN) {
       if (shMem->info->cArticles) {
 	 TRACE9 ("Words::addArticles (const Glib::ustring&, unsigned int) - Search: " << word);
 	 pos = binarySearch (shMem->info, shMem->values, shMem->info->maxEntries - shMem->info->cArticles,
@@ -277,6 +278,7 @@ void Words::addArticle (const Glib::ustring& word, unsigned int pos) {
       }
       else
 	 pos = shMem->info->maxEntries - 1;
+   }
 
    if (pos >= (shMem->info->maxEntries - shMem->info->cArticles))
       moveValues (shMem->info->maxEntries - shMem->info->cArticles, pos,
@@ -302,7 +304,7 @@ Glib::ustring Words::removeArticle (const Glib::ustring& name) {
 
    Glib::ustring word (getWord (name));
    if (word.size () != name.size ()
-       && containsWord (shMem->info->maxEntries - shMem->info->cArticles, shMem->info->maxEntries - 1, word)) {
+       && containsWord (shMem->info->maxEntries - shMem->info->cArticles, shMem->info->maxEntries, word)) {
       unsigned int pos (word.size ());
       while (!isalnum (name[pos]))
 	 ++pos;

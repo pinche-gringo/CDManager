@@ -1,14 +1,14 @@
 # English messages for the CD-Manager project.
 # Copyright (C) 2004 - 2009 Markus Schwab
 # This file is distributed under the GNU General Public License.
-# Markus Schwab <g17m0@lycos.com>, 2008.
+# Markus Schwab <g17m0@lycos.com>, 2009.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2009-05-17 13:54+0200\n"
-"PO-Revision-Date: 2009-05-06 11:07+0200\n"
+"POT-Creation-Date: 2009-08-08 15:26+0200\n"
+"PO-Revision-Date: 2009-08-08 15:27+0200\n"
 "Last-Translator: Markus Schwab <g17m0@users.sourceforge.net>\n"
 "Language-Team: English <g17m0@users.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -170,11 +170,11 @@ msgstr ""
 msgid "Exporting (language %1) ..."
 msgstr ""
 
-#: src/CDManager.cpp:602
+#: src/CDManager.cpp:603
 msgid "Export Warning!"
 msgstr ""
 
-#: src/CDManager.cpp:632
+#: src/CDManager.cpp:633
 msgid ""
 "Can't open file `%1'!\n"
 "\n"
@@ -640,6 +640,17 @@ msgstr ""
 msgid "<ctl>Delete"
 msgstr ""
 
+#: src/PRecords.cpp:710 src/PMovies.cpp:587
+msgid ""
+"Couldn't write data!\n"
+"\n"
+"Reason: %1"
+msgstr ""
+
+#: src/PRecords.cpp:713
+msgid "Error exporting records to HTML!"
+msgstr ""
+
 #: src/PActors.cpp:308
 msgid "The database contains an invalid reference (%1) to a movie!"
 msgstr ""
@@ -720,6 +731,10 @@ msgid ""
 "Can't query available movies!\n"
 "\n"
 "Reason: %1"
+msgstr ""
+
+#: src/PMovies.cpp:590
+msgid "Error exporting movies to HTML!"
 msgstr ""
 
 #: src/Storage.cpp:169

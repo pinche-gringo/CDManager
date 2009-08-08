@@ -1,11 +1,11 @@
-//$Id: PRecords.cpp,v 1.19 2007/02/09 12:54:41 markus Rel $
+//$Id: PRecords.cpp,v 1.20 2009/08/08 13:24:28 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Records
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.19 $
+//REVISION    : $Revision: 1.20 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
 //COPYRIGHT   : Copyright (C) 2006, 2007
@@ -706,7 +706,14 @@ void PRecords::export2HTML (unsigned int fd, const std::string&) {
 	    output << "R" << **r;
 
 	 TRACE9 ("PRecorsd::export2HTML (unsigned int) - Writing: " << output.str ());
-	 ::write (fd, output.str ().data (), output.str ().size ());
+	 if (::write (fd, output.str ().data (), output.str ().size ()) != (ssize_t)output.str ().size ()) {
+	    Glib::ustring msg (_("Couldn't write data!\n\nReason: %1"));
+	    msg.replace (msg.find ("%1"), 2, strerror (errno));
+	    Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+	    dlg.set_title (_("Error exporting records to HTML!"));
+	    dlg.run ();
+	    break;
+	 }
       }
 }
 

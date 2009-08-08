@@ -1,11 +1,11 @@
-//$Id: PMovies.cpp,v 1.17 2006/06/06 22:02:03 markus Rel $
+//$Id: PMovies.cpp,v 1.18 2009/08/08 13:24:28 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movies
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.17 $
+//REVISION    : $Revision: 1.18 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
 //COPYRIGHT   : Copyright (C) 2006
@@ -583,7 +583,14 @@ void PMovies::export2HTML (unsigned int fd, const std::string& lang) {
 	    output << "M" << **m;
 
 	 TRACE9 ("PMovies::export2HTML (unsinged int) - Writing: " << output.str ());
-	 ::write (fd, output.str ().data (), output.str ().size ());
+	 if (::write (fd, output.str ().data (), output.str ().size ()) != (ssize_t)output.str ().size ()) {
+	    Glib::ustring msg (_("Couldn't write data!\n\nReason: %1"));
+	    msg.replace (msg.find ("%1"), 2, strerror (errno));
+	    Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+	    dlg.set_title (_("Error exporting movies to HTML!"));
+	    dlg.run ();
+	    break;
+	 }
       }
 
    Movie::currLang = oldLang;

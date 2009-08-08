@@ -1,11 +1,11 @@
-//$Id: CDManager.cpp,v 1.81 2009/05/17 11:41:45 markus Rel $
+//$Id: CDManager.cpp,v 1.82 2009/08/08 13:24:28 markus Exp $
 
 //PROJECT     : CDManager
 //SUBSYSTEM   : CDManager
 //REFERENCES  :
 //TODO        :
 //BUGS        :
-//REVISION    : $Revision: 1.81 $
+//REVISION    : $Revision: 1.82 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
 //COPYRIGHT   : Copyright (C) 2004 - 2009
@@ -582,7 +582,8 @@ void CDManager::export2HTML () {
 	 args[POS_LANG] = lang.c_str ();
 	 TRACE3 ("CDManager::export2HTML () - Parms: " << args[POS_LANG] << ' ' << args[POS_LANG + 1]);
 
-	 pipe (pipes);
+	 if (pipe (pipes) < 0)
+	    throw std::runtime_error (strerror (errno));
 	 pid = YGP::Process::execIOConnected ("CDWriter", args, pipes);
 
 	 for (unsigned int i (0); i < (WITH_RECORDS + WITH_MOVIES); ++i)

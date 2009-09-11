@@ -204,7 +204,7 @@ void CDWriter::writeHeader (const char* lang, const char* format,
    Check3 ((sizeof (titles) / sizeof (*titles)) == strlen (formats));
 
    while (*format) {
-      char* posFormat (strchr (formats, *format));
+      const char* posFormat (strchr (formats, *format));
       if (posFormat) {
 	 unsigned int pos (strchr (formats, *format++) - formats);
 	 Check3 (titles[pos].size ());

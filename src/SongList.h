@@ -79,8 +79,8 @@ class SongList : public Gtk::TreeView {
       Gtk::TreeRow r (*row);
       return r[colSongs.entry];
    }
-   YGP::HEntity getEntryAt (const Gtk::TreeModel::iterator& row) const {
-      return YGP::HEntity::cast (getSongAt (row));
+   HEntity getEntryAt (const Gtk::TreeModel::iterator& row) const {
+      return (HEntity)getSongAt (row);
    }
    Gtk::TreeModel::iterator getSong (const HSong& song) const;
    Gtk::TreeModel::iterator getSong (const YGP::ANumeric& track) const;

@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.10 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.09.2005
-//COPYRIGHT   : Copyright (C) 2005 - 2007
+//COPYRIGHT   : Copyright (C) 2005 - 2007, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -91,9 +91,9 @@ ActorList::~ActorList () {
 /// \param pos: Position in model for insert
 /// \returns Gtk::TreeModel::Row: Inserted row
 //-----------------------------------------------------------------------------
-Gtk::TreeRow ActorList::insert (const YGP::HEntity& entity, const Gtk::TreeIter& pos) {
-   TRACE7 ("ActorList::insert (const YGP::HEntity&, const Gtk::TreeIter&)");
-   Check1 (entity.isDefined ());
+Gtk::TreeRow ActorList::insert (const HEntity& entity, const Gtk::TreeIter& pos) {
+   TRACE7 ("ActorList::insert (const HEntity&, const Gtk::TreeIter&)");
+   Check1 (entity);
 
    Gtk::TreeRow newRow (*mOwnerObjects->insert (pos));
    newRow[colActors.entry] = entity;
@@ -107,9 +107,9 @@ Gtk::TreeRow ActorList::insert (const YGP::HEntity& entity, const Gtk::TreeIter&
 /// \param artist: Actor starring in the movie
 /// \returns Gtk::TreeModel::Row: Inserted row
 //-----------------------------------------------------------------------------
-Gtk::TreeRow ActorList::append (const YGP::HEntity& entity, const Gtk::TreeIter& pos) {
-   TRACE7 ("ActorList::append (const YGP::HEntity&, const Gtk::TreeRow&)");
-   Check1 (entity.isDefined ());
+Gtk::TreeRow ActorList::append (const HEntity& entity, const Gtk::TreeIter& pos) {
+   TRACE7 ("ActorList::append (const HEntity&, const Gtk::TreeRow&)");
+   Check1 (entity);
 
    Gtk::TreeRow newLine (*mOwnerObjects->append (pos->children ()));
    newLine[colActors.entry] = entity;
@@ -122,9 +122,9 @@ Gtk::TreeRow ActorList::append (const YGP::HEntity& entity, const Gtk::TreeIter&
 /// \param row: Row to update
 //-----------------------------------------------------------------------------
 void ActorList::update (Gtk::TreeRow& row) {
-   YGP::HEntity entity (row[colActors.entry]);
-   HMovie movie (HMovie::castDynamic (entity));
-   if (movie.isDefined ()) {
+   HEntity obj (row[colActors.entry]);
+   HMovie movie (boost::dynamic_pointer_cast<Movie> (obj));
+   if (movie) {
       row[colActors.name] = movie->getName ();
       row[colActors.year] = movie->getYear ().toString ();
 
@@ -135,7 +135,7 @@ void ActorList::update (Gtk::TreeRow& row) {
       row[colActors.editable] = false;
    }
    else {
-      HActor actor (HActor::cast (entity)); Check3 (actor.isDefined ());
+      HActor actor (boost::dynamic_pointer_cast<Actor> (obj)); Check3 (actor);
       row[colActors.name] = actor->getName ();
       row[colActors.year] = actor->getLifespan ();
       row[colActors.editable] = true;
@@ -158,8 +158,8 @@ void ActorList::valueChanged (const Glib::ustring& path,
    Glib::ustring oldValue;
 
    try {
-      YGP::HEntity hEntity (row[colActors.entry]);
-      HActor actor (HActor::castDynamic (hEntity)); Check3 (actor.isDefined ());
+      HEntity hEntity (row[colActors.entry]);
+      HActor actor (boost::dynamic_pointer_cast<Actor> (hEntity)); Check3 (actor);
 
       switch (column) {
       case 0:
@@ -243,11 +243,11 @@ Gtk::TreeIter ActorList::findName (const Glib::ustring& name, unsigned int level
 /// \param end: End object
 /// \returns Gtk::TreeModel::iterator: Iterator to found entry or mOwnerObjects->children ().end ().
 //-----------------------------------------------------------------------------
-Gtk::TreeIter ActorList::findEntity (const YGP::HEntity& entry, unsigned int level,
+Gtk::TreeIter ActorList::findEntity (const HEntity& entry, unsigned int level,
 				     Gtk::TreeIter begin, Gtk::TreeIter end) const {
    while (begin != end) {
       Gtk::TreeModel::Row actRow (*begin);
-      if (entry == actRow[colActors.entry])
+      if (entry == (HEntity)actRow[colActors.entry])
 	 return begin;
 
       if (level && begin->children ().size ()) {
@@ -273,8 +273,8 @@ int ActorList::sortByName (const Gtk::TreeModel::iterator& a, const Gtk::TreeMod
    Gtk::TreeRow ra (*a);
    Gtk::TreeRow rb (*b);
 
-   YGP::HEntity entity (ra[colActors.entry]);
-   int rc (HActor::castDynamic (entity).isDefined ()
+   HEntity entity (ra[colActors.entry]);
+   int rc ((typeid (*entity.get ()) == typeid (Actor))
 	   ? Actor::removeIgnored (ra[colActors.name]).compare (Actor::removeIgnored (rb[colActors.name]))
 	   : Movie::removeIgnored (ra[colActors.name]).compare (Movie::removeIgnored (rb[colActors.name])));
    if (!rc)
@@ -295,16 +295,16 @@ int ActorList::sortByYear (const Gtk::TreeModel::iterator& a, const Gtk::TreeMod
    YGP::AYear ya;
    YGP::AYear yb;
 
-   YGP::HEntity entity (ra[colActors.entry]);
+   HEntity entity (ra[colActors.entry]);
    if (typeid (*entity) == typeid (Actor)) {
-      ya = HActor::cast (entity)->getBorn ();
+      ya = boost::dynamic_pointer_cast<Actor> (entity)->getBorn ();
       entity = rb[colActors.entry];
-      yb = HActor::cast (entity)->getBorn ();
+      yb = boost::dynamic_pointer_cast<Actor> (entity)->getBorn ();
    }
    else {
-      ya = HMovie::cast (entity)->getYear ();
+      ya = boost::dynamic_pointer_cast<Movie> (entity)->getYear ();
       entity = rb[colActors.entry];
-      yb = HMovie::cast (entity)->getYear ();
+      yb = boost::dynamic_pointer_cast<Movie> (entity)->getYear ();
    }
    return ya.compare (yb);
 }

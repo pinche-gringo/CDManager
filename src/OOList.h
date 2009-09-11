@@ -27,7 +27,7 @@
 
 class Genres;
 
-typedef YGP::Handle<YGP::Entity> HEntity;
+typedef boost::shared_ptr<YGP::Entity> HEntity;
 
 
 /**Class describing the columns in the genre-model

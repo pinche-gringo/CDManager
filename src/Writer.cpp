@@ -55,8 +55,8 @@ MovieWriter::~MovieWriter () {
 /// \returns std::string: Substituted string
 //-----------------------------------------------------------------------------
 std::string MovieWriter::getSubstitute (const char ctrl, bool extend) const {
-   if (hMovie.isDefined ()) {
-      Check2 (hDirector.isDefined ());
+   if (hMovie) {
+      Check2 (hDirector);
 
       switch (ctrl) {
       case 'n':
@@ -87,8 +87,8 @@ std::string MovieWriter::getSubstitute (const char ctrl, bool extend) const {
       } // endswitch
    }
    else {
-      Check2 (hDirector.isDefined ());
-      Check3 (!hMovie.isDefined ());
+      Check2 (hDirector);
+      Check3 (!hMovie);
 
       if (ctrl == 'n')
 	 return YGP::TableWriter::changeHTMLSpecialChars (hDirector->getName ());
@@ -104,7 +104,7 @@ std::string MovieWriter::getSubstitute (const char ctrl, bool extend) const {
 //-----------------------------------------------------------------------------
 void MovieWriter::writeMovie (const HMovie& movie, const HDirector& director,
 			      std::ostream& out) {
-   Check2 (!hMovie.isDefined ()); Check2 (!hDirector.isDefined ());
+   Check2 (!hMovie); Check2 (!hDirector);
    hMovie = movie;
    hDirector = director;
 
@@ -115,8 +115,8 @@ void MovieWriter::writeMovie (const HMovie& movie, const HDirector& director,
       out << "<td>" << value << "</td>";
    out << "</tr>\n";
 
-   hMovie.undefine ();
-   hDirector.undefine ();
+   hMovie.reset ();
+   hDirector.reset ();
 }
 
 //-----------------------------------------------------------------------------
@@ -125,11 +125,11 @@ void MovieWriter::writeMovie (const HMovie& movie, const HDirector& director,
 /// \param out: Stream to write to
 //-----------------------------------------------------------------------------
 void MovieWriter::writeDirector (const HDirector& director, std::ostream& out) {
-   Check2 (!hMovie.isDefined ()); Check2 (!hDirector.isDefined ());
+   Check2 (!hMovie); Check2 (!hDirector);
    hDirector = director;
    out << "<tr><td>&nbsp;" << rowEnd << "\n"
        << "<tr><td colspan=\"5\" class=\"owner\">" << hDirector->getName () << rowEnd;
-   hDirector.undefine ();
+   hDirector.reset ();
 
    oddLine = true;
 }
@@ -169,8 +169,8 @@ RecordWriter::~RecordWriter () {
 /// \returns std::string: Substituted string
 //-----------------------------------------------------------------------------
 std::string RecordWriter::getSubstitute (const char ctrl, bool extend) const {
-   if (hRecord.isDefined ()) {
-      Check2 (hInterpret.isDefined ());
+   if (hRecord) {
+      Check2 (hInterpret);
 
       switch (ctrl) {
       case 'n':
@@ -189,8 +189,8 @@ std::string RecordWriter::getSubstitute (const char ctrl, bool extend) const {
       } // endswitch
    }
    else {
-      Check2 (hInterpret.isDefined ());
-      Check3 (!hRecord.isDefined ());
+      Check2 (hInterpret);
+      Check3 (!hRecord);
 
       if (ctrl == 'n')
 	 return YGP::TableWriter::changeHTMLSpecialChars (hInterpret->getName ());
@@ -207,7 +207,7 @@ std::string RecordWriter::getSubstitute (const char ctrl, bool extend) const {
 //-----------------------------------------------------------------------------
 void RecordWriter::writeRecord (const HRecord& record, const HInterpret& interpret,
 			      std::ostream& out) {
-   Check2 (!hRecord.isDefined ()); Check2 (!hInterpret.isDefined ());
+   Check2 (!hRecord); Check2 (!hInterpret);
    hRecord = record;
    hInterpret = interpret;
 
@@ -218,8 +218,8 @@ void RecordWriter::writeRecord (const HRecord& record, const HInterpret& interpr
       out << "<td>" << value << "</td>";
    out << "</tr>\n";
 
-   hRecord.undefine ();
-   hInterpret.undefine ();
+   hRecord.reset ();
+   hInterpret.reset ();
 }
 
 //-----------------------------------------------------------------------------
@@ -228,11 +228,11 @@ void RecordWriter::writeRecord (const HRecord& record, const HInterpret& interpr
 /// \param out: Stream to write to
 //-----------------------------------------------------------------------------
 void RecordWriter::writeInterpret (const HInterpret& interpret, std::ostream& out) {
-   Check2 (!hRecord.isDefined ()); Check2 (!hInterpret.isDefined ());
+   Check2 (!hRecord); Check2 (!hInterpret);
    hInterpret = interpret;
    out << "<tr><td>&nbsp;" << rowEnd << "\n"
        << "<tr><td colspan=\"3\" class=\"owner\">" << hInterpret->getName () << rowEnd;
-   hInterpret.undefine ();
+   hInterpret.reset ();
 
    oddLine = true;
 }

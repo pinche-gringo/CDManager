@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.18 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
-//COPYRIGHT   : Copyright (C) 2006
+//COPYRIGHT   : Copyright (C) 2006, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -91,8 +91,7 @@ PMovies::~PMovies () {
 //-----------------------------------------------------------------------------
 void PMovies::newDirector () {
    TRACE5 ("void PMovies::newDirector ()");
-   HDirector director;
-   director.define ();
+   HDirector director (new Director);
    directors.push_back (director);
 
    Gtk::TreeModel::iterator i (movies.append (director));
@@ -100,7 +99,7 @@ void PMovies::newDirector () {
    movies.selectRow (i);
    movies.set_cursor (path);
 
-   aUndo.push (Undo (Undo::INSERT, DIRECTOR, 0, YGP::HEntity::cast (director), path, ""));
+   aUndo.push (Undo (Undo::INSERT, DIRECTOR, 0, director, path, ""));
    apMenus[UNDO]->set_sensitive ();
    enableSave ();
 }
@@ -117,8 +116,7 @@ void PMovies::newMovie () {
       p = ((*p)->parent ());
    TRACE9 ("void PMovies::newMovie () - Founding director " << movies.getDirectorAt (p)->getName ());
 
-   HMovie movie;
-   movie.define ();
+   HMovie movie (new Movie);
    Gtk::TreeIter i (movies.append (movie, *p));
    Gtk::TreePath path (movies.getModel ()->get_path (i));
    movies.expand_row (path, false);
@@ -128,7 +126,7 @@ void PMovies::newMovie () {
    director = movies.getDirectorAt (p);
    relMovies.relate (director, movie);
 
-   aUndo.push (Undo (Undo::INSERT, MOVIE, 0, YGP::HEntity::cast (movie), path, ""));
+   aUndo.push (Undo (Undo::INSERT, MOVIE, 0, movie, path, ""));
    apMenus[UNDO]->set_sensitive ();
    enableSave ();
 }
@@ -155,8 +153,7 @@ void PMovies::directorChanged (const Gtk::TreeIter& row, unsigned int column, Gl
    TRACE9 ("PDirectors::directorChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&)\n\t- " << column << '/' << oldValue);
 
    Gtk::TreePath path (movies.getModel ()->get_path (row));
-   aUndo.push (Undo (Undo::CHANGED, DIRECTOR, column,
-		     YGP::HEntity::cast (movies.getCelebrityAt (row)), path, oldValue));
+   aUndo.push (Undo (Undo::CHANGED, DIRECTOR, column, movies.getCelebrityAt (row), path, oldValue));
 
    enableSave ();
    apMenus[UNDO]->set_sensitive ();
@@ -338,11 +335,11 @@ HMovie PMovies::findMovie (const std::vector<HDirector>& directors,
 			   unsigned int id) {
    for (std::vector<HDirector>::const_iterator d (directors.begin ());
 	d != directors.end (); ++d) {
-      Check3 (d->isDefined ());
+      Check3 (*d);
       const std::vector<HMovie>& movies (relMovies.getObjects (*d));
 
       for (std::vector<HMovie>::const_iterator m (movies.begin ()); m != movies.end (); ++m) {
-	 Check3 (m->isDefined ());
+	 Check3 (*m);
 	 if ((*m)->getId () == id)
 	    return *m;
       }
@@ -367,7 +364,7 @@ void PMovies::loadData () {
 
       for (std::vector<HDirector>::const_iterator i (directors.begin ());
 	   i != directors.end (); ++i) {
-	 Check3 (i->isDefined ());
+	 Check3 (*i);
 	 Gtk::TreeModel::Row director (movies.append (*i));
 
 	 std::map<unsigned int, std::vector<HMovie> >::iterator iMovie
@@ -431,8 +428,8 @@ void PMovies::loadData (const std::string& lang) {
 void PMovies::saveData () throw (std::exception) {
    TRACE9 ("PMovies::saveData ()");
 
-   std::vector<YGP::HEntity> aSaved;
-   std::vector<YGP::HEntity>::iterator posSaved (aSaved.end ());
+   std::vector<HEntity> aSaved;
+   std::vector<HEntity>::iterator posSaved (aSaved.end ());
 
    while (aUndo.size ()) {
       Undo last (aUndo.top ());
@@ -442,14 +439,14 @@ void PMovies::saveData () throw (std::exception) {
 	 switch (last.what ()) {
 	 case MOVIE: {
 	    Check3 (typeid (*last.getEntity ()) == typeid (Movie));
-	    HMovie movie (HMovie::cast (last.getEntity ()));
+	    HMovie movie (boost::dynamic_pointer_cast<Movie> (last.getEntity ()));
 	    if (last.how () == Undo::DELETE) {
 	       if (movie->getId ()) {
 		  Check3 (movie->getId () == last.column ());
 		  StorageMovie::deleteMovie (movie->getId ());
 	       }
 
-	       std::map<YGP::HEntity, YGP::HEntity>::iterator delRel
+	       std::map<HEntity, HEntity>::iterator delRel
 		  (delRelation.find (last.getEntity ()));
 	       Check3 (delRel != delRelation.end ());
 	       Check3 (typeid (*delRel->second) == typeid (Director));
@@ -458,12 +455,11 @@ void PMovies::saveData () throw (std::exception) {
 	    else {
 	       HDirector director  (relMovies.getParent (movie));
 	       if (!director->getId ()) {
-		  Check3 (std::find (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (director)) == aSaved.end ());
-		  Check3 (delRelation.find (YGP::HEntity::cast (director)) == delRelation.end ());
+		  Check3 (std::find (aSaved.begin (), aSaved.end (), director) == aSaved.end ());
+		  Check3 (delRelation.find (director) == delRelation.end ());
 
 		  SaveCelebrity::store (director, "Directors", *getWindow ());
-		  aSaved.insert (lower_bound (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (director)),
-				 YGP::HEntity::cast (director));
+		  aSaved.insert (lower_bound (aSaved.begin (), aSaved.end (), director), director);
 		  posSaved = lower_bound (aSaved.begin (), aSaved.end (), last.getEntity ());
 	       }
 	       StorageMovie::saveMovie (movie, relMovies.getParent (movie)->getId ());
@@ -472,7 +468,7 @@ void PMovies::saveData () throw (std::exception) {
 
 	 case DIRECTOR: {
 	    Check3 (typeid (*last.getEntity ()) == typeid (Director));
-	    HDirector director (HDirector::cast (last.getEntity ()));
+	    HDirector director (boost::dynamic_pointer_cast<Director> (last.getEntity ()));
 	    if (last.how () == Undo::DELETE) {
 	       if (director->getId ()) {
 		  Check3 (director->getId () == last.column ());
@@ -514,14 +510,14 @@ void PMovies::deleteSelection () {
 	 deleteMovie (iter);
       else {                               // A director is going to be deleted
 	 TRACE9 ("PMovies::deleteSelection () - Deleting " << iter->children ().size () << " children");
-	 HDirector director (movies.getDirectorAt (iter)); Check3 (director.isDefined ());
+	 HDirector director (movies.getDirectorAt (iter)); Check3 (director);
 	 while (iter->children ().size ()) {
 	    Gtk::TreeIter child (iter->children ().begin ());
 	    deleteMovie (child);
 	 }
 
 	 Gtk::TreePath path (movies.getModel ()->get_path (iter));
-	 aUndo.push (Undo (Undo::DELETE, DIRECTOR, director->getId (), YGP::HEntity::cast (director), path, ""));
+	 aUndo.push (Undo (Undo::DELETE, DIRECTOR, director->getId (), director, path, ""));
 	 movies.getModel ()->erase (iter);
       }
    }
@@ -540,14 +536,14 @@ void PMovies::deleteMovie (const Gtk::TreeIter& movie) {
    TRACE9 ("PMovies::deleteMovie (const Gtk::TreeIter&) - Deleting movie "
 	   << hMovie->getName ());
    Check3 (relMovies.isRelated (hMovie));
-   HDirector hDirector (relMovies.getParent (hMovie)); Check3 (hDirector.isDefined ());
+   HDirector hDirector (relMovies.getParent (hMovie)); Check3 (hDirector);
 
-   Check3 (delRelation.find (YGP::HEntity::cast (hMovie)) == delRelation.end ());
+   Check3 (delRelation.find (hMovie) == delRelation.end ());
 
    Glib::RefPtr<Gtk::TreeStore> model (movies.getModel ());
    Gtk::TreePath path (model->get_path (movies.getOwner (hDirector)));
-   aUndo.push (Undo (Undo::DELETE, MOVIE, hMovie->getId (), YGP::HEntity::cast (hMovie), path, ""));
-   delRelation[YGP::HEntity::cast (hMovie)] = YGP::HEntity::cast (hDirector);
+   aUndo.push (Undo (Undo::DELETE, MOVIE, hMovie->getId (), hMovie, path, ""));
+   delRelation[hMovie] = hDirector;
 
    relMovies.unrelate (hDirector, hMovie);
    model->erase (movie);
@@ -635,7 +631,7 @@ void PMovies::undoMovie (const Undo& last) {
    Gtk::TreeIter iter (movies.getModel ()->get_iter (path));
 
    Check3 (typeid (*last.getEntity ()) == typeid (Movie));
-   HMovie movie (HMovie::cast (last.getEntity ()));
+   HMovie movie (boost::dynamic_pointer_cast<Movie> (last.getEntity ()));
    TRACE9 ("PMovies::undoMovie (const Undo&) - " << last.how () << ": " << movie->getName ());
 
    switch (last.how ()) {
@@ -681,10 +677,9 @@ void PMovies::undoMovie (const Undo& last) {
       break;
 
    case Undo::DELETE: {
-      std::map<YGP::HEntity, YGP::HEntity>::iterator delRel
-	 (delRelation.find (last.getEntity ()));
+      std::map<HEntity, HEntity>::iterator delRel (delRelation.find (last.getEntity ()));
       Check3 (typeid (*delRel->second) == typeid (Director));
-      HDirector director (HDirector::cast (delRel->second));
+      HDirector director (boost::dynamic_pointer_cast<Director> (delRel->second));
       Gtk::TreeRow rowDirector (*movies.getOwner (director));
 
       iter = movies.append (movie, rowDirector);
@@ -718,7 +713,7 @@ void PMovies::undoDirector (const Undo& last) {
    Gtk::TreeIter iter (movies.getModel ()->get_iter (path)); Check3 (!iter->parent ());
 
    Check3 (typeid (*last.getEntity ()) == typeid (Director));
-   HDirector director (HDirector::cast (last.getEntity ()));
+   HDirector director (boost::dynamic_pointer_cast<Director> (last.getEntity ()));
    TRACE9 ("PMovies::undoDirector (const Undo&) - " << last.how () << ": " << director->getName ());
 
    switch (last.how ()) {

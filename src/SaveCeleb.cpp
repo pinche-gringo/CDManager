@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.1 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 11.03.2006
-//COPYRIGHT   : Copyright (C) 2006
+//COPYRIGHT   : Copyright (C) 2006, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -49,16 +49,16 @@ SaveCelebrity::SaveCelebrity (Gtk::Window& parent, const HCelebrity celeb, const
 			 false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true),
      lstCelebs (NULL) {
    set_title (_("Choose matching celebrity"));
-   Check1 (celeb.isDefined ());
+   Check1 (celeb);
    Check1 (celebs.size ());
 
    // Create string identifying celebrity to save
    Glib::ustring newCeleb (celeb->getName ());
-   if (celeb->getBorn ().isDefined () || celeb->getDied ().isDefined ()) {
+   if (celeb->getBorn () || celeb->getDied ()) {
       newCeleb += " (";
-      if (celeb->getBorn ().isDefined ())
+      if (celeb->getBorn ())
 	 newCeleb += celeb->getBorn ().toString ();
-      if (celeb->getDied ().isDefined ()) {
+      if (celeb->getDied ()) {
 	 newCeleb += '-';
 	 newCeleb += celeb->getDied ().toString ();
       }
@@ -132,7 +132,7 @@ SaveCelebrity::~SaveCelebrity () {
 //-----------------------------------------------------------------------------
 void SaveCelebrity::store (const HCelebrity celeb, const char* role,
 			   Gtk::Widget& parent) throw (std::exception) {
-   Check1 (celeb.isDefined ());
+   Check1 (celeb);
    TRACE8 ("SaveCelebrity::store (const HCelebrity, const char*, Gtk::Widget&) - " << celeb->getName ());
 
    if (celeb->getId ())

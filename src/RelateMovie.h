@@ -20,6 +20,8 @@
 
 #include <vector>
 
+#include <boost/shared_ptr.hpp>
+
 #include <glibmm/refptr.h>
 
 #include "Actor.h"
@@ -38,7 +40,7 @@ namespace Gtk {
 }
 
 
-typedef YGP::Handle<YGP::Entity> HEntity;
+typedef boost::shared_ptr<YGP::Entity> HEntity;
 
 
 /**Dialog to permit connecting movies to an actor

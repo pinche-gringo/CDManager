@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.26 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2007
+//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -114,8 +114,8 @@ SongList::~SongList () {
 /// \returns Gtk::TreeModel::iterator: Inserted row
 //-----------------------------------------------------------------------------
 Gtk::TreeModel::iterator SongList::insert (HSong& song, const Gtk::TreeIter& pos) {
-   TRACE3 ("SongList::insert (HSong&, const TreeIter&) - " << (song.isDefined () ? song->getName ().c_str () : "None"));
-   Check1 (song.isDefined ());
+   TRACE3 ("SongList::insert (HSong&, const TreeIter&) - " << (song ? song->getName ().c_str () : "None"));
+   Check1 (song);
 
    Gtk::TreeModel::Row newSong (*mSongs->insert (pos));
    newSong[colSongs.entry] = song;
@@ -137,7 +137,7 @@ void SongList::valueChanged (const Glib::ustring& path,
    Gtk::TreeModel::Row row (*mSongs->get_iter (Gtk::TreeModel::Path (path)));
 
    Glib::ustring oldValue;
-   HSong song (row[colSongs.entry]); Check3 (song.isDefined ());
+   HSong song (row[colSongs.entry]); Check3 (song);
    try {
       switch (column) {
       case 0: {
@@ -213,8 +213,8 @@ int SongList::sortByTrack (const Gtk::TreeModel::iterator& a,
 			   const Gtk::TreeModel::iterator& b) const {
    Gtk::TreeModel::Row rowa (*a);
    Gtk::TreeModel::Row rowb (*b);
-   HSong ha (rowa[colSongs.entry]); Check3 (ha.isDefined ());
-   HSong hb (rowb[colSongs.entry]); Check3 (hb.isDefined ());
+   HSong ha (rowa[colSongs.entry]); Check3 (ha);
+   HSong hb (rowb[colSongs.entry]); Check3 (hb);
    TRACE9 ("SongList::sortByTrack (2x const Gtk::TreeModel::iterator&) - "
 	   << ha->getTrack () << '/' << hb->getTrack () << '='
 	   << ha->getTrack ().compare (hb->getTrack ()));
@@ -232,8 +232,8 @@ int SongList::sortByName (const Gtk::TreeModel::iterator& a,
 			   const Gtk::TreeModel::iterator& b) const {
    Gtk::TreeModel::Row rowa (*a);
    Gtk::TreeModel::Row rowb (*b);
-   HSong ha (rowa[colSongs.entry]); Check3 (ha.isDefined ());
-   HSong hb (rowb[colSongs.entry]); Check3 (hb.isDefined ());
+   HSong ha (rowa[colSongs.entry]); Check3 (ha);
+   HSong hb (rowb[colSongs.entry]); Check3 (hb);
 
    Glib::ustring aname (Words::removeArticle (ha->getName ()));
    Glib::ustring bname (Words::removeArticle (hb->getName ()));
@@ -264,7 +264,7 @@ Gtk::TreeModel::iterator SongList::getSong (const HSong& song) const {
    for (Gtk::TreeModel::const_iterator i (mSongs->children ().begin ());
 	i != mSongs->children ().end (); ++i) {
       Gtk::TreeModel::Row actRow (*i);
-      if (song == actRow[colSongs.entry])
+      if (song == (HSong)actRow[colSongs.entry])
 	 return i;
    }
    return mSongs->children ().end ();
@@ -310,7 +310,7 @@ Gtk::TreeModel::iterator SongList::getSong (const YGP::ANumeric& track) const {
 void SongList::setGenre (Gtk::TreeIter& iter, unsigned int genre) {
    TRACE9 ("SongList::setGenre (Gtk::TreeIter&, unsigned int) - " << genre);
    Check1 (iter);
-   HSong song (getSongAt (iter)); Check2 (song.isDefined ());
+   HSong song (getSongAt (iter)); Check2 (song);
    TRACE9 ("SongList::setGenre (Gtk::TreeIter&, unsigned int) - Genre: " << song->getGenre ());
    if (!song->getGenre ()) {
       TRACE9 ("SongList::setGenre (Gtk::TreeIter&, unsigned int) - Changing " << song->getName ());
@@ -333,7 +333,7 @@ void SongList::setGenre (Gtk::TreeIter& iter, unsigned int genre) {
 void SongList::update (Gtk::TreeModel::Row& row) {
    TRACE9 ("SongList::update (Gtk::TreeModel::Row&)");
 
-   HSong song (row[colSongs.entry]); Check3 (song.isDefined ());
+   HSong song (row[colSongs.entry]); Check3 (song);
    row[colSongs.colTrack] = song->getTrack ().toString ();
    row[colSongs.colName] = song->getName ();
    row[colSongs.colDuration] = song->getDuration ();

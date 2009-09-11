@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
-//COPYRIGHT   : Copyright (C) 2006
+//COPYRIGHT   : Copyright (C) 2006, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ void StorageMovie::loadNames (const std::vector<HDirector>& directors,
 
       HMovie movie (PMovies::findMovie (directors, relMovies,
 					Database::getResultColumnAsUInt (0)));
-      Check3 (movie.isDefined ());
+      Check3 (movie);
       movie->setName (Database::getResultColumnAsString (1), lang);
       Database::getNextResultRow ();
    }
@@ -83,7 +83,7 @@ unsigned int StorageMovie::loadMovies (std::map<unsigned int, std::vector<HMovie
 		 << Database::getResultColumnAsString (1));
 
 	 try {
-	    movie.define ();
+	    movie.reset (new Movie);
 	    movie->setName (Database::getResultColumnAsString (1), "");
 	    movie->setId (Database::getResultColumnAsUInt (0));
 
@@ -123,7 +123,7 @@ void StorageMovie::saveMovie (const HMovie movie, unsigned int idDirector) throw
 	 << movie->getTitles () << "\", type=" << movie->getType ()
 	 << ", director=" << idDirector;
 
-   if (movie->getYear ().isDefined ())
+   if (movie->getYear ())
       query << ", year=" << movie->getYear ();
    if (movie->getId ())
       query << " WHERE id=" << movie->getId ();

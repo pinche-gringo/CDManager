@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.20 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
-//COPYRIGHT   : Copyright (C) 2006, 2007
+//COPYRIGHT   : Copyright (C) 2006, 2007, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -187,8 +187,7 @@ void PRecords::loadSongs (const HRecord& record) {
 /// Adds a new interpret to the list
 //-----------------------------------------------------------------------------
 void PRecords::newInterpret () {
-   HInterpret interpret;
-   interpret.define ();
+   HInterpret interpret (new Interpret);
    addInterpret (interpret);
 }
 
@@ -204,8 +203,7 @@ void PRecords::newRecord () {
    if ((*p)->parent ())
       p = ((*p)->parent ());
 
-   HRecord record;
-   record.define ();
+   HRecord record (new Record);
    record->setSongsLoaded ();
    addRecord (p, record);
 }
@@ -214,8 +212,7 @@ void PRecords::newRecord () {
 /// Adds a new song to the first selected record
 //-----------------------------------------------------------------------------
 void PRecords::newSong () {
-   HSong song;
-   song.define ();
+   HSong song (new Song);
    addSong (song);
 }
 
@@ -297,8 +294,7 @@ void PRecords::interpretChanged (const Gtk::TreeIter& row, unsigned int column, 
    TRACE9 ("PRecords::interpretChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&) - " << column);
 
    Gtk::TreePath path (records.getModel ()->get_path (row));
-   aUndo.push (Undo (Undo::CHANGED, INTERPRET, column,
-		     YGP::HEntity::cast (records.getCelebrityAt (row)), path, oldValue));
+   aUndo.push (Undo (Undo::CHANGED, INTERPRET, column, records.getCelebrityAt (row), path, oldValue));
 
    apMenus[UNDO]->set_sensitive ();
    enableSave ();
@@ -399,7 +395,7 @@ Gtk::TreeIter PRecords::addInterpret (const HInterpret& interpret) {
    Gtk::TreePath path (records.getModel ()->get_path (i));
    records.set_cursor (path);
 
-   aUndo.push (Undo (Undo::INSERT, INTERPRET, 0, YGP::HEntity::cast (interpret), path, ""));
+   aUndo.push (Undo (Undo::INSERT, INTERPRET, 0, interpret, path, ""));
    apMenus[UNDO]->set_sensitive ();
    enableSave ();
    return i;
@@ -422,7 +418,7 @@ Gtk::TreeIter PRecords::addRecord (Gtk::TreeIter& parent, HRecord& record) {
    interpret = records.getInterpretAt (parent);
    relRecords.relate (interpret, record);
 
-   aUndo.push (Undo (Undo::INSERT, RECORD, 0, YGP::HEntity::cast (record), path, ""));
+   aUndo.push (Undo (Undo::INSERT, RECORD, 0, record, path, ""));
    apMenus[UNDO]->set_sensitive ();
    enableSave ();
    return i;
@@ -446,7 +442,7 @@ Gtk::TreeIter PRecords::addSong (HSong& song) {
    songs.set_cursor (pathSong);
 
    Gtk::TreePath path (*list.begin ());
-   aUndo.push (Undo (Undo::INSERT, SONG, 0, YGP::HEntity::cast (song), path, ""));
+   aUndo.push (Undo (Undo::INSERT, SONG, 0, song, path, ""));
 
    apMenus[UNDO]->set_sensitive ();
    enableSave ();
@@ -460,8 +456,8 @@ Gtk::TreeIter PRecords::addSong (HSong& song) {
 void PRecords::saveData () throw (std::exception) {
    TRACE5 ("PRecords::saveData () - " << aUndo.size ());
 
-   std::vector<YGP::HEntity> aSaved;
-   std::vector<YGP::HEntity>::iterator posSaved (aSaved.end ());
+   std::vector<HEntity> aSaved;
+   std::vector<HEntity>::iterator posSaved (aSaved.end ());
 
    while (aUndo.size ()) {
       Undo last (aUndo.top ());
@@ -471,16 +467,14 @@ void PRecords::saveData () throw (std::exception) {
       if ((posSaved == aSaved.end ()) || (*posSaved != last.getEntity ())) {
 	 switch (last.what ()) {
 	 case SONG: {
-	    Check3 (typeid (*last.getEntity ()) == typeid (Song));
-	    HSong song (HSong::cast (last.getEntity ()));
+	    HSong song (boost::dynamic_pointer_cast<Song> (last.getEntity ())); Check3 (song);
 	    if (last.how () == Undo::DELETE) {
 	       if (song->getId ()) {
 		  Check3 (song->getId () == last.column ());
 		  StorageRecord::deleteSong (song->getId ());
 	       }
 
-	       std::map<YGP::HEntity, YGP::HEntity>::iterator delRel
-		  (delRelation.find (last.getEntity ()));
+	       std::map<HEntity, HEntity>::iterator delRel (delRelation.find (last.getEntity ()));
 	       Check3 (delRel != delRelation.end ());
 	       Check3 (typeid (*delRel->second) == typeid (Record));
 	       delRelation.erase (delRel);
@@ -488,21 +482,19 @@ void PRecords::saveData () throw (std::exception) {
 	    else {
 	       HRecord hRec (relSongs.getParent (song));
 	       if (!hRec->getId ()) {
-		  Check3 (std::find (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (hRec)) == aSaved.end ());
-		  Check3 (delRelation.find (YGP::HEntity::cast (hRec)) == delRelation.end ());
+		  Check3 (std::find (aSaved.begin (), aSaved.end (), HEntity::cast (hRec)) == aSaved.end ());
+		  Check3 (delRelation.find (HEntity::cast (hRec)) == delRelation.end ());
 
 		  HInterpret interpret  (relRecords.getParent (hRec));
 		  if (!interpret->getId ()) {
-		     Check3 (std::find (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (interpret)) == aSaved.end ());
-		     Check3 (delRelation.find (YGP::HEntity::cast (interpret)) == delRelation.end ());
+		     Check3 (std::find (aSaved.begin (), aSaved.end (), HEntity::cast (interpret)) == aSaved.end ());
+		     Check3 (delRelation.find (HEntity::cast (interpret)) == delRelation.end ());
 
 		     SaveCelebrity::store (interpret, "Interprets", *getWindow ());
-		     aSaved.insert (lower_bound (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (interpret)),
-				    YGP::HEntity::cast (interpret));
+		     aSaved.insert (lower_bound (aSaved.begin (), aSaved.end (), interpret), interpret);
 		  }
 		  StorageRecord::saveRecord (hRec, relRecords.getParent (hRec)->getId ());
-		  aSaved.insert (lower_bound (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (hRec)),
-				 YGP::HEntity::cast (hRec));
+		  aSaved.insert (lower_bound (aSaved.begin (), aSaved.end (), hRec), hRec);
 		  posSaved = lower_bound (aSaved.begin (), aSaved.end (), last.getEntity ());
 	       }
 	       StorageRecord::saveSong (song, hRec->getId ());
@@ -511,14 +503,14 @@ void PRecords::saveData () throw (std::exception) {
 
 	 case RECORD: {
 	    Check3 (typeid (*last.getEntity ()) == typeid (Record));
-	    HRecord rec (HRecord::cast (last.getEntity ()));
+	    HRecord rec (boost::dynamic_pointer_cast<Record> (last.getEntity ()));
 	    if (last.how () == Undo::DELETE) {
 	       if (rec->getId ()) {
 		  Check3 (rec->getId () == last.column ());
 		  StorageRecord::deleteRecord (rec->getId ());
 	       }
 
-	       std::map<YGP::HEntity, YGP::HEntity>::iterator delRel
+	       std::map<HEntity, HEntity>::iterator delRel
 		  (delRelation.find (last.getEntity ()));
 	       Check3 (delRel != delRelation.end ());
 	       Check3 (typeid (*delRel->second) == typeid (Interpret));
@@ -527,12 +519,11 @@ void PRecords::saveData () throw (std::exception) {
 	    else {
 	       HInterpret interpret  (relRecords.getParent (rec));
 	       if (!interpret->getId ()) {
-		  Check3 (std::find (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (interpret)) == aSaved.end ());
-		  Check3 (delRelation.find (YGP::HEntity::cast (interpret)) == delRelation.end ());
+		  Check3 (std::find (aSaved.begin (), aSaved.end (), HEntity::cast (interpret)) == aSaved.end ());
+		  Check3 (delRelation.find (HEntity::cast (interpret)) == delRelation.end ());
 
 		  SaveCelebrity::store (interpret, "Interprets", *getWindow ());
-		  aSaved.insert (lower_bound (aSaved.begin (), aSaved.end (), YGP::HEntity::cast (interpret)),
-				 YGP::HEntity::cast (interpret));
+		  aSaved.insert (lower_bound (aSaved.begin (), aSaved.end (), interpret), interpret);
 		  posSaved = lower_bound (aSaved.begin (), aSaved.end (), last.getEntity ());
 	       }
 	       StorageRecord::saveRecord (rec, interpret->getId ());
@@ -541,7 +532,7 @@ void PRecords::saveData () throw (std::exception) {
 
 	 case INTERPRET: {
 	    Check3 (typeid (*last.getEntity ()) == typeid (Interpret));
-	    HInterpret interpret (HInterpret::cast (last.getEntity ()));
+	    HInterpret interpret (boost::dynamic_pointer_cast<Interpret> (last.getEntity ()));
 	    if (last.how () == Undo::DELETE) {
 	       if (interpret->getId ()) {
 		  Check3 (interpret->getId () == last.column ());
@@ -608,7 +599,7 @@ void PRecords::deleteSelectedRecords () {
 	    deleteRecord (child);
 	 }
 	 Gtk::TreePath path (records.getModel ()->get_path (iter));
-	 aUndo.push (Undo (Undo::DELETE, INTERPRET, interpret->getId (), YGP::HEntity::cast (interpret), path, ""));
+	 aUndo.push (Undo (Undo::DELETE, INTERPRET, interpret->getId (), interpret, path, ""));
 	 records.getModel ()->erase (iter);
       }
    }
@@ -636,11 +627,11 @@ void PRecords::deleteRecord (const Gtk::TreeIter& record) {
       relSongs.unrelateAll (hRec);
    }
 
-   Check3 (delRelation.find (YGP::HEntity::cast (hRec)) == delRelation.end ());
+   Check3 (delRelation.find (HEntity::cast (hRec)) == delRelation.end ());
 
    Gtk::TreePath path (records.getModel ()->get_path (records.getOwner (hInterpret)));
-   aUndo.push (Undo (Undo::DELETE, RECORD, hRec->getId (), YGP::HEntity::cast (hRec), path, ""));
-   delRelation[YGP::HEntity::cast (hRec)] = YGP::HEntity::cast (hInterpret);
+   aUndo.push (Undo (Undo::DELETE, RECORD, hRec->getId (), hRec, path, ""));
+   delRelation[hRec] = hInterpret;
    relRecords.unrelate (hInterpret, hRec);
 
    records.getModel ()->erase (record);
@@ -654,11 +645,11 @@ void PRecords::deleteRecord (const Gtk::TreeIter& record) {
 void PRecords::deleteSong (const HSong& song, const HRecord& record) {
    TRACE9 ("PRecords::deleteSong (const HSong& song, const HRecord& record)");
    Check1 (song.isDefined ()); Check1 (record.isDefined ());
-   Check3 (delRelation.find (YGP::HEntity::cast (song)) == delRelation.end ());
+   Check3 (delRelation.find (HEntity::cast (song)) == delRelation.end ());
 
-   Gtk::TreePath path (records.getModel ()->get_path (records.getObject (HEntity::cast (record))));
-   aUndo.push (Undo (Undo::DELETE, SONG, song->getId (), YGP::HEntity::cast (song), path, ""));
-   delRelation[YGP::HEntity::cast (song)] = YGP::HEntity::cast (record);
+   Gtk::TreePath path (records.getModel ()->get_path (records.getObject (record)));
+   aUndo.push (Undo (Undo::DELETE, SONG, song->getId (), song, path, ""));
+   delRelation[song] = record;
 }
 
 //-----------------------------------------------------------------------------
@@ -730,7 +721,8 @@ void PRecords::addEntry (const Glib::ustring&artist, const Glib::ustring& record
    Gtk::TreeIter i (records.getOwner (artist));
    if (i == records.getModel ()->children ().end ()) {
       TRACE9 ("PRecords::addEntry (3x const Glib::ustring&, unsigned int) - Adding band " << artist);
-      interpret.define ();
+
+      interpret.reset (new Interpret);
       interpret->setName (artist);
       i = addInterpret (interpret);
    }
@@ -741,7 +733,7 @@ void PRecords::addEntry (const Glib::ustring&artist, const Glib::ustring& record
    Gtk::TreeIter r (records.getObject (i, record));
    if (r == i->children ().end ()) {
       TRACE9 ("PRecords::addEntry (3x const Glib::ustring&, unsigned int) - Adding record " << record);
-      rec.define ();
+      rec.reset (new Record);
       rec->setSongsLoaded ();
       rec->setName (record);
       addRecord (i, rec);
@@ -755,7 +747,7 @@ void PRecords::addEntry (const Glib::ustring&artist, const Glib::ustring& record
    Gtk::TreeIter s (songs.getSong (song));
    if (s == songs.getModel ()->children ().end ()) {
       TRACE9 ("PRecords::addEntry (3x const Glib::ustring&, unsigned int) - Adding song " << hSong);
-      hSong.define ();
+      hSong.reset (new Song);
       hSong->setName (song);
       if (track)
 	 hSong->setTrack (track);
@@ -817,7 +809,7 @@ void PRecords::undoRecord (const Undo& last) {
    Gtk::TreeIter iter (records.getModel ()->get_iter (path)); Check3 (iter->parent ());
 
    Check3 (typeid (*last.getEntity ()) == typeid (Record));
-   HRecord record (HRecord::cast (last.getEntity ()));
+   HRecord record (boost::dynamic_pointer_cast<Record> (last.getEntity ()));
    TRACE9 ("PRecords::undoRecord (const Undo&) - " << last.how () << ": " << record->getName ());
 
    switch (last.how ()) {
@@ -849,10 +841,10 @@ void PRecords::undoRecord (const Undo& last) {
       break;
 
    case Undo::DELETE: {
-      std::map<YGP::HEntity, YGP::HEntity>::iterator delRel
+      std::map<HEntity, HEntity>::iterator delRel
 	 (delRelation.find (last.getEntity ()));
       Check3 (typeid (*delRel->second) == typeid (Interpret));
-      HInterpret interpret (HInterpret::cast (delRel->second));
+      HInterpret interpret (boost::dynamic_pointer_cast<Interpret> (delRel->second));
       Gtk::TreeRow rowInterpret (*records.getOwner (interpret));
 
       iter = records.append (record, rowInterpret);
@@ -885,8 +877,7 @@ void PRecords::undoInterpret (const Undo& last) {
    Gtk::TreePath path (last.getPath ());
    Gtk::TreeIter iter (records.getModel ()->get_iter (path)); Check3 (!iter->parent ());
 
-   Check3 (typeid (*last.getEntity ()) == typeid (Interpret));
-   HInterpret interpret (HInterpret::cast (last.getEntity ()));
+   HInterpret interpret (boost::dynamic_pointer_cast<Interpret> (last.getEntity ())); Check3 (interpret);
    TRACE9 ("PRecords::undoInterpret (const Undo&) - " << last.how () << ": " << interpret->getName ());
 
    switch (last.how ())
@@ -943,7 +934,7 @@ void PRecords::undoSong (const Undo& last) {
    sel->select (iter);
 
    Check3 (typeid (*last.getEntity ()) == typeid (Song));
-   HSong song (HSong::cast (last.getEntity ()));
+   HSong song (boost::dynamic_pointer_cast<Song> (last.getEntity ()));
    TRACE9 ("PRecords::undoSong (const Undo&) - " << last.how () << ": " << song->getName ());
    iter = songs.getSong (song); Check3 (iter);
 
@@ -981,9 +972,9 @@ void PRecords::undoSong (const Undo& last) {
    case Undo::DELETE: {
       iter = songs.insert (song, iter);
 
-      std::map<YGP::HEntity, YGP::HEntity>::iterator delRel (delRelation.find (last.getEntity ()));
+      std::map<HEntity, HEntity>::iterator delRel (delRelation.find (last.getEntity ()));
       Check3 (typeid (*delRel->second) == typeid (Record));
-      relSongs.relate (HRecord::cast (delRel->second), song);
+      relSongs.relate (boost::dynamic_pointer_cast<Record> (delRel->second), song);
 
       delRelation.erase (delRel);
       break; }

@@ -33,7 +33,7 @@ class ActorColumns : public Gtk::TreeModel::ColumnRecord {
    ActorColumns () {
       add (entry); add (name); add (year); add (genre); add (editable); }
 
-   Gtk::TreeModelColumn<YGP::HEntity>  entry;
+   Gtk::TreeModelColumn<HEntity>       entry;
    Gtk::TreeModelColumn<Glib::ustring> name;
    Gtk::TreeModelColumn<Glib::ustring> year;
    Gtk::TreeModelColumn<Glib::ustring> genre;
@@ -47,11 +47,11 @@ class ActorList : public Gtk::TreeView {
    ActorList (const Genres& genres);
    virtual ~ActorList ();
 
-   Gtk::TreeRow insert (const YGP::HEntity& entity, const Gtk::TreeIter& pos);
-   Gtk::TreeRow append (const YGP::HEntity& entity) { return insert (entity, mOwnerObjects->children ().end ()); }
-   Gtk::TreeRow prepend (const YGP::HEntity& entity) { return insert (entity, mOwnerObjects->children ().begin ()); }
+   Gtk::TreeRow insert (const HEntity& entity, const Gtk::TreeIter& pos);
+   Gtk::TreeRow append (const HEntity& entity) { return insert (entity, mOwnerObjects->children ().end ()); }
+   Gtk::TreeRow prepend (const HEntity& entity) { return insert (entity, mOwnerObjects->children ().begin ()); }
 
-   Gtk::TreeRow append (const YGP::HEntity& object, const Gtk::TreeIter& owner);
+   Gtk::TreeRow append (const HEntity& object, const Gtk::TreeIter& owner);
    void clear () { mOwnerObjects->clear (); }
 
    void update (Gtk::TreeRow& row);
@@ -61,14 +61,14 @@ class ActorList : public Gtk::TreeView {
    /// Returns the handle at the passed position
    /// \param iter: Iterator to position in the list
    /// \returns HMovie: Handle of the selected line
-   YGP::HEntity getEntityAt (const Gtk::TreeIter iter) const {
-      YGP::HEntity hEntity ((*iter)[colActors.entry]);
+   HEntity getEntityAt (const Gtk::TreeIter iter) const {
+      HEntity hEntity ((*iter)[colActors.entry]);
       return hEntity;
    }
 
-   Gtk::TreeIter findEntity (const YGP::HEntity& entry, unsigned int level,
+   Gtk::TreeIter findEntity (const HEntity& entry, unsigned int level,
 			     Gtk::TreeIter begin, Gtk::TreeIter end) const;
-   Gtk::TreeIter findEntity (const YGP::HEntity& entry, unsigned int level = -1U) const {
+   Gtk::TreeIter findEntity (const HEntity& entry, unsigned int level = -1U) const {
       return findEntity (entry, level, mOwnerObjects->children ().begin (),
 			 mOwnerObjects->children ().end ());
    }

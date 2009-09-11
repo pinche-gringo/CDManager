@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
-//COPYRIGHT   : Copyright (C) 2006
+//COPYRIGHT   : Copyright (C) 2006, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ unsigned int StorageRecord::loadRecords (std::map<unsigned int, std::vector<HRec
 	 TRACE8 ("StorageRecords::loadRecords (...) - Adding record "
 		 << Database::getResultColumnAsUInt (0) << '/'
 		 << Database::getResultColumnAsString (1));
-	 newRec.define ();
+	 newRec.reset (new Record);
 
 	 try {
 	    newRec->setId (Database::getResultColumnAsUInt (0));
@@ -98,7 +98,7 @@ void StorageRecord::loadSongs (unsigned int idRecord, std::vector<HSong>& songs)
 
    HSong song;
    while (Database::hasData ()) {
-      song.define ();
+      song.reset (new Song);
       song->setId (Database::getResultColumnAsUInt (0));
       song->setName (Database::getResultColumnAsString (1));
       std::string time (Database::getResultColumnAsString (2));

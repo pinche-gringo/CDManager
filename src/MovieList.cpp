@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.26 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006
+//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -127,10 +127,10 @@ MovieList::~MovieList () {
 Gtk::TreeModel::Row MovieList::append (HMovie& movie,
 				       const Gtk::TreeModel::Row& director) {
    TRACE3 ("MovieList::append (HMovie&, Gtk::TreeModel::Row) - "
-	   << (movie.isDefined () ? movie->getName ().c_str () : "None"));
-   Check1 (movie.isDefined ());
+	   << (movie ? movie->getName ().c_str () : "None"));
+   Check1 (movie);
 
-   HEntity obj (HEntity::cast (movie));
+   HEntity obj (movie);
    Gtk::TreeModel::Row newMovie (OwnerObjectList::append (obj, director));
    update (newMovie);
    return newMovie;
@@ -143,8 +143,7 @@ Gtk::TreeModel::Row MovieList::append (HMovie& movie,
 //-----------------------------------------------------------------------------
 HMovie MovieList::getMovieAt (const Gtk::TreeIter iter) const {
    Check2 ((*iter)->parent ());
-   HEntity hMovie (getObjectAt (iter)); Check3 (hMovie.isDefined ());
-   HMovie movie (HMovie::cast (hMovie));
+   HMovie movie (boost::dynamic_pointer_cast<Movie> (getObjectAt (iter))); Check3 (movie);
    TRACE7 ("CDManager::getMovieAt (const Gtk::TreeIter&) - Selected movie: " <<
 	   movie->getId () << '/' << movie->getName ());
    return movie;
@@ -156,8 +155,7 @@ HMovie MovieList::getMovieAt (const Gtk::TreeIter iter) const {
 /// \param value: Value to set
 //-----------------------------------------------------------------------------
 void MovieList::setName (HEntity& object, const Glib::ustring& value) {
-   HMovie m (HMovie::cast (object));
-   m->setName (value);
+   (boost::dynamic_pointer_cast<Movie> (object))->setName (value);
 }
 
 //-----------------------------------------------------------------------------
@@ -167,8 +165,7 @@ void MovieList::setName (HEntity& object, const Glib::ustring& value) {
 /// \throw std::exception: In case of an error
 //-----------------------------------------------------------------------------
 void MovieList::setYear (HEntity& object, const Glib::ustring& value) throw (std::exception) {
-   HMovie m (HMovie::cast (object));
-   m->setYear (value);
+   (boost::dynamic_pointer_cast<Movie> (object))->setYear (value);
 }
 
 //-----------------------------------------------------------------------------
@@ -177,8 +174,7 @@ void MovieList::setYear (HEntity& object, const Glib::ustring& value) throw (std
 /// \param value: Value to set
 //-----------------------------------------------------------------------------
 void MovieList::setGenre (HEntity& object, unsigned int value) {
-   HMovie m (HMovie::cast (object));
-   m->setGenre (value);
+   (boost::dynamic_pointer_cast<Movie> (object))->setGenre (value);
 }
 
 //-----------------------------------------------------------------------------
@@ -296,7 +292,7 @@ bool MovieList::on_button_press_event (GdkEventButton* e) {
 		 << areaLang.get_x () << '-' << e->x << '-'
 		 << (areaSub.get_x () + areaSub.get_width ()));
 	 // Create the popup-window
-	 HMovie movie (getMovieAt (oldSel)); Check3 (movie.isDefined ());
+	 HMovie movie (getMovieAt (oldSel)); Check3 (movie);
 	 if (e->x < areaSub.get_x ()) {
 	    std::string languages (movie->getLanguage ());
 	    LanguageDialog dlg (languages, 4);
@@ -378,7 +374,7 @@ void MovieList::update (const std::string& lang) {
    for (Gtk::TreeModel::const_iterator d (mOwnerObjects->children ().begin ());
 	d != mOwnerObjects->children ().end (); ++d) {
       for (Gtk::TreeIter m (d->children ().begin ()); m != d->children ().end (); ++m) {
-	 HMovie movie (getMovieAt (m)); Check3 (movie.isDefined ());
+	 HMovie movie (getMovieAt (m)); Check3 (movie);
 	 TRACE9 ("MovieList::update (const std::string&) - Updating " << movie->getName (lang));
 	 (*m)[colOwnerObjects->name] = movie->getName (lang);
       }

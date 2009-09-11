@@ -18,10 +18,12 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 
+#include <boost/shared_ptr.hpp>
+
 #include "Celebrity.h"
 
 
 typedef Celebrity Director;
-defineHndl(Director);
+typedef boost::shared_ptr<Director> HDirector;
 
 #endif

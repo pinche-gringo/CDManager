@@ -154,7 +154,7 @@ void Storage::fillCelebrities (std::vector<HCelebrity>& target, YGP::StatusObjec
 
       // Fill and store entry from DB-values
       try {
-	 hCeleb.define ();
+	 hCeleb.reset (new Celebrity);
 	 hCeleb->setId (Database::getResultColumnAsUInt (0));
 	 hCeleb->setName (Database::getResultColumnAsString (1));
 
@@ -205,16 +205,16 @@ void Storage::commitTransaction () {
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
 void Storage::insertCelebrity (const HCelebrity celeb, const char* role) throw (std::exception) {
-   Check1 (celeb.isDefined ());
+   Check1 (celeb);
    TRACE8 ("Storage::insertCelebrity (const HCelebrity, const char*) - " << role << ": " << celeb->getName ());
    Check1 (!celeb->getId ());
 
    std::stringstream query;
    query << "INSERT INTO Celebrities  SET name=\"" << Database::escapeDBValue (celeb->getName ())
 	 << "\", born="
-	 << (celeb->getBorn ().isDefined () ? celeb->getBorn () : YGP::AYear (0))
+	 << (celeb->getBorn () ? celeb->getBorn () : YGP::AYear (0))
 	 << ", died="
-	 << (celeb->getDied ().isDefined () ? celeb->getDied () : YGP::AYear (0));
+	 << (celeb->getDied () ? celeb->getDied () : YGP::AYear (0));
    Database::execute (query.str ().c_str ());
    celeb->setId (Database::getIDOfInsert ());
    setRole (celeb->getId (), role);
@@ -227,16 +227,16 @@ void Storage::insertCelebrity (const HCelebrity celeb, const char* role) throw (
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
 void Storage::updateCelebrity (const HCelebrity celeb) throw (std::exception) {
-   Check1 (celeb.isDefined ());
+   Check1 (celeb);
    TRACE8 ("Storage::updateCelebrity (const HCelebrity) - " << celeb->getName ());
    Check1 (celeb->getId ());
 
    std::stringstream query;
    query << "UPDATE Celebrities  SET name=\"" << Database::escapeDBValue (celeb->getName ())
 	 << "\", born="
-	 << (celeb->getBorn ().isDefined () ? celeb->getBorn () : YGP::AYear (0))
+	 << (celeb->getBorn () ? celeb->getBorn () : YGP::AYear (0))
 	 << ", died="
-	 << (celeb->getDied ().isDefined () ? celeb->getDied () : YGP::AYear (0))
+	 << (celeb->getDied () ? celeb->getDied () : YGP::AYear (0))
 	 << " WHERE id=" << celeb->getId ();
    Database::execute (query.str ().c_str ());
 }

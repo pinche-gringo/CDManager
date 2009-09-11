@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.6 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
-//COPYRIGHT   : Copyright (C) 2006
+//COPYRIGHT   : Copyright (C) 2006, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -88,7 +88,7 @@ void NBPage::export2HTML (unsigned int fd, const std::string& lang) {
 /// \param row: Listbox-line related to the changed entity
 /// \param value: Old value of changed entry
 //-----------------------------------------------------------------------------
-NBPage::Undo::Undo (CHGSPEC chg, unsigned int what, unsigned int col, YGP::HEntity entity,
+NBPage::Undo::Undo (CHGSPEC chg, unsigned int what, unsigned int col, HEntity entity,
 		    Gtk::TreePath& row, const Glib::ustring& value)
    : entity (entity), row (row), value (value) {
    TRACE9 ("NBPage::Undo::Undo (...)");

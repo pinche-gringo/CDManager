@@ -21,6 +21,8 @@
 #include <map>
 #include <string>
 
+#include <boost/shared_ptr.hpp>
+
 #include <glibmm/ustring.h>
 
 #include <YGP/AYear.h>
@@ -30,7 +32,7 @@
 #include "Language.h"
 
 class Movie;
-defineHndl (Movie);
+typedef boost::shared_ptr<Movie> HMovie;
 
 /**Class to hold a movie
  */

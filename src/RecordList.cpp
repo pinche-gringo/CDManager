@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.18 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006
+//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -71,8 +71,7 @@ Gtk::TreeModel::Row RecordList::append (HRecord& record,
 	   << (record.isDefined () ? record->getName ().c_str () : "None"));
    Check1 (record.isDefined ());
 
-   HEntity obj (HEntity::cast (record));
-   Gtk::TreeModel::Row newRecord (OwnerObjectList::append (obj, artist));
+   Gtk::TreeModel::Row newRecord (OwnerObjectList::append ((HEntity&)record, artist));
    update (newRecord);
    return newRecord;
 }
@@ -84,8 +83,7 @@ Gtk::TreeModel::Row RecordList::append (HRecord& record,
 //-----------------------------------------------------------------------------
 HRecord RecordList::getRecordAt (const Gtk::TreeIter iter) const {
    Check2 ((*iter)->parent ());
-   HEntity hRec (getObjectAt (iter)); Check3 (hRec.isDefined ());
-   HRecord record (HRecord::cast (hRec));
+   HRecord record (boost::dynamic_pointer_cast<Record> (getObjectAt (iter))); Check3 (record);
    TRACE7 ("RecordList::getRecordAt (const Gtk::TreeIter&) - Selected record: " <<
 	   record->getId () << '/' << record->getName ());
    return record;
@@ -98,8 +96,7 @@ HRecord RecordList::getRecordAt (const Gtk::TreeIter iter) const {
 /// \remarks To be implemented
 //-----------------------------------------------------------------------------
 void RecordList::setName (HEntity& object, const Glib::ustring& value) {
-   HRecord m (HRecord::cast (object));
-   m->setName (value);
+   (boost::dynamic_pointer_cast<Record> (object))->setName (value);
 }
 
 //-----------------------------------------------------------------------------
@@ -110,8 +107,7 @@ void RecordList::setName (HEntity& object, const Glib::ustring& value) {
 /// \remarks To be implemented
 //-----------------------------------------------------------------------------
 void RecordList::setYear (HEntity& object, const Glib::ustring& value) throw (std::exception) {
-   HRecord m (HRecord::cast (object));
-   m->setYear (value);
+   (boost::dynamic_pointer_cast<Record> (object))->setYear (value);
 }
 
 //-----------------------------------------------------------------------------
@@ -121,8 +117,7 @@ void RecordList::setYear (HEntity& object, const Glib::ustring& value) throw (st
 /// \remarks To be implemented
 //-----------------------------------------------------------------------------
 void RecordList::setGenre (HEntity& object, unsigned int value) {
-   HRecord m (HRecord::cast (object));
-   m->setGenre (value);
+   (boost::dynamic_pointer_cast<Record> (object))->setGenre (value);
 }
 
 //-----------------------------------------------------------------------------

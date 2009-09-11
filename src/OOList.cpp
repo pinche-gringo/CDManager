@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.28 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2007
+//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -127,7 +127,7 @@ Gtk::TreeModel::Row OwnerObjectList::append (HEntity& object,
 					     const Gtk::TreeModel::Row& owner) {
    TRACE3 ("OwnerObjectList::append (HEntity&, const Gtk::TreeModel::Row&)");
    Check2 (colOwnerObjects);
-   Check1 (object.isDefined ());
+   Check1 (object);
 
    Gtk::TreeModel::Row newObj (*mOwnerObjects->append (owner.children ()));
    newObj[colOwnerObjects->entry] = object;
@@ -142,12 +142,12 @@ Gtk::TreeModel::Row OwnerObjectList::append (HEntity& object,
 //-----------------------------------------------------------------------------
 Gtk::TreeModel::Row OwnerObjectList::insert (const HCelebrity& owner, const Gtk::TreeIter& pos) {
    TRACE3 ("OwnerObjectList::insert (const HCelebrity&, const Gtk::TreeIter&) - "
-	   << (owner.isDefined () ? owner->getName ().c_str () : "None"));
-   Check1 (owner.isDefined ());
+	   << (owner ? owner->getName ().c_str () : "None"));
+   Check1 (owner);
    Check2 (colOwnerObjects);
 
    Gtk::TreeModel::Row newOwner (*mOwnerObjects->insert (pos));
-   set (newOwner, YGP::Handle<YGP::Entity>::cast (owner));
+   set (newOwner, owner);
    return newOwner;
 }
 
@@ -214,7 +214,7 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 	    signalObjectChanged.emit (row, column, oldValue);
       } // endif object edited
       else {
-	 HCelebrity celeb (getCelebrityAt (row)); Check3 (celeb.isDefined ());
+	 HCelebrity celeb (getCelebrityAt (row)); Check3 (celeb);
 
 	 switch (column) {
 	 case 0:
@@ -275,7 +275,7 @@ void OwnerObjectList::updateGenres () {
 HEntity OwnerObjectList::getObjectAt (const Gtk::TreeIter iter) const {
    Check2 ((*iter)->parent ());
    Check2 (colOwnerObjects);
-   HEntity hEntity ((*iter)[colOwnerObjects->entry]); Check3 (hEntity.isDefined ());
+   HEntity hEntity ((*iter)[colOwnerObjects->entry]); Check3 (hEntity);
    return hEntity;
 }
 
@@ -288,8 +288,8 @@ HCelebrity OwnerObjectList::getCelebrityAt (const Gtk::TreeIter iter) const {
    TRACE9 ("GetCelibrity: " << (*iter)[colOwnerObjects->name]);
    Check2 (!(*iter)->parent ());
    Check2 (colOwnerObjects);
-   HEntity hObj ((*iter)[colOwnerObjects->entry]); Check3 (hObj.isDefined ());
-   HCelebrity owner (HCelebrity::cast (hObj));
+   HCelebrity owner (boost::dynamic_pointer_cast<Celebrity> ((HEntity)(*iter)[colOwnerObjects->entry]));
+   Check3 (owner);
    TRACE7 ("CDManager::getCelebrityAt (const Gtk::TreeIter&) - Selected: " <<
 	   owner->getId () << '/' << owner->getName ());
    return owner;
@@ -405,8 +405,8 @@ int OwnerObjectList::sortByGenre (const Gtk::TreeModel::iterator& a,
 int OwnerObjectList::sortOwner (const Gtk::TreeModel::iterator& a,
 				const Gtk::TreeModel::iterator& b) const {
    Check2 (!a->parent ()); Check2 (!b->parent ());
-   HCelebrity ha (getCelebrityAt (a)); Check3 (ha.isDefined ());
-   HCelebrity hb (getCelebrityAt (b)); Check3 (hb.isDefined ());
+   HCelebrity ha (getCelebrityAt (a)); Check3 (ha);
+   HCelebrity hb (getCelebrityAt (b)); Check3 (hb);
 
    TRACE9 ("OwnerObjectList::sortOwner (2x const Gtk::TreeModel::iterator&) - " << ha->getName () << "<->" << hb->getName ());
    int rc (Celebrity::removeIgnored (ha->getName ()).compare (Celebrity::removeIgnored (hb->getName ())));
@@ -458,13 +458,12 @@ Gtk::TreeModel::iterator OwnerObjectList::getOwner (const Glib::ustring& name) c
 //-----------------------------------------------------------------------------
 Gtk::TreeModel::iterator OwnerObjectList::getOwner (const HCelebrity& owner) const {
    Check2 (colOwnerObjects);
-   Check2 (owner.isDefined ());
+   Check2 (owner);
 
-   HEntity obj (HEntity::cast (owner));
    for (Gtk::TreeModel::const_iterator i (mOwnerObjects->children ().begin ());
 	i != mOwnerObjects->children ().end (); ++i) {
       Gtk::TreeModel::Row actRow (*i);
-      if (obj == actRow[colOwnerObjects->entry])
+      if (owner == (HEntity)actRow[colOwnerObjects->entry])
 	 return i;
    }
    return mOwnerObjects->children ().end ();
@@ -502,7 +501,7 @@ Gtk::TreeModel::iterator OwnerObjectList::getObject (const Gtk::TreeIter& parent
    for (Gtk::TreeModel::const_iterator i (parent->children ().begin ());
 	i != parent->children ().end (); ++i) {
       Gtk::TreeModel::Row actRow (*i);
-      if (object == actRow[colOwnerObjects->entry])
+      if (object == (HEntity)actRow[colOwnerObjects->entry])
 	 return i;
    }
    return parent->children ().end ();
@@ -521,7 +520,7 @@ Gtk::TreeModel::iterator OwnerObjectList::getObject (const HEntity& object) cons
       for (Gtk::TreeModel::const_iterator j (i->children ().begin ());
 	   j != i->children ().end (); ++j) {
 	 Gtk::TreeModel::Row actRow (*j);
-	 if (object == actRow[colOwnerObjects->entry])
+	 if (object == (HEntity)actRow[colOwnerObjects->entry])
 	    return j;
    }
    return mOwnerObjects->children ().end ();

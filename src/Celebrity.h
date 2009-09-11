@@ -20,15 +20,17 @@
 
 #include <vector>
 
+#include <boost/shared_ptr.hpp>
+
 #include <glibmm/ustring.h>
 
 #include <YGP/AYear.h>
-#include <YGP/Handle.h>
 #include <YGP/Entity.h>
 
 
 class Celebrity;
-defineHndl(Celebrity);
+typedef boost::shared_ptr<YGP::Entity> HEntity;
+typedef boost::shared_ptr<Celebrity>   HCelebrity;
 
 
 /**Class to hold an celibrity

@@ -18,6 +18,8 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 
+#include <boost/shared_ptr.hpp>
+
 #include <glibmm/ustring.h>
 
 #include <YGP/AYear.h>
@@ -25,7 +27,7 @@
 
 
 class Record;
-defineHndl(Record);
+typedef boost::shared_ptr<Record> HRecord;
 
 
 /**Class to hold a record

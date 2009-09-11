@@ -18,12 +18,17 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 
+#include <boost/shared_ptr.hpp>
+
 #include <glibmm/ustring.h>
 
 #include <YGP/ATime.h>
 #include <YGP/ANumeric.h>
 
 #include <YGP/Entity.h>
+
+
+typedef boost::shared_ptr<YGP::Entity> HEntity;
 
 
 /**Class to hold an interpret
@@ -68,6 +73,6 @@ class Song : public YGP::Entity {
    YGP::ATime        duration;
    unsigned long int genre;
 };
-defineHndl(Song);
+typedef boost::shared_ptr<Song> HSong;
 
 #endif

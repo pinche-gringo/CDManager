@@ -23,6 +23,8 @@
 #include <vector>
 #include <stdexcept>
 
+#include <boost/shared_ptr.hpp>
+
 #include <glibmm/ustring.h>
 
 #include <gtkmm/action.h>
@@ -32,6 +34,9 @@
 #include <YGP/Entity.h>
 
 #include <sigc++/trackable.h>
+
+
+typedef boost::shared_ptr<YGP::Entity> HEntity;
 
 
 // Forward declarations
@@ -85,14 +90,14 @@ class NBPage : public sigc::trackable {
    public:
       typedef enum { UNDEFINED = 0, INSERT, DELETE, CHANGED } CHGSPEC;
       Undo () { chgSpec.how = UNDEFINED; };
-      Undo (CHGSPEC chg, unsigned int what, unsigned int col, YGP::HEntity entity,
+      Undo (CHGSPEC chg, unsigned int what, unsigned int col, HEntity entity,
 	    Gtk::TreePath& row, const Glib::ustring& value);
 
       unsigned int how () const { return chgSpec.how; }
       unsigned int what () const { return chgSpec.what; }
       unsigned int column () const { return chgSpec.column; }
 
-      const YGP::HEntity getEntity () const { return entity; }
+      const HEntity getEntity () const { return entity; }
       const Gtk::TreePath& getPath () const { return row; }
       const Glib::ustring& getValue () const { return value; }
 
@@ -102,14 +107,14 @@ class NBPage : public sigc::trackable {
 	 unsigned int how    : 2;
 	 unsigned int what   : 3;
       } chgSpec;
-      YGP::HEntity  entity;
+      HEntity  entity;
       Gtk::TreePath row;
       Glib::ustring value;
    };
 
    bool loaded;
-   std::stack<Undo>                     aUndo;
-   std::map<YGP::HEntity, YGP::HEntity> delRelation;
+   std::stack<Undo>           aUndo;
+   std::map<HEntity, HEntity> delRelation;
 
  private:
    NBPage (const NBPage&);

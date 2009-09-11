@@ -75,7 +75,7 @@ class PActors : public NBPage {
    void viewByActor ();
    void viewByMovie ();
 
-   void changeAllEntries (const YGP::HEntity& entry, Gtk::TreeIter begin, Gtk::TreeIter end);
+   void changeAllEntries (const HEntity& entry, Gtk::TreeIter begin, Gtk::TreeIter end);
    void saveRelatedMovies (const HActor& actor) throw (std::exception);
 
    ActorList actors;                              // GUI-element holding actors

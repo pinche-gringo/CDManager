@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.3 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 2005-10-18
-//COPYRIGHT   : Copyright (C) 2005
+//COPYRIGHT   : Copyright (C) 2005, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -61,7 +61,7 @@ RelateMovie::RelateMovie (const HActor& actor, const std::vector<HMovie>& movies
      lstAllMovies (*manage (new Gtk::TreeView)),
      actor (actor) {
    TRACE9 ("RelateMovie::RelateMovie (const HActor&, const std::vector<HMovie>&, const Glib::RefPtr<Gtk::TreeStore>)");
-   Check3 (actor.isDefined ());
+   Check3 (actor);
 
    for (std::vector<HMovie>::const_iterator i (movies.begin ()); i != movies.end (); ++i)
       insertMovie (*i);
@@ -98,7 +98,7 @@ RelateMovie::~RelateMovie () {
 /// Handling of the OK button; closes the dialog with commiting data
 //-----------------------------------------------------------------------------
 void RelateMovie::okEvent () {
-   Check3 (actor.isDefined ());
+   Check3 (actor);
 
    std::vector<HMovie> movies;
    for (Gtk::TreeModel::const_iterator i (mMovies->children ().begin ());
@@ -117,15 +117,15 @@ void RelateMovie::addMovie (const Gtk::TreeModel::Path& path, Gtk::TreeViewColum
 
    Gtk::TreeIter sel (availMovies->get_iter (path)); Check3 (sel);
    if (sel->parent ()) {
-      HEntity entry ((*sel)[colAllMovies.entry]); Check3 (entry.isDefined ());
-      HMovie movie (HMovie::cast (entry)); Check3 (movie.isDefined ());
+      HEntity entry ((*sel)[colAllMovies.entry]); Check3 (entry);
+      HMovie movie (boost::dynamic_pointer_cast<Movie> (entry)); Check3 (movie);
       TRACE9 ("RelateMovie::addMovie (const Gtk::TreeModel::Path&, Gtk::TreeViewColumn*) - " << movie->getName ());
       insertMovie (movie);
    }
    else {
       for (Gtk::TreeIter i (sel->children ().begin ()); i != sel->children ().end (); ++i) {
-	 HEntity entry ((*i)[colAllMovies.entry]); Check3 (entry.isDefined ());
-	 HMovie movie (HMovie::cast (entry)); Check3 (movie.isDefined ());
+	 HEntity entry ((*i)[colAllMovies.entry]); Check3 (entry);
+	 HMovie movie (boost::dynamic_pointer_cast<Movie> (entry)); Check3 (movie);
 	 TRACE9 ("RelateMovie::addMovie (const Gtk::TreeModel::Path&, Gtk::TreeViewColumn*) - " << movie->getName ())
 	 insertMovie (movie);
       }
@@ -148,13 +148,13 @@ void RelateMovie::removeMovie (const Gtk::TreeModel::Path& path, Gtk::TreeViewCo
 /// \param director: Director of the movie
 //-----------------------------------------------------------------------------
 void RelateMovie::insertMovie (const HMovie& movie) {
-   TRACE9 ("RelateMovie::insertMovie (const HMovie&) - " << (movie.isDefined () ? movie->getName ().c_str () : ""));
-   Check1 (movie.isDefined ());
+   TRACE9 ("RelateMovie::insertMovie (const HMovie&) - " << (movie ? movie->getName ().c_str () : ""));
+   Check1 (movie);
 
    // Check that movie does not exist
    for (Gtk::TreeModel::const_iterator i (mMovies->children ().begin ());
 	i != mMovies->children ().end (); ++i)
-      if (movie == (*i)[colMovies.hMovie])
+      if (movie == (HMovie)(*i)[colMovies.hMovie])
 	 return;
 
    Gtk::TreeModel::Row newMovie (*mMovies->append ());
@@ -208,7 +208,7 @@ void RelateMovie::allMoviesSelected () {
 /// Inititalizes the class
 //-----------------------------------------------------------------------------
 void RelateMovie::init () {
-   Check2 (actor.isDefined ());
+   Check2 (actor);
    Glib::ustring title (_("Movies starring %1"));
    title.replace (title.find ("%1"), 2, actor->getName ());
    set_title (title);

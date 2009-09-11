@@ -89,7 +89,7 @@ Glib::ustring Celebrity::removeIgnored (const Glib::ustring& name) {
 /// \returns bool: True, if a->name < b->name
 //-----------------------------------------------------------------------------
 bool Celebrity::compByName (const HCelebrity& a, const HCelebrity& b) {
-   Check1 (a.isDefined ()); Check1 (b.isDefined ());
+   Check1 (a); Check1 (b);
    int rc (removeIgnored (a->name).compare (removeIgnored (b->name)));
    return rc ? (rc < 0) : (a->name < b->name);
 }
@@ -101,7 +101,7 @@ bool Celebrity::compByName (const HCelebrity& a, const HCelebrity& b) {
 /// \returns bool: True, if a->name < b->name
 //-----------------------------------------------------------------------------
 bool Celebrity::compById (const HCelebrity& a, const HCelebrity& b) {
-   Check1 (a.isDefined ()); Check1 (b.isDefined ());
+   Check1 (a); Check1 (b);
    return a->getId () < b->getId ();
 }
 
@@ -143,7 +143,7 @@ Glib::ustring Celebrity::getLifespan () const {
    TRACE9 ("Celebrity::getLiveSpan () - " << name.c_str ());
 
    Glib::ustring tmp (born.toString ());
-   if (died.isDefined ()) {
+   if (died) {
       if (tmp.size ())
 	 tmp.append (1, ' ');
       tmp.append ("- ");

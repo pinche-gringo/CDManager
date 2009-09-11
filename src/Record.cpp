@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 29.11.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006
+//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -82,7 +82,7 @@ Glib::ustring Record::removeIgnored (const Glib::ustring& name) {
 /// \returns bool: True, if a->name < b->name
 //-----------------------------------------------------------------------------
 bool Record::compByName (const HRecord& a, const HRecord& b) {
-   Check1 (a.isDefined ()); Check1 (b.isDefined ());
+   Check1 (a); Check1 (b);
    Glib::ustring aname (removeIgnored (a->name));
    Glib::ustring bname (removeIgnored (b->name));
    return aname < bname;
@@ -95,7 +95,7 @@ bool Record::compByName (const HRecord& a, const HRecord& b) {
 /// \returns bool: True, if a->year < b->year
 //-----------------------------------------------------------------------------
 bool Record::compByYear (const HRecord& a, const HRecord& b) {
-   Check1 (a.isDefined ()); Check1 (b.isDefined ());
+   Check1 (a); Check1 (b);
    return a->year < b->year;
 }
 
@@ -106,6 +106,6 @@ bool Record::compByYear (const HRecord& a, const HRecord& b) {
 /// \returns bool: True, if a->genre < b->genre
 //-----------------------------------------------------------------------------
 bool Record::compByGenre (const HRecord& a, const HRecord& b) {
-   Check1 (a.isDefined ()); Check1 (b.isDefined ());
+   Check1 (a); Check1 (b);
    return a->genre < b->genre;
 }

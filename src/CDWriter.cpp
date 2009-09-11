@@ -367,7 +367,7 @@ int CDWriter::perform (int argc, const char** argv) {
 	 switch (type) {
 #if WITH_MOVIES == 1
 	 case 'D':
-	    director.define ();
+	    director.reset (new Director);
 	    std::cin >> *director;
 	    TRACE9 ("CDWriter::perform (int, char**) - Director: " << director->getName ());
 	    directors.push_back (director);
@@ -375,7 +375,7 @@ int CDWriter::perform (int argc, const char** argv) {
 
 	 case 'M': {
 	    Check3 (director.isDefined ());
-	    movie.define ();
+	    movie.reset (new Movie);
 	    std::cin >> *movie;
 	    TRACE9 ("CDWriter::perform (int, char**) - Movie: " << movie->getName ());
 	    if (!relMovies.isRelated (director))
@@ -397,7 +397,7 @@ int CDWriter::perform (int argc, const char** argv) {
 
 #if WITH_RECORDS == 1
 	 case 'I':
-	    artist.define ();
+	    artist.reset (new Interpret);
 	    std::cin >> *artist;
 	    TRACE9 ("CDWriter::perform (int, char**) - Artist: " << artist->getName ());
 	    artists.push_back (artist);
@@ -405,7 +405,7 @@ int CDWriter::perform (int argc, const char** argv) {
 
 	 case 'R':
 	    Check3 (artist.isDefined ());
-	    record.define ();
+	    record.reset (new Record);
 	    std::cin >> *record;
 	    TRACE9 ("CDWriter::perform (int, char**) - Record: " << record->getName ());
 	    if (!relRecords.isRelated (artist))

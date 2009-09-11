@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.21 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006
+//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -171,14 +171,13 @@ void Words::moveValues (unsigned int start, unsigned int end, unsigned int targe
 unsigned int Words::binarySearch (values* values, char* data, unsigned int start,
 				  unsigned int end, const char* word) {
    Check1 (values);
-   Check2 (end < values->maxEntries);
+   Check2 (end <= values->maxEntries);
 
    unsigned int middle (0);
 
    while ((end - start) > 0 ) {
       middle = start + ((end - start) >> 1);
       Check3 (strcmp (data + values->aOffsets[start], data + values->aOffsets[middle]) <= 0);
-      Check3 (strcmp (data + values->aOffsets[end], data + values->aOffsets[middle]) >= 0);
 
       if (strcmp (word, data + values->aOffsets[middle]) < 0)
 	 end = middle;
@@ -223,7 +222,7 @@ void Words::addName2Ignore (const Glib::ustring& word, unsigned int pos) {
    if (pos == POS_UNKNOWN) {
       if (shMem->info->cNames) {
 	 TRACE9 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Search: " << word);
-	 pos = binarySearch (shMem->info, shMem->values, 0, shMem->info->cNames - 1, word.c_str ());
+	 pos = binarySearch (shMem->info, shMem->values, 0, shMem->info->cNames, word.c_str ());
       }
       else
 	 pos = 0;
@@ -274,7 +273,7 @@ void Words::addArticle (const Glib::ustring& word, unsigned int pos) {
       if (shMem->info->cArticles) {
 	 TRACE9 ("Words::addArticles (const Glib::ustring&, unsigned int) - Search: " << word);
 	 pos = binarySearch (shMem->info, shMem->values, shMem->info->maxEntries - shMem->info->cArticles,
-			     shMem->info->maxEntries - 1, word.c_str ());
+			     shMem->info->maxEntries, word.c_str ());
       }
       else
 	 pos = shMem->info->maxEntries - 1;

@@ -143,7 +143,7 @@ Glib::ustring Celebrity::getLifespan () const {
    TRACE9 ("Celebrity::getLiveSpan () - " << name.c_str ());
 
    Glib::ustring tmp (born.toString ());
-   if (died) {
+   if (died.isDefined ()) {
       if (tmp.size ())
 	 tmp.append (1, ' ');
       tmp.append ("- ");

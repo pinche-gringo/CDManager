@@ -304,7 +304,7 @@ int CDWriter::perform (int argc, const char** argv) {
 	 error.replace (error.find ("%1"), 2, htmlData[i].name);
 	 error.replace (error.find ("%2"), 2, strerror (errno));
 
-	 TRACE1 ("CDWriter::perform (int, const char**) - Error reading HTML-header/footer:\n\t" << msg);
+	 TRACE1 ("CDWriter::perform (int, const char**) - Error reading HTML-header/footer:\n\t" << error);
 	 std::cerr << name () << ": " << error << '\n';
 	 return -4;
       }
@@ -374,7 +374,7 @@ int CDWriter::perform (int argc, const char** argv) {
 	    break;
 
 	 case 'M': {
-	    Check3 (director.isDefined ());
+	    Check3 (director);
 	    movie.reset (new Movie);
 	    std::cin >> *movie;
 	    TRACE9 ("CDWriter::perform (int, char**) - Movie: " << movie->getName ());
@@ -404,7 +404,7 @@ int CDWriter::perform (int argc, const char** argv) {
 	    break;
 
 	 case 'R':
-	    Check3 (artist.isDefined ());
+	    Check3 (artist);
 	    record.reset (new Record);
 	    std::cin >> *record;
 	    TRACE9 ("CDWriter::perform (int, char**) - Record: " << record->getName ());
@@ -561,7 +561,7 @@ int CDWriter::perform (int argc, const char** argv) {
 	 HInterpret interpret;
 	 for (std::vector<HRecord>::const_iterator m (records.begin ());
 	      m != records.end (); ++m) {
-	    interpret = relRecords.getParent (*m); Check3 (interpret.isDefined ());
+	    interpret = relRecords.getParent (*m); Check3 (interpret);
 	    writer.writeRecord (*m, interpret, fileOut);
 	 }
 	 writer.printEnd (fileOut);
@@ -578,7 +578,7 @@ int CDWriter::perform (int argc, const char** argv) {
 	 HDirector director;
 	 for (std::vector<HMovie>::const_iterator m (movies.begin ());
 	      m != movies.end (); ++m) {
-	    director = relMovies.getParent (*m); Check3 (director.isDefined ());
+	    director = relMovies.getParent (*m); Check3 (director);
 	    writer.writeMovie (*m, director, fileOut);
 	 }
 	 writer.printEnd (fileOut);
@@ -602,7 +602,7 @@ int CDWriter::perform (int argc, const char** argv) {
 	 for (std::vector<HRecord>::reverse_iterator m (records.rbegin ());
 	      m != records.rend (); ++m) {
 	    HInterpret interpret;
-	    interpret = relRecords.getParent (*m); Check3 (interpret.isDefined ());
+	    interpret = relRecords.getParent (*m); Check3 (interpret);
 	    writer.writeRecord (*m, interpret, fileOut);
 	 }
 	 writer.printEnd (fileOut);
@@ -617,7 +617,7 @@ int CDWriter::perform (int argc, const char** argv) {
 	 for (std::vector<HMovie>::reverse_iterator m (movies.rbegin ());
 	      m != movies.rend (); ++m) {
 	    HDirector director;
-	    director = relMovies.getParent (*m); Check3 (director.isDefined ());
+	    director = relMovies.getParent (*m); Check3 (director);
 	    writer.writeMovie (*m, director, fileOut);
 	 }
 	 writer.printEnd (fileOut);
@@ -668,7 +668,7 @@ int CDWriter::perform (int argc, const char** argv) {
 	    if (((*m)->getLanguage ().find (l->first) != std::string::npos)
 		|| ((*m)->getTitles ().find (l->first) != std::string::npos)) {
 	       HDirector director;
-	       director = relMovies.getParent (*m); Check3 (director.isDefined ());
+	       director = relMovies.getParent (*m); Check3 (director);
 	       langWriter.writeMovie (*m, director, fileOut);
 	 }
       }
@@ -705,7 +705,7 @@ const char* CDWriter::description () const {
 /// \param file: Created stream
 //-----------------------------------------------------------------------------
 void CDWriter::createFile (const std::string& filename, const char* lang, std::ofstream& file) {
-   TRACE9 ("CDWriter::createFile (const std::string&, const char*, std::ofstream&) - " << name);
+   TRACE9 ("CDWriter::createFile (const std::string&, const char*, std::ofstream&) - " << filename);
    Check1 (filename.size ());
    Check1 (lang);
 

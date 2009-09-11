@@ -287,7 +287,7 @@ void PActors::PActors::loadData () {
 
 	 // Iterate over all actors
 	 for (std::vector<HActor>::const_iterator i (aActors.begin ()); i != aActors.end (); ++i) {
-	    Check3 (i->isDefined ());
+	    Check3 (*i);
 	    Gtk::TreeModel::Row actor (actors.append (*i));
 
 	    // Get the movies the actor played in
@@ -312,7 +312,7 @@ void PActors::PActors::loadData () {
 	       // Add the movies to the actor
 	       std::sort (movies.begin (), movies.end (), Movie::compByName);
 	       for (std::vector<HMovie>::iterator m (movies.begin ()); m != movies.end (); ++m) {
-		  Check (m->isDefined ());
+		  Check (*m);
 		  actors.append (*m, actor);
 		  relActors.relate (*i, *m);
 	       } // end-for all movies for an actor

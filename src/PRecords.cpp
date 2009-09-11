@@ -162,8 +162,8 @@ void PRecords::loadData () {
 //-----------------------------------------------------------------------------
 void PRecords::loadSongs (const HRecord& record) {
    TRACE9 ("PRecords::loadSongs (const HRecord& record) - "
-	   << (record.isDefined () ? record->getName ().c_str () : "Undefined"));
-   Check1 (record.isDefined ());
+	   << (record ? record->getName ().c_str () : "Undefined"));
+   Check1 (record);
 
    try {
       std::vector<HSong> songs_;
@@ -231,7 +231,7 @@ void PRecords::recordSelected () {
       Gtk::TreeIter i (records.get_model ()->get_iter (*list.begin ())); Check3 (i);
 
       if ((*i)->parent ()) {
-	 HRecord hRecord (records.getRecordAt (i)); Check3 (hRecord.isDefined ());
+	 HRecord hRecord (records.getRecordAt (i)); Check3 (hRecord);
 	 if (hRecord->needsLoading () && hRecord->getId ())
 	    loadSongs (hRecord);
 	 Check3 (!hRecord->needsLoading ());
@@ -315,8 +315,8 @@ void PRecords::recordChanged (const Gtk::TreeIter& row, unsigned int column, Gli
    if (column == 2) {     // If the record-genre was changed, copy it for songs
       HRecord rec (records.getRecordAt (row));
       TRACE9 ("PRecords::recordChanged (const HEntity& record) - "
-	      << (rec.isDefined () ? rec->getId () : -1UL) << '/'
-	      << (rec.isDefined () ? rec->getName ().c_str () : "Undefined"));
+	      << (rec ? rec->getId () : -1UL) << '/'
+	      << (rec ? rec->getName ().c_str () : "Undefined"));
       Check3 (oldValue.size () == 1);
 
       if (relSongs.isRelated (rec)) {
@@ -435,7 +435,7 @@ Gtk::TreeIter PRecords::addSong (HSong& song) {
    Check3 (list.size ());
    Gtk::TreeIter p (records.getModel ()->get_iter (*list.begin ())); Check3 (p);
 
-   HRecord record (records.getRecordAt (p)); Check3 (record.isDefined ());
+   HRecord record (records.getRecordAt (p)); Check3 (record);
    relSongs.relate (record, song);
    Gtk::TreeIter iterSong (songs.append (song));
    Gtk::TreePath pathSong (songs.getModel ()->get_path (iterSong));
@@ -482,13 +482,13 @@ void PRecords::saveData () throw (std::exception) {
 	    else {
 	       HRecord hRec (relSongs.getParent (song));
 	       if (!hRec->getId ()) {
-		  Check3 (std::find (aSaved.begin (), aSaved.end (), HEntity::cast (hRec)) == aSaved.end ());
-		  Check3 (delRelation.find (HEntity::cast (hRec)) == delRelation.end ());
+		  Check3 (std::find (aSaved.begin (), aSaved.end (), hRec) == aSaved.end ());
+		  Check3 (delRelation.find (hRec) == delRelation.end ());
 
 		  HInterpret interpret  (relRecords.getParent (hRec));
 		  if (!interpret->getId ()) {
-		     Check3 (std::find (aSaved.begin (), aSaved.end (), HEntity::cast (interpret)) == aSaved.end ());
-		     Check3 (delRelation.find (HEntity::cast (interpret)) == delRelation.end ());
+		     Check3 (std::find (aSaved.begin (), aSaved.end (), interpret) == aSaved.end ());
+		     Check3 (delRelation.find (interpret) == delRelation.end ());
 
 		     SaveCelebrity::store (interpret, "Interprets", *getWindow ());
 		     aSaved.insert (lower_bound (aSaved.begin (), aSaved.end (), interpret), interpret);
@@ -519,8 +519,8 @@ void PRecords::saveData () throw (std::exception) {
 	    else {
 	       HInterpret interpret  (relRecords.getParent (rec));
 	       if (!interpret->getId ()) {
-		  Check3 (std::find (aSaved.begin (), aSaved.end (), HEntity::cast (interpret)) == aSaved.end ());
-		  Check3 (delRelation.find (HEntity::cast (interpret)) == delRelation.end ());
+		  Check3 (std::find (aSaved.begin (), aSaved.end (), interpret) == aSaved.end ());
+		  Check3 (delRelation.find (interpret) == delRelation.end ());
 
 		  SaveCelebrity::store (interpret, "Interprets", *getWindow ());
 		  aSaved.insert (lower_bound (aSaved.begin (), aSaved.end (), interpret), interpret);
@@ -590,7 +590,7 @@ void PRecords::deleteSelectedRecords () {
       else {                             // An interpret is going to be deleted
 	 TRACE9 ("PRecords::deleteSelectedRecords () - Deleting " <<
 		 iter->children ().size () << " children");
-	 HInterpret interpret (records.getInterpretAt (iter)); Check3 (interpret.isDefined ());
+	 HInterpret interpret (records.getInterpretAt (iter)); Check3 (interpret);
 	 while (iter->children ().size ()) {
 	    Gtk::TreeIter child (iter->children ().begin ());
 	    HRecord hRecord (records.getRecordAt (child));
@@ -616,7 +616,7 @@ void PRecords::deleteRecord (const Gtk::TreeIter& record) {
    TRACE9 ("PRecords::deleteRecord (const Gtk::TreeIter&) - Deleting record "
 	   << hRec->getName ());
    Check3 (relRecords.isRelated (hRec));
-   HInterpret hInterpret (relRecords.getParent (hRec)); Check3 (hInterpret.isDefined ());
+   HInterpret hInterpret (relRecords.getParent (hRec)); Check3 (hInterpret);
 
    // Remove related songs
    TRACE3 ("PRecords::deleteRecord (const Gtk::TreeIter&) - Remove Songs");
@@ -627,7 +627,7 @@ void PRecords::deleteRecord (const Gtk::TreeIter& record) {
       relSongs.unrelateAll (hRec);
    }
 
-   Check3 (delRelation.find (HEntity::cast (hRec)) == delRelation.end ());
+   Check3 (delRelation.find (hRec) == delRelation.end ());
 
    Gtk::TreePath path (records.getModel ()->get_path (records.getOwner (hInterpret)));
    aUndo.push (Undo (Undo::DELETE, RECORD, hRec->getId (), hRec, path, ""));
@@ -644,8 +644,8 @@ void PRecords::deleteRecord (const Gtk::TreeIter& record) {
 //-----------------------------------------------------------------------------
 void PRecords::deleteSong (const HSong& song, const HRecord& record) {
    TRACE9 ("PRecords::deleteSong (const HSong& song, const HRecord& record)");
-   Check1 (song.isDefined ()); Check1 (record.isDefined ());
-   Check3 (delRelation.find (HEntity::cast (song)) == delRelation.end ());
+   Check1 (song); Check1 (record);
+   Check3 (delRelation.find (song) == delRelation.end ());
 
    Gtk::TreePath path (records.getModel ()->get_path (records.getObject (record)));
    aUndo.push (Undo (Undo::DELETE, SONG, song->getId (), song, path, ""));
@@ -665,10 +665,10 @@ void PRecords::deleteSelectedSongs () {
       Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
 
       Gtk::TreeIter iter (songs.get_model ()->get_iter (*i)); Check3 (iter);
-      HSong song (songs.getSongAt (iter)); Check3 (song.isDefined ());
+      HSong song (songs.getSongAt (iter)); Check3 (song);
       Check3 (relSongs.isRelated (song));
       HRecord record (relSongs.getParent (song));
-      Check3 (record.isDefined ());
+      Check3 (record);
       deleteSong (song, record);
 
       relSongs.unrelate (record, song);

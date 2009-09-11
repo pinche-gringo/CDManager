@@ -68,8 +68,8 @@ RecordList::~RecordList () {
 Gtk::TreeModel::Row RecordList::append (HRecord& record,
 					const Gtk::TreeModel::Row& artist) {
    TRACE3 ("RecordList::append (HRecord&, Gtk::TreeModel::Row&) - "
-	   << (record.isDefined () ? record->getName ().c_str () : "None"));
-   Check1 (record.isDefined ());
+	   << (record ? record->getName ().c_str () : "None"));
+   Check1 (record);
 
    Gtk::TreeModel::Row newRecord (OwnerObjectList::append ((HEntity&)record, artist));
    update (newRecord);

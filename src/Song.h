@@ -21,7 +21,6 @@
 #include <glibmm/ustring.h>
 
 #include <YGP/ATime.h>
-#include <YGP/Handle.h>
 #include <YGP/ANumeric.h>
 
 #include <YGP/Entity.h>

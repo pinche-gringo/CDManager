@@ -21,7 +21,6 @@
 #include <glibmm/ustring.h>
 
 #include <YGP/AYear.h>
-#include <YGP/Handle.h>
 #include <YGP/Entity.h>
 
 

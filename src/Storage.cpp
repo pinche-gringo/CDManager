@@ -212,9 +212,9 @@ void Storage::insertCelebrity (const HCelebrity celeb, const char* role) throw (
    std::stringstream query;
    query << "INSERT INTO Celebrities  SET name=\"" << Database::escapeDBValue (celeb->getName ())
 	 << "\", born="
-	 << (celeb->getBorn () ? celeb->getBorn () : YGP::AYear (0))
+	 << (celeb->getBorn ().isDefined () ? celeb->getBorn () : YGP::AYear (0))
 	 << ", died="
-	 << (celeb->getDied () ? celeb->getDied () : YGP::AYear (0));
+	 << (celeb->getDied ().isDefined () ? celeb->getDied () : YGP::AYear (0));
    Database::execute (query.str ().c_str ());
    celeb->setId (Database::getIDOfInsert ());
    setRole (celeb->getId (), role);
@@ -234,9 +234,9 @@ void Storage::updateCelebrity (const HCelebrity celeb) throw (std::exception) {
    std::stringstream query;
    query << "UPDATE Celebrities  SET name=\"" << Database::escapeDBValue (celeb->getName ())
 	 << "\", born="
-	 << (celeb->getBorn () ? celeb->getBorn () : YGP::AYear (0))
+	 << (celeb->getBorn ().isDefined () ? celeb->getBorn () : YGP::AYear (0))
 	 << ", died="
-	 << (celeb->getDied () ? celeb->getDied () : YGP::AYear (0))
+	 << (celeb->getDied ().isDefined () ? celeb->getDied () : YGP::AYear (0))
 	 << " WHERE id=" << celeb->getId ();
    Database::execute (query.str ().c_str ());
 }

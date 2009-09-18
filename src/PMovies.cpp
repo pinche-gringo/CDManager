@@ -710,7 +710,7 @@ void PMovies::undoDirector (const Undo& last) {
    TRACE5 ("PMovies::undoDirector (const Undo&)");
 
    Gtk::TreePath path (last.getPath ());
-   Gtk::TreeIter iter (movies.getModel ()->get_iter (path)); Check3 (!iter->parent ());
+   Gtk::TreeIter iter (movies.getModel ()->get_iter (path));
 
    Check3 (typeid (*last.getEntity ()) == typeid (Director));
    HDirector director (boost::dynamic_pointer_cast<Director> (last.getEntity ()));
@@ -718,6 +718,8 @@ void PMovies::undoDirector (const Undo& last) {
 
    switch (last.how ()) {
    case Undo::CHANGED:
+      Check3 (iter); Check3 (!iter->parent ());
+
       switch (last.column ()) {
       case 0:
 	 director->setName (last.getValue ());
@@ -733,12 +735,17 @@ void PMovies::undoDirector (const Undo& last) {
       break;
 
    case Undo::INSERT:
+      Check3 (iter); Check3 (!iter->parent ());
       Check3 (!relMovies.isRelated (director));
       movies.getModel ()->erase (iter);
       iter = movies.getModel ()->children ().end ();
       break;
 
    case Undo::DELETE:
+      if (iter)
+	 Check3 (!iter->parent ());
+      else
+	 iter = movies.getModel ()->children ().end ();
       iter = movies.insert (director, iter);
       path = movies.getModel ()->get_path (iter);
       break;

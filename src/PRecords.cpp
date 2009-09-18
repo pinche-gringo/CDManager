@@ -875,13 +875,15 @@ void PRecords::undoInterpret (const Undo& last) {
    TRACE6 ("PRecords::undoInterpret (const Undo&)");
 
    Gtk::TreePath path (last.getPath ());
-   Gtk::TreeIter iter (records.getModel ()->get_iter (path)); Check3 (!iter->parent ());
+   Gtk::TreeIter iter (records.getModel ()->get_iter (path));
 
    HInterpret interpret (boost::dynamic_pointer_cast<Interpret> (last.getEntity ())); Check3 (interpret);
    TRACE9 ("PRecords::undoInterpret (const Undo&) - " << last.how () << ": " << interpret->getName ());
 
    switch (last.how ())
    case Undo::CHANGED: {
+      Check3 (iter); Check3 (!iter->parent ());
+
       switch (last.column ()) {
       case 0:
 	 interpret->setName (last.getValue ());
@@ -897,12 +899,17 @@ void PRecords::undoInterpret (const Undo& last) {
       break;
 
    case Undo::INSERT:
+      Check3 (iter); Check3 (!iter->parent ());
       Check3 (!relRecords.isRelated (interpret));
       records.getModel ()->erase (iter);
       iter = records.getModel ()->children ().end ();
       break;
 
    case Undo::DELETE:
+      if (iter)
+	 Check3 (!iter->parent ());
+      else
+	 iter = records.getModel ()->children ().end ();
       iter = records.insert (interpret, iter);
       path = records.getModel ()->get_path (iter);
       break;

@@ -489,7 +489,7 @@ void CDManager::savePreferences () {
 	 YGP::INIFile::write (inifile, "Export", opt);
 
 #ifdef WITH_MOVIES
-	 inifile << "[Movies]\nLanguage=" << Movie::currLang << '\n';
+	 inifile << "\n[Movies]\nLanguage=" << Movie::currLang << '\n';
 #endif
       }
       else {

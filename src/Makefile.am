@@ -41,7 +41,7 @@ SaveCeleb.cpp SaveCeleb.h Settings.cpp Settings.h LangDlg.cpp	\
 LangDlg.h OOList.cpp OOList.h LangImg.cpp LangImg.h WordDlg.cpp	\
 WordDlg.h Language.cpp Language.h DB.cpp DB.h $(USE_MOVIE)	\
 $(USE_RECORD) $(USE_ACTOR) CDManager.h CDManager.cpp CDAppl.cpp	\
-CDAppl.h
+CDAppl.h IconAuthor.h IconProgram.h
 
 CDManager_CPPFLAGS=@INCLUDES@ -I../Common @DEPS_CFLAGS@ @XGP_CFLAGS@ -DUSE_LANGUAGEPIXMAPS -Wall
 CDManager_LDFLAGS=-lCDMgr @DEPS_LIBS@ @XGP_LIBS@ @LTLIBINTL@ @MYSQLLIBS@

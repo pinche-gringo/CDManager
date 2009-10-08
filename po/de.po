@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2009-05-17 13:54+0200\n"
-"PO-Revision-Date: 2009-05-06 11:08+0200\n"
+"POT-Creation-Date: 2009-10-08 20:57+0200\n"
+"PO-Revision-Date: 2009-10-08 21:01+0200\n"
 "Last-Translator: Markus Schwab <g17m0@users.sourceforge.net>\n"
 "Language-Team: German <g17m0@users.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -188,11 +188,11 @@ msgstr ""
 msgid "Exporting (language %1) ..."
 msgstr "Exportiere (Sprache %1) ..."
 
-#: src/CDManager.cpp:602
+#: src/CDManager.cpp:603
 msgid "Export Warning!"
 msgstr "Warnung beim Exportieren!"
 
-#: src/CDManager.cpp:632
+#: src/CDManager.cpp:633
 msgid ""
 "Can't open file `%1'!\n"
 "\n"
@@ -686,6 +686,20 @@ msgstr "_Löschen"
 msgid "<ctl>Delete"
 msgstr ""
 
+#: src/PRecords.cpp:710 src/PMovies.cpp:587
+msgid ""
+"Couldn't write data!\n"
+"\n"
+"Reason: %1"
+msgstr ""
+"Die Daten konnten nicht gespeichert werden!\n"
+"\n"
+"Ursache: %1"
+
+#: src/PRecords.cpp:713
+msgid "Error exporting records to HTML!"
+msgstr ""
+
 #: src/PActors.cpp:308
 msgid "The database contains an invalid reference (%1) to a movie!"
 msgstr "Die Datenbank enthält eine ungültige Referenz (%1) zu einem Film!"
@@ -773,6 +787,10 @@ msgstr ""
 "Die vorhandenen Filme konnten nicht ermittelt werden!\n"
 "\n"
 "Ursache: %1"
+
+#: src/PMovies.cpp:590
+msgid "Error exporting movies to HTML!"
+msgstr "Fehler beim Exportieren der Filme als HTML-Datei!"
 
 #: src/Storage.cpp:169
 msgid "Warning loading celebrity `%1': %2"

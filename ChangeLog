@@ -17,6 +17,20 @@
 
 	* data/Movies.foot, data/Records.foot: Actualised contact information
 
+2009-10-08 21:02:56 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+	* ChangeLog, NEWS: Changes of V0.8.38 documented
+
+        * configure.ac: Version to 0.8.38; Prettifying output (if automake supports it)
+
+2009-10-08 21:02:25 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/Makefile.am: Adding Icon*.h to the distribution
+
+2009-10-08 21:02:04 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * po/*.po: Actualised
+
 2009-05-17  Markus Schwab  <g17m0@users.sourceforge.net>
 
 	* ChangeLog, NEWS: Changes of V0.8.36 documented

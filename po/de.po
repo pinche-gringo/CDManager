@@ -692,7 +692,7 @@ msgid ""
 "\n"
 "Reason: %1"
 msgstr ""
-"Die Daten konnten nicht geschrieben werden!\n"
+"Die Daten konnten nicht gespeichert werden!\n"
 "\n"
 "Ursache: %1"
 

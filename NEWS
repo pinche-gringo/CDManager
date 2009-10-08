@@ -1,3 +1,14 @@
+Overview of changes in version 0.8.40:
+
+  - Using boost::shared_ptr and boost::scoped_ptr instead of YGP::Handle/SmartPtr
+  - Fixes
+
+Overview of changes in version 0.8.38:
+
+  - Prettyfied output (if automake supports it)
+  - Added forgotten files src/Icon*.h to the distribution
+
+
 Overview of changes in version 0.8.37:
 
   - Fixed an off-by-1 error which failed to use the last of the articles

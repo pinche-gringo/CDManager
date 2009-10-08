@@ -3,7 +3,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.52)
 AC_REVISION($Revision: 1.32 $)
-AC_INIT(CDManager, 0.8.37, [g17m0@users.sourceforge.net], CDManager)
+AC_INIT(CDManager, 0.8.38, [g17m0@users.sourceforge.net], CDManager)
 
 RELEASE=${PACKAGE_VERSION%.*}
 AC_DEFINE_UNQUOTED(PRG_RELEASE, "$RELEASE", [Define to the release of the program])
@@ -19,11 +19,15 @@ AC_C_BIGENDIAN
 dnl Checks for programs.
 AC_LANG_CPLUSPLUS
 AM_CONFIG_HEADER(cdmgr-cfg.h)
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
-AC_PROG_LIBTOOL
+AC_PROG_CXX
+AC_LANG_CPLUSPLUS
+AM_PROG_LIBTOOL
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
+AC_GNU_SOURCE
 AM_GNU_GETTEXT
 
 ALL_LINGUAS="de en es"

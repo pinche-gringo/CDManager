@@ -1,3 +1,15 @@
+Overview of changes in version 0.8.38:
+
+  - Prettyfied output (if automake supports it)
+  - Added forgotten files src/Icon*.h to the distribution
+
+
+Overview of changes in version 0.8.37:
+
+  - Fixed an off-by-1 error which failed to use the last of the articles
+  - Fixed (harmless) compiler warnings
+
+
 Overview of changes in version 0.8.36:
 
   - Changed type of born/died fields to SMALLINT

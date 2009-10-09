@@ -1,6 +1,6 @@
 Overview of changes in version 0.8.40:
 
-  - Using boost::shared_ptr and boost::scoped_ptr instead of YGP::Handle/SmartPtr
+  - Using boost::shared_ptr/scoped_ptr instead of YGP::Handle/SmartPtr
   - Fixes
 
 Overview of changes in version 0.8.38:

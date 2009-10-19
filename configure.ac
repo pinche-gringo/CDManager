@@ -46,21 +46,21 @@ PKG_CHECK_MODULES(XGP, gtkmm-2.4 >= 2.6.0 gthread-2.0 > 2.2.0 XGP >= 0.9.20)
 # Location of MySQL installation
 #
 AC_ARG_WITH(mysql,
-    AC_HELP_STRING([--with-mysql=PATH],
-	           [root directory path of MySQL installation]),
+    AC_HELP_STRING([--with-mysql=DIR],
+	           [search for MySQL in DIR/include and DIR/lib]),
     [MYSQL_lib_check=$withval/lib/mysql $with_mysql/lib
      MYSQL_inc_check=$withval/include/mysql],
     [MYSQL_lib_check="/usr/local/mysql/lib/mysql /usr/local/lib/mysql /opt/mysql/lib/mysql /usr/lib/mysql /usr/local/mysql/lib /usr/local/lib /opt/mysql/lib /usr/lib"
      MYSQL_inc_check="/usr/local/mysql/include/mysql /usr/local/include/mysql /opt/mysql/include/mysql /usr/include/mysql"])
 
 AC_ARG_WITH(mysql-lib,
-    AC_HELP_STRING([--with-mysql-lib=PATH],
-	           [directory path of MySQL library installation]),
+    AC_HELP_STRING([--with-mysql-lib=DIR],
+	           [directory of MySQL library installation]),
     [MYSQL_lib_check=$withval/mysql])
 
 AC_ARG_WITH(mysql-include,
-    AC_HELP_STRING([--with-mysql-include=PATH],
-                   [directory path of MySQL header installation]),
+    AC_HELP_STRING([--with-mysql-include=DIR],
+                   [directory of MySQL header installation]),
     [MYSQL_inc_check=$withval/mysql])
 
 AC_MSG_CHECKING([for MySQL library directory])
@@ -116,21 +116,21 @@ MYSQLLIBS="$MYSQLLIBS -lmysqlclient"
 # Location of MySQL++ installation
 #
 AC_ARG_WITH(mysqlpp,
-    AC_HELP_STRING([--with-mysql++=PATH],
-	           [root directory path of MySQL++ installation]),
+    AC_HELP_STRING([--with-mysqlpp=DIR],
+	           [search for MySQL++ in DIR/include and DIR/lib]),
     [MYSQLPP_lib_check=$withval/mysql++ $withval/lib
      MYSQLPP_inc_check=$withval/mysql++],
     [MYSQLPP_lib_check="/usr/local/mysql++/lib/mysql++ /usr/local/lib/mysql++ /opt/mysql++/lib/mysql++ /usr/lib/mysql++ /usr/local/mysql++/lib /usr/local/lib /opt/mysql++/lib /usr/lib"
      MYSQLPP_inc_check="/usr/local/mysql/include/mysql++ /usr/local/include/mysql++ /opt/mysql/include/mysql++ /usr/include/mysql++"])
 
 AC_ARG_WITH(mysqlpp-lib,
-    AC_HELP_STRING([--with-mysqlpp-lib=PATH],
-	           [directory path of MySQL++ library installation]),
+    AC_HELP_STRING([--with-mysqlpp-lib=DIR],
+	           [directory of MySQL++ library installation]),
     [MYSQLPP_lib_check=$withval])
 
 AC_ARG_WITH(mysqlpp-include,
-    AC_HELP_STRING([--with-mysqlpp-include=PATH],
-                   [directory path of MySQL++ header installation]),
+    AC_HELP_STRING([--with-mysqlpp-include=DIR],
+                   [directory of MySQL++ header installation]),
     [MYSQLPP_inc_check=$withval])
 
 AC_MSG_CHECKING([for MySQL++ library directory])
@@ -185,7 +185,7 @@ AC_MSG_RESULT([$MYSQLPP_incdir])
 
 if test -d "$MYSQLPP_incdir" -a -d "$MYSQLPP_libdir"; then
    MYSQLLIBS="$MYSQLLIBS -lmysqlpp"
-   AC_DEFINE_UNQUOTED(HAVE_LIBMYSQLPP, "1", [Define to 1, if libmysql is installed])
+   AC_DEFINE_UNQUOTED(HAVE_LIBMYSQLPP, "1", [Define to 1, if libmysqlpp is installed])
 fi
 
 AC_SUBST(INCLUDES)
@@ -204,7 +204,7 @@ ACTORS=0
 MOVIES=0
 RECORDS=0
 AC_ARG_ENABLE(debug,
-              AC_HELP_STRING([[[[[--enable-debug[=LEVEL]]]]]],
+              AC_HELP_STRING([--enable-debug=LEVEL],
                              [Enables additional traces]),
               if test "$enableval" != "no"; then
                   test "$enableval" = "yes" && enableval=0
@@ -212,7 +212,7 @@ AC_ARG_ENABLE(debug,
               else
                   CXXFLAGS="-O2 -UTRACELEVEL"; fi)
 AC_ARG_ENABLE(checks,
-              AC_HELP_STRING([[[[[--enable-checks[=LEVEL]]]]]],
+              AC_HELP_STRING([--enable-checks=LEVEL],
                              [Enables additional (internal) checks]),
               if test "$enableval" != "no"; then
                   test "$enableval" = "yes" && enableval=0
@@ -230,7 +230,7 @@ if test "$enable_actors" != "no"; then
    ACTORS=1
 fi
 AC_ARG_ENABLE(movies,
-              AC_HELP_STRING([--Disable-movies],
+              AC_HELP_STRING([--disable-movies],
                              [Disables handling of movies]))
 if test "$enable_movies" != "no"; then
    MOVIES=1

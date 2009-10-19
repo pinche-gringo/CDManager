@@ -112,7 +112,10 @@ bool Movie::compByName (const HMovie& a, const HMovie& b) {
    Check1 (a.isDefined ()); Check1 (b.isDefined ());
    Glib::ustring aname (removeIgnored (a->getName ()));
    Glib::ustring bname (removeIgnored (b->getName ()));
-   return aname < bname;
+   int rc (aname.compare (bname));
+   if (!rc)
+      rc = a->year < b->year;
+   return rc < 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -123,7 +126,13 @@ bool Movie::compByName (const HMovie& a, const HMovie& b) {
 //-----------------------------------------------------------------------------
 bool Movie::compByYear (const HMovie& a, const HMovie& b) {
    Check1 (a.isDefined ()); Check1 (b.isDefined ());
-   return a->year < b->year;
+   int rc (a->year - b->year);
+   if (!rc) {
+      Glib::ustring aname (removeIgnored (a->getName ()));
+      Glib::ustring bname (removeIgnored (b->getName ()));
+      rc = aname.compare (bname);
+   }
+   return rc < 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -134,7 +143,8 @@ bool Movie::compByYear (const HMovie& a, const HMovie& b) {
 //-----------------------------------------------------------------------------
 bool Movie::compByGenre (const HMovie& a, const HMovie& b) {
    Check1 (a.isDefined ()); Check1 (b.isDefined ());
-   return a->genre < b->genre;
+   int rc (a->genre - b->genre);
+   return rc ? (rc < 0) : compByName (a, b);
 }
 
 //-----------------------------------------------------------------------------
@@ -145,7 +155,8 @@ bool Movie::compByGenre (const HMovie& a, const HMovie& b) {
 //-----------------------------------------------------------------------------
 bool Movie::compByMedia (const HMovie& a, const HMovie& b) {
    Check1 (a.isDefined ()); Check1 (b.isDefined ());
-   return a->type < b->type;
+   int rc (a->type - b->type);
+   return rc ? (rc < 0) : compByName (a, b);
 }
 
 //-----------------------------------------------------------------------------

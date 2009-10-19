@@ -1,5 +1,6 @@
 Overview of changes in version 0.8.40:
 
+  - Exporting to HTML sorts each type also by name/year
   - Using boost::shared_ptr/scoped_ptr instead of YGP::Handle/SmartPtr
   - Fixes
 

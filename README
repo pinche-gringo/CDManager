@@ -1,7 +1,7 @@
                        CDManager
 
 Utility to manage CDs/DVDs (audio and video)
-Copyright (C) 2004 - 2008 Markus Schwab <g17m0@lycos.com>
+Copyright (C) 2004 - 2009 Markus Schwab <g17m0@users.sourceforge.net>
 -----------------------------------------------------------------------
 
 The package is distributed under the GNU General Public License; in the hope
@@ -113,3 +113,22 @@ Exporting the database to HTML documents
   representing the languages. Those flags are stored in the data
   directory (/usr/local/share/CDManager, by default) and are called
   "xx.png" (with "xx" again the two-letter code for the language).
+
+  The generated documents include css-files for formatting
+  (records.css and movies.css, respectively). I use the following:
+
+td.header { white-space:nowrap; vertical-align:Middle; background-color:#55879b;
+            color:white; text-align:Center; font-weight:bold;
+            font-familiy:Courier New,Courier,monospace; font-size:25px; }
+td.separator { background-color:black; }
+
+td.owner { border-width: 2px; border-style: solid; line-height:24px;
+           background-color:linen; text-align:right; font-size:16px; }
+
+tr.odd { background-color:lightgrey; vertical-align:Top; }
+tr.even { background-color: #e8e8e8; vertical-align:Top; }
+
+thead td { font-weight:bold; text-align:center; }
+
+div.header { background-color: #eeeeff; border: 1px solid #b0b0b0;
+             text-align: center; margin: 2px; padding: 2px; line-height: 140%; }

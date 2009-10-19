@@ -656,8 +656,8 @@ int CDWriter::perform (int argc, const char** argv) {
    for (std::map<std::string, Language>::const_iterator l (Language::begin ());
 	l != Language::end (); ++l) {
       if (usedLanguages.find (l->first) != std::string::npos) {
-	 fileOut << "<tr><td colspan=\"6\"><div class=\"header\"><a name=\"" << l->first << "\">\n<br></a><h2>"
-		   << l->second.getInternational () << "</h2></div></td></tr>";
+	 fileOut << "<tr><td colspan=\"6\"><div class=\"header\"><a name=\"" << l->first
+		 << "\">\n<br></a><h2>" << l->second.getInternational () << "</h2></div></td></tr>";
 
 	 fileOut << "<tr><td>";
 	 writeHeader (argv[0], "[=]![n]![d]![y]![g]![m]", fileOut, false);

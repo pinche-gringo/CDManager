@@ -51,6 +51,11 @@ Common options for configure
   --help=short                  # Reduces the output of configure --help
   --prefix=<path>		# default: /usr/local
   --disable-nls                 # Disable national language support
+  --disable-actors		# To don't store actor-information
+  --disable-movies		# To not handle a certain type of media
+  --disable-records
+  --with-mysql[-{lib,include}]	# Path to mysql header/libs
+  --with-mysqlpp[-{lib,include}]
   --enable-checks[=level]	# Adds asserts and Checks
   --enable-debug[=level]	# Sets tracelevel & generation of debuginfo
 

@@ -32,6 +32,7 @@
 
 #include <gtkmm/cellrenderercombo.h>
 
+#define TRACELEVEL 1
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ANumeric.h>
@@ -101,6 +102,10 @@ MovieList::MovieList (const Genres& genres)
    column->pack_start (colMovies.sub4, false);
    column->pack_start (colMovies.sub5, false);
    column->pack_start (colMovies.sub6, false);
+   column->pack_start (colMovies.sub7, false);
+   column->pack_start (colMovies.sub8, false);
+   column->pack_start (colMovies.sub9, false);
+   column->pack_start (colMovies.sub10, false);
 
    append_column (*Gtk::manage (column));
    column->set_resizable ();
@@ -295,7 +300,7 @@ bool MovieList::on_button_press_event (GdkEventButton* e) {
 	 HMovie movie (getMovieAt (oldSel)); Check3 (movie);
 	 if (e->x < areaSub.get_x ()) {
 	    std::string languages (movie->getLanguage ());
-	    LanguageDialog dlg (languages, 4);
+	    LanguageDialog dlg (languages, 5);
 	    dlg.run ();
 
 	    if (languages != movie->getLanguage ())
@@ -303,7 +308,7 @@ bool MovieList::on_button_press_event (GdkEventButton* e) {
 	 }
 	 else {
 	    std::string titles (movie->getTitles ());
-	    LanguageDialog dlg (titles, 6, false);
+	    LanguageDialog dlg (titles, 10, false);
 	    dlg.set_title (_("Select subtitles"));
 	    dlg.run ();
 
@@ -350,12 +355,14 @@ void MovieList::setTitles (Gtk::TreeModel::Row& row, const std::string& titles) 
    bool countSet (false);
    static const Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> >* columns[] =
       { &colMovies.sub1, &colMovies.sub2, &colMovies.sub3, &colMovies.sub4,
-	&colMovies.sub5, &colMovies.sub6 };
+	&colMovies.sub5, &colMovies.sub6, &colMovies.sub7, &colMovies.sub8,
+	&colMovies.sub9, &colMovies.sub10 };
 
    for (unsigned int i (0); i < (sizeof (columns) / sizeof (*columns)); ++i)
       if (langs.getNextNode (',').size ())
 	 row[(*columns)[i]] = Language::findFlag (langs.getActNode ());
       else {
+	 TRACE1 ("Set Title: " << titles << " = " << i);
 	 row[(*columns)[i]] = Glib::RefPtr<Gdk::Pixbuf> ();
 	 if (!countSet) {
 	    row[colMovies.titles] = i;

@@ -20,7 +20,7 @@ CREATE TABLE Movies
      genre      BIGINT UNSIGNED NOT NULL DEFAULT 0,
      type       INT UNSIGNED    NOT NULL DEFAULT 0,
      languages  VARCHAR(14)     NOT NULL,
-     subtitles  VARCHAR(17)     NOT NULL,
+     subtitles  VARCHAR(29)     NOT NULL,
      PRIMARY KEY (id));
 CREATE INDEX movieNames ON Movies (name);
 

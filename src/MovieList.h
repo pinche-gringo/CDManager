@@ -47,7 +47,7 @@ class MovieColumns : public OwnerObjectColumns {
    MovieColumns () : OwnerObjectColumns () {
       add (type); add (lang1); add (lang2); add (lang3); add (lang4);
       add (lang5); add (langs); add (sub1); add (sub2); add (sub3); add (sub4);
-      add (sub5); add (sub6); add (titles); }
+      add (sub5); add (sub6); add (sub7); add (sub8); add (sub9); add (sub10); add (titles); }
 
    Gtk::TreeModelColumn<Glib::ustring>              type;
    Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > lang1;
@@ -62,6 +62,10 @@ class MovieColumns : public OwnerObjectColumns {
    Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > sub4;
    Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > sub5;
    Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > sub6;
+   Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > sub7;
+   Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > sub8;
+   Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > sub9;
+   Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> > sub10;
    Gtk::TreeModelColumn<unsigned int>               titles;
 };
 

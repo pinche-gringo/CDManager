@@ -338,8 +338,10 @@ void MovieList::setLanguage (Gtk::TreeModel::Row& row, const std::string& langua
 	&colMovies.lang5 };
 
    for (unsigned int i (0); i < (sizeof (columns) / sizeof (*columns)); ++i)
-      if (l != langs.end ())
+      if (l != langs.end ()) {
 	 row[(*columns)[i]] = Language::findFlag (*l);
+	 ++l;
+      }
       else {
 	 row[(*columns)[i]] = Glib::RefPtr<Gdk::Pixbuf> ();
 	 if (!countSet) {
@@ -364,8 +366,10 @@ void MovieList::setTitles (Gtk::TreeModel::Row& row, const std::string& titles) 
 	&colMovies.sub9, &colMovies.sub10 };
 
    for (unsigned int i (0); i < (sizeof (columns) / sizeof (*columns)); ++i)
-      if (l != langs.end ())
+      if (l != langs.end ()) {
 	 row[(*columns)[i]] = Language::findFlag (*l);
+	 ++l;
+      }
       else {
 	 TRACE1 ("Set Title: " << titles << " = " << i);
 	 row[(*columns)[i]] = Glib::RefPtr<Gdk::Pixbuf> ();

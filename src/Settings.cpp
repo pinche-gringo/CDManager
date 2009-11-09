@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 23.12.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006
+//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -78,8 +78,8 @@ Settings::Settings (Options& options)
       pagExport.attach (this->*fields[i], 1, 2, i, i + 1, Gtk::FILL | Gtk::EXPAND, Gtk::FILL, 5);
    }
 
-   nb.append_page (pagExport, _("_Export"), true);
    nb.append_page (*manage (wordDialog), _("Reserved _words"), true);
+   nb.append_page (pagExport, _("_Export"), true);
 
    get_vbox ()->pack_start (nb, true, true, 5);
    show_all_children ();

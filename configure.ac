@@ -39,8 +39,8 @@ AC_CHECK_HEADER(boost/shared_ptr.hpp,,AC_MSG_ERROR([Required headers not found])
 dnl Checks for libraries.
 AC_CHECK_LIB(stdc++, main)
 
-PKG_CHECK_MODULES(DEPS, glibmm-2.4 >= 2.4.0 YGP >= 0.8.21)
-PKG_CHECK_MODULES(XGP, gtkmm-2.4 >= 2.6.0 gthread-2.0 > 2.2.0 XGP >= 0.9.20)
+PKG_CHECK_MODULES(DEPS, glibmm-2.4 >= 2.4.0 YGP >= 0.9.30)
+PKG_CHECK_MODULES(XGP, gtkmm-2.4 >= 2.6.0 gthread-2.0 > 2.2.0 XGP >= 0.9.30)
 
 #
 # Location of MySQL installation

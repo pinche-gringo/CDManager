@@ -30,13 +30,13 @@
 #include <cerrno>
 #include <cstdlib>
 
+#include <boost/tokenizer.hpp>
+
 #include <gtkmm/cellrenderercombo.h>
 
-#define TRACELEVEL 1
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ANumeric.h>
-#include <YGP/Tokenize.h>
 #include <YGP/StatusObj.h>
 
 #include <XGP/XValue.h>
@@ -47,6 +47,9 @@
 #include "LangDlg.h"
 
 #include "MovieList.h"
+
+
+typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
 
 
 //-----------------------------------------------------------------------------
@@ -327,15 +330,16 @@ bool MovieList::on_button_press_event (GdkEventButton* e) {
 /// \param languages: Languages to show
 //-----------------------------------------------------------------------------
 void MovieList::setLanguage (Gtk::TreeModel::Row& row, const std::string& languages) {
-   YGP::Tokenize langs (languages);
+   tokenizer langs (languages, boost::char_separator<char> (","));
+   tokenizer::iterator l (langs.begin ());
    bool countSet (false);
    static const Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> >* columns[] =
       { &colMovies.lang1, &colMovies.lang2, &colMovies.lang3, &colMovies.lang4,
 	&colMovies.lang5 };
 
    for (unsigned int i (0); i < (sizeof (columns) / sizeof (*columns)); ++i)
-      if (langs.getNextNode (',').size ())
-	 row[(*columns)[i]] = Language::findFlag (langs.getActNode ());
+      if (l != langs.end ())
+	 row[(*columns)[i]] = Language::findFlag (*l);
       else {
 	 row[(*columns)[i]] = Glib::RefPtr<Gdk::Pixbuf> ();
 	 if (!countSet) {
@@ -351,7 +355,8 @@ void MovieList::setLanguage (Gtk::TreeModel::Row& row, const std::string& langua
 /// \param titles: Subtitles to show
 //-----------------------------------------------------------------------------
 void MovieList::setTitles (Gtk::TreeModel::Row& row, const std::string& titles) {
-   YGP::Tokenize langs (titles);
+   tokenizer langs (titles, boost::char_separator<char> (","));
+   tokenizer::iterator l (langs.begin ());
    bool countSet (false);
    static const Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> >* columns[] =
       { &colMovies.sub1, &colMovies.sub2, &colMovies.sub3, &colMovies.sub4,
@@ -359,8 +364,8 @@ void MovieList::setTitles (Gtk::TreeModel::Row& row, const std::string& titles) 
 	&colMovies.sub9, &colMovies.sub10 };
 
    for (unsigned int i (0); i < (sizeof (columns) / sizeof (*columns)); ++i)
-      if (langs.getNextNode (',').size ())
-	 row[(*columns)[i]] = Language::findFlag (langs.getActNode ());
+      if (l != langs.end ())
+	 row[(*columns)[i]] = Language::findFlag (*l);
       else {
 	 TRACE1 ("Set Title: " << titles << " = " << i);
 	 row[(*columns)[i]] = Glib::RefPtr<Gdk::Pixbuf> ();

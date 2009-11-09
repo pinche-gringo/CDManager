@@ -36,6 +36,8 @@
 #include <iostream>
 #include <stdexcept>
 
+#include <boost/tokenizer.hpp>
+
 #include <glibmm/ustring.h>
 #include <glibmm/convert.h>
 
@@ -45,7 +47,6 @@
 #include <YGP/ADate.h>
 #include <YGP/ATStamp.h>
 #include <YGP/Relation.h>
-#include <YGP/Tokenize.h>
 #include <YGP/Exception.h>
 
 #include "DB.h"
@@ -385,11 +386,13 @@ int CDWriter::perform (int argc, const char** argv) {
 	    movieWriter.writeMovie (movie, director, fileMovie);
 	    movies.push_back (movie);
 
-	    YGP::Tokenize langs (movie->getLanguage ());
-	    while (langs.getNextNode (',').size ()) {
-	       if (usedLanguages.find (langs.getActNode ()) == std::string::npos) {
+	    boost::tokenizer<boost::char_separator<char> > langs (movie->getLanguage (),
+								  boost::char_separator<char> (","));
+	    for (boost::tokenizer<boost::char_separator<char> >::iterator i (langs.begin ());
+		 i != langs.end (); ++i) {
+	       if (usedLanguages.find (*i) == std::string::npos) {
 		  usedLanguages += ',';
-		  usedLanguages += langs.getActNode ();
+		  usedLanguages += *i;
 	       }
 	    }
 	    break; }

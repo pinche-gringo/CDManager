@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.15 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 27.11.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2007
+//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,9 +31,10 @@
 
 #include <sstream>
 
+#include <boost/tokenizer.hpp>
+
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
-#include <YGP/Tokenize.h>
 
 #include "CDType.h"
 
@@ -141,12 +142,15 @@ void MovieWriter::writeDirector (const HDirector& director, std::ostream& out) {
 //-----------------------------------------------------------------------------
 std::string MovieWriter::addLanguageLinks (const std::string& languages) {
    std::string output;
-   YGP::Tokenize langs (languages);
-   while (langs.getNextNode (',').size ()) {
+
+   boost::tokenizer<boost::char_separator<char> > langs (languages,
+							 boost::char_separator<char> (","));
+   for (boost::tokenizer<boost::char_separator<char> >::iterator i (langs.begin ());
+	i != langs.end (); ++i) {
       output += "<img src=\"images/";
-      output += langs.getActNode ();
+      output += *i;
       output += ".png\" alt=\"";
-      output += langs.getActNode ();
+      output += *i;
       output += " \">";
    } // endwhile
    return output;

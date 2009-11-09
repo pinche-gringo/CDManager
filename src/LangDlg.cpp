@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.7 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 11.12.2004
-//COPYRIGHT   : Copyright (C) 2004, 2005
+//COPYRIGHT   : Copyright (C) 2004, 2005, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@
 
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
-#include <YGP/Tokenize.h>
+#include <boost/tokenizer.hpp>
 
 #include "Language.h"
 
@@ -170,17 +170,18 @@ LanguageDialog::LanguageDialog (std::string& languages, unsigned int maxLangs,
 
    std::string tmp;
    if (languages.size ()) {
-      YGP::Tokenize langs (languages);
+      boost::tokenizer<boost::char_separator<char> > langs (languages, boost::char_separator<char> (","));
+      boost::tokenizer<boost::char_separator<char> >::iterator i (langs.begin ());
       if (showMainLang) {
-	 tmp = langs.getNextNode (',');
-	 TRACE9 ("LanguageDialog::LanguageDialog (std::string&, unsigned int) - Main: "
-		 << main);
+	 tmp = *i;
+	 ++i;
+	 TRACE9 ("LanguageDialog::LanguageDialog (std::string&, unsigned int) - Main: " << main);
       }
 
       std::string translation;
       Glib::RefPtr<Gtk::TreeSelection> sel (listLang->get_selection ());
-      while ((translation = langs.getNextNode (',')).size ())
-	 sel->select (modelList->getLine (translation));
+      while (i != langs.end ())
+	 sel->select (modelList->getLine (*i));
    }
    else
       if (showMainLang)

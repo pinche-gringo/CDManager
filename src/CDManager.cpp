@@ -64,7 +64,7 @@
 #  include "PActors.h"
 #endif
 #if WITH_MOVIES == 1
-#  include <YGP/Tokenize.h>
+#  include <boost/tokenizer.hpp>
 #  include "PMovies.h"
 #endif
 #if WITH_RECORDS == 1
@@ -73,7 +73,7 @@
 
 #if (WITH_RECORDS == 1) || (WITH_MOVIES == 1)
 #  include <YGP/Process.h>
-#  include <YGP/Tokenize.h>
+#  include <boost/tokenizer.hpp>
 #endif
 
 #include "CDManager.h"
@@ -542,9 +542,6 @@ void CDManager::export2HTML () {
    std::ostringstream memKey;
    memKey << Words::getMemoryKey () << std::ends;
 
-   YGP::Tokenize langs (LANGUAGES);
-   std::string lang;
-
    const char* envLang (getenv ("LANGUAGE"));
    std::string oldLang;
    if (envLang)
@@ -566,10 +563,12 @@ void CDManager::export2HTML () {
 
    // Export to every language supported
    Glib::ustring statMsg (_("Exporting (language %1) ..."));
-   while ((lang = langs.getNextNode (' ')).size ()) {
-      TRACE6 ("CDManager::export2HTML () - Lang: " << lang);
+   std::string allLangs (LANGUAGES, sizeof (LANGUAGES) - 1);
+   boost::tokenizer<> langs (allLangs);
+   for (boost::tokenizer<>::iterator l (langs.begin ()); l != langs.end (); ++l) {
+      TRACE6 ("CDManager::export2HTML () - Lang: " << *l);
       Glib::ustring stat (statMsg);
-      stat.replace (stat.find ("%1"), 2, Language::findInternational (lang));
+      stat.replace (stat.find ("%1"), 2, Language::findInternational (*l));
       status.push (stat);
 
       Glib::RefPtr<Glib::MainContext> ctx (Glib::MainContext::get_default ());
@@ -578,8 +577,8 @@ void CDManager::export2HTML () {
       pid_t pid (-1);
       int pipes[2];
       try {
-	 setenv ("LANGUAGE", lang.c_str (), true);
-	 args[POS_LANG] = lang.c_str ();
+	 setenv ("LANGUAGE", l->c_str (), true);
+	 args[POS_LANG] = l->c_str ();
 	 TRACE3 ("CDManager::export2HTML () - Parms: " << args[POS_LANG] << ' ' << args[POS_LANG + 1]);
 
 	 if (pipe (pipes) < 0)
@@ -587,7 +586,7 @@ void CDManager::export2HTML () {
 	 pid = YGP::Process::execIOConnected ("CDWriter", args, pipes);
 
 	 for (unsigned int i (0); i < (WITH_RECORDS + WITH_MOVIES); ++i)
-	    pages[i]->export2HTML (pipes[1], lang);
+	    pages[i]->export2HTML (pipes[1], *l);
 	 close (pipes[1]);
 
 	 char output[128] = "";

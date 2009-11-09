@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 13.01.2005
-//COPYRIGHT   : Copyright (C) 2005 - 2007
+//COPYRIGHT   : Copyright (C) 2005 - 2007, 2009
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -29,12 +29,13 @@
 
 #include <string>
 
+#include <boost/tokenizer.hpp>
+
 #include <glibmm/convert.h>
 
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/INIFile.h>
-#include <YGP/Tokenize.h>
 
 #include <XGP/XAttribute.h>
 
@@ -56,10 +57,13 @@ void Genres::loadFromFile (const char* file, Genres& records, Genres& movies,
    std::string name (file);
 
    // Check every language-entry (while removing trailing specifiers)
-   YGP::Tokenize ext (languages);
+   std::string langs (languages);
+   boost::tokenizer<boost::char_separator<char> > ext (langs, boost::char_separator<char> (":"));
    std::string extension;
    struct stat sfile;
-   while ((extension = ext.getNextNode (':')).size ()) {
+   for (boost::tokenizer<boost::char_separator<char> >::iterator i (ext.begin ());
+	i != ext.end (); ++i) {
+      extension = *i;
       std::string search;
       do {
 	 search = name + std::string (1, '.') + extension;

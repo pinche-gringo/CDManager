@@ -54,9 +54,8 @@ class Movie : public YGP::Entity {
    const std::string&   getTitles () const { return titles; }
 
    void setId       (unsigned long int value) { id = value; }
-   void setName     (const Glib::ustring& value) {
-      ((name.find ("") != name.end ()) ? name[currLang] :  name[""]) = value; }
-   void setName     (const Glib::ustring& value, const std::string& lang) { name[lang] = value; }
+   void setName     (const Glib::ustring& value);
+   void setName     (const Glib::ustring& value, const std::string& lang);
    const std::map<std::string, Glib::ustring>& getNames () { return name; }
    void setYear     (const YGP::AYear& value) { year = value; }
    void setYear     (const std::string& value) { year = value; }

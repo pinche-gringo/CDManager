@@ -112,7 +112,7 @@ void MovieWriter::writeMovie (const HMovie& movie, const HDirector& director,
    std::string value;
    out << "<tr class=\"" << (oddLine ? "odd" : "even") << "\">";
    oddLine = !oddLine;
-   while (!((value = getNextNode ()).empty ()))
+   while ((value = getNextNode ()).size ())
       out << "<td>" << value << "</td>";
    out << "</tr>\n";
 
@@ -218,7 +218,7 @@ void RecordWriter::writeRecord (const HRecord& record, const HInterpret& interpr
    std::string value;
    out << "<tr class=\"" << (oddLine ? "odd" : "even") << "\">";
    oddLine = !oddLine;
-   while (!((value = getNextNode ()).empty ()))
+   while ((value = getNextNode ()).size ())
       out << "<td>" << value << "</td>";
    out << "</tr>\n";
 

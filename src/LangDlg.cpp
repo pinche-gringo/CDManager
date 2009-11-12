@@ -180,7 +180,7 @@ LanguageDialog::LanguageDialog (std::string& languages, unsigned int maxLangs,
 
       std::string translation;
       Glib::RefPtr<Gtk::TreeSelection> sel (listLang->get_selection ());
-      while (i != langs.end ())
+      for (; i != langs.end (); ++i)
 	 sel->select (modelList->getLine (*i));
    }
    else

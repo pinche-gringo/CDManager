@@ -560,7 +560,8 @@ int CDWriter::perform (int argc, const char** argv) {
       if (aOutputs[i].type) {
 	 std::sort (records.begin (), records.end (), (PFNCMPRECORD)aOutputs[i].fnCompare);
 
-	 RecordWriter writer (aOutputs[i].format, recGenres);
+	 recordFormat = aOutputs[i].format;
+	 RecordWriter writer (recordFormat, recGenres);
 	 writer.printStart (fileOut, header.str ());
 
 	 HInterpret interpret;
@@ -577,7 +578,8 @@ int CDWriter::perform (int argc, const char** argv) {
       {
 	 std::sort (movies.begin (), movies.end (), (PFNCMPMOVIE)aOutputs[i].fnCompare);
 
-	 MovieWriter writer (aOutputs[i].format, movieGenres);
+	 movieFormat = aOutputs[i].format;
+	 MovieWriter writer (movieFormat, movieGenres);
 	 writer.printStart (fileOut, header.str ());
 
 	 HDirector director;
@@ -601,7 +603,7 @@ int CDWriter::perform (int argc, const char** argv) {
 
 #if WITH_RECORDS == 1
       if (aOutputs[i].type) {
-	 RecordWriter writer (aOutputs[i].format, recGenres);
+	 RecordWriter writer (recordFormat, recGenres);
 	 writer.printStart (fileOut, rheader.str ());
 
 	 for (std::vector<HRecord>::reverse_iterator m (records.rbegin ());
@@ -616,7 +618,7 @@ int CDWriter::perform (int argc, const char** argv) {
 #endif
 #if WITH_MOVIES == 1
       {
-	 MovieWriter writer (aOutputs[i].format, movieGenres);
+	 MovieWriter writer (movieFormat, movieGenres);
 	 writer.printStart (fileOut, rheader.str ());
 
 	 for (std::vector<HMovie>::reverse_iterator m (movies.rbegin ());
@@ -653,7 +655,8 @@ int CDWriter::perform (int argc, const char** argv) {
 		   << l->second.getInternational () << "</a> |";
    fileOut << "</div>";
 
-   MovieWriter langWriter ("%l|%n|%d||%y|%g|%t", movieGenres);
+   movieFormat = "%l|%n|%d||%y|%g|%t";
+   MovieWriter langWriter (movieFormat, movieGenres);
    std::sort (movies.begin (), movies.end (), &Movie::compByName);
 
    langWriter.printStart (fileOut, "");

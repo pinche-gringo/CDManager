@@ -312,7 +312,6 @@ int CDWriter::perform (int argc, const char** argv) {
    } // end-for
 
    size_t pos (0);
-   std::string format;
 #if WITH_MOVIES == 1
    std::ofstream fileMovie;
    createFile (opt.getDirOutput () + "Movies.html", argv[0], fileMovie);
@@ -326,8 +325,8 @@ int CDWriter::perform (int argc, const char** argv) {
 
    writeHeader (argv[0], "[d-n-y-g-m-l]", fileMovie);
 
-   format = "%n|%y|%g|%t|%l";
-   MovieWriter movieWriter (format, movieGenres);
+   std::string movieFormat ("%n|%y|%g|%t|%l");
+   MovieWriter movieWriter (movieFormat, movieGenres);
    movieWriter.printStart (fileMovie, "");
 
    HMovie movie;
@@ -351,8 +350,8 @@ int CDWriter::perform (int argc, const char** argv) {
 
    writeHeader (argv[0], "[a-n-y-g]", fileRec, true, "Records");
 
-   format = "%n|%y|%g";
-   RecordWriter recWriter (format, recGenres);
+   std::string recordFormat ("%n|%y|%g");
+   RecordWriter recWriter (recordFormat, recGenres);
    recWriter.printStart (fileRec, "");
 
    HRecord record;

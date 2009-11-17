@@ -1,9 +1,10 @@
 Overview of changes in version 0.8.40:
 
+  - Movies: Removing a name/translation removes it immediately
   - Exporting to HTML sorts each type also by name/year (For this you need to
     change the database; execute "make updateDB_Subtitles" in the SQL directory)
   - Supporting up to 10 subtitles per movie (before: 6)
-  - Using boost::shared_ptr/scoped_ptr instead of YGP::Handle/SmartPtr
+  - Adapted to libYGP-0.9.30 (using booth)
   - Fixes
 
 Overview of changes in version 0.8.38:

@@ -1,3 +1,145 @@
+2009-11-17 17:29:12 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+	* ChangeLog, NEWS: Changes of V0.8.40 documented
+
+        * po/*.po: Actualised
+
+2009-11-12 16:07:47 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/CDWriter.cpp: Fixed exporting reverse-sorted entries
+
+2009-11-12 15:58:16 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * CDWriter.cpp: Fixed exporting both records and movies at the same time
+
+2009-11-12 15:09:20 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * LanguageDlg: Fixed showing dialogue with more than 1 language or any subtitle
+
+2009-11-10 10:49:52 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/Writer.cpp: Minor optimisation of code
+
+2009-11-10 10:49:22 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/CDWriter.cpp: Ensuring the format for the writers keeps being valid
+
+2009-11-09 20:37:33 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * data/Records.head: Fixed URL of logo (had wrong file-type .gif)
+
+2009-11-09 20:36:35 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/MovieList.cpp: Fixed iterating over titles
+
+2009-11-09 20:27:49 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Adapted to new style of libYGP-0.9.30 (using boost)
+
+2009-11-09 20:09:29 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/Settings.cpp: Displaying page 'Reserved words' before page 'Export'
+
+2009-11-09 20:08:55 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/Movie: Deleting translated name reverts to default name for this language
+
+2009-11-09 20:07:55 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * configure.ac: Needing libYGP/libXGP-0.9.30
+
+2009-10-19 21:23:01 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Movies: Can store up to 10 subtitles
+
+2009-10-19 21:22:25 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/CDWriter.cpp: Improved formatting
+
+2009-10-19 21:22:00 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * configure.ac: Improved configure's help-text
+
+2009-10-19 21:21:23 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * README: Describing css-files for formatting
+
+2009-10-19 21:21:04 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * INSTALL: Describing configure-options
+
+2009-10-19 20:20:35 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Movie.cpp: Actualising copyright
+
+2009-10-19 20:02:57 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Exporting to HTML sorts each type also by name/year
+
+2009-10-09 11:57:41 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * NEWS: Fitting lines to 80 columns
+
+2009-10-08 21:28:17 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Merge branch 'master' of ssh://devel.gizmo.org/usr/local/Repos/CDManager
+
+2009-10-08 21:25:52 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Resovled merging CDManager-0.8.38
+
+2009-10-08 21:09:25 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/Makefile.am: Added Icon*.h to the distribution
+
+2009-10-08 20:48:43 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * .gitignore: Added to git
+
+2009-10-01 14:25:15 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/CDManager.cpp: Linebreak before [Movies]-section in INI-file
+
+2009-10-01 14:24:11 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * configure.ac: Prettyfied output; defining used tools
+
+2009-09-18 13:05:59 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/P{Movies,Records},cpp: Fixed trap restoring deleted last director
+
+2009-09-12 14:01:59 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Storage.cpp: Fixed saving dates of celebrities
+
+2009-09-11 22:35:22 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Words.cpp: Fixed checks (binarySearch accessed values after end)
+
+2009-09-11 22:34:29 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/Celebrity.cpp: Fixed checking if person is already dead
+
+2009-09-11 21:49:59 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Adapted Checks/Traces to use boost::shared_ptr
+
+2009-09-11 21:41:56 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * configure.ac: Version to 0.8.40; Checking for boost-headers
+
+2009-09-11 21:41:19 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Using boost/shared_ptr instead of YGP::Handle
+
+2009-09-11 18:05:40 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/CDWriter.cpp: Const-corrected
+
+2009-09-11 18:05:10 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Movie/Record/Song.h: Removed unneeded include
+
 2009-08-08  Markus Schwab  <g17m0@users.sourceforge.net>
 
 	* ChangeLog, NEWS: Changes of V0.8.37 documented

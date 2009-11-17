@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2009-08-08 15:26+0200\n"
+"POT-Creation-Date: 2009-11-17 17:28+0100\n"
 "PO-Revision-Date: 2009-08-08 15:30+0200\n"
 "Last-Translator: Markus Schwab <g17m0@users.sourceforge.net>\n"
 "Language-Team: German <g17m0@users.sourceforge.net>\n"
@@ -72,7 +72,7 @@ msgstr "Einstellungen _speichern"
 msgid "<ctl>F9"
 msgstr "<ctl>F9"
 
-#: src/CDManager.cpp:192 src/CDWriter.cpp:261
+#: src/CDManager.cpp:192 src/CDWriter.cpp:262
 msgid ""
 "Can't read datafile containing the genres!\n"
 "\n"
@@ -164,7 +164,7 @@ msgstr ""
 msgid "Disconnected!"
 msgstr "Abgemeldet!"
 
-#: src/CDManager.cpp:496 src/CDWriter.cpp:718
+#: src/CDManager.cpp:496 src/CDWriter.cpp:726
 msgid ""
 "Can't create file `%1'!\n"
 "\n"
@@ -184,15 +184,15 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManager.cpp:568
+#: src/CDManager.cpp:565
 msgid "Exporting (language %1) ..."
 msgstr "Exportiere (Sprache %1) ..."
 
-#: src/CDManager.cpp:603
+#: src/CDManager.cpp:602
 msgid "Export Warning!"
 msgstr "Warnung beim Exportieren!"
 
-#: src/CDManager.cpp:633
+#: src/CDManager.cpp:632
 msgid ""
 "Can't open file `%1'!\n"
 "\n"
@@ -202,36 +202,36 @@ msgstr ""
 "\n"
 "Ursache: %2."
 
-#: src/MovieList.cpp:68
+#: src/MovieList.cpp:72
 msgid "Type"
 msgstr "Typ"
 
-#: src/MovieList.cpp:84 src/CDWriter.cpp:201
+#: src/MovieList.cpp:88 src/CDWriter.cpp:202
 msgid "Language(s)"
 msgstr "Sprache(n)"
 
-#: src/MovieList.cpp:97
+#: src/MovieList.cpp:101
 msgid "Subtitles(s)"
 msgstr "Untertitel"
 
-#: src/MovieList.cpp:189
+#: src/MovieList.cpp:193
 msgid "Director/Movie"
 msgstr "Regisseur/Film"
 
-#: src/MovieList.cpp:228
+#: src/MovieList.cpp:232
 msgid "Unknown type of media!"
 msgstr "Unbekannter Medientyp!"
 
-#: src/MovieList.cpp:258 src/SongList.cpp:197 src/OOList.cpp:248
+#: src/MovieList.cpp:262 src/SongList.cpp:197 src/OOList.cpp:248
 #: src/ActorList.cpp:191
 msgid "Invalid value!"
 msgstr "Ungültiger Wert!"
 
-#: src/MovieList.cpp:311
+#: src/MovieList.cpp:315
 msgid "Select subtitles"
 msgstr "Auswählen der Untertitel"
 
-#: src/RecordList.cpp:133
+#: src/RecordList.cpp:128
 msgid "Interpret/Record"
 msgstr "Interpret/Album"
 
@@ -247,8 +247,8 @@ msgstr "Name"
 msgid "Duration"
 msgstr "Dauer"
 
-#: src/SongList.cpp:77 src/OOList.cpp:100 src/CDWriter.cpp:200
-#: src/CDWriter.cpp:521 src/CDWriter.cpp:535 src/ActorList.cpp:60
+#: src/SongList.cpp:77 src/OOList.cpp:100 src/CDWriter.cpp:201
+#: src/CDWriter.cpp:526 src/CDWriter.cpp:540 src/ActorList.cpp:60
 msgid "Genre"
 msgstr ""
 
@@ -260,8 +260,8 @@ msgstr "Das Lied '%1' existiert bereits!"
 msgid "Unknown genre!"
 msgstr "Unbekanntes Genre!"
 
-#: src/OOList.cpp:79 src/CDWriter.cpp:200 src/CDWriter.cpp:519
-#: src/CDWriter.cpp:533 src/ActorList.cpp:59
+#: src/OOList.cpp:79 src/CDWriter.cpp:201 src/CDWriter.cpp:524
+#: src/CDWriter.cpp:538 src/ActorList.cpp:59
 msgid "Year"
 msgstr "Jahr"
 
@@ -381,11 +381,11 @@ msgstr "[PWORT] Paßwort des Datenbankbenutzers\n"
 msgid "[FILE] Use file as INI file\n"
 msgstr "[DATEI] Verwende Datei als Initialisierungsdatei\n"
 
-#: src/CDAppl.cpp:68 src/CDWriter.cpp:109
+#: src/CDAppl.cpp:68 src/CDWriter.cpp:110
 msgid "Output version information and exit\n"
 msgstr "Versionsinformation anzeigen und beenden\n"
 
-#: src/CDAppl.cpp:69 src/CDWriter.cpp:110
+#: src/CDAppl.cpp:69 src/CDWriter.cpp:111
 msgid ""
 "Displays this help and exit\n"
 "\n"
@@ -422,7 +422,7 @@ msgid "-warning: Can't convert username to UTF-8! Ignoring ...\n"
 msgstr ""
 "-Warnung: Ignoriere den ungültigen Benutzernamen (nicht UTF-8 konform)!\n"
 
-#: src/CDAppl.cpp:202 src/CDWriter.cpp:693
+#: src/CDAppl.cpp:202 src/CDWriter.cpp:701
 msgid "Compiled on"
 msgstr "Übersetzt am"
 
@@ -460,12 +460,12 @@ msgid "Foo_ter for records:"
 msgstr "F_ußdatei für Platten:"
 
 #: src/Settings.cpp:81
-msgid "_Export"
-msgstr "_Exportieren"
-
-#: src/Settings.cpp:82
 msgid "Reserved _words"
 msgstr "Reservierte _Wörter"
+
+#: src/Settings.cpp:82
+msgid "_Export"
+msgstr "_Exportieren"
 
 #: src/WordDlg.cpp:70
 msgid "First names"
@@ -475,7 +475,7 @@ msgstr "Vornamen"
 msgid "Articles"
 msgstr "Artikel"
 
-#: src/CDWriter.cpp:98
+#: src/CDWriter.cpp:99
 msgid ""
 "Utitily to write HTML documents from data received\n"
 "\n"
@@ -485,58 +485,58 @@ msgstr ""
 "\n"
 "Aufruf: "
 
-#: src/CDWriter.cpp:99
+#: src/CDWriter.cpp:100
 msgid ""
 " [OPTIONS] [LANGUAGE-ID] [MEMORY-ID]\n"
 "\n"
 msgstr "[OPTIONEN] [SPRACH-CODE] [SPEICHER-ID]\n"
 
-#: src/CDWriter.cpp:100
+#: src/CDWriter.cpp:101
 msgid "Directory to export data to\n"
 msgstr "Verzeichnis in das die Daten exportiert werden sollen\n"
 
-#: src/CDWriter.cpp:102
+#: src/CDWriter.cpp:103
 msgid "File to use as header for records\n"
 msgstr "Headerdatei für Platten\n"
 
-#: src/CDWriter.cpp:103
+#: src/CDWriter.cpp:104
 msgid "File to use as footer for records\n"
 msgstr "Fußdatei für Platten\n"
 
-#: src/CDWriter.cpp:106
+#: src/CDWriter.cpp:107
 msgid "File to use as header for movies\n"
 msgstr "Headerdatei für Filme\n"
 
-#: src/CDWriter.cpp:107
+#: src/CDWriter.cpp:108
 msgid "File to use as footer for movies\n"
 msgstr "Fußdatei für Filme\n"
 
-#: src/CDWriter.cpp:128
+#: src/CDWriter.cpp:129
 msgid "-warning: No directory specified! Ignoring option `d'\n"
 msgstr "-Warnung: Kein Verzeichnis angegeben! Die Option 'd' wird ignoriert\n"
 
-#: src/CDWriter.cpp:138 src/CDWriter.cpp:152
+#: src/CDWriter.cpp:139 src/CDWriter.cpp:153
 msgid "-warning: No file specified! Ignoring option `%1'\n"
 msgstr "-Warnung: Keine Datei angegeben! Die Option '%1' wird ignoriert\n"
 
-#: src/CDWriter.cpp:200 src/CDWriter.cpp:346 src/CDWriter.cpp:427
+#: src/CDWriter.cpp:201 src/CDWriter.cpp:348 src/CDWriter.cpp:432
 msgid "Interpret"
 msgstr "Interpret"
 
-#: src/CDWriter.cpp:200 src/CDWriter.cpp:322 src/CDWriter.cpp:427
+#: src/CDWriter.cpp:201 src/CDWriter.cpp:323 src/CDWriter.cpp:432
 msgid "Director"
 msgstr "Regisseur"
 
-#: src/CDWriter.cpp:200 src/CDWriter.cpp:517 src/CDWriter.cpp:531
+#: src/CDWriter.cpp:201 src/CDWriter.cpp:522 src/CDWriter.cpp:536
 #: src/SaveCeleb.cpp:73
 msgid "Name"
 msgstr ""
 
-#: src/CDWriter.cpp:201 src/CDWriter.cpp:523
+#: src/CDWriter.cpp:202 src/CDWriter.cpp:528
 msgid "Media"
 msgstr ""
 
-#: src/CDWriter.cpp:238
+#: src/CDWriter.cpp:239
 msgid ""
 "-error: Need language id and memory-key as parameters\n"
 "(This program is designed to be called by the CDManager-application)\n"
@@ -544,11 +544,11 @@ msgstr ""
 "-Fehler: Benötige Sprachkennung (de, es, ...) und Speicher-ID als Parameter\n"
 "(Dieses Program sollte nur von der CDManager-Anwendung aufgerufen werden)\n"
 
-#: src/CDWriter.cpp:247
+#: src/CDWriter.cpp:248
 msgid "Invalid memory-key (0)!"
 msgstr "Ungültiger Speicher-Schlüssel (0)"
 
-#: src/CDWriter.cpp:255
+#: src/CDWriter.cpp:256
 msgid ""
 "-error: Can't access reserved words!\n"
 "\n"
@@ -558,15 +558,15 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDWriter.cpp:269
+#: src/CDWriter.cpp:270
 msgid "Movies (by %1)"
 msgstr "Filme (sortiert nach %1)"
 
-#: src/CDWriter.cpp:272
+#: src/CDWriter.cpp:273
 msgid "Records (by %1)"
 msgstr "Alben (sortiert nach %1)"
 
-#: src/CDWriter.cpp:303
+#: src/CDWriter.cpp:304
 msgid ""
 "Error reading header file `%1'!\n"
 "\n"
@@ -576,31 +576,31 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/CDWriter.cpp:427 src/RelateMovie.cpp:230
+#: src/CDWriter.cpp:432 src/RelateMovie.cpp:230
 msgid "Movie"
 msgstr "Filme"
 
-#: src/CDWriter.cpp:427
+#: src/CDWriter.cpp:432
 msgid "Record"
 msgstr "Alben"
 
-#: src/CDWriter.cpp:430
+#: src/CDWriter.cpp:435
 msgid "unknown entity"
 msgstr "unbekanntes Object!"
 
-#: src/CDWriter.cpp:432
+#: src/CDWriter.cpp:437
 msgid "-error: Can't read %1: %2"
 msgstr "-Fehler: Kann Datei \"%1\" nicht lesen: %2"
 
-#: src/CDWriter.cpp:439
+#: src/CDWriter.cpp:444
 msgid "-error: Unknown error!\n"
 msgstr "-Fehler: Unbekannter Fehler!\n"
 
-#: src/CDWriter.cpp:637
+#: src/CDWriter.cpp:644
 msgid "Language"
 msgstr "Sprache"
 
-#: src/CDWriter.cpp:695
+#: src/CDWriter.cpp:703
 msgid ""
 "Copyright (C) 2005 - 2007, 2009 Markus Schwab; e-mail: g17m0@users."
 "sourceforge.net\n"
@@ -610,7 +610,7 @@ msgstr ""
 "net\n"
 "Vertrieben unter den Bedingungen der GNU General Public License"
 
-#: src/CDWriter.cpp:721
+#: src/CDWriter.cpp:729
 msgid "-error: "
 msgstr "-Fehler: "
 
@@ -650,43 +650,43 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/PRecords.cpp:370 src/PActors.cpp:382 src/PMovies.cpp:243
+#: src/PRecords.cpp:366 src/PActors.cpp:380 src/PMovies.cpp:240
 msgid "<ctl>Z"
 msgstr ""
 
-#: src/PRecords.cpp:373
+#: src/PRecords.cpp:369
 msgid "New _interpret"
 msgstr "Neuer _Interpret"
 
-#: src/PRecords.cpp:374 src/PActors.cpp:386 src/PMovies.cpp:247
+#: src/PRecords.cpp:370 src/PActors.cpp:384 src/PMovies.cpp:244
 msgid "<ctl>N"
 msgstr ""
 
-#: src/PRecords.cpp:376
+#: src/PRecords.cpp:372
 msgid "_New record"
 msgstr "_Neues Album"
 
-#: src/PRecords.cpp:377 src/PActors.cpp:389 src/PMovies.cpp:250
+#: src/PRecords.cpp:373 src/PActors.cpp:387 src/PMovies.cpp:247
 msgid "<ctl><alt>N"
 msgstr ""
 
-#: src/PRecords.cpp:379
+#: src/PRecords.cpp:375
 msgid "New _song"
 msgstr "Neues _Lied"
 
-#: src/PRecords.cpp:380
+#: src/PRecords.cpp:376
 msgid "<ctl><shft>N"
 msgstr ""
 
-#: src/PRecords.cpp:382 src/PActors.cpp:391 src/PMovies.cpp:252
+#: src/PRecords.cpp:378 src/PActors.cpp:389 src/PMovies.cpp:249
 msgid "_Delete"
 msgstr "_Löschen"
 
-#: src/PRecords.cpp:383 src/PActors.cpp:392 src/PMovies.cpp:253
+#: src/PRecords.cpp:379 src/PActors.cpp:390 src/PMovies.cpp:250
 msgid "<ctl>Delete"
 msgstr ""
 
-#: src/PRecords.cpp:710 src/PMovies.cpp:587
+#: src/PRecords.cpp:701 src/PMovies.cpp:583
 msgid ""
 "Couldn't write data!\n"
 "\n"
@@ -696,25 +696,25 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/PRecords.cpp:713
+#: src/PRecords.cpp:704
 msgid "Error exporting records to HTML!"
 msgstr "Fehler beim Exportieren der Platten zu HTML!"
 
-#: src/PActors.cpp:308
+#: src/PActors.cpp:306
 msgid "The database contains an invalid reference (%1) to a movie!"
 msgstr "Die Datenbank enthält eine ungültige Referenz (%1) zu einem Film!"
 
-#: src/PActors.cpp:327
+#: src/PActors.cpp:325
 msgid "Loaded %1 actor"
 msgid_plural "Loaded %1 actors"
 msgstr[0] "%1 Schauspieler"
 msgstr[1] "%1 Schauspieler"
 
-#: src/PActors.cpp:334
+#: src/PActors.cpp:332
 msgid "Warnings loading actors!"
 msgstr "Warnungen beim Laden der Schauspieler"
 
-#: src/PActors.cpp:339
+#: src/PActors.cpp:337
 msgid ""
 "Can't query the actors1!\n"
 "\n"
@@ -724,61 +724,61 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/PActors.cpp:385
+#: src/PActors.cpp:383
 msgid "New _actor"
 msgstr "Neuer _Schauspieler"
 
-#: src/PActors.cpp:388
+#: src/PActors.cpp:386
 msgid "_Plays in movie..."
 msgstr "Spielt in _Film..."
 
-#: src/PActors.cpp:398
+#: src/PActors.cpp:396
 msgid "_View"
 msgstr "_Ansicht"
 
-#: src/PActors.cpp:400
+#: src/PActors.cpp:398
 msgid "By _actor"
 msgstr "Nach _Schauspieler"
 
-#: src/PActors.cpp:402
+#: src/PActors.cpp:400
 msgid "By _movie"
 msgstr "Nach _Film"
 
-#: src/PActors.cpp:640 src/ActorList.cpp:58
+#: src/PActors.cpp:637 src/ActorList.cpp:58
 msgid "Actors/Movies"
 msgstr "Schauspieler/Filme"
 
-#: src/PActors.cpp:666
+#: src/PActors.cpp:663
 msgid "Movies/Actors"
 msgstr "Filme/Schauspieler"
 
-#: src/PMovies.cpp:192
+#: src/PMovies.cpp:189
 msgid "_Original name"
 msgstr "Name (_Original)"
 
-#: src/PMovies.cpp:246
+#: src/PMovies.cpp:243
 msgid "New _director"
 msgstr "Neuer _Regiseur"
 
-#: src/PMovies.cpp:249
+#: src/PMovies.cpp:246
 msgid "_New movie"
 msgstr "_Neuer Film"
 
-#: src/PMovies.cpp:256
+#: src/PMovies.cpp:253
 msgid "_Language"
 msgstr "_Sprache"
 
-#: src/PMovies.cpp:387
+#: src/PMovies.cpp:384
 msgid "Loaded %1 movie"
 msgid_plural "Loaded %1 movies"
 msgstr[0] "%1 Film geladen"
 msgstr[1] "%1 Filme geladen"
 
-#: src/PMovies.cpp:394
+#: src/PMovies.cpp:391
 msgid "Warnings loading movies"
 msgstr "Warnungen beim Laden der Filme"
 
-#: src/PMovies.cpp:399 src/PMovies.cpp:420
+#: src/PMovies.cpp:396 src/PMovies.cpp:417
 msgid ""
 "Can't query available movies!\n"
 "\n"
@@ -788,7 +788,7 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/PMovies.cpp:590
+#: src/PMovies.cpp:586
 msgid "Error exporting movies to HTML!"
 msgstr "Fehler beim Exportieren der Filme zu HTML!"
 

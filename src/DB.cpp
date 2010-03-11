@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.12 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 16.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2007
+//COPYRIGHT   : Copyright (C) 2004 - 2007, 2010
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -55,8 +55,16 @@ std::string Database::escapeDBValue (const std::string& value) {
 #  include <mysql++.h>
 
 static mysqlpp::Connection       con (mysqlpp::use_exceptions);
-static mysqlpp::Result           result;
-static mysqlpp::Result::iterator i;
+
+#if MYSQLPP_HEADER_VERSION < 0x030000
+   static mysqlpp::Result           result;
+   static mysqlpp::Result::iterator i;
+#else
+   static mysqlpp::StoreQueryResult           result;
+   static mysqlpp::StoreQueryResult::iterator i;
+
+   static long lastIDInsert = 0;
+#endif
 
 
 void Database::connect (const char* db, const char* user, const char* pwd) throw (std::exception&) {
@@ -66,7 +74,11 @@ void Database::connect (const char* db, const char* user, const char* pwd) throw
 
 void Database::close () throw (std::exception&) {
    TRACE9 ("Database::close ()");
+#if MYSQLPP_HEADER_VERSION < 0x030000
    con.close ();
+#else
+   con.disconnect ();
+#endif
 }
 
 bool Database::connected () {
@@ -78,6 +90,10 @@ void Database::execute (const char* query) throw (std::exception&) {
    mysqlpp::Query q (con.query ());
    result = q.store (query);
    i = result.begin ();
+
+#if MYSQLPP_HEADER_VERSION >= 0x030000
+   lastIDInsert = q.insert_id ();
+#endif
 }
 
 unsigned int Database::resultSize () {
@@ -114,7 +130,11 @@ int Database::getResultColumnAsInt (unsigned int column) {
 }
 
 long Database::getIDOfInsert () {
+#if MYSQLPP_HEADER_VERSION < 0x030000
    return con.insert_id ();
+#else
+   return lastIDInsert;
+#endif
 }
 
 #elif defined HAVE_LIBMYSQL

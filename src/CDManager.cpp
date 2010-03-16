@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.82 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2009
+//COPYRIGHT   : Copyright (C) 2004 - 2009, 2010
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -59,6 +59,7 @@
 #include "Storage.h"
 #include "Settings.h"
 #include "Language.h"
+#include "SaveCeleb.h"
 
 #if WITH_ACTORS == 1
 #  include "PActors.h"
@@ -248,6 +249,8 @@ void CDManager::save () {
 
       Check3 (apMenus[SAVE]);
       apMenus[SAVE]->set_sensitive (false);
+   }
+   catch (SaveCelebrity::DlgCanceled&) {
    }
    catch (std::exception& err) {
       Glib::ustring msg (_("Error saving data!\n\nReason: %1"));

@@ -4,7 +4,7 @@ Overview of changes in version 0.8.41:
   - Supporting libmysql++ 3.0
   - Convert tables to UTF-8
   - Movies: Default sort is by director, year, name
-  ? Fixing adding role to a person
+  - Fixing adding role to a person
 
 Overview of changes in version 0.8.40:
 

@@ -28,6 +28,7 @@
 #include <cdmgr-cfg.h>
 
 #include <gtkmm/label.h>
+#include <gtkmm/stock.h>
 #include <gtkmm/liststore.h>
 
 #include <YGP/Check.h>
@@ -66,7 +67,10 @@ SaveCelebrity::SaveCelebrity (Gtk::Window& parent, const HCelebrity celeb, const
    lstCelebs->append_column (_("Born"), colCeleb.born);
    lstCelebs->append_column (_("Died"), colCeleb.died);
 
+   set_response_sensitive (Gtk::RESPONSE_YES, false);
    lstCelebs->get_selection ()->signal_changed ().connect (mem_fun (*this, &SaveCelebrity::rowSelected));
+
+   add_button (Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
 
    get_vbox ()->pack_start (*manage (lblNewCeleb), false, false, 5);
    get_vbox ()->pack_start (*manage (lstCelebs), false, false, 5);
@@ -116,14 +120,16 @@ SaveCelebrity::~SaveCelebrity () {
 /// Saves a celebrity in the passed role
 /// \param celeb: Celebrity to save
 /// \param role: Role celebrity should have
-/// \throw std::exception: Describing error
+/// \throw
+///   - DlgCanceled if the dialog was canceled
+///   - std::exception: Describing error
 /// \remarks
 ///    - If the celebrity is unsaved (has no id), and the DB contains
 ///      a celebrity with the same name, it checks the DB-tables "Directors",
 ///      "Actors" and "Interpret" for the role of this celebrity
 //-----------------------------------------------------------------------------
 void SaveCelebrity::store (const HCelebrity celeb, const char* role,
-			   Gtk::Widget& parent) throw (std::exception) {
+			   Gtk::Widget& parent) throw (std::exception, DlgCanceled) {
    Check1 (celeb);
    TRACE8 ("SaveCelebrity::store (const HCelebrity, const char*, Gtk::Widget&) - " << celeb->getName ());
 
@@ -136,13 +142,20 @@ void SaveCelebrity::store (const HCelebrity celeb, const char* role,
 	 Check3 (parent.get_toplevel ());
 	 SaveCelebrity dlg (*(Gtk::Window*)parent.get_toplevel (), celeb, celebs);
 	 dlg.get_window ()->set_transient_for (parent.get_window ());
-	 if (dlg.run () == Gtk::RESPONSE_YES) {
+	 switch (dlg.run ()) {
+	 case Gtk::RESPONSE_YES:
 	    Check3 (dlg.getIdOfSelection ());
 
 	    celeb->setId (dlg.getIdOfSelection ());
 	    Storage::updateCelebrity (celeb);
 	    Storage::setRole (celeb->getId (), role);
 	    return;
+
+	 case Gtk::RESPONSE_NO:
+	    break;
+
+	 default:
+	    throw DlgCanceled ();
 	 }
       }
       Storage::insertCelebrity (celeb, role);

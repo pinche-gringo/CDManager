@@ -33,10 +33,18 @@
  */
 class SaveCelebrity : public Gtk::MessageDialog {
  public:
+   /**Dialog-canceled exception
+    */
+   class DlgCanceled : public std::runtime_error {
+    public:
+      explicit DlgCanceled () : std::runtime_error ("By user") { }
+      virtual ~DlgCanceled () throw () { }
+   };
+
    virtual ~SaveCelebrity ();
 
    static void store (const HCelebrity celeb, const char* role,
-		      Gtk::Widget& parent) throw (std::exception);
+		      Gtk::Widget& parent) throw (std::exception, DlgCanceled);
 
  protected:
    SaveCelebrity (Gtk::Window& parent, const HCelebrity celeb, const std::vector<HCelebrity>& celebs);

@@ -5,8 +5,7 @@ CREATE TABLE Celebrities
      id	        BIGINT UNSIGNED   NOT NULL AUTO_INCREMENT,
      born       SMALLINT UNSIGNED NOT NULL DEFAULT 0,
      died       SMALLINT UNSIGNED NOT NULL DEFAULT 0,
-     PRIMARY KEY (id));
-CREATE INDEX names ON Celebrities (name);
+     PRIMARY KEY (id), KEY names (name)) DEFAULT CHARSET=utf8;
 
 CREATE TABLE Directors
     (id	        BIGINT UNSIGNED NOT NULL REFERENCES Celebrities(id),
@@ -21,15 +20,13 @@ CREATE TABLE Movies
      type       INT UNSIGNED    NOT NULL DEFAULT 0,
      languages  VARCHAR(14)     NOT NULL,
      subtitles  VARCHAR(29)     NOT NULL,
-     PRIMARY KEY (id));
-CREATE INDEX movieNames ON Movies (name);
+     PRIMARY KEY (id), KEY movieNames (name)) DEFAULT CHARSET=utf8;
 
 CREATE TABLE MovieNames
     (id         BIGINT UNSIGNED NOT NULL REFERENCES Movies(id),
      name       VARCHAR (64)    NOT NULL,
      language   CHAR(2)         NOT NULL,
-     PRIMARY KEY (id, language));
-CREATE INDEX movieTranlations ON MovieNames (id);
+     PRIMARY KEY (id, language), KEY movieTranslations (id)) DEFAULT CHARSET=utf8;
 
 CREATE TABLE Actors
     (id	        BIGINT UNSIGNED NOT NULL REFERENCES Celebrities(id),
@@ -49,9 +46,7 @@ CREATE TABLE Records
      year       YEAR            NOT NULL DEFAULT 0,
      interpret  BIGINT UNSIGNED NOT NULL REFERENCES Interprets(id),
      genre      int             NOT NULL DEFAULT 0,
-     PRIMARY KEY (id));
-CREATE INDEX recordNames ON Records (name);
-CREATE INDEX recordInterprets ON Records (interpret);
+     PRIMARY KEY (id), KEY recordNames (name), KEY recordInterprets (interpret)) DEFAULT CHARSET=utf8;
 
 CREATE TABLE Songs
     (name       VARCHAR(64)       NOT NULL,
@@ -60,14 +55,12 @@ CREATE TABLE Songs
      idRecord   BIGINT UNSIGNED   NOT NULL REFERENCES Records(id),
      duration   TIME              NOT NULL,
      genre      BIGINT UNSIGNED   DEFAULT 0,
-     PRIMARY KEY (id));
-CREATE INDEX songNames ON Songs (name);
-CREATE INDEX songRecord ON Songs (idRecord);
+     PRIMARY KEY (id), KEY songNames (name), KEY songRecord (idRecord)) DEFAULT CHARSET=utf8;
 
 CREATE TABLE Words
     (word       VARCHAR(32)     CHARACTER SET binary NOT NULL COLLATE 'binary',
-     PRIMARY KEY (word));
+     PRIMARY KEY (word)) DEFAULT CHARSET=utf8;
 
 CREATE TABLE Articles
     (article     VARCHAR(9)    NOT NULL,
-     PRIMARY KEY (article));
+     PRIMARY KEY (article)) DEFAULT CHARSET=utf8;

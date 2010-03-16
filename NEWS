@@ -1,3 +1,10 @@
+Overview of changes in version 0.8.41:
+
+  - Check if a line is valid (especially before saving)
+  - Supporting libmysql++ 3.0
+  - Convert tables to UTF-8
+  ? Fixing adding role to a person
+
 Overview of changes in version 0.8.40:
 
   - Movies: Removing a name/translation removes it immediately

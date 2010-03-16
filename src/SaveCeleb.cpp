@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.1 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 11.03.2006
-//COPYRIGHT   : Copyright (C) 2006, 2009
+//COPYRIGHT   : Copyright (C) 2006, 2009, 2010
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -54,16 +54,8 @@ SaveCelebrity::SaveCelebrity (Gtk::Window& parent, const HCelebrity celeb, const
 
    // Create string identifying celebrity to save
    Glib::ustring newCeleb (celeb->getName ());
-   if (celeb->getBorn () || celeb->getDied ()) {
-      newCeleb += " (";
-      if (celeb->getBorn ())
-	 newCeleb += celeb->getBorn ().toString ();
-      if (celeb->getDied ()) {
-	 newCeleb += '-';
-	 newCeleb += celeb->getDied ().toString ();
-      }
-      newCeleb += ") ";
-   }
+   if (celeb->getBorn () || celeb->getDied ())
+      newCeleb += " (" + celeb->getLifespan () + ") ";
 
    Gtk::Label* lblNewCeleb (new Gtk::Label (newCeleb, Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER));
 

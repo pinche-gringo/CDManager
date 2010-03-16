@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.82 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2009, 2010
+//COPYRIGHT   : Copyright (C) 2004 - 2010
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -284,7 +284,7 @@ void CDManager::editPreferences () {
 /// Shows the about box for the program
 //-----------------------------------------------------------------------------
 void CDManager::showAboutbox () {
-   std::string ver (_("Copyright (C) 2004 - 2009 Markus Schwab"
+   std::string ver (_("Copyright (C) 2004 - 2010 Markus Schwab"
                       "\ne-mail: <g17m0@lusers.sourceforge.net>\n\nCompiled on %1 at %2"));
    ver.replace (ver.find ("%1"), 2, __DATE__);
    ver.replace (ver.find ("%2"), 2, __TIME__);

@@ -1,14 +1,14 @@
 # Spanish translations for the CD-Manager project.
-# Copyright (C) 2004 - 2009 Markus Schwab
+# Copyright (C) 2004 - 2010 Markus Schwab
 # This file is distributed under the GNU General Public License.
-# Markus Schwab <g17m0@users.sourceforge.net>, 2008.
+# Markus Schwab <g17m0@users.sourceforge.net>, 2010.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2009-11-17 17:28+0100\n"
-"PO-Revision-Date: 2009-08-08 15:31+0200\n"
+"POT-Creation-Date: 2010-03-16 19:29+0100\n"
+"PO-Revision-Date: 2010-03-16 19:30+0100\n"
 "Last-Translator: Markus Schwab <g17m0@users.sourceforge.net>\n"
 "Language-Team: Spanish <g17m0@users.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -16,63 +16,63 @@ msgstr ""
 "Content-Transfer-Encoding: 8-bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
-#: src/CDManager.cpp:132
+#: src/CDManager.cpp:133
 msgid "_CD"
 msgstr ""
 
-#: src/CDManager.cpp:133
+#: src/CDManager.cpp:134
 msgid "_Login"
 msgstr "_Conectar ..."
 
-#: src/CDManager.cpp:134
+#: src/CDManager.cpp:135
 msgid "<ctl>L"
 msgstr "<ctl>O"
 
-#: src/CDManager.cpp:138
+#: src/CDManager.cpp:139
 msgid "Log_out"
 msgstr "_Desconectar"
 
-#: src/CDManager.cpp:139
+#: src/CDManager.cpp:140
 msgid "<ctl>O"
 msgstr "<ctl>D"
 
-#: src/CDManager.cpp:142
+#: src/CDManager.cpp:143
 msgid "_Export to HTML"
 msgstr "_Exportar a HTML"
 
-#: src/CDManager.cpp:143
+#: src/CDManager.cpp:144
 msgid "<ctl>E"
 msgstr ""
 
-#: src/CDManager.cpp:147
+#: src/CDManager.cpp:148
 msgid "_Import from file-info ..."
 msgstr "_Importar informaciones de archivos audio  ..."
 
-#: src/CDManager.cpp:148
+#: src/CDManager.cpp:149
 msgid "<ctl>I"
 msgstr ""
 
-#: src/CDManager.cpp:153
+#: src/CDManager.cpp:154
 msgid "_Edit"
 msgstr "_Editar"
 
-#: src/CDManager.cpp:154
+#: src/CDManager.cpp:155
 msgid "_Options"
 msgstr "_Opciones"
 
-#: src/CDManager.cpp:156
+#: src/CDManager.cpp:157
 msgid "F9"
 msgstr ""
 
-#: src/CDManager.cpp:158
+#: src/CDManager.cpp:159
 msgid "_Save preferences"
 msgstr "_Guardar preferencias"
 
-#: src/CDManager.cpp:159
+#: src/CDManager.cpp:160
 msgid "<ctl>F9"
 msgstr ""
 
-#: src/CDManager.cpp:192 src/CDWriter.cpp:262
+#: src/CDManager.cpp:193 src/CDWriter.cpp:262
 msgid ""
 "Can't read datafile containing the genres!\n"
 "\n"
@@ -82,23 +82,23 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/CDManager.cpp:207
+#: src/CDManager.cpp:208
 msgid "_Records"
 msgstr "_Discos"
 
-#: src/CDManager.cpp:213
+#: src/CDManager.cpp:214
 msgid "_Movies"
 msgstr "_Películas"
 
-#: src/CDManager.cpp:219
+#: src/CDManager.cpp:220
 msgid "_Actors"
 msgstr "_Actores"
 
-#: src/CDManager.cpp:222
+#: src/CDManager.cpp:223
 msgid "Connect to a database ..."
 msgstr "Conectar a base de datos .."
 
-#: src/CDManager.cpp:253
+#: src/CDManager.cpp:256
 msgid ""
 "Error saving data!\n"
 "\n"
@@ -108,35 +108,35 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/CDManager.cpp:265
+#: src/CDManager.cpp:268
 msgid "Select file(s) to import"
 msgstr "Elige fichero(s) para importar"
 
-#: src/CDManager.cpp:284
+#: src/CDManager.cpp:287
 msgid ""
-"Copyright (C) 2004 - 2009 Markus Schwab\n"
+"Copyright (C) 2004 - 2010 Markus Schwab\n"
 "e-mail: <g17m0@lusers.sourceforge.net>\n"
 "\n"
 "Compiled on %1 at %2"
 msgstr ""
-"Copyright © 2004 - 2009 Markus Schwab\n"
+"Copyright © 2004 - 2010 Markus Schwab\n"
 "correo-e: g17m0@users.sourceforge.net\n"
 "\n"
 "Compilado el %1 a las %2"
 
-#: src/CDManager.cpp:308
+#: src/CDManager.cpp:311
 msgid "Database login"
 msgstr "Conectar a base de datos "
 
-#: src/CDManager.cpp:351
+#: src/CDManager.cpp:354
 msgid "Reading database ..."
 msgstr "Leyendo de base de datos ..."
 
-#: src/CDManager.cpp:412
+#: src/CDManager.cpp:415
 msgid "The data has been modified! Save those changes?"
 msgstr "¡Los datos han estado modificado! ¿Quiere guardar esos cambios?"
 
-#: src/CDManager.cpp:435
+#: src/CDManager.cpp:438
 msgid ""
 "Can't connect to database!\n"
 "\n"
@@ -146,11 +146,11 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/CDManager.cpp:438
+#: src/CDManager.cpp:441
 msgid "Login error"
 msgstr "Falla de conección"
 
-#: src/CDManager.cpp:448
+#: src/CDManager.cpp:451
 msgid ""
 "Can't query needed information!\n"
 "\n"
@@ -160,11 +160,11 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/CDManager.cpp:473
+#: src/CDManager.cpp:476
 msgid "Disconnected!"
 msgstr "¡Desconectado!"
 
-#: src/CDManager.cpp:496 src/CDWriter.cpp:726
+#: src/CDManager.cpp:499 src/CDWriter.cpp:726
 msgid ""
 "Can't create file `%1'!\n"
 "\n"
@@ -174,7 +174,7 @@ msgstr ""
 "\n"
 "Causa: %2"
 
-#: src/CDManager.cpp:518
+#: src/CDManager.cpp:521
 msgid ""
 "Can't store special names!\n"
 "\n"
@@ -184,15 +184,15 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/CDManager.cpp:565
+#: src/CDManager.cpp:568
 msgid "Exporting (language %1) ..."
 msgstr "Exportando (idioma %1) ..."
 
-#: src/CDManager.cpp:602
+#: src/CDManager.cpp:605
 msgid "Export Warning!"
 msgstr "¡Aviso exportando!"
 
-#: src/CDManager.cpp:632
+#: src/CDManager.cpp:635
 msgid ""
 "Can't open file `%1'!\n"
 "\n"
@@ -432,12 +432,11 @@ msgstr "Compilado el"
 
 #: src/CDAppl.cpp:204
 msgid ""
-"Copyright (C) 2004 - 2009 Markus Schwab; e-mail: g17m0@users.sourceforge."
+"Copyright (C) 2004 - 2010 Markus Schwab; e-mail: g17m0@users.sourceforge."
 "net\n"
 "Distributed under the terms of the GNU General Public License"
 msgstr ""
-"Copyright © 2004 - 2009 Markus Schwab; correo-e: g17m0@users.sourceforge."
-"net\n"
+"Copyright © 2004 - 2010 Markus Schwab; correo-e: g17m0@users.sourceforge.net\n"
 "Distribuido bajo las condiciones de la GNU Licensia General Público"
 
 #: src/Settings.cpp:62
@@ -535,7 +534,7 @@ msgid "Director"
 msgstr "Director"
 
 #: src/CDWriter.cpp:201 src/CDWriter.cpp:522 src/CDWriter.cpp:536
-#: src/SaveCeleb.cpp:73
+#: src/SaveCeleb.cpp:66
 msgid "Name"
 msgstr "Nombre"
 
@@ -821,30 +820,30 @@ msgstr "Películas con %1"
 msgid "Available directors/movies"
 msgstr "Directores/Películas disponibles"
 
-#: src/SaveCeleb.cpp:48
+#: src/SaveCeleb.cpp:49
 msgid "A celebrity with the same name already exists! Are they identic?"
 msgstr "¡Ya hay una celebridad con el mismo nombre! ¿Son identicas?"
 
-#: src/SaveCeleb.cpp:51
+#: src/SaveCeleb.cpp:52
 msgid "Choose matching celebrity"
 msgstr "Elige celebridad"
 
-#: src/SaveCeleb.cpp:74
+#: src/SaveCeleb.cpp:67
 msgid "Born"
 msgstr "Nacido"
 
-#: src/SaveCeleb.cpp:75
+#: src/SaveCeleb.cpp:68
 msgid "Died"
 msgstr "Muerto"
 
-#: src/SaveCeleb.cpp:86
+#: src/SaveCeleb.cpp:82
 msgid "actor"
 msgstr "actor"
 
-#: src/SaveCeleb.cpp:87
+#: src/SaveCeleb.cpp:83
 msgid "interpret"
 msgstr "artista"
 
-#: src/SaveCeleb.cpp:88
+#: src/SaveCeleb.cpp:84
 msgid "director"
 msgstr "director"

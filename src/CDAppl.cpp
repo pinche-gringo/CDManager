@@ -60,7 +60,7 @@ CDAppl::~CDAppl () {
 /// Displays the help
 //-----------------------------------------------------------------------------
 void CDAppl::showHelp () const {
-   std::cout << _("Utility to manage CDs\n\nUsage:") << PACKAGE
+   std::cout << _("Utility to manage CDs\n\nUsage: ") << PACKAGE
              << _(" [OPTIONS]\n\n")
              << "  -u, --user ....... " << _("[USER] User for database login\n")
              << "  -p, --password ... " << _("[PWD] Password for database login\n")
@@ -68,20 +68,20 @@ void CDAppl::showHelp () const {
              << "  -V, --version .... " << _("Output version information and exit\n")
              << "  -h, -?, --help ... " << _("Displays this help and exit\n\n")
              << _("The INI file can have the following entries:\n\n")
-             <<  ("  [Database]\n"
-		  "  User=user\n"
-		  "  Password=pwd\n\n"
-		  "  [Export]\n"
-		  "  MovieHead=Movies.head\n"
-		  "  MovieFoot=Movies.foot\n"
-		  "  RecordHead=Records.head\n"
-		  "  RecordFoot=Records.foot\n"
-		  "  OutputDir=/var/www/cds/\n"
+             << ("  [Database]\n"
+		 "  User=user\n"
+		 "  Password=pwd\n\n"
+		 "  [Export]\n"
+		 "  MovieHead=Movies.head\n"
+		 "  MovieFoot=Movies.foot\n"
+		 "  RecordHead=Records.head\n"
+		 "  RecordFoot=Records.foot\n"
+		 "  OutputDir=/var/www/cds/\n"
 #if WITH_MOVIES == 1
-		  "  \n[Movies]\n"
-		  "  Language=de\n"
+		 "  \n  [Movies]\n"
+		 "  Language=de\n"
 #endif
-);
+		 );
 }
 
 //-----------------------------------------------------------------------------

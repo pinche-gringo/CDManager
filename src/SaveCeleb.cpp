@@ -54,7 +54,7 @@ SaveCelebrity::SaveCelebrity (Gtk::Window& parent, const HCelebrity celeb, const
 
    // Create string identifying celebrity to save
    Glib::ustring newCeleb (celeb->getName ());
-   if (celeb->getBorn () || celeb->getDied ())
+   if (celeb->getBorn ().isDefined () || celeb->getDied ().isDefined ())
       newCeleb += " (" + celeb->getLifespan () + ") ";
 
    Gtk::Label* lblNewCeleb (new Gtk::Label (newCeleb, Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER));

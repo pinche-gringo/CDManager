@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 21.01.2006
-//COPYRIGHT   : Copyright (C) 2006, 2009
+//COPYRIGHT   : Copyright (C) 2006, 2009, 2010
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -232,7 +232,7 @@ void Storage::updateCelebrity (const HCelebrity celeb) throw (std::exception) {
    Check1 (celeb->getId ());
 
    std::stringstream query;
-   query << "UPDATE Celebrities  SET name=\"" << Database::escapeDBValue (celeb->getName ())
+   query << "UPDATE Celebrities SET name=\"" << Database::escapeDBValue (celeb->getName ())
 	 << "\", born="
 	 << (celeb->getBorn ().isDefined () ? celeb->getBorn () : YGP::AYear (0))
 	 << ", died="

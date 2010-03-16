@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
-//COPYRIGHT   : Copyright (C) 2006, 2009
+//COPYRIGHT   : Copyright (C) 2006, 2009, 2010
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -72,7 +72,7 @@ void StorageMovie::loadNames (const std::vector<HDirector>& directors,
 unsigned int StorageMovie::loadMovies (std::map<unsigned int, std::vector<HMovie> >& aMovies,
 			       YGP::StatusObject& stat) throw (std::exception) {
    Database::execute ("SELECT id, name, director, year, genre, type, languages"
-		      ", subtitles FROM Movies ORDER BY director, year");
+		      ", subtitles FROM Movies ORDER BY director, year, name");
    if (Database::resultSize ()) {
       HMovie movie;
       unsigned int tmp;

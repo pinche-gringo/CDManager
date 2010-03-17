@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2010-03-16 19:35+0100\n"
+"POT-Creation-Date: 2010-03-17 12:18+0100\n"
 "PO-Revision-Date: 2010-03-16 19:35+0100\n"
 "Last-Translator: Markus Schwab <g17m0@users.sourceforge.net>\n"
 "Language-Team: German <g17m0@users.sourceforge.net>\n"
@@ -650,7 +650,7 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/PRecords.cpp:366 src/PActors.cpp:380 src/PMovies.cpp:240
+#: src/PRecords.cpp:366 src/PActors.cpp:381 src/PMovies.cpp:241
 msgid "<ctl>Z"
 msgstr ""
 
@@ -658,7 +658,7 @@ msgstr ""
 msgid "New _interpret"
 msgstr "Neuer _Interpret"
 
-#: src/PRecords.cpp:370 src/PActors.cpp:384 src/PMovies.cpp:244
+#: src/PRecords.cpp:370 src/PActors.cpp:385 src/PMovies.cpp:245
 msgid "<ctl>N"
 msgstr ""
 
@@ -666,7 +666,7 @@ msgstr ""
 msgid "_New record"
 msgstr "_Neues Album"
 
-#: src/PRecords.cpp:373 src/PActors.cpp:387 src/PMovies.cpp:247
+#: src/PRecords.cpp:373 src/PActors.cpp:388 src/PMovies.cpp:248
 msgid "<ctl><alt>N"
 msgstr ""
 
@@ -678,15 +678,15 @@ msgstr "Neues _Lied"
 msgid "<ctl><shft>N"
 msgstr ""
 
-#: src/PRecords.cpp:378 src/PActors.cpp:389 src/PMovies.cpp:249
+#: src/PRecords.cpp:378 src/PActors.cpp:390 src/PMovies.cpp:250
 msgid "_Delete"
 msgstr "_Löschen"
 
-#: src/PRecords.cpp:379 src/PActors.cpp:390 src/PMovies.cpp:250
+#: src/PRecords.cpp:379 src/PActors.cpp:391 src/PMovies.cpp:251
 msgid "<ctl>Delete"
 msgstr ""
 
-#: src/PRecords.cpp:701 src/PMovies.cpp:583
+#: src/PRecords.cpp:701 src/PMovies.cpp:584
 msgid ""
 "Couldn't write data!\n"
 "\n"
@@ -700,21 +700,21 @@ msgstr ""
 msgid "Error exporting records to HTML!"
 msgstr "Fehler beim Exportieren der Platten zu HTML!"
 
-#: src/PActors.cpp:306
+#: src/PActors.cpp:307
 msgid "The database contains an invalid reference (%1) to a movie!"
 msgstr "Die Datenbank enthält eine ungültige Referenz (%1) zu einem Film!"
 
-#: src/PActors.cpp:325
+#: src/PActors.cpp:326
 msgid "Loaded %1 actor"
 msgid_plural "Loaded %1 actors"
 msgstr[0] "%1 Schauspieler"
 msgstr[1] "%1 Schauspieler"
 
-#: src/PActors.cpp:332
+#: src/PActors.cpp:333
 msgid "Warnings loading actors!"
 msgstr "Warnungen beim Laden der Schauspieler"
 
-#: src/PActors.cpp:337
+#: src/PActors.cpp:338
 msgid ""
 "Can't query the actors1!\n"
 "\n"
@@ -724,61 +724,61 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/PActors.cpp:383
+#: src/PActors.cpp:384
 msgid "New _actor"
 msgstr "Neuer _Schauspieler"
 
-#: src/PActors.cpp:386
+#: src/PActors.cpp:387
 msgid "_Plays in movie..."
 msgstr "Spielt in _Film..."
 
-#: src/PActors.cpp:396
+#: src/PActors.cpp:397
 msgid "_View"
 msgstr "_Ansicht"
 
-#: src/PActors.cpp:398
+#: src/PActors.cpp:399
 msgid "By _actor"
 msgstr "Nach _Schauspieler"
 
-#: src/PActors.cpp:400
+#: src/PActors.cpp:401
 msgid "By _movie"
 msgstr "Nach _Film"
 
-#: src/PActors.cpp:637 src/ActorList.cpp:58
+#: src/PActors.cpp:638 src/ActorList.cpp:58
 msgid "Actors/Movies"
 msgstr "Schauspieler/Filme"
 
-#: src/PActors.cpp:663
+#: src/PActors.cpp:664
 msgid "Movies/Actors"
 msgstr "Filme/Schauspieler"
 
-#: src/PMovies.cpp:189
+#: src/PMovies.cpp:190
 msgid "_Original name"
 msgstr "Name (_Original)"
 
-#: src/PMovies.cpp:243
+#: src/PMovies.cpp:244
 msgid "New _director"
 msgstr "Neuer _Regiseur"
 
-#: src/PMovies.cpp:246
+#: src/PMovies.cpp:247
 msgid "_New movie"
 msgstr "_Neuer Film"
 
-#: src/PMovies.cpp:253
+#: src/PMovies.cpp:254
 msgid "_Language"
 msgstr "_Sprache"
 
-#: src/PMovies.cpp:384
+#: src/PMovies.cpp:385
 msgid "Loaded %1 movie"
 msgid_plural "Loaded %1 movies"
 msgstr[0] "%1 Film geladen"
 msgstr[1] "%1 Filme geladen"
 
-#: src/PMovies.cpp:391
+#: src/PMovies.cpp:392
 msgid "Warnings loading movies"
 msgstr "Warnungen beim Laden der Filme"
 
-#: src/PMovies.cpp:396 src/PMovies.cpp:417
+#: src/PMovies.cpp:397 src/PMovies.cpp:418
 msgid ""
 "Can't query available movies!\n"
 "\n"
@@ -788,7 +788,7 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/PMovies.cpp:586
+#: src/PMovies.cpp:587
 msgid "Error exporting movies to HTML!"
 msgstr "Fehler beim Exportieren der Filme zu HTML!"
 

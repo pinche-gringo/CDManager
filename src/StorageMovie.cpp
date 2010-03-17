@@ -121,10 +121,8 @@ void StorageMovie::saveMovie (const HMovie movie, unsigned int idDirector) throw
 	 << "\", genre=" << movie->getGenre () << ", languages=\""
 	 << movie->getLanguage () << "\", subtitles=\""
 	 << movie->getTitles () << "\", type=" << movie->getType ()
-	 << ", director=" << idDirector;
-
-   if (movie->getYear ())
-      query << ", year=" << movie->getYear ();
+	 << ", director=" << idDirector << ", year="
+	 << (movie->getYear ().isDefined () ? (int)movie->getYear () : 0);
    if (movie->getId ())
       query << " WHERE id=" << movie->getId ();
 

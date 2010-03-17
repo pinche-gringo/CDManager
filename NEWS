@@ -1,10 +1,11 @@
 Overview of changes in version 0.8.41:
 
-  - Check if a line is valid (especially before saving)
+  - Movies: Fixed saving entries without year
+  - Better handling adding new entries (select lines in edit-mode)
   - Supporting libmysql++ 3.0
   - Convert tables to UTF-8
   - Movies: Default sort is by director, year, name
-  - Fixing adding role to a person
+  - Fixed adding a role to a person
 
 Overview of changes in version 0.8.40:
 

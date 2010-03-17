@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.20 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
-//COPYRIGHT   : Copyright (C) 2006, 2007, 2009
+//COPYRIGHT   : Copyright (C) 2006, 2007, 2009, 2010
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -393,7 +393,7 @@ Gtk::TreeIter PRecords::addInterpret (const HInterpret& interpret) {
 
    Gtk::TreeModel::iterator i (records.append (interpret));
    Gtk::TreePath path (records.getModel ()->get_path (i));
-   records.set_cursor (path);
+   records.set_cursor (path, *records.get_column (0), true);
 
    aUndo.push (Undo (Undo::INSERT, INTERPRET, 0, interpret, path, ""));
    apMenus[UNDO]->set_sensitive ();
@@ -412,7 +412,7 @@ Gtk::TreeIter PRecords::addRecord (Gtk::TreeIter& parent, HRecord& record) {
    Glib::RefPtr<Gtk::TreeStore> model (records.getModel ());
    records.expand_row (model->get_path (parent), false);
    Gtk::TreePath path (records.getModel ()->get_path (i));
-   records.set_cursor (path);
+   records.set_cursor (path, *records.get_column (0), true);
 
    HInterpret interpret;
    interpret = records.getInterpretAt (parent);
@@ -439,7 +439,7 @@ Gtk::TreeIter PRecords::addSong (HSong& song) {
    relSongs.relate (record, song);
    Gtk::TreeIter iterSong (songs.append (song));
    Gtk::TreePath pathSong (songs.getModel ()->get_path (iterSong));
-   songs.set_cursor (pathSong);
+   songs.set_cursor (pathSong, *songs.get_column (0), true);
 
    Gtk::TreePath path (*list.begin ());
    aUndo.push (Undo (Undo::INSERT, SONG, 0, song, path, ""));
@@ -864,7 +864,6 @@ void PRecords::undoRecord (const Undo& last) {
    }
    records.set_cursor (path);
    records.scroll_to_row (path, 0.8);
-   // records.get_selection ()->select (p);
 }
 
 //-----------------------------------------------------------------------------
@@ -924,7 +923,6 @@ void PRecords::undoInterpret (const Undo& last) {
    }
    records.set_cursor (path);
    records.scroll_to_row (path, 0.8);
-   // records.get_selection ()->select (p);
 }
 
 //-----------------------------------------------------------------------------
@@ -997,7 +995,6 @@ void PRecords::undoSong (const Undo& last) {
    }
    songs.set_cursor (path);
    songs.scroll_to_row (path, 0.8);
-   // songs.get_selection ()->select (p);
 }
 
 //-----------------------------------------------------------------------------

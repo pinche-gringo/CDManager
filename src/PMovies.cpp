@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.18 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
-//COPYRIGHT   : Copyright (C) 2006, 2009
+//COPYRIGHT   : Copyright (C) 2006, 2009, 2010
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -97,7 +97,7 @@ void PMovies::newDirector () {
    Gtk::TreeModel::iterator i (movies.append (director));
    Gtk::TreePath path (movies.getModel ()->get_path (i));
    movies.selectRow (i);
-   movies.set_cursor (path);
+   movies.set_cursor (path, *movies.get_column (0), true);
 
    aUndo.push (Undo (Undo::INSERT, DIRECTOR, 0, director, path, ""));
    apMenus[UNDO]->set_sensitive ();
@@ -119,8 +119,9 @@ void PMovies::newMovie () {
    HMovie movie (new Movie);
    Gtk::TreeIter i (movies.append (movie, *p));
    Gtk::TreePath path (movies.getModel ()->get_path (i));
-   movies.expand_row (path, false);
+   movies.expand_row (movies.getModel ()->get_path (p), false);
    movies.selectRow (i);
+   movies.set_cursor (path, *movies.get_column (0), true);
 
    HDirector director;
    director = movies.getDirectorAt (p);

@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.17 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
-//COPYRIGHT   : Copyright (C) 2006, 2009
+//COPYRIGHT   : Copyright (C) 2006, 2009, 2010
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -138,6 +138,7 @@ void PActors::newActor () {
 
    Gtk::TreePath path (actors.get_model ()->get_path (i));
    actors.selectRow (i);
+   actors.set_cursor (path, *actors.get_column (0), true);
 
    aUndo.push (Undo (Undo::INSERT, ACTOR, 0, actor, path, ""));
 

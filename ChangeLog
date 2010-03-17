@@ -1,3 +1,53 @@
+2010-03-17 12:20:46 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+	* ChangeLog: Changes of V0.8.41 documented
+
+        * po/*.po: Actualised
+
+2010-03-17 11:42:33 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * CDManager: Better handling adding new entries (select lines in edit-mode)
+
+2010-03-17 10:56:31 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/StorageMovie.cpp: Fixed saving entries without year
+
+2010-03-17 10:25:23 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * README: Actualised copyright
+
+2010-03-16 19:36:32 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Fixed formatting of help-message (of command-line application)
+
+2010-03-16 19:31:53 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Updated copyright to 2001
+
+2010-03-16 12:04:16 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Fixed saving same-named persons; can also be canceled
+
+2010-03-16 11:08:16 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/Storage.cpp: Removed unneeded space out of SQL statement
+
+2010-03-16 11:06:11 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/SaveCeleb.cpp: Fixed check if celebrity has a born/died-dated
+
+2010-03-16 10:32:07 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Movies: Default sort is by director, year, name
+
+2010-03-16 10:26:56 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * SQL/createDB.sql: Using UTF-8 as default charset
+
+2010-03-11 23:33:11 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/DB.cpp: Adapted to libmysqlpp 3.0
+
 2009-11-17 17:29:12 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
 
 	* ChangeLog, NEWS: Changes of V0.8.40 documented

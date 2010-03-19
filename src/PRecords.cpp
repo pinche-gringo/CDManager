@@ -29,6 +29,7 @@
 
 #include <unistd.h>
 
+#include <fstream>
 #include <sstream>
 
 #include <gtkmm/paned.h>
@@ -42,6 +43,7 @@
 #include <YGP/ANumeric.h>
 #include <YGP/StatusObj.h>
 
+#include <XGP/XFileDlg.h>
 #include <XGP/MessageDlg.h>
 
 #include "SaveCeleb.h"
@@ -360,6 +362,8 @@ void PRecords::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAct
 	  "<menuitem action='NSong'/>"
 	  "<separator/>"
 	  "<menuitem action='RDelete'/>"
+	  "<separator/>"
+	  "<menuitem action='Import'/>"
 	  "</placeholder></menu>");
 
    grpAction->add (apMenus[UNDO] = Gtk::Action::create ("RUndo", Gtk::Stock::UNDO),
@@ -378,9 +382,169 @@ void PRecords::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAct
    grpAction->add (apMenus[DELETE] = Gtk::Action::create ("RDelete", Gtk::Stock::DELETE, _("_Delete")),
 		   Gtk::AccelKey (_("<ctl>Delete")),
 		   mem_fun (*this, &PRecords::deleteSelection));
+   grpAction->add (Gtk::Action::create ("Import", _("_Import from file-info ...")),
+		   Gtk::AccelKey (_("<ctl>I")),
+		   mem_fun (*this, &PRecords::importFromFileInfo));
 
    apMenus[UNDO]->set_sensitive (false);
    recordSelected ();
+}
+
+//-----------------------------------------------------------------------------
+/// Imports information from audio file (e.g. MP3-ID3 tag or OGG-commentheader)
+//-----------------------------------------------------------------------------
+void PRecords::importFromFileInfo () {
+   XGP::FileDialog::create (_("Select file(s) to import"),
+			    Gtk::FILE_CHOOSER_ACTION_OPEN,
+			    XGP::FileDialog::MUST_EXIST
+			    | XGP::FileDialog::MULTIPLE)
+      ->sigSelected.connect (mem_fun (*this, &PRecords::parseFileInfo));
+}
+
+//-----------------------------------------------------------------------------
+/// Reads the ID3 information from a MP3 file
+/// \param file: Name of file to analzye
+//-----------------------------------------------------------------------------
+void PRecords::parseFileInfo (const std::string& file) {
+   TRACE8 ("PRecords::parseFileInfo (const std::string&) - " << file);
+   Check2 (file.size ());
+
+   std::ifstream stream (file.c_str ());
+   Glib::ustring artist, record, song;
+   unsigned int track (0);
+   if (!stream) {
+      Glib::ustring err (_("Can't open file `%1'!\n\nReason: %2"));
+      err.replace (err.find ("%1"), 2, file);
+      err.replace (err.find ("%2"), 2, strerror (errno));
+      Gtk::MessageDialog (err).run ();
+      return;
+   }
+
+   std::string extension (file.substr (file.size () - 4));
+   TRACE1 ("PRecords::parseFileInfo (const std::string&) - Type: " << extension);
+   if (((extension == ".mp3")
+	&& parseMP3Info (stream, artist, record, song, track))
+       || ((extension == ".ogg")
+	   && parseOGGCommentHeader (stream, artist, record, song, track))) {
+      TRACE8 ("PRecords::parseFileInfo (const std::string&) - " << artist
+	      << '/' << record << '/' << song << '/' << track);
+      Check1 (typeid (**pages) == typeid (PRecords));
+      addEntry (artist, record, song, track);
+   }
+}
+
+//-----------------------------------------------------------------------------
+/// Reads the ID3 information from a MP3 file
+/// \param stream: MP3-file to analyze
+/// \param artist: Found artist
+/// \param record: Found record name
+/// \param song: Found song
+/// \param track: Tracknumber
+/// \returns bool: True, if ID3 info has been found
+//-----------------------------------------------------------------------------
+bool PRecords::parseMP3Info (std::istream& stream, Glib::ustring& artist,
+			      Glib::ustring& record, Glib::ustring& song,
+			      unsigned int& track) {
+   stream.seekg (-0x80, std::ios::end);
+   std::string value;
+
+   std::getline (stream, value, '\xff');
+   TRACE8 ("PRecords::parseMP3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Found: "
+	   << value << "; Length: " << value.size ());
+   if ((value.size () > 3) && (value[0] == 'T') && (value[1] == 'A') && (value[2] == 'G')) {
+      song = Glib::locale_to_utf8 (stripString (value, 3, 29));
+      artist = Glib::locale_to_utf8 (stripString (value, 33, 29));
+      record = Glib::locale_to_utf8 (stripString (value, 63, 29));
+      track = (value[0x7d] != 0x20) ? value[0x7e] : 0;
+      return true;
+   }
+   return false;
+}
+
+//-----------------------------------------------------------------------------
+/// Reads the OGG comment header from an OGG vorbis encoded file
+/// \param stream: OGG-file to analyze
+/// \param artist: Found artist
+/// \param record: Found record name
+/// \param song: Found song
+/// \param track: Tracknumber
+/// \returns bool: True, if comment header has been found
+//-----------------------------------------------------------------------------
+bool PRecords::parseOGGCommentHeader (std::istream& stream, Glib::ustring& artist,
+				       Glib::ustring& record, Glib::ustring& song,
+				       unsigned int& track) {
+   char buffer[512];
+   stream.read (buffer, 4);
+   if ((*buffer != 'O') && (buffer[1] != 'g') && (buffer[2] != 'g') && (buffer[3] != 'S'))
+      return false;
+
+   stream.seekg (0x69, std::ios::cur);
+   unsigned int len (0);
+   stream.read ((char*)&len, 4);                // Read the vendorstring-length
+   TRACE8 ("PRecords::parseOGGCommentHeader (std::istream&, 3x Glib::ustring&, unsigned&) - Length: " << len);
+   stream.seekg (len, std::ios::cur);
+
+   unsigned int cComments (0);
+   stream.read ((char*)&cComments, 4);               // Read number of comments
+   TRACE8 ("PRecords::parseOGGCommentHeader (std::istream&, 3x Glib::ustring&, unsigned&) - Comments: " << cComments);
+   if (!cComments)
+      return false;
+
+   std::string key;
+   Glib::ustring *value (NULL);
+   do {
+      stream.read ((char*)&len, 4);                  // Read the comment-length
+
+      std::getline (stream, key, '=');
+      len -= key.size () + 1;
+      TRACE8 ("PRecords::parseOGGCommentHeader (std::stream&, 3x Glib::ustring&, unsigned&) - Key: " << key);
+
+      if (key == "TITLE")
+	 value = &song;
+      else if (key == "ALBUM")
+	 value = &record;
+      else if (key == "ARTIST")
+	 value = &artist;
+      else if (key == "TRACKNUMBER") {
+	 Check2 (len < sizeof (buffer));
+	 stream.read (buffer, len);
+	 track = strtoul (buffer, NULL, 10);
+	 value = NULL;
+	 len = 0;
+      }
+      else
+	 value = NULL;
+
+      if (value) {
+	 unsigned int read (0);
+	 do {
+	    read = stream.readsome (buffer, (len > sizeof (buffer)) ? sizeof (buffer) - 1 : len);
+	    len -= read;
+	    buffer[read] = '\0';
+	    value->append (buffer);
+ 	 } while (len);
+      }
+      else
+	 stream.seekg (len, std::ios::cur);
+   } while (--cComments);  // end-do while comments
+   return true;
+}
+
+//-----------------------------------------------------------------------------
+/// Returns the specified substring, removed from trailing spaces
+/// \param value: String to manipulate
+/// \param pos: Starting pos inside the string
+/// \param len: Maximal length of string
+/// \returns std::string: Stripped value
+//-----------------------------------------------------------------------------
+std::string PRecords::stripString (const std::string& value, unsigned int pos, unsigned int len) {
+   len += pos;
+   while (len > pos) {
+      if ((value[len] != ' ') && (value[len]))
+         break;
+      --len;
+   }
+   return (pos == len) ? " " : value.substr (pos, len - pos + 1);
 }
 
 //-----------------------------------------------------------------------------

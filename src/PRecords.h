@@ -88,6 +88,18 @@ class PRecords : public NBPage {
 
    void loadSongs (const HRecord& record);
 
+   //@{
+   /// Importing from file-information
+   void importFromFileInfo ();
+   std::string stripString (const std::string& value, unsigned int pos, unsigned int len);
+   void parseFileInfo (const std::string& file);
+   bool parseMP3Info (std::istream& stream, Glib::ustring& artist,
+		      Glib::ustring& record, Glib::ustring& song, unsigned int& track);
+   bool parseOGGCommentHeader (std::istream& stream, Glib::ustring& artist,
+			       Glib::ustring& record, Glib::ustring& song,
+			       unsigned int& track);
+   //@}
+
    enum { INTERPRET, RECORD, SONG };
 
    RecordList records;                              // GUI-element holding records

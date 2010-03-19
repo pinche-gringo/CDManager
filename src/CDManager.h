@@ -65,9 +65,6 @@ class CDManager : public XGP::XApplication {
    void save ();
    void showLogin ();
    void logout ();
-#if WITH_RECORDS == 1
-   void importFromFileInfo ();
-#endif
 #if (WITH_RECORDS == 1) || (WITH_MOVIES == 1)
    void export2HTML ();
 #endif
@@ -86,16 +83,6 @@ class CDManager : public XGP::XApplication {
    void exit ();
    bool on_delete_event (GdkEventAny*);
 
-#if WITH_RECORDS == 1
-   std::string stripString (const std::string& value, unsigned int pos, unsigned int len);
-   void parseFileInfo (const std::string& file);
-   bool parseMP3Info (std::istream& stream, Glib::ustring& artist,
-		      Glib::ustring& record, Glib::ustring& song, unsigned int& track);
-   bool parseOGGCommentHeader (std::istream& stream, Glib::ustring& artist,
-			       Glib::ustring& record, Glib::ustring& song,
-			       unsigned int& track);
-#endif
-
    static const char* xpmProgram[];
    static const char* xpmAuthor[];
 
@@ -113,9 +100,6 @@ class CDManager : public XGP::XApplication {
    enum { LOGIN = 0, SAVE, LOGOUT, MEDIT, SAVE_PREFS,
 #if (WITH_RECORDS == 1) || (WITH_MOVIES == 1)
 	  EXPORT,
-#endif
-#if WITH_RECORDS == 1
-	  IMPORT_MP3,
 #endif
    	  LAST };
    Glib::RefPtr<Gtk::Action> apMenus[LAST];

@@ -49,6 +49,7 @@
 
 #include "LangImg.h"
 #include "SaveCeleb.h"
+#include "ImportIMDb.h"
 #include "StorageMovie.h"
 
 #include "PMovies.h"
@@ -234,6 +235,8 @@ void PMovies::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActi
 	  "<menuitem action='NMovie'/>"
 	  "<separator/>"
 	  "<menuitem action='MDelete'/>"
+	  "<separator/>"
+	  "<menuitem action='MImport'/>"
 	  "</placeholder></menu>"
 	  "<placeholder name='Other'><menu action='Lang'>");
 
@@ -250,6 +253,8 @@ void PMovies::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActi
    grpAction->add (apMenus[DELETE] = Gtk::Action::create ("MDelete", Gtk::Stock::DELETE, _("_Delete")),
 		   Gtk::AccelKey (_("<ctl>Delete")),
 		   mem_fun (*this, &PMovies::deleteSelection));
+   grpAction->add (Gtk::Action::create ("MImport", _("_Import from IMDb.com")),
+		   Gtk::AccelKey (_("<ctl>I")), mem_fun (*this, &PMovies::importFromIMDb));
 
    grpAction->add (Gtk::Action::create ("Lang", _("_Language")));
    addLanguageMenus (ui, grpAction);
@@ -774,3 +779,11 @@ void PMovies::clear () {
    NBPage::clear ();
    loadedLangs.clear ();
 }
+
+//-----------------------------------------------------------------------------
+/// Opens a dialog allowing to import information for a movie from IMDb.com
+//-----------------------------------------------------------------------------
+void PMovies::importFromIMDb () {
+   ImportFromIMDb::create ();
+}
+

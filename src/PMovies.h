@@ -86,6 +86,8 @@ class PMovies : public NBPage {
    void undoMovie (const Undo& last);
    void undoDirector (const Undo& last);
 
+   void importFromIMDb ();
+
    void movieSelected ();
    HMovie findMovie (unsigned int id) const {
       return findMovie (directors, relMovies, id);

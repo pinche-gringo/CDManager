@@ -244,7 +244,7 @@ void ImportFromIMDb::written (const boost::system::error_code& err) {
 /// \param err Error-information (in case of error)
 //-----------------------------------------------------------------------------
 void ImportFromIMDb::readStatus (const boost::system::error_code& err) {
-   TRACE1 ("ImportFromIMDb::readStatus (boost::system::error_code&");
+   TRACE1 ("ImportFromIMDb::readStatus (boost::system::error_code&)");
 
    if (!err) {
       // Check that response is OK.
@@ -284,12 +284,22 @@ void ImportFromIMDb::readStatus (const boost::system::error_code& err) {
 /// \param err Error-information (in case of error)
 //-----------------------------------------------------------------------------
 void ImportFromIMDb::readHeaders (const boost::system::error_code& err) {
-   TRACE1 ("ImportFromIMDb::readHeaders (boost::system::error_code&");
+   TRACE1 ("ImportFromIMDb::readHeaders (boost::system::error_code&)");
 
    if (!err) {
+      // Skip the response headers.
+      std::istream response (&buf);
+      std::string line;
+      while (std::getline (response, line) && (line != "\r"))
+	 ;
+
       // Read the remaining content
       contentIMDb.clear ();
-      boost::asio::async_read (sockIO, buf,
+      while (std::getline (response, line))
+	 contentIMDb += line;
+      TRACE8 ("ImportFromIMDb::readHeaders (boost::system::error_code&) - " << contentIMDb);
+
+      boost::asio::async_read (sockIO, buf, boost::asio::transfer_at_least (1),
 			       boost::bind (&ImportFromIMDb::readContent, this,
 					    boost::asio::placeholders::error));
    }
@@ -302,21 +312,26 @@ void ImportFromIMDb::readHeaders (const boost::system::error_code& err) {
 /// \param err Error-information (in case of error)
 //-----------------------------------------------------------------------------
 void ImportFromIMDb::readContent (const boost::system::error_code& err) {
-   TRACE1 ("ImportFromIMDb::readContent (boost::system::error_code&");
+   TRACE1 ("ImportFromIMDb::readContent (boost::system::error_code&)");
 
    if (!err) {
-      Glib::ustring value;
+      std::string line;;
       std::istream response (&buf);
-      response >> value;
-      contentIMDb += value;
+      while (std::getline (response, line)) {
+	 TRACE8 ("ImportFromIMDb::readContent (boost::system::error_code&) - " << line);
+	 contentIMDb += line;
+      }
+
       // Continue reading remaining data until EOF.
       boost::asio::async_read (sockIO, buf,
 			      boost::asio::transfer_at_least (1),
 			       boost::bind (&ImportFromIMDb::readContent, this,
 					    boost::asio::placeholders::error));
    }
-   else if (err == boost::asio::error::eof)
+   else if (err == boost::asio::error::eof) {
+      TRACE9 ("ImportFromIMDb::readContent (boost::system::error_code&) - Final: " << contentIMDb);
       status = CONFIRM;
+   }
    else
       showError (err.message ());
 }

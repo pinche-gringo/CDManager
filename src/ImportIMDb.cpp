@@ -146,6 +146,7 @@ void ImportFromIMDb::connectToIMDb () {
       (query, boost::bind (&ImportFromIMDb::resolved, this,
 			   boost::asio::placeholders::error,
 			   boost::asio::placeholders::iterator));
+   svcIO.run ();
 }
 
 //-----------------------------------------------------------------------------
@@ -161,7 +162,7 @@ void ImportFromIMDb::resolved (const boost::system::error_code& err,
       // Attempt a connection to the first endpoint in the list. Each endpoint
       // will be tried until we successfully establish a connection.
       sockIO.async_connect
-	 (*iEndpoints, boost::bind (&ImportFromIMDb::resolved, this,
+	 (*iEndpoints, boost::bind (&ImportFromIMDb::connected, this,
 				    boost::asio::placeholders::error, iEndpoints));
    }
    else {

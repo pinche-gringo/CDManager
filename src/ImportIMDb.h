@@ -19,8 +19,9 @@
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/streambuf.hpp>
+#include <boost/asio/io_service.hpp>
 #include <boost/asio/placeholders.hpp>
 
 #include <gtkmm/entry.h>
@@ -60,12 +61,12 @@ class ImportFromIMDb : public XGP::XDialog {
    Gtk::Table client;             ///< Pointer to the client information area
    Gtk::Entry txtID;                 ///< Textfield, where user enters the ID
 
-   enum { LOGIN };
+   Glib::ustring contentIMDb;                ///< Page received from IMDb.com
 
    void okEvent ();
 
  private:
-   enum { QUERY, LOADING, CONFIRM } status;
+   volatile enum { QUERY, LOADING, CONFIRM } status;
 
    // Prohibited manager functions
    ImportFromIMDb (const ImportFromIMDb& other);
@@ -73,16 +74,21 @@ class ImportFromIMDb : public XGP::XDialog {
 
    void inputChanged ();
    bool indicateWait (Gtk::ProgressBar* progress);
+   void showError (const Glib::ustring& msg);
 
    void connectToIMDb ();
    void resolved (const boost::system::error_code& err,
 		  boost::asio::ip::tcp::resolver::iterator iEndpoints);
    void connected (const boost::system::error_code& err,
 		  boost::asio::ip::tcp::resolver::iterator iEndpoints);
-
+   void written (const boost::system::error_code& err);
+   void readStatus (const boost::system::error_code& err);
+   void readHeaders (const boost::system::error_code& err);
+   void readContent (const boost::system::error_code& err);
 
    boost::asio::io_service svcIO;
    boost::asio::ip::tcp::socket sockIO;
+   boost::asio::streambuf buf;
 };
 
 #endif

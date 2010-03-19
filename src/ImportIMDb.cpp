@@ -28,7 +28,13 @@
 
 #include <cdmgr-cfg.h>
 
+#include <istream>
+#include <ostream>
+
 #include <boost/bind.hpp>
+#include <boost/asio/read.hpp>
+#include <boost/asio/write.hpp>
+#include <boost/asio/read_until.hpp>
 
 #include <gtkmm/label.h>
 #include <gtkmm/stock.h>
@@ -39,8 +45,13 @@
 #define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
+#include <YGP/ANumeric.h>
 
 #include "ImportIMDb.h"
+
+
+static const char* HOST ("localhost");
+static const char* PORT ("http");
 
 
 //-----------------------------------------------------------------------------
@@ -100,6 +111,7 @@ void ImportFromIMDb::okEvent () {
       status = LOADING;
       ok->set_sensitive (false);
       Gtk::ProgressBar* progress (new Gtk::ProgressBar);
+      progress->set_text (_("Connecting to IMDB.com ..."));
       progress->pulse ();
       progress->show ();
       client.attach (*manage (progress), 0, 2, 1, 2, Gtk::FILL | Gtk::EXPAND,
@@ -139,7 +151,7 @@ bool ImportFromIMDb::indicateWait (Gtk::ProgressBar* progress) {
 //-----------------------------------------------------------------------------
 void ImportFromIMDb::connectToIMDb () {
    TRACE5 ("ImportFromIMDb::connectToIMDb ()");
-   boost::asio::ip::tcp::resolver::query query ("localhost", "http");
+   boost::asio::ip::tcp::resolver::query query (HOST, PORT);
    boost::asio::ip::tcp::resolver resolver (svcIO);
 
    resolver.async_resolve
@@ -156,7 +168,7 @@ void ImportFromIMDb::connectToIMDb () {
 //-----------------------------------------------------------------------------
 void ImportFromIMDb::resolved (const boost::system::error_code& err,
 			       boost::asio::ip::tcp::resolver::iterator iEndpoints) {
-   TRACE7 ("ImportFromIMDb::resolved (error_code&, iterator)");
+   TRACE7 ("ImportFromIMDb::resolved (boost::system::error_code&, iterator)");
 
    if (!err) {
       // Attempt a connection to the first endpoint in the list. Each endpoint
@@ -165,12 +177,20 @@ void ImportFromIMDb::resolved (const boost::system::error_code& err,
 	 (*iEndpoints, boost::bind (&ImportFromIMDb::connected, this,
 				    boost::asio::placeholders::error, iEndpoints));
    }
-   else {
-      status = QUERY;
-      Gtk::MessageDialog dlg (err.message (), Gtk::MESSAGE_ERROR);
-      dlg.run ();
-    }
+   else
+      showError (err.message ());
+}
 
+//-----------------------------------------------------------------------------
+/// Displays an error-message and makes the progress-bar stop
+//-----------------------------------------------------------------------------
+void ImportFromIMDb::showError (const Glib::ustring& msg) {
+   sockIO.close ();
+   svcIO.stop ();
+   status = QUERY;
+   Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+   dlg.run ();
+   inputChanged ();
 }
 
 //-----------------------------------------------------------------------------
@@ -180,13 +200,17 @@ void ImportFromIMDb::resolved (const boost::system::error_code& err,
 //-----------------------------------------------------------------------------
 void ImportFromIMDb::connected (const boost::system::error_code& err,
 			       boost::asio::ip::tcp::resolver::iterator iEndpoints) {
-   TRACE2 ("ImportFromIMDb::connected (error_code&, iterator)");
+   TRACE2 ("ImportFromIMDb::connected (boost::system::error_code&, iterator)");
 
    if (!err) {
       // The connection was successful. Send the request.
-      // boost::asio::async_write(socket_, request_,
-      //			       boost::bind(&client::handle_write_request, this,
-      //					   boost::asio::placeholders::error));
+      std::ostream request (&buf);
+      request << "GET /" << txtID.get_text () << " HTTP/1.0\r\nHost: " << HOST
+	      << "\r\nAccept: */*\r\nConnection: close\r\n\r\n";
+
+      boost::asio::async_write (sockIO, buf,
+				boost::bind (&ImportFromIMDb::written, this,
+					     boost::asio::placeholders::error));
    }
    else {
       // The connection failed. Try the next endpoint in the list.
@@ -196,4 +220,103 @@ void ImportFromIMDb::connected (const boost::system::error_code& err,
       else
 	 resolved (boost::asio::error::host_not_found, iEndpoints);
    }
+}
+
+//-----------------------------------------------------------------------------
+/// Callback after having sent the HTTP-request
+/// \param err Error-information (in case of error)
+//-----------------------------------------------------------------------------
+void ImportFromIMDb::written (const boost::system::error_code& err) {
+   TRACE1 ("ImportFromIMDb::written (boost::system::error_code&");
+
+   if (!err) {
+      // Read the response status line.
+      boost::asio::async_read_until (sockIO, buf, "\r\n",
+				     boost::bind (&ImportFromIMDb::readStatus, this,
+						  boost::asio::placeholders::error));
+   }
+   else
+      showError (err.message ());
+}
+
+//-----------------------------------------------------------------------------
+/// Callback after reading the HTTP-status
+/// \param err Error-information (in case of error)
+//-----------------------------------------------------------------------------
+void ImportFromIMDb::readStatus (const boost::system::error_code& err) {
+   TRACE1 ("ImportFromIMDb::readStatus (boost::system::error_code&");
+
+   if (!err) {
+      // Check that response is OK.
+      std::istream response (&buf);
+      std::string idHTTP;
+      unsigned int nrStatus;
+      std::string msgStatus;
+
+      response >> idHTTP >> nrStatus;
+      std::getline (response, msgStatus);
+
+      if (!response || (idHTTP.substr (0, 5) != "HTTP/")) {
+	 Glib::ustring msg (_("Invalid response: `%1'"));
+	 msg.replace (msg.find ("%1"), 2, idHTTP);
+	 showError (msg);
+	 return;
+      }
+
+      if (nrStatus != 200) {
+	 Glib::ustring msg (_("Response returned with status code %1"));
+	 msg.replace (msg.find ("%1"), 2, YGP::ANumeric (nrStatus).toString ());
+	 showError (msg);
+	 return;
+      }
+
+      // Read the response headers, which are terminated by a blank line.
+      boost::asio::async_read_until (sockIO, buf, "\r\n\r\n",
+				     boost::bind (&ImportFromIMDb::readHeaders, this,
+						  boost::asio::placeholders::error));
+   }
+   else
+      showError (err.message ());
+}
+
+//-----------------------------------------------------------------------------
+/// Callback after reading the headers
+/// \param err Error-information (in case of error)
+//-----------------------------------------------------------------------------
+void ImportFromIMDb::readHeaders (const boost::system::error_code& err) {
+   TRACE1 ("ImportFromIMDb::readHeaders (boost::system::error_code&");
+
+   if (!err) {
+      // Read the remaining content
+      contentIMDb.clear ();
+      boost::asio::async_read (sockIO, buf,
+			       boost::bind (&ImportFromIMDb::readContent, this,
+					    boost::asio::placeholders::error));
+   }
+   else
+      showError (err.message ());
+}
+
+//-----------------------------------------------------------------------------
+/// Callback after reading (a part of) the content
+/// \param err Error-information (in case of error)
+//-----------------------------------------------------------------------------
+void ImportFromIMDb::readContent (const boost::system::error_code& err) {
+   TRACE1 ("ImportFromIMDb::readContent (boost::system::error_code&");
+
+   if (!err) {
+      Glib::ustring value;
+      std::istream response (&buf);
+      response >> value;
+      contentIMDb += value;
+      // Continue reading remaining data until EOF.
+      boost::asio::async_read (sockIO, buf,
+			      boost::asio::transfer_at_least (1),
+			       boost::bind (&ImportFromIMDb::readContent, this,
+					    boost::asio::placeholders::error));
+   }
+   else if (err == boost::asio::error::eof)
+      status = CONFIRM;
+   else
+      showError (err.message ());
 }

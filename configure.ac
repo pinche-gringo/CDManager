@@ -34,7 +34,9 @@ ALL_LINGUAS="de en es"
 AC_DEFINE_UNQUOTED(CATALOGS, "$ALL_LINGUAS", [Translations])
 
 dnl Checks for header files.
-AC_CHECK_HEADER(boost/shared_ptr.hpp,,AC_MSG_ERROR([Required headers not found]))
+
+AC_CHECK_HEADERS(boost/shared_ptr.hpp boost/bind.hpp boost/asio.hpp,,
+	         AC_MSG_ERROR([Required headers not found]))
 
 dnl Checks for libraries.
 AC_CHECK_LIB(stdc++, main)

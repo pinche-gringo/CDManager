@@ -3,11 +3,15 @@ Prerequisites
 
 The following packages are needed
 
-  - Optional: The libmysql++ library, available from
-     http://www.mysql.com/download_mysql++.html.
+  - Boost
+  - Gtkmm-2.4 (which itself needs GTK+-2.4). Available at http://www.gktmm.org/
+  - MySQL developer files. Available via http://www.mysql.com/
   - My YGP library; also availabe as a Sourceforge project
-    (http://libymp.sourceforge.net)
-  - Gtkmm-2.4 (which itself needs GTK+-2.4). Available via http://www.gktmm.org
+    (http://libymp.sourceforge.net/)
+
+The following packages are optional, but recommended
+
+  - The libmysql++ library. Also available at http://www.mysql.com/
 
 
 How to build (if extracted from an (tar-)archive)

@@ -522,7 +522,7 @@ bool PRecords::parseOGGCommentHeader (std::istream& stream, Glib::ustring& artis
 	    len -= read;
 	    buffer[read] = '\0';
 	    value->append (buffer);
- 	 } while (len);
+	 } while (len);
       }
       else
 	 stream.seekg (len, std::ios::cur);

@@ -76,7 +76,7 @@ Changing the sort order of the entries
   it first tries to remove a single leading article and then any
   leading first names (except if this would remove the last word).
 
-  This should lead to a list sorted by sure names or - in case of
+  This should lead to a list sorted by surenames or - in case of
   groups - to names having the articles stripped of.
 
   To be able to do so, the program needs to know, what articles and

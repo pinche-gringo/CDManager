@@ -42,7 +42,7 @@
 #include <gtkmm/messagedialog.h>
 
 #define CHECK 9
-#define TRACELEVEL 9
+#define TRACELEVEL 8 
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ANumeric.h>
@@ -312,15 +312,13 @@ void ImportFromIMDb::readHeaders (const boost::system::error_code& err) {
 /// \param err Error-information (in case of error)
 //-----------------------------------------------------------------------------
 void ImportFromIMDb::readContent (const boost::system::error_code& err) {
-   TRACE1 ("ImportFromIMDb::readContent (boost::system::error_code&)");
+   TRACE9 ("ImportFromIMDb::readContent (boost::system::error_code&)");
 
    if (!err) {
       std::string line;;
       std::istream response (&buf);
-      while (std::getline (response, line)) {
-	 TRACE8 ("ImportFromIMDb::readContent (boost::system::error_code&) - " << line);
+      while (std::getline (response, line))
 	 contentIMDb += line;
-      }
 
       // Continue reading remaining data until EOF.
       boost::asio::async_read (sockIO, buf,
@@ -331,6 +329,24 @@ void ImportFromIMDb::readContent (const boost::system::error_code& err) {
    else if (err == boost::asio::error::eof) {
       TRACE9 ("ImportFromIMDb::readContent (boost::system::error_code&) - Final: " << contentIMDb);
       status = CONFIRM;
+
+      // Extract director
+      Glib::ustring director, name, year, genre;
+      std::string::size_type i (contentIMDb.find (">Director:<"));
+      if (i != std::string::npos) {
+	 i = contentIMDb.find ("<a href=\"/name");
+	 if (i != std::string::npos)
+	    i = contentIMDb.find ("/';\">");
+
+	 if (i != std::string::npos) {
+	    i += 5;
+	    std::string::size_type end (contentIMDb.find ("</a>", i));
+	    if (i != std::string::npos)
+	       director = contentIMDb.substr (i, end - i);
+	 }
+      }
+
+      TRACE1 ("ImportFromIMDb::readContent (boost::system::error_code&) - Director: " << director);
    }
    else
       showError (err.message ());

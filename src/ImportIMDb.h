@@ -76,6 +76,9 @@ class ImportFromIMDb : public XGP::XDialog {
    bool indicateWait (Gtk::ProgressBar* progress);
    void showError (const Glib::ustring& msg);
 
+   Glib::ustring extract (const char* section, const char* subpart,
+			  const char* before, const char* after) const;
+
    void connectToIMDb ();
    void resolved (const boost::system::error_code& err,
 		  boost::asio::ip::tcp::resolver::iterator iEndpoints);

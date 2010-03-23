@@ -42,7 +42,7 @@
 #include <gtkmm/messagedialog.h>
 
 #define CHECK 9
-#define TRACELEVEL 8 
+#define TRACELEVEL 8
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ANumeric.h>
@@ -331,23 +331,44 @@ void ImportFromIMDb::readContent (const boost::system::error_code& err) {
       status = CONFIRM;
 
       // Extract director
-      Glib::ustring director, name, year, genre;
-      std::string::size_type i (contentIMDb.find (">Director:<"));
-      if (i != std::string::npos) {
-	 i = contentIMDb.find ("<a href=\"/name");
-	 if (i != std::string::npos)
-	    i = contentIMDb.find ("/';\">");
-
-	 if (i != std::string::npos) {
-	    i += 5;
-	    std::string::size_type end (contentIMDb.find ("</a>", i));
-	    if (i != std::string::npos)
-	       director = contentIMDb.substr (i, end - i);
-	 }
-      }
+      Glib::ustring director (extract (">Director:<", "<a href=\"/name", "/';\">", "</a>"));
+      Glib::ustring name (extract ("<head>", NULL, "<title>", "</title>"));
+      Glib::ustring genre (extract (">Genre:<", "<a href=\"/Sections/Genres/", "/\">", "</a>"));
 
       TRACE1 ("ImportFromIMDb::readContent (boost::system::error_code&) - Director: " << director);
+      TRACE1 ("ImportFromIMDb::readContent (boost::system::error_code&) - Name: " << name);
+      TRACE1 ("ImportFromIMDb::readContent (boost::system::error_code&) - Genre: " << genre);
    }
    else
       showError (err.message ());
+}
+
+//-----------------------------------------------------------------------------
+/// Extracts a substring out of (a previously parsed) contentIMDb
+/// \param section Section in contentIMDb which is followed by the searched text
+/// \param subpart Text leading to the searched text
+/// \param before Text immediately before the searched text
+/// \param after Text immediately after the searched text
+//-----------------------------------------------------------------------------
+Glib::ustring ImportFromIMDb::extract (const char* section, const char* subpart,
+				     const char* before, const char* after) const {
+   Check1 (section); Check1 (before); Check1 (after);
+
+   Glib::ustring::size_type i (contentIMDb.find (section));
+   if (i == std::string::npos)
+      return Glib::ustring ();
+   TRACE1 ("Found section at " << i);
+
+   if (subpart)
+      if ((i = contentIMDb.find (subpart, i)) == std::string::npos)
+	 return Glib::ustring ();
+
+   i = contentIMDb.find (before, i);
+   if (i == std::string::npos)
+      return Glib::ustring ();
+   TRACE1 ("Found before at " << i);
+
+   i += strlen (before);
+   std::string::size_type end (contentIMDb.find (after, i));
+   return (end == std::string::npos) ? Glib::ustring () : contentIMDb.substr (i, end - i);
 }

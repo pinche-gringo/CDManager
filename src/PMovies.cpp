@@ -800,8 +800,10 @@ void PMovies::clear () {
 /// Opens a dialog allowing to import information for a movie from IMDb.com
 //-----------------------------------------------------------------------------
 void PMovies::importFromIMDb () {
+   TRACE9 ("PMovies::importFromIMDb ()");
    ImportFromIMDb* dlg (ImportFromIMDb::create ());
    dlg->sigLoaded.connect (mem_fun (*this, &PMovies::importMovie));
+   dlg->run ();
 }
 
 //-----------------------------------------------------------------------------
@@ -839,14 +841,14 @@ bool PMovies::importMovie (const Glib::ustring& director, const Glib::ustring& m
 	 }
       }
 
-      SaveCelebrity* dlg (SaveCelebrity::create (*(Gtk::Window*)getWindow ()->get_toplevel (),
-						 hDirector, sameDirectors));
-      switch (dlg->run ()) {
+      boost::scoped_ptr<SaveCelebrity> dlgCeleb
+	 (SaveCelebrity::create (*(Gtk::Window*)getWindow ()->get_toplevel (), hDirector, sameDirectors));
+      switch (dlgCeleb->run ()) {
       case Gtk::RESPONSE_YES:
-	 TRACE9 ("PMovies::importMovie (3x const Glib::ustring&) - Same director " << dlg->getIdOfSelection ());
-	 Check3 (dlg->getIdOfSelection ());
-	 hDirector->setId (dlg->getIdOfSelection ());
-	 iNewDirector = iDirectors[dlg->getIdOfSelection ()];
+	 TRACE9 ("PMovies::importMovie (3x const Glib::ustring&) - Same director " << dlgCeleb->getIdOfSelection ());
+	 Check3 (dlgCeleb->getIdOfSelection ());
+	 hDirector->setId (dlgCeleb->getIdOfSelection ());
+	 iNewDirector = iDirectors[dlgCeleb->getIdOfSelection ()];
 	 break;
 
       case Gtk::RESPONSE_NO:

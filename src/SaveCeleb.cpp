@@ -31,8 +31,6 @@
 #include <gtkmm/stock.h>
 #include <gtkmm/liststore.h>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 

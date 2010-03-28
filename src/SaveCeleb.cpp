@@ -31,6 +31,8 @@
 #include <gtkmm/stock.h>
 #include <gtkmm/liststore.h>
 
+#define CHECK 9
+#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 
@@ -168,12 +170,12 @@ void SaveCelebrity::store (const HCelebrity celeb, const char* role,
 /// \param celeb Celebrity to match
 /// \param celebs List of celebrities matching celeb
 /// \returns SaveCelebrity* Pointer to created dialog
+/// \remarks Does not register a callback to free the created dialog!
 //-----------------------------------------------------------------------------
 SaveCelebrity* SaveCelebrity::create (Gtk::Window& parent, const HCelebrity celeb,
 			   const std::vector<HCelebrity>& celebs) {
    SaveCelebrity* dlg (new SaveCelebrity (*(Gtk::Window*)parent.get_toplevel (), celeb, celebs));
    dlg->get_window ()->set_transient_for (parent.get_window ());
-   dlg->signal_response ().connect (mem_fun (*dlg, &SaveCelebrity::free));
    return dlg;
 }
 
@@ -182,6 +184,7 @@ SaveCelebrity* SaveCelebrity::create (Gtk::Window& parent, const HCelebrity cele
 /// \returns unsigned long: ID of the selected celebrity
 //-----------------------------------------------------------------------------
 unsigned long SaveCelebrity::getIdOfSelection () {
+   TRACE9 ("SaveCelebrity::getIdOfSelection ()");
    Check1 (lstCelebs);
    Check3 (lstCelebs->get_selection ());
    Check3 (lstCelebs->get_selection ()->get_selected ());
@@ -195,12 +198,4 @@ unsigned long SaveCelebrity::getIdOfSelection () {
 //-----------------------------------------------------------------------------
 void SaveCelebrity::rowSelected () {
    set_response_sensitive (Gtk::RESPONSE_YES, lstCelebs->get_selection ()->get_selected ());
-}
-
-//-----------------------------------------------------------------------------
-/// Frees the dialog.
-/// \remarks Call only if the dialog was created with new
-//-----------------------------------------------------------------------------
-void SaveCelebrity::free (int) {
-   delete this;
 }

@@ -52,8 +52,6 @@ class SaveCelebrity : public Gtk::MessageDialog {
  protected:
    SaveCelebrity (Gtk::Window& parent, const HCelebrity celeb, const std::vector<HCelebrity>& celebs);
 
-   void free (int);
-
  private:
    //Prohibited manager functions
    SaveCelebrity (const SaveCelebrity& other);

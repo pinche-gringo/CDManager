@@ -41,9 +41,9 @@
 
 //-----------------------------------------------------------------------------
 /// Constructor
-/// \param parent: Parent window
-/// \param celeb: Celebrity to match
-/// \param celebs: List of celebrities matching celeb
+/// \param parent Parent window
+/// \param celeb Celebrity to match
+/// \param celebs List of celebrities matching celeb
 //-----------------------------------------------------------------------------
 SaveCelebrity::SaveCelebrity (Gtk::Window& parent, const HCelebrity celeb, const std::vector<HCelebrity>& celebs)
    : Gtk::MessageDialog (parent, _("A celebrity with the same name already exists! Are they identic?"),
@@ -118,11 +118,11 @@ SaveCelebrity::~SaveCelebrity () {
 
 //-----------------------------------------------------------------------------
 /// Saves a celebrity in the passed role
-/// \param celeb: Celebrity to save
-/// \param role: Role celebrity should have
+/// \param celeb Celebrity to save
+/// \param role Role celebrity should have
 /// \throw
 ///   - DlgCanceled if the dialog was canceled
-///   - std::exception: Describing error
+///   - std::exception Describing error
 /// \remarks
 ///    - If the celebrity is unsaved (has no id), and the DB contains
 ///      a celebrity with the same name, it checks the DB-tables "Directors",
@@ -163,6 +163,21 @@ void SaveCelebrity::store (const HCelebrity celeb, const char* role,
 }
 
 //-----------------------------------------------------------------------------
+/// Creates the dialog
+/// \param parent Parent window
+/// \param celeb Celebrity to match
+/// \param celebs List of celebrities matching celeb
+/// \returns SaveCelebrity* Pointer to created dialog
+//-----------------------------------------------------------------------------
+SaveCelebrity* SaveCelebrity::create (Gtk::Window& parent, const HCelebrity celeb,
+			   const std::vector<HCelebrity>& celebs) {
+   SaveCelebrity* dlg (new SaveCelebrity (*(Gtk::Window*)parent.get_toplevel (), celeb, celebs));
+   dlg->get_window ()->set_transient_for (parent.get_window ());
+   dlg->signal_response ().connect (mem_fun (*dlg, &SaveCelebrity::free));
+   return dlg;
+}
+
+//-----------------------------------------------------------------------------
 /// Returns the ID of the selected celebrity
 /// \returns unsigned long: ID of the selected celebrity
 //-----------------------------------------------------------------------------
@@ -180,4 +195,12 @@ unsigned long SaveCelebrity::getIdOfSelection () {
 //-----------------------------------------------------------------------------
 void SaveCelebrity::rowSelected () {
    set_response_sensitive (Gtk::RESPONSE_YES, lstCelebs->get_selection ()->get_selected ());
+}
+
+//-----------------------------------------------------------------------------
+/// Frees the dialog.
+/// \remarks Call only if the dialog was created with new
+//-----------------------------------------------------------------------------
+void SaveCelebrity::free (int) {
+   delete this;
 }

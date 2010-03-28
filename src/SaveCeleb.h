@@ -45,16 +45,20 @@ class SaveCelebrity : public Gtk::MessageDialog {
 
    static void store (const HCelebrity celeb, const char* role,
 		      Gtk::Widget& parent) throw (std::exception, DlgCanceled);
+   static SaveCelebrity* create (Gtk::Window& parent, const HCelebrity celeb, const std::vector<HCelebrity>& celebs);
+
+   unsigned long getIdOfSelection ();
 
  protected:
    SaveCelebrity (Gtk::Window& parent, const HCelebrity celeb, const std::vector<HCelebrity>& celebs);
+
+   void free (int);
 
  private:
    //Prohibited manager functions
    SaveCelebrity (const SaveCelebrity& other);
    const SaveCelebrity& operator= (const SaveCelebrity& other);
 
-   unsigned long getIdOfSelection ();
    void rowSelected ();
 
    Gtk::TreeView* lstCelebs;

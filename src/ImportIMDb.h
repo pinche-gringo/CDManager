@@ -24,7 +24,6 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/placeholders.hpp>
 
-#include <gtkmm/entry.h>
 #include <gtkmm/table.h>
 
 #include <YGP/Check.h>
@@ -32,6 +31,8 @@
 
 
 namespace Gtk {
+   class Label;
+   class Table;
    class ProgressBar;
 }
 
@@ -55,11 +56,14 @@ class ImportFromIMDb : public XGP::XDialog {
    }
 
    /// Signal emitted, when the loaed movie-information is confirmed
-   sigc::signal<bool, const Glib::ustring&, const Glib::ustring&> sigLoaded;
+   sigc::signal<bool, const Glib::ustring&, const Glib::ustring&, const Glib::ustring&> sigLoaded;
 
  protected:
-   Gtk::Table client;             ///< Pointer to the client information area
-   Gtk::Entry txtID;                 ///< Textfield, where user enters the ID
+   Gtk::Table* client;            ///< Pointer to the client information area
+   Gtk::Entry* txtID;                ///< Textfield, where user enters the ID
+   Gtk::Label* lblDirector;                ///< Label displaying the director
+   Gtk::Label* lblMovie;          ///< Label displaying the movie (with year)
+   Gtk::Label* lblGenre;         ///< Label displaying the genre of the movie
 
    Glib::ustring contentIMDb;                ///< Page received from IMDb.com
 

@@ -22,10 +22,10 @@
 #include <gtkmm/liststore.h>
 #include <gtkmm/treestore.h>
 
+#include "Genres.h"
+
 #include "Celebrity.h"
 
-
-class Genres;
 
 typedef boost::shared_ptr<YGP::Entity> HEntity;
 
@@ -90,6 +90,8 @@ class OwnerObjectList : public Gtk::TreeView {
 
    void set (Gtk::TreeModel::Row& row, const HEntity& obj);
    virtual void update (Gtk::TreeModel::Row& row);
+
+   int getGenre (const Glib::ustring& genre) const { return genres.getId (genre); }
 
  protected:
    void init (const OwnerObjectColumns& cols);

@@ -40,8 +40,6 @@
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/scrolledwindow.h>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ANumeric.h>
@@ -837,6 +835,21 @@ bool PMovies::importMovie (const Glib::ustring& director, const Glib::ustring& m
 			   const Glib::ustring& genre) {
    TRACE5 ("PMovies::importMovie (3x const Glib::ustring&) - " << director << ": " << movie);
 
+   Glib::ustring nameMovie;
+   YGP::AYear year;
+
+   // Check if the movie has the year in parenthesis appended
+   std::string::size_type pos (movie.rfind (" (", movie.size () - 2));
+   if ((movie[movie.size () - 1] == ')') && (pos != std::string::npos)) {
+      try {
+	 year = movie.substr (pos + 2, movie.size () - pos - 3);
+	 nameMovie = movie.substr (0, pos);
+      }
+      catch (std::invalid_argument& err) { }
+   }
+   else
+      nameMovie = movie;
+
    // Create the new director
    HDirector hDirector (new Director);
    hDirector->setName (director);
@@ -877,9 +890,15 @@ bool PMovies::importMovie (const Glib::ustring& director, const Glib::ustring& m
    else
       iNewDirector = addDirector (hDirector);
 
+
+   int idGenre (movies.getGenre (genre));
+   if (idGenre == -1)
+      idGenre = 0;
+
    HMovie hMovie (new Movie);
-   // hMovie->setGenre (genre);
-   hMovie->setName (movie);
+   hMovie->setGenre (idGenre);
+   hMovie->setName (nameMovie);
+   hMovie->setYear (year);
    addMovie (hMovie, iNewDirector);
    return true;
 }

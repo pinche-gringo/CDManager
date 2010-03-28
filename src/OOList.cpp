@@ -41,8 +41,6 @@
 
 #include <XGP/XValue.h>
 
-#include "Genres.h"
-
 #include "OOList.h"
 
 

@@ -128,7 +128,8 @@ void ImportFromIMDb::okEvent () {
    }
    else if (status == CONFIRM) {
       Check3 (lblDirector); Check3 (lblMovie); Check3 (lblGenre);
-      sigLoaded.emit (lblDirector->get_text (), lblMovie->get_text (), lblGenre->get_text ());
+      if (sigLoaded.emit (lblDirector->get_text (), lblMovie->get_text (), lblGenre->get_text ()))
+	 response (Gtk::RESPONSE_OK);
    }
 }
 

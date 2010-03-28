@@ -42,8 +42,6 @@
 #include <gtkmm/progressbar.h>
 #include <gtkmm/messagedialog.h>
 
-#define CHECK 9
-#define TRACELEVEL 8
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ANumeric.h>
@@ -51,8 +49,10 @@
 #include "ImportIMDb.h"
 
 
-static const char* HOST ("localhost");
+static const char* HOST ("www.imdb.com/");
 static const char* PORT ("http");
+
+static const char SKIP[] = "www.imdb.com/title/";
 
 
 //-----------------------------------------------------------------------------
@@ -142,6 +142,11 @@ bool ImportFromIMDb::indicateWait (Gtk::ProgressBar* progress) {
    Check1 (progress);
 
    if (status == LOADING) {
+      if (contentIMDb.size ()) {
+	 Glib::ustring msg (_("Receiving from IMDb: %1 bytes"));
+	 msg.replace (msg.find ("%1"), 2, YGP::ANumeric (contentIMDb.size ()).toString ());
+	 progress->set_text (msg);
+      }
       progress->pulse ();
       return true;
    }
@@ -208,10 +213,22 @@ void ImportFromIMDb::connected (const boost::system::error_code& err,
 			       boost::asio::ip::tcp::resolver::iterator iEndpoints) {
    TRACE2 ("ImportFromIMDb::connected (boost::system::error_code&, iterator)");
 
+   // The connection was successful. Send the request.
    if (!err) {
-      // The connection was successful. Send the request.
       std::ostream request (&buf);
-      request << "GET /" << txtID->get_text () << " HTTP/1.0\r\nHost: " << HOST
+
+      // Strip everything except the IMDb-ID from the input
+      std::string path (txtID->get_text ());
+      if (!path.compare (0, 7, "http://"))
+	 path = path.substr (7);
+      if (!path.compare (0, sizeof (SKIP) - 1, SKIP))
+	 path = path.substr (sizeof (SKIP) - 1);
+      if (!path.compare (0, 2, "tt"))
+	 path = path.substr (2);
+      if (path[path.size () - 1] != '/')
+	 path += '/';
+
+      request << "GET /title/tt" << path << " HTTP/1.0\r\nHost: " << HOST
 	      << "\r\nAccept: */*\r\nConnection: close\r\n\r\n";
 
       boost::asio::async_write (sockIO, buf,

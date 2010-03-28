@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.15 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 27.11.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009
+//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009, 2010
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ std::string MovieWriter::getSubstitute (const char ctrl, bool extend) const {
 
       case 'g':
 	 Check3 (hMovie->getGenre () < genres.size ());
-	 return YGP::TableWriter::changeHTMLSpecialChars (genres[hMovie->getGenre ()]);
+	 return YGP::TableWriter::changeHTMLSpecialChars (genres.getGenre (hMovie->getGenre ()));
 
       case 'd':
 	 return YGP::TableWriter::changeHTMLSpecialChars (hDirector->getName ());
@@ -186,7 +186,7 @@ std::string RecordWriter::getSubstitute (const char ctrl, bool extend) const {
 
       case 'g':
 	 Check3 (hRecord->getGenre () < genres.size ());
-	 return YGP::TableWriter::changeHTMLSpecialChars (genres[hRecord->getGenre ()]);
+	 return YGP::TableWriter::changeHTMLSpecialChars (genres.getGenre (hRecord->getGenre ()));
 
       case 'd':
 	 return YGP::TableWriter::changeHTMLSpecialChars (hInterpret->getName ());

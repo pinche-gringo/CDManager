@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.26 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009
+//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009, 2010
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -177,10 +177,10 @@ void SongList::valueChanged (const Glib::ustring& path,
 	 break;
 
       case 3: {
-	 Genres::const_iterator g (std::find (genres.begin (), genres.end (), value));
-	 if (g != genres.end ()) {
+	 int g (genres.getId (value));
+	 if (g != -1) {
 	    oldValue = Glib::ustring (1, (char)song->getGenre ());
-	    song->setGenre (g - genres.begin ());
+	    song->setGenre (g);
 	    row[colSongs.colGenre] = value;
 	    break;
 	 }
@@ -249,9 +249,9 @@ void SongList::updateGenres () {
    TRACE9 ("SongList::updateGenres () - Genres: " << genres.size ());
 
    mSongGenres->clear ();
-   for (Genres::const_iterator g (genres.begin ()); g != genres.end (); ++g) {
+   for (unsigned int i (0); i < genres.size (); ++i) {
       Gtk::TreeModel::Row newGenre (*mSongGenres->append ());
-      newGenre[colSongGenres.genre] = (*g);
+      newGenre[colSongGenres.genre] = (genres.getGenre (i));
    }
 }
 
@@ -321,7 +321,7 @@ void SongList::setGenre (Gtk::TreeIter& iter, unsigned int genre) {
 
       if (genre >= genres.size ())
 	  genre = 0;
-      (*iter)[colSongs.colGenre] = genres[genre];
+      (*iter)[colSongs.colGenre] = genres.getGenre (genre);
    }
 }
 
@@ -341,5 +341,5 @@ void SongList::update (Gtk::TreeModel::Row& row) {
    unsigned int genre (song->getGenre ());
    if (genre >= genres.size ())
       genre = 0;
-   row[colSongs.colGenre] = genres[genre];
+   row[colSongs.colGenre] = genres.getGenre (genre);
 }

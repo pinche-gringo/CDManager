@@ -27,7 +27,7 @@
 
 /**Class to handle the genres of both records and movies.
  */
-class Genres : public std::vector<Glib::ustring> {
+class Genres {
  public:
    Genres () { }
    virtual ~Genres () { }
@@ -35,9 +35,21 @@ class Genres : public std::vector<Glib::ustring> {
    static void loadFromFile (const char* file, Genres& records, Genres& movies,
 			     const char* languages) throw (YGP::ParseError, YGP::FileError);
 
+   int getId (const Glib::ustring& genre) const;
+
+   /// Returns the number of genres
+   /// \returns std::vector::size_type Number of genres
+   size_t size () const { return genres.size (); }
+
+   /// Returns the nth genre
+   /// \param genre Number of genre to return
+   Glib::ustring getGenre (unsigned int genre) const { return genres[genre]; }
+
  private:
    Genres (const Genres& other);
    const Genres& operator= (const Genres& other);
+
+   std::vector<Glib::ustring> genres;
 };
 
 #endif

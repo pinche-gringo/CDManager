@@ -131,7 +131,7 @@ void ActorList::update (Gtk::TreeRow& row) {
       unsigned int g (movie->getGenre ());
       if (g >= genres.size ())
 	 g = 0;
-      row[colActors.genre] = genres[g];
+      row[colActors.genre] = genres.getGenre (g);
       row[colActors.editable] = false;
    }
    else {

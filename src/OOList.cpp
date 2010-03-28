@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.28 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009
+//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009, 2010
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -195,13 +195,11 @@ void OwnerObjectList::valueChanged (const Glib::ustring& path,
 
 	 case 2: {
 	    oldValue = row[colOwnerObjects->genre];
-	    Genres::const_iterator g (std::find (genres.begin (), genres.end (), oldValue));
-	    Check3 (g != genres.end ());
-	    oldValue = Glib::ustring (1, (char)(g - genres.begin ()));
+	    oldValue = Glib::ustring (1, (char)(genres.getId (oldValue)));
 
-	    g = std::find (genres.begin (), genres.end (), value);
-	    if (g != genres.end ()) {
-	       setGenre (object, g - genres.begin ());
+	    int g (genres.getId (value));
+	    if (g != -1) {
+	       setGenre (object, g);
 	       row[colOwnerObjects->genre] = value;
 	       break;
 	    }
@@ -260,10 +258,9 @@ void OwnerObjectList::updateGenres () {
    TRACE9 ("OwnerObjectList::updateGenres () - Genres: " << genres.size ());
 
    mGenres->clear ();
-   for (Genres::const_iterator g (genres.begin ());
-	g != genres.end (); ++g) {
+   for (unsigned int i (0); i < genres.size (); ++i) {
       Gtk::TreeModel::Row newGenre (*mGenres->append ());
-      newGenre[colGenres.genre] = (*g);
+      newGenre[colGenres.genre] = (genres.getGenre (i));
    }
 }
 
@@ -334,7 +331,7 @@ void OwnerObjectList::changeGenre (Gtk::TreeModel::Row& row, unsigned int value)
 
    if (value >= genres.size ())
       value = 0;
-   row[colOwnerObjects->genre] = genres[value];
+   row[colOwnerObjects->genre] = genres.getGenre (value);
 }
 
 //-----------------------------------------------------------------------------

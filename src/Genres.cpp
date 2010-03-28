@@ -8,7 +8,7 @@
 //REVISION    : $Revision: 1.8 $
 //AUTHOR      : Markus Schwab
 //CREATED     : 13.01.2005
-//COPYRIGHT   : Copyright (C) 2005 - 2007, 2009
+//COPYRIGHT   : Copyright (C) 2005 - 2007, 2009, 2010
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -86,10 +86,20 @@ void Genres::loadFromFile (const char* file, Genres& records, Genres& movies,
    } // end-while
 
    YGP::INIFile _inifile_ (name.c_str ());
-   YGP::INIList<Glib::ustring, std::vector<Glib::ustring> > lstMovies ("Movies", movies);
+   YGP::INIList<Glib::ustring, std::vector<Glib::ustring> > lstMovies ("Movies", movies.genres);
    _inifile_.addSection (lstMovies);
-   YGP::INIList<Glib::ustring, std::vector<Glib::ustring> > lstRecords ("Records", records);
+   YGP::INIList<Glib::ustring, std::vector<Glib::ustring> > lstRecords ("Records", records.genres);
    _inifile_.addSection (lstRecords);
 
    _inifile_.read ();
+}
+
+//-----------------------------------------------------------------------------
+/// Gets the id of the passed genre
+/// \param Name of genre to convert to its associated number
+/// \returns int ID of genre or -1
+//-----------------------------------------------------------------------------
+int Genres::getId (const Glib::ustring& genre) const {
+   std::vector<Glib::ustring>::const_iterator g (std::find (genres.begin (), genres.end (), genre));
+   return (g != genres.end ()) ? (g - genres.begin ()) : -1;
 }

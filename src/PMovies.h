@@ -80,6 +80,7 @@ class PMovies : public NBPage {
    void movieChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
 
    void newDirector ();
+   Gtk::TreeModel::iterator addDirector (HDirector& hDirector);
    void newMovie ();
    void deleteMovie (const Gtk::TreeIter& movie);
 
@@ -92,6 +93,9 @@ class PMovies : public NBPage {
    HMovie findMovie (unsigned int id) const {
       return findMovie (directors, relMovies, id);
    }
+
+   bool importMovie (const Glib::ustring& director, const Glib::ustring& movie,
+		     const Glib::ustring& genre);
 
    LanguageImg* imgLang;
 

@@ -40,6 +40,8 @@
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/scrolledwindow.h>
 
+#define CHECK 9
+#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ANumeric.h>
@@ -93,16 +95,30 @@ PMovies::~PMovies () {
 void PMovies::newDirector () {
    TRACE5 ("void PMovies::newDirector ()");
    HDirector director (new Director);
-   directors.push_back (director);
+   Gtk::TreeModel::iterator i (addDirector (director));
 
-   Gtk::TreeModel::iterator i (movies.append (director));
+   Gtk::TreePath path (movies.getModel ()->get_path (i));
+   movies.set_cursor (path, *movies.get_column (0), true);
+}
+
+//-----------------------------------------------------------------------------
+/// Adds the passed director to the list
+/// \param hDirector Director to add
+/// \returns Gtk::TreeModel::iterator Appended line
+//-----------------------------------------------------------------------------
+Gtk::TreeModel::iterator PMovies::addDirector (HDirector& hDirector) {
+   Check1 (hDirector);
+   TRACE5 ("void PMovies::addDirector () - " << hDirector->getName ());
+
+   directors.push_back (hDirector);
+   Gtk::TreeModel::iterator i (movies.append (hDirector));
    Gtk::TreePath path (movies.getModel ()->get_path (i));
    movies.selectRow (i);
-   movies.set_cursor (path, *movies.get_column (0), true);
 
-   aUndo.push (Undo (Undo::INSERT, DIRECTOR, 0, director, path, ""));
+   aUndo.push (Undo (Undo::INSERT, DIRECTOR, 0, hDirector, path, ""));
    apMenus[UNDO]->set_sensitive ();
    enableSave ();
+   return i;
 }
 
 //-----------------------------------------------------------------------------
@@ -350,8 +366,7 @@ HMovie PMovies::findMovie (const std::vector<HDirector>& directors,
 	    return *m;
       }
    }
-   HMovie m;
-   return m;
+   return HMovie ();
 }
 
 //-----------------------------------------------------------------------------
@@ -718,6 +733,7 @@ void PMovies::undoDirector (const Undo& last) {
    Gtk::TreePath path (last.getPath ());
    Gtk::TreeIter iter (movies.getModel ()->get_iter (path));
 
+   Check1 (last.getEntity ());
    Check3 (typeid (*last.getEntity ()) == typeid (Director));
    HDirector director (boost::dynamic_pointer_cast<Director> (last.getEntity ()));
    TRACE9 ("PMovies::undoDirector (const Undo&) - " << last.how () << ": " << director->getName ());
@@ -784,6 +800,62 @@ void PMovies::clear () {
 /// Opens a dialog allowing to import information for a movie from IMDb.com
 //-----------------------------------------------------------------------------
 void PMovies::importFromIMDb () {
-   ImportFromIMDb::create ();
+   ImportFromIMDb* dlg (ImportFromIMDb::create ());
+   dlg->sigLoaded.connect (mem_fun (*this, &PMovies::importMovie));
 }
 
+//-----------------------------------------------------------------------------
+/// Imports the passed movie-information and adds them appropiately to the
+/// list of movies.
+///
+/// Algorithm: If the name of the director does exist, ask if they are equal.
+///    The movie is added to the respective director
+/// \param director Name of the director
+/// \param movie Name of the movie with year in parenthesis at the end
+/// \param genre Genre of the movie
+//-----------------------------------------------------------------------------
+bool PMovies::importMovie (const Glib::ustring& director, const Glib::ustring& movie,
+			   const Glib::ustring& genre) {
+   TRACE5 ("PMovies::importMovie (3x const Glib::ustring&) - " << director << ": " << movie);
+
+   // Create the new director
+   HDirector hDirector (new Director);
+   hDirector->setName (director);
+
+   Gtk::TreeModel::const_iterator i (movies.getOwner (director));
+   if (i) {
+      Gtk::TreeModel::const_iterator iNewDirector;
+
+      std::vector<HDirector> sameDirectors;
+      std::map<unsigned long, Gtk::TreeModel::const_iterator> iDirectors;
+
+      // Get all directors with a similar name
+      for (Gtk::TreeModel::const_iterator i (movies.getModel ()->children ().begin ());
+	   i != movies.getModel ()->children ().end (); ++i) {
+	 HDirector actDirector (movies.getDirectorAt (i));
+	 if (!actDirector->getName ().compare (0, director.size (), director)) {
+	    iDirectors[actDirector->getId ()] = i;
+	    sameDirectors.push_back (actDirector);
+	 }
+      }
+
+      SaveCelebrity* dlg (SaveCelebrity::create (*(Gtk::Window*)getWindow ()->get_toplevel (),
+						 hDirector, sameDirectors));
+      switch (dlg->run ()) {
+      case Gtk::RESPONSE_YES:
+	 TRACE9 ("PMovies::importMovie (3x const Glib::ustring&) - Same director " << dlg->getIdOfSelection ());
+	 Check3 (dlg->getIdOfSelection ());
+	 hDirector->setId (dlg->getIdOfSelection ());
+	 iNewDirector = iDirectors[dlg->getIdOfSelection ()];
+	 break;
+
+      case Gtk::RESPONSE_NO:
+	 iNewDirector = addDirector (hDirector);
+	 break;
+
+      default:
+	 return false;
+      }
+   }
+   return true;
+}

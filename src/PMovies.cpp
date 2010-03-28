@@ -104,7 +104,7 @@ void PMovies::newDirector () {
 //-----------------------------------------------------------------------------
 /// Adds the passed director to the list
 /// \param hDirector Director to add
-/// \returns Gtk::TreeModel::iterator Appended line
+/// \returns Gtk::TreeModel::iterator Appended line in the list
 //-----------------------------------------------------------------------------
 Gtk::TreeModel::iterator PMovies::addDirector (HDirector& hDirector) {
    Check1 (hDirector);
@@ -131,22 +131,39 @@ void PMovies::newMovie () {
    Gtk::TreeIter p (movieSel->get_selected ()); Check3 (p);
    if ((*p)->parent ())
       p = ((*p)->parent ());
-   TRACE9 ("void PMovies::newMovie () - Founding director " << movies.getDirectorAt (p)->getName ());
+   TRACE9 ("void PMovies::newMovie () - Found director " << movies.getDirectorAt (p)->getName ());
 
    HMovie movie (new Movie);
-   Gtk::TreeIter i (movies.append (movie, *p));
+   addMovie (movie, p);
+
+   Gtk::TreeIter i (addMovie (movie, *p));
    Gtk::TreePath path (movies.getModel ()->get_path (i));
-   movies.expand_row (movies.getModel ()->get_path (p), false);
-   movies.selectRow (i);
    movies.set_cursor (path, *movies.get_column (0), true);
+}
+
+//-----------------------------------------------------------------------------
+/// Adds a new movie to the first selected director
+/// \param hMovie Movie to add
+/// \param pos Position in list where to add the movie
+/// \returns Gtk::TreeModel::iterator Appended line in the list
+//-----------------------------------------------------------------------------
+Gtk::TreeModel::iterator PMovies::addMovie (HMovie& hMovie, Gtk::TreeIter pos) {
+   Check1 (hMovie); Check1 (pos);
+   TRACE9 ("PMovies::addMovie (HMovie&, Gtk::TreeIter) - " << hMovie->getName ());
+
+   Gtk::TreeIter i (movies.append (hMovie, *pos));
+   Gtk::TreePath path (movies.getModel ()->get_path (i));
+   movies.expand_row (movies.getModel ()->get_path (pos), false);
+   movies.selectRow (i);
 
    HDirector director;
-   director = movies.getDirectorAt (p);
-   relMovies.relate (director, movie);
+   director = movies.getDirectorAt (pos);
+   relMovies.relate (director, hMovie);
 
-   aUndo.push (Undo (Undo::INSERT, MOVIE, 0, movie, path, ""));
+   aUndo.push (Undo (Undo::INSERT, MOVIE, 0, hMovie, path, ""));
    apMenus[UNDO]->set_sensitive ();
    enableSave ();
+   return i;
 }
 
 //-----------------------------------------------------------------------------
@@ -824,10 +841,8 @@ bool PMovies::importMovie (const Glib::ustring& director, const Glib::ustring& m
    HDirector hDirector (new Director);
    hDirector->setName (director);
 
-   Gtk::TreeModel::const_iterator i (movies.getOwner (director));
-   if (i) {
-      Gtk::TreeModel::const_iterator iNewDirector;
-
+   Gtk::TreeModel::const_iterator iNewDirector (movies.getOwner (director));
+   if (iNewDirector) {
       std::vector<HDirector> sameDirectors;
       std::map<unsigned long, Gtk::TreeModel::const_iterator> iDirectors;
 
@@ -859,5 +874,12 @@ bool PMovies::importMovie (const Glib::ustring& director, const Glib::ustring& m
 	 return false;
       }
    }
+   else
+      iNewDirector = addDirector (hDirector);
+
+   HMovie hMovie (new Movie);
+   // hMovie->setGenre (genre);
+   hMovie->setName (movie);
+   addMovie (hMovie, iNewDirector);
    return true;
 }

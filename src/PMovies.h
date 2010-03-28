@@ -82,6 +82,7 @@ class PMovies : public NBPage {
    void newDirector ();
    Gtk::TreeModel::iterator addDirector (HDirector& hDirector);
    void newMovie ();
+   Gtk::TreeModel::iterator addMovie (HMovie& hMovie, Gtk::TreeIter pos);
    void deleteMovie (const Gtk::TreeIter& movie);
 
    void undoMovie (const Undo& last);

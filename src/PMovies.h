@@ -36,6 +36,10 @@ class Genres;
 class MovieList;
 class LanguageImg;
 
+namespace Gtk {
+   class Dialog;
+}
+
 
 /**Class handling the movies notebook-page
  */
@@ -89,6 +93,7 @@ class PMovies : public NBPage {
    void undoDirector (const Undo& last);
 
    void importFromIMDb ();
+   static void closeDialog (int, const Gtk::Dialog* dlg);
 
    void movieSelected ();
    HMovie findMovie (unsigned int id) const {

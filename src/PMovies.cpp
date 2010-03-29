@@ -284,7 +284,7 @@ void PMovies::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActi
    grpAction->add (apMenus[DELETE] = Gtk::Action::create ("MDelete", Gtk::Stock::DELETE, _("_Delete")),
 		   Gtk::AccelKey (_("<ctl>Delete")),
 		   mem_fun (*this, &PMovies::deleteSelection));
-   grpAction->add (Gtk::Action::create ("MImport", _("_Import from IMDb.com")),
+   grpAction->add (Gtk::Action::create ("MImport", _("_Import from IMDb.com ...")),
 		   Gtk::AccelKey (_("<ctl>I")), mem_fun (*this, &PMovies::importFromIMDb));
 
    grpAction->add (Gtk::Action::create ("Lang", _("_Language")));
@@ -818,7 +818,17 @@ void PMovies::importFromIMDb () {
    TRACE9 ("PMovies::importFromIMDb ()");
    ImportFromIMDb* dlg (ImportFromIMDb::create ());
    dlg->sigLoaded.connect (mem_fun (*this, &PMovies::importMovie));
-   dlg->run ();
+   dlg->signal_response ().connect (bind (ptr_fun (&PMovies::closeDialog), dlg));
+}
+
+//-----------------------------------------------------------------------------
+/// Frees the passed dialog
+/// \param int Response of dialog (ignored)
+/// \param dlg Dialog to close additionally
+//-----------------------------------------------------------------------------
+void PMovies::closeDialog (int, const Gtk::Dialog* dlg) {
+   Check1 (dlg);
+   delete dlg;
 }
 
 //-----------------------------------------------------------------------------

@@ -19,27 +19,19 @@
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/streambuf.hpp>
-#include <boost/asio/placeholders.hpp>
-
 #include <gtkmm/table.h>
 
 #include <YGP/Check.h>
 #include <XGP/XDialog.h>
 
 
-namespace boost {
-   namespace asio {
-      class io_service;
-   }
-}
-
 namespace Gtk {
    class Label;
    class Table;
    class ProgressBar;
 }
+
+class IMDbProgress;
 
 /**Dialog allowing to import information from a movie from IMDb.com
  *
@@ -82,29 +74,9 @@ class ImportFromIMDb : public XGP::XDialog {
    const ImportFromIMDb& operator= (const ImportFromIMDb& other);
 
    void inputChanged ();
-   bool indicateWait (Gtk::ProgressBar* progress);
-   void showError (const Glib::ustring& msg, boost::asio::io_service* svcIO,
-		   boost::asio::ip::tcp::socket* sock);
-
-   Glib::ustring extract (const char* section, const char* subpart,
-			  const char* before, const char* after) const;
-
-   void connectToIMDb (boost::asio::io_service* svcIO);
-   bool poll (boost::asio::io_service* svcIO);
-   void resolved (boost::asio::io_service* svcIO,
-		  const boost::system::error_code& err,
-		  boost::asio::ip::tcp::resolver::iterator iEndpoints);
-   void connected (boost::asio::ip::tcp::socket* sockIO, boost::asio::streambuf* buffer,
-		   const boost::system::error_code& err,
-		  boost::asio::ip::tcp::resolver::iterator iEndpoints);
-   void requestWritten (boost::asio::ip::tcp::socket* sockIO, boost::asio::streambuf* buffer,
-			const boost::system::error_code& err);
-   void readStatus (boost::asio::ip::tcp::socket* sockIO, boost::asio::streambuf* buffer,
-		    const boost::system::error_code& err);
-   void readHeaders (boost::asio::ip::tcp::socket* sockIO, boost::asio::streambuf* buffer,
-		     const boost::system::error_code& err);
-   void readContent (boost::asio::ip::tcp::socket* sockIO, boost::asio::streambuf* buffer,
-		     const boost::system::error_code& err);
+   void showError (const Glib::ustring& msg);
+   void showData (const Glib::ustring& director, const Glib::ustring& name,
+		  const Glib::ustring& genre, IMDbProgress* progress);
 };
 
 #endif

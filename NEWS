@@ -1,3 +1,8 @@
+Overview of changes in version 1.0.00:
+
+  - Can import information from IMDb
+
+
 Overview of changes in version 0.8.41:
 
   - Movies: Fixed saving entries without year

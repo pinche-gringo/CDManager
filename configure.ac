@@ -3,7 +3,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.52)
 AC_REVISION($Revision: 1.32 $)
-AC_INIT(CDManager, 0.8.41, [g17m0@users.sourceforge.net], CDManager)
+AC_INIT(CDManager, 1.0.00, [g17m0@users.sourceforge.net], CDManager)
 
 RELEASE=${PACKAGE_VERSION%.*}
 AC_DEFINE_UNQUOTED(PRG_RELEASE, "$RELEASE", [Define to the release of the program])
@@ -35,7 +35,7 @@ AC_DEFINE_UNQUOTED(CATALOGS, "$ALL_LINGUAS", [Translations])
 
 dnl Checks for header files.
 
-AC_CHECK_HEADERS(boost/shared_ptr.hpp boost/bind.hpp boost/asio.hpp,,
+AC_CHECK_HEADERS(boost/shared_ptr.hpp boost/tokenizer.hpp boost/bind.hpp boost/asio.hpp,,
 	         AC_MSG_ERROR([Required headers not found]))
 
 dnl Checks for libraries.

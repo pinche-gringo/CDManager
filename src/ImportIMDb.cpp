@@ -154,6 +154,8 @@ void ImportFromIMDb::showData (const Glib::ustring& director, const Glib::ustrin
 
    ok->set_label (Gtk::Stock::OK.id);
    ok->set_sensitive ();
+
+   status = CONFIRM;
 }
 
 //-----------------------------------------------------------------------------

@@ -69,6 +69,7 @@ class CDManager : public XGP::XApplication {
    void export2HTML ();
 #endif
 
+   void showStatistics ();
    void editPreferences ();
    void savePreferences ();
 

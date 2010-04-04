@@ -62,6 +62,8 @@ class Storage {
    static bool hasRole (unsigned int idCeleb, const char* role) throw (std::exception);
    //}
 
+   static void getStatistics (unsigned int counts[4]) throw (std::exception);
+
  private:
    Storage ();
    Storage (const Storage& other);

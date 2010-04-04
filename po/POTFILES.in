@@ -28,3 +28,4 @@ src/RelateMovie.cpp
 src/SaveCeleb.cpp
 src/ImportIMDb.cpp
 src/IMDbProgress.cpp
+src/Statistics.cpp

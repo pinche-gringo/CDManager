@@ -58,6 +58,7 @@
 #include "Settings.h"
 #include "Language.h"
 #include "SaveCeleb.h"
+#include "Statistics.h"
 
 #if WITH_ACTORS == 1
 #  include "PActors.h"
@@ -121,6 +122,8 @@ CDManager::CDManager (Options& options)
 		     "  </menu>"
 		     "  <placeholder name='Other'/>"
 		     "  <menu action='Options'>"
+		     "    <menuitem action='Stats'/>"
+		     "    <separator/>"
 		     "    <menuitem action='Prefs'/>"
 		     "    <menuitem action='SavePrefs'/>"
 		     "  </menu>");
@@ -143,6 +146,9 @@ CDManager::CDManager (Options& options)
 		   mem_fun (*this, &CDManager::exit));
    grpAction->add (apMenus[MEDIT] = Gtk::Action::create ("Edit", _("_Edit")));
    grpAction->add (Gtk::Action::create ("Options", _("_Options")));
+   grpAction->add (Gtk::Action::create ("Stats", Gtk::Stock::INFO),
+		   Gtk::AccelKey (_("F12")),
+		   mem_fun (*this, &CDManager::showStatistics));
    grpAction->add (Gtk::Action::create ("Prefs", Gtk::Stock::PREFERENCES),
 		   Gtk::AccelKey (_("F9")),
 		   mem_fun (*this, &CDManager::editPreferences));
@@ -248,6 +254,13 @@ void CDManager::save () {
       Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
       dlg.run ();
    }
+}
+
+//-----------------------------------------------------------------------------
+/// Shows the statistic-dialog
+//-----------------------------------------------------------------------------
+void CDManager::showStatistics () {
+   Statistics::create (get_window ());
 }
 
 //-----------------------------------------------------------------------------

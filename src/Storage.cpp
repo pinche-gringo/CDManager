@@ -40,10 +40,10 @@
 
 //-----------------------------------------------------------------------------
 /// Login to the database with the passed user/password pair
-/// \param db: Name of database
-/// \param user: User to use for the DB
-/// \param pwd: Password of user
-/// \throw std::exception: Occurred error
+/// \param db Name of database
+/// \param user User to use for the DB
+/// \param pwd Password of user
+/// \throw std::exception Occurred error
 //-----------------------------------------------------------------------------
 void Storage::login (const char* db, const char* user, const char* pwd) throw (std::exception) {
    Database::connect (db, user, pwd);
@@ -87,8 +87,8 @@ void Storage::loadSpecialWords () throw (std::exception) {
 
 //-----------------------------------------------------------------------------
 /// Stores one name into the database
-/// \param word: Word to store
-/// \throw std::exception: Occurred error
+/// \param word Word to store
+/// \throw std::exception Occurred error
 //-----------------------------------------------------------------------------
 void Storage::storeWord (const char* word) throw (std::exception) {
    std::string ins ("INSERT INTO Words VALUES ('%1')");
@@ -99,8 +99,8 @@ void Storage::storeWord (const char* word) throw (std::exception) {
 
 //-----------------------------------------------------------------------------
 /// Stores one artice into the database
-/// \param article: Article to store
-/// \throw std::exception: Occurred error
+/// \param article Article to store
+/// \throw std::exception Occurred error
 //-----------------------------------------------------------------------------
 void Storage::storeArticle (const char* article) throw (std::exception) {
    std::string ins ("INSERT INTO Articles VALUES ('%1')");
@@ -111,7 +111,7 @@ void Storage::storeArticle (const char* article) throw (std::exception) {
 
 //-----------------------------------------------------------------------------
 /// Deletes all names stored in the database
-/// \throw std::exception: Occurred error
+/// \throw std::exception Occurred error
 //-----------------------------------------------------------------------------
 void Storage::deleteNames () throw (std::exception) {
    Database::execute ("DELETE FROM Words");
@@ -126,9 +126,9 @@ void Storage::deleteArticles () throw (std::exception) {
 
 //-----------------------------------------------------------------------------
 /// Loads the stored celebrities from the database
-/// \param target: Vector, in which to load the celebrities
-/// \param table: Database table from which to load them
-/// \param stat: Statusobject, in which to return the errors
+/// \param target Vector, in which to load the celebrities
+/// \param table Database table from which to load them
+/// \param stat Statusobject, in which to return the errors
 //-----------------------------------------------------------------------------
 void Storage::loadCelebrities (std::vector<HCelebrity>& target, const std::string& table,
 			       YGP::StatusObject& stat) throw (std::exception) {
@@ -144,8 +144,8 @@ void Storage::loadCelebrities (std::vector<HCelebrity>& target, const std::strin
 
 //-----------------------------------------------------------------------------
 /// Fills the celebrities into the passed vector
-/// \param target: Vector to fill with celebrities
-/// \param stat: Object to hold status-information
+/// \param target Vector to fill with celebrities
+/// \param stat Object to hold status-information
 //-----------------------------------------------------------------------------
 void Storage::fillCelebrities (std::vector<HCelebrity>& target, YGP::StatusObject& stat) {
    HCelebrity hCeleb;
@@ -200,9 +200,9 @@ void Storage::commitTransaction () {
 
 //-----------------------------------------------------------------------------
 /// Saves the passed interpret.
-/// \param interpret: Interpret to save
-/// \returns bool: True, if entry was created, false if updated
-/// \throw std::exception: In case of error
+/// \param interpret Interpret to save
+/// \returns bool True, if entry was created, false if updated
+/// \throw std::exception In case of error
 //-----------------------------------------------------------------------------
 void Storage::insertCelebrity (const HCelebrity celeb, const char* role) throw (std::exception) {
    Check1 (celeb);
@@ -222,9 +222,9 @@ void Storage::insertCelebrity (const HCelebrity celeb, const char* role) throw (
 
 //-----------------------------------------------------------------------------
 /// Updates the passed interpret.
-/// \param interpret: Interpret to save
-/// \returns bool: True, if entry was created, false if updated
-/// \throw std::exception: In case of error
+/// \param interpret Interpret to save
+/// \returns bool True, if entry was created, false if updated
+/// \throw std::exception In case of error
 //-----------------------------------------------------------------------------
 void Storage::updateCelebrity (const HCelebrity celeb) throw (std::exception) {
    Check1 (celeb);
@@ -243,10 +243,10 @@ void Storage::updateCelebrity (const HCelebrity celeb) throw (std::exception) {
 
 //-----------------------------------------------------------------------------
 /// Gets the celebrities with the passed name
-/// \param name: Name of celebrity to query
-/// \param target: Vector to store the found celebrities
-/// \returns unsigned long: Id of found celebrity or 0, if not found
-/// \throw std::exception: In case of error
+/// \param name Name of celebrity to query
+/// \param target Vector to store the found celebrities
+/// \returns unsigned long Id of found celebrity or 0, if not found
+/// \throw std::exception In case of error
 //-----------------------------------------------------------------------------
 void Storage::getCelebrities (const std::string& name, std::vector<HCelebrity>& target) throw (std::exception) {
    YGP::StatusObject stat;
@@ -258,10 +258,10 @@ void Storage::getCelebrities (const std::string& name, std::vector<HCelebrity>& 
 
 //-----------------------------------------------------------------------------
 /// Checks if the passed celebrity has a certain role
-/// \param idCeleb: ID of celebrity
-/// \param role: Role of celebrity
-/// \returns bool: True, if the celebrity has the passed role
-/// \throw std::exception: In case of an error
+/// \param idCeleb ID of celebrity
+/// \param role Role of celebrity
+/// \returns bool True, if the celebrity has the passed role
+/// \throw std::exception In case of an error
 /// \remarks The roles are the name of the DB-tables
 //-----------------------------------------------------------------------------
 bool Storage::hasRole (unsigned int idCeleb, const char* role) throw (std::exception) {
@@ -273,13 +273,42 @@ bool Storage::hasRole (unsigned int idCeleb, const char* role) throw (std::excep
 
 //-----------------------------------------------------------------------------
 /// Sets a role for a celebrity
-/// \param idCeleb: ID of celebrity
-/// \param role: Role to set for celebrity
-/// \throw std::exception: In case of an error
+/// \param idCeleb ID of celebrity
+/// \param role Role to set for celebrity
+/// \throw std::exception In case of an error
 /// \remarks The roles are the name of the DB-tables
 //-----------------------------------------------------------------------------
 void Storage::setRole (unsigned int idCeleb, const char* role) throw (std::exception) {
    std::stringstream query;
    query << "INSERT INTO " << role << " set id="<< idCeleb;
    Database::execute (query.str ().c_str ());
+}
+
+//-----------------------------------------------------------------------------
+/// Queries the number of entries in the database
+/// \param counts Array receiving the statistical information in order
+///               interpret/records/director/movies
+/// \param role: Role to set for celebrity
+/// \throw std::exception In case of error
+//-----------------------------------------------------------------------------
+void Storage::getStatistics (unsigned int counts[4]) throw (std::exception) {
+   memset (counts, '\0', sizeof (counts));
+   const char* query (
+#ifdef WITH_RECORDS
+		      "SELECT count(*) AS ci FROM Interprets UNION ALL SELECT count(*) AS cr FROM Records"
+#else
+		      "SELECT 0, 0"
+#endif
+		      " UNION ALL "
+#ifdef WITH_MOVIES
+		      "SELECT count(*) AS cd FROM Directors UNION ALL SELECT count(*) AS cm FROM Movies"
+#else
+		      "SELECT 0, 0"
+#endif
+		      );
+   Database::execute (query);
+   while (Database::hasData ()) {
+      *counts++ = Database::getResultColumnAsUInt (0);
+      Database::getNextResultRow ();
+   }
 }

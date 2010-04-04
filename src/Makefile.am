@@ -1,7 +1,8 @@
 ## Process this file with automake to produce Makefile.in
 
 SRC_MOVIE=MovieList.cpp MovieList.h StorageMovie.cpp StorageMovie.h	\
-PMovies.cpp PMovies.h ImportIMDb.cpp ImportIMDb.h
+PMovies.cpp PMovies.h ImportIMDb.cpp ImportIMDb.h IMDbProgress.cpp	\
+IMDbProgress.h
 SRC_GENMOVIE=Director.h Movie.cpp Movie.h
 if WITH_MOVIES
    USE_MOVIE=$(SRC_MOVIE)

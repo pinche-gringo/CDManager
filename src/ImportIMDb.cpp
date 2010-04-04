@@ -103,7 +103,7 @@ void ImportFromIMDb::okEvent () {
       txtID->set_sensitive (false);
       ok->set_sensitive (false);
 
-      IMDbProgress* progress (new IMDbProgress);
+      IMDbProgress* progress (new IMDbProgress (txtID->get_text ()));
       progress->sigError.connect (mem_fun (*this, &ImportFromIMDb::showError));
       progress->sigSuccess.connect (bind (mem_fun (*this, &ImportFromIMDb::showData), progress));
       progress->show ();

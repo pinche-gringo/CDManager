@@ -31,7 +31,7 @@
  */
 class IMDbProgress : public Gtk::ProgressBar {
  public:
-   IMDbProgress ();
+   IMDbProgress (const Glib::ustring& movie);
    virtual ~IMDbProgress ();
 
    typedef struct ConnectInfo ConnectInfo;

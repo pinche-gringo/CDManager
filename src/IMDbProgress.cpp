@@ -59,10 +59,12 @@ struct ConnectInfo {
    boost::asio::streambuf buffer;
 
    Glib::ustring contentIMDb;
+   Glib::ustring movie;
 
    /// Constructor
-   ConnectInfo () : svcIO (), query (HOST, PORT), resolver (svcIO), sockIO (svcIO),
-		    buffer (), contentIMDb () { }
+   ConnectInfo (const Glib::ustring& movie)
+      : svcIO (), query (HOST, PORT), resolver (svcIO), sockIO (svcIO),
+	buffer (), contentIMDb (), movie (movie) { }
    ~ConnectInfo () {
       sockIO.close ();
       svcIO.stop ();
@@ -71,8 +73,10 @@ struct ConnectInfo {
 
 //-----------------------------------------------------------------------------
 /// Default constructor
+/// \param movie ID of movie to import
 //-----------------------------------------------------------------------------
-IMDbProgress::IMDbProgress () : Gtk::ProgressBar (), data (*new ConnectInfo) {
+IMDbProgress::IMDbProgress (const Glib::ustring& movie) : Gtk::ProgressBar (),
+							  data (*new ConnectInfo (movie)) {
    set_text (_("Connecting to IMDB.com ..."));
    pulse ();
 
@@ -174,7 +178,7 @@ void IMDbProgress::connected (const boost::system::error_code& err,
 
 #ifndef LOCALTEST
       // Strip everything except the IMDb-ID from the input
-      std::string path (txtID->get_text ());
+      std::string path (data.movie);
       if (!path.compare (0, 7, "http://"))
 	 path = path.substr (7);
       if (!path.compare (0, sizeof (SKIP) - 1, SKIP))

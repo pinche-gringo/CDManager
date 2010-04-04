@@ -287,24 +287,30 @@ void Storage::setRole (unsigned int idCeleb, const char* role) throw (std::excep
 //-----------------------------------------------------------------------------
 /// Queries the number of entries in the database
 /// \param counts Array receiving the statistical information in order
-///               interpret/records/director/movies
+///               words/articles/interpret/records/director/movies/actors
 /// \param role: Role to set for celebrity
 /// \throw std::exception In case of error
+/// \remarks If some pages are disabled the responding columns are returned as -1
 //-----------------------------------------------------------------------------
-void Storage::getStatistics (int counts[6]) throw (std::exception) {
-   const char* query (
+void Storage::getStatistics (int counts[7]) throw (std::exception) {
+   const char* query ("SELECT count(*) FROM Words UNION ALL SELECT count(*) FROM Articles UNION ALL "
 #ifdef WITH_RECORDS
 		      "SELECT count(*) FROM Interprets UNION ALL SELECT count(*) FROM Records"
 #else
-		      "SELECT -1, -1"
+		      "SELECT -1 UNION ALL SELECT -1"
 #endif
 		      " UNION ALL "
 #ifdef WITH_MOVIES
 		      "SELECT count(*) FROM Directors UNION ALL SELECT count(*) FROM Movies"
 #else
-		      "SELECT -1, -1"
+		      "SELECT -1 UNION ALL SELECT -1"
 #endif
-		      " UNION ALL SELECT count(*) FROM Words UNION ALL SELECT count(*) FROM Articles"
+		      " UNION ALL "
+#ifdef WITH_ACTORS
+		      "SELECT count(*) FROM Actors"
+#else
+		      "SELECT -1"
+#endif
 		      );
    Database::execute (query);
    while (Database::hasData ()) {

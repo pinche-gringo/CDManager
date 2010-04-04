@@ -50,6 +50,7 @@ class IMDbProgress : public Gtk::ProgressBar {
 
    Glib::ustring extract (const char* section, const char* subpart,
 			  const char* before, const char* after) const;
+   static void convert (Glib::ustring& string);
 
    void connectToIMDb ();
    void resolved (const boost::system::error_code& err,

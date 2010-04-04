@@ -319,6 +319,8 @@ void IMDbProgress::readContent (const boost::system::error_code& err) {
       Glib::ustring director (extract (">Director", "<a href=\"/name", "/';\">", "</a>"));
       Glib::ustring name (extract ("<head>", NULL, "<title>", "</title>"));
       Glib::ustring genre (extract (">Genre:<", "<a href=\"/Sections/Genres/", "/\">", "</a>"));
+      convert (director);
+      convert (name);
 
       TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Director: " << director);
       TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Name: " << name);
@@ -356,4 +358,15 @@ Glib::ustring IMDbProgress::extract (const char* section, const char* subpart,
    i += strlen (before);
    std::string::size_type end (data.contentIMDb.find (after, i));
    return (end == std::string::npos) ? Glib::ustring () : data.contentIMDb.substr (i, end - i);
+}
+
+//-----------------------------------------------------------------------------
+/// Converts special HTML-characters in string to its equivalent character
+/// \param string String to convert
+//-----------------------------------------------------------------------------
+void IMDbProgress::convert (Glib::ustring& string) {
+   // At the moment only &#x27; is converted to '
+   Glib::ustring::size_type pos (-1);
+   while ((pos = string.find ("&#x27")) != Glib::ustring::npos)
+      string.replace (pos, 6, 1, '\'');
 }

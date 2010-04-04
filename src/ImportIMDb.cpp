@@ -48,8 +48,12 @@
 
 #include "ImportIMDb.h"
 
-
-static const char* HOST ("www.imdb.com/");
+#define LOCALTEST
+#ifdef LOCALTEST
+static const char* HOST ("localhost");
+#else
+static const char* HOST ("www.imdb.com");
+#endif
 static const char* PORT ("http");
 
 static const char SKIP[] = "www.imdb.com/title/";
@@ -167,7 +171,6 @@ void ImportFromIMDb::connectToIMDb () {
       (query, boost::bind (&ImportFromIMDb::resolved, this,
 			   boost::asio::placeholders::error,
 			   boost::asio::placeholders::iterator));
-   svcIO.run ();
 }
 
 //-----------------------------------------------------------------------------
@@ -217,6 +220,7 @@ void ImportFromIMDb::connected (const boost::system::error_code& err,
    if (!err) {
       std::ostream request (&buf);
 
+#ifndef LOCALHOST
       // Strip everything except the IMDb-ID from the input
       std::string path (txtID->get_text ());
       if (!path.compare (0, 7, "http://"))
@@ -229,6 +233,9 @@ void ImportFromIMDb::connected (const boost::system::error_code& err,
 	 path += '/';
 
       request << "GET /title/tt" << path << " HTTP/1.0\r\nHost: " << HOST
+#else
+      request << "GET /index.html HTTP/1.0\r\nHost: " << HOST
+#endif
 	      << "\r\nAccept: */*\r\nConnection: close\r\n\r\n";
 
       boost::asio::async_write (sockIO, buf,

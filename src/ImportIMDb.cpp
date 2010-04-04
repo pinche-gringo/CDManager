@@ -166,6 +166,5 @@ void ImportFromIMDb::showError (const Glib::ustring& msg) {
    status = QUERY;
    inputChanged ();
 
-   Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-   dlg.run ();
+   Gtk::MessageDialog (msg, Gtk::MESSAGE_ERROR).run ();
 }

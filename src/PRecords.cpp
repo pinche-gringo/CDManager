@@ -153,8 +153,7 @@ void PRecords::loadData () {
    catch (std::exception& err) {
       Glib::ustring msg (_("Can't query available records!\n\nReason: %1"));
       msg.replace (msg.find ("%1"), 2, err.what ());
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.run ();
+      Gtk::MessageDialog (msg, Gtk::MESSAGE_ERROR).run ();
    }
 }
 
@@ -180,8 +179,7 @@ void PRecords::loadSongs (const HRecord& record) {
       Glib::ustring msg (_("Can't query the songs for record %1!\n\nReason: %2"));
       msg.replace (msg.find ("%1"), 2, record->getName ());
       msg.replace (msg.find ("%2"), 2, err.what ());
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.run ();
+      Gtk::MessageDialog (msg, Gtk::MESSAGE_ERROR).run ();
    }
 }
 

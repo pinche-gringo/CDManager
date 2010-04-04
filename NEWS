@@ -13,6 +13,7 @@ Overview of changes in version 0.8.41:
   - Movies: Default sort is by director, year, name
   - Fixed adding a role to a person
 
+
 Overview of changes in version 0.8.40:
 
   - Movies: Removing a name/translation removes it immediately
@@ -21,6 +22,7 @@ Overview of changes in version 0.8.40:
   - Supporting up to 10 subtitles per movie (before: 6)
   - Adapted to libYGP-0.9.30 (using booth)
   - Fixes
+
 
 Overview of changes in version 0.8.38:
 

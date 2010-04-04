@@ -316,7 +316,7 @@ void IMDbProgress::readContent (const boost::system::error_code& err) {
       TRACE9 ("IMDbProgress::readContent (boost::system::error_code&) - Final: " << data.contentIMDb);
 
       // Extract director
-      Glib::ustring director (extract (">Director:<", "<a href=\"/name", "/';\">", "</a>"));
+      Glib::ustring director (extract (">Director", "<a href=\"/name", "/';\">", "</a>"));
       Glib::ustring name (extract ("<head>", NULL, "<title>", "</title>"));
       Glib::ustring genre (extract (">Genre:<", "<a href=\"/Sections/Genres/", "/\">", "</a>"));
 

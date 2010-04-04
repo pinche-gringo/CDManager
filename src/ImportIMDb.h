@@ -21,7 +21,6 @@
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/streambuf.hpp>
-#include <boost/asio/io_service.hpp>
 #include <boost/asio/placeholders.hpp>
 
 #include <gtkmm/table.h>
@@ -29,6 +28,12 @@
 #include <YGP/Check.h>
 #include <XGP/XDialog.h>
 
+
+namespace boost {
+   namespace asio {
+      class io_service;
+   }
+}
 
 namespace Gtk {
    class Label;
@@ -78,24 +83,28 @@ class ImportFromIMDb : public XGP::XDialog {
 
    void inputChanged ();
    bool indicateWait (Gtk::ProgressBar* progress);
-   void showError (const Glib::ustring& msg);
+   void showError (const Glib::ustring& msg, boost::asio::io_service* svcIO,
+		   boost::asio::ip::tcp::socket* sock);
 
    Glib::ustring extract (const char* section, const char* subpart,
 			  const char* before, const char* after) const;
 
-   void connectToIMDb ();
-   void resolved (const boost::system::error_code& err,
+   void connectToIMDb (boost::asio::io_service* svcIO);
+   bool poll (boost::asio::io_service* svcIO);
+   void resolved (boost::asio::io_service* svcIO,
+		  const boost::system::error_code& err,
 		  boost::asio::ip::tcp::resolver::iterator iEndpoints);
-   void connected (const boost::system::error_code& err,
+   void connected (boost::asio::ip::tcp::socket* sockIO, boost::asio::streambuf* buffer,
+		   const boost::system::error_code& err,
 		  boost::asio::ip::tcp::resolver::iterator iEndpoints);
-   void written (const boost::system::error_code& err);
-   void readStatus (const boost::system::error_code& err);
-   void readHeaders (const boost::system::error_code& err);
-   void readContent (const boost::system::error_code& err);
-
-   boost::asio::io_service svcIO;
-   boost::asio::ip::tcp::socket sockIO;
-   boost::asio::streambuf buf;
+   void requestWritten (boost::asio::ip::tcp::socket* sockIO, boost::asio::streambuf* buffer,
+			const boost::system::error_code& err);
+   void readStatus (boost::asio::ip::tcp::socket* sockIO, boost::asio::streambuf* buffer,
+		    const boost::system::error_code& err);
+   void readHeaders (boost::asio::ip::tcp::socket* sockIO, boost::asio::streambuf* buffer,
+		     const boost::system::error_code& err);
+   void readContent (boost::asio::ip::tcp::socket* sockIO, boost::asio::streambuf* buffer,
+		     const boost::system::error_code& err);
 };
 
 #endif

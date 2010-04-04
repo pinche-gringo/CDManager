@@ -77,7 +77,7 @@ struct ConnectInfo {
 //-----------------------------------------------------------------------------
 IMDbProgress::IMDbProgress (const Glib::ustring& movie) : Gtk::ProgressBar (),
 							  data (*new ConnectInfo (movie)) {
-   set_text (_("Connecting to IMDB.com ..."));
+   set_text (_("Connecting to IMDb.com ..."));
    pulse ();
 
    connectToIMDb ();
@@ -113,7 +113,7 @@ bool IMDbProgress::poll () {
 //-----------------------------------------------------------------------------
 bool IMDbProgress::indicateWait () {
    if (data.contentIMDb.size ()) {
-      Glib::ustring msg (_("Receiving from IMDb: %1 bytes"));
+      Glib::ustring msg (_("Receiving from IMDb.com: %1 bytes"));
       msg.replace (msg.find ("%1"), 2, YGP::ANumeric (data.contentIMDb.size ()).toString ());
       set_text (msg);
    }
@@ -250,7 +250,7 @@ void IMDbProgress::readStatus (const boost::system::error_code& err) {
       }
 
       if (nrStatus != 200) {
-	 Glib::ustring msg (_("Response returned with status code %1"));
+	 Glib::ustring msg (_("IMDb.com returned status code %1"));
 	 msg.replace (msg.find ("%1"), 2, YGP::ANumeric (nrStatus).toString ());
 	 error (msg);
 	 return;

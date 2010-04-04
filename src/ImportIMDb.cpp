@@ -131,21 +131,21 @@ void ImportFromIMDb::showData (const Glib::ustring& director, const Glib::ustrin
    client->remove (*progress);
    delete progress;
 
-   Gtk::Label* lbl (new Gtk::Label (_("Director: "), Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER));
+   Gtk::Label* lbl (new Gtk::Label (_("Director:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER));
    lbl->show ();
    client->attach (*manage (lbl), 0, 1, 2, 3, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
    lblDirector = new Gtk::Label (director, Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER);
    lblDirector->show ();
    client->attach (*manage (lblDirector), 1, 2, 2, 3, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
 
-   lbl = new Gtk::Label (_("Movie: "), Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER);
+   lbl = new Gtk::Label (_("Movie:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER);
    lbl->show ();
    client->attach (*manage (lbl), 0, 1, 3, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
    lblMovie = new Gtk::Label (name, Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER);
    lblMovie->show ();
    client->attach (*manage (lblMovie), 1, 2, 3, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
 
-   lbl = new Gtk::Label (_("Genre: "), Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER);
+   lbl = new Gtk::Label (_("Genre:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER);
    lbl->show ();
    client->attach (*manage (lbl), 0, 1, 4, 5, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
    lblGenre = new Gtk::Label (genre, Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER);

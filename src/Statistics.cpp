@@ -53,14 +53,14 @@ Statistics::Statistics ()
    set_title (_("Statistical information"));
 
    Gtk::Label* lbl = manage (new Gtk::Label (_("The database contains:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
-   pClient->attach (*lbl, 0, 7, 0, 1, Gtk::EXPAND, Gtk::FILL, 2, 10);
+   pClient->attach (*lbl, 0, 7, 0, 1, Gtk::SHRINK, Gtk::FILL, 2, 10);
 
    unsigned int stats[4];
    Storage::getStatistics (stats);
    lbl = manage (new Gtk::Label (_("Interprets:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
-   pClient->attach (*lbl, 0, 1, 1, 2, Gtk::SHRINK, Gtk::FILL, 5);
+   pClient->attach (*lbl, 0, 1, 1, 2, Gtk::FILL, Gtk::FILL, 5);
    lbl = manage (new Gtk::Label (YGP::ANumeric (stats[0]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));
-   pClient->attach (*lbl, 1, 2, 1, 2, Gtk::FILL, Gtk::FILL, 5);
+   pClient->attach (*lbl, 1, 2, 1, 2, Gtk::FILL, Gtk::FILL, 15);
    lbl = manage (new Gtk::Label (_("Records:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
    pClient->attach (*lbl, 2, 3, 1, 2, Gtk::FILL, Gtk::FILL, 5);
    lbl = manage (new Gtk::Label (YGP::ANumeric (stats[1]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));
@@ -69,7 +69,7 @@ Statistics::Statistics ()
    lbl = manage (new Gtk::Label (_("Directors:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
    pClient->attach (*lbl, 0, 1, 2, 3, Gtk::FILL, Gtk::FILL, 5);
    lbl = manage (new Gtk::Label (YGP::ANumeric (stats[2]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));
-   pClient->attach (*lbl, 1, 2, 2, 3, Gtk::FILL, Gtk::FILL, 5);
+   pClient->attach (*lbl, 1, 2, 2, 3, Gtk::FILL, Gtk::FILL, 15);
    lbl = manage (new Gtk::Label (_("Movies:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
    pClient->attach (*lbl, 2, 3, 2, 3, Gtk::FILL, Gtk::FILL, 5);
    lbl = manage (new Gtk::Label (YGP::ANumeric (stats[3]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));

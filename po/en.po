@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2010-03-17 12:18+0100\n"
+"POT-Creation-Date: 2010-04-04 16:22+0200\n"
 "PO-Revision-Date: 2010-03-16 19:30+0100\n"
 "Last-Translator: Markus Schwab <g17m0@users.sourceforge.net>\n"
 "Language-Team: English <g17m0@users.sourceforge.net>\n"
@@ -16,97 +16,85 @@ msgstr ""
 "Content-Transfer-Encoding: 8-bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
-#: src/CDManager.cpp:133
+#: src/CDManager.cpp:128
 msgid "_CD"
 msgstr ""
 
-#: src/CDManager.cpp:134
+#: src/CDManager.cpp:129
 msgid "_Login"
 msgstr ""
 
-#: src/CDManager.cpp:135
+#: src/CDManager.cpp:130
 msgid "<ctl>L"
 msgstr ""
 
-#: src/CDManager.cpp:139
+#: src/CDManager.cpp:134
 msgid "Log_out"
 msgstr ""
 
-#: src/CDManager.cpp:140
+#: src/CDManager.cpp:135
 msgid "<ctl>O"
 msgstr ""
 
-#: src/CDManager.cpp:143
+#: src/CDManager.cpp:138
 msgid "_Export to HTML"
 msgstr ""
 
-#: src/CDManager.cpp:144
+#: src/CDManager.cpp:139
 msgid "<ctl>E"
 msgstr ""
 
-#: src/CDManager.cpp:148
-msgid "_Import from file-info ..."
-msgstr ""
-
-#: src/CDManager.cpp:149
-msgid "<ctl>I"
-msgstr ""
-
-#: src/CDManager.cpp:154
+#: src/CDManager.cpp:144
 msgid "_Edit"
 msgstr ""
 
-#: src/CDManager.cpp:155
+#: src/CDManager.cpp:145
 msgid "_Options"
 msgstr ""
 
-#: src/CDManager.cpp:157
+#: src/CDManager.cpp:147
 msgid "F9"
 msgstr ""
 
-#: src/CDManager.cpp:159
+#: src/CDManager.cpp:149
 msgid "_Save preferences"
 msgstr ""
 
-#: src/CDManager.cpp:160
+#: src/CDManager.cpp:150
 msgid "<ctl>F9"
 msgstr ""
 
-#: src/CDManager.cpp:193 src/CDWriter.cpp:262
+#: src/CDManager.cpp:183 src/CDWriter.cpp:262
 msgid ""
 "Can't read datafile containing the genres!\n"
 "\n"
 "Reason: %1"
 msgstr ""
 
-#: src/CDManager.cpp:208
+#: src/CDManager.cpp:198
 msgid "_Records"
 msgstr ""
 
-#: src/CDManager.cpp:214
+#: src/CDManager.cpp:204
 msgid "_Movies"
 msgstr ""
 
-#: src/CDManager.cpp:220
+#: src/CDManager.cpp:210
 msgid "_Actors"
 msgstr ""
 
-#: src/CDManager.cpp:223
+#: src/CDManager.cpp:213
 msgid "Connect to a database ..."
 msgstr ""
 
-#: src/CDManager.cpp:256
+#: src/CDManager.cpp:246
 msgid ""
 "Error saving data!\n"
 "\n"
 "Reason: %1"
 msgstr ""
 
-#: src/CDManager.cpp:268
-msgid "Select file(s) to import"
-msgstr ""
-
-#: src/CDManager.cpp:287
+#: src/CDManager.cpp:264
 msgid ""
 "Copyright (C) 2004 - 2010 Markus Schwab\n"
 "e-mail: <g17m0@lusers.sourceforge.net>\n"
@@ -118,67 +106,60 @@ msgstr ""
 "\n"
 "Compiled on %1 at %2"
 
-#: src/CDManager.cpp:311
+#: src/CDManager.cpp:288
 msgid "Database login"
 msgstr ""
 
-#: src/CDManager.cpp:354
+#: src/CDManager.cpp:328
 msgid "Reading database ..."
 msgstr ""
 
-#: src/CDManager.cpp:415
+#: src/CDManager.cpp:389
 msgid "The data has been modified! Save those changes?"
 msgstr ""
 
-#: src/CDManager.cpp:438
+#: src/CDManager.cpp:412
 msgid ""
 "Can't connect to database!\n"
 "\n"
 "Reason: %1"
 msgstr ""
 
-#: src/CDManager.cpp:441
+#: src/CDManager.cpp:415
 msgid "Login error"
 msgstr ""
 
-#: src/CDManager.cpp:451
+#: src/CDManager.cpp:425
 msgid ""
 "Can't query needed information!\n"
 "\n"
 "Reason: %1"
 msgstr ""
 
-#: src/CDManager.cpp:476
+#: src/CDManager.cpp:450
 msgid "Disconnected!"
 msgstr ""
 
-#: src/CDManager.cpp:499 src/CDWriter.cpp:726
+#: src/CDManager.cpp:473 src/CDWriter.cpp:726
 msgid ""
 "Can't create file `%1'!\n"
 "\n"
 "Reason: %2."
 msgstr ""
 
-#: src/CDManager.cpp:521
+#: src/CDManager.cpp:495
 msgid ""
 "Can't store special names!\n"
 "\n"
 "Reason: %1."
 msgstr ""
 
-#: src/CDManager.cpp:568
+#: src/CDManager.cpp:542
 msgid "Exporting (language %1) ..."
 msgstr ""
 
-#: src/CDManager.cpp:605
+#: src/CDManager.cpp:579
 msgid "Export Warning!"
-msgstr ""
-
-#: src/CDManager.cpp:635
-msgid ""
-"Can't open file `%1'!\n"
-"\n"
-"Reason: %2"
 msgstr ""
 
 #: src/MovieList.cpp:72
@@ -201,7 +182,7 @@ msgstr ""
 msgid "Unknown type of media!"
 msgstr ""
 
-#: src/MovieList.cpp:262 src/SongList.cpp:197 src/OOList.cpp:248
+#: src/MovieList.cpp:262 src/SongList.cpp:197 src/OOList.cpp:244
 #: src/ActorList.cpp:191
 msgid "Invalid value!"
 msgstr ""
@@ -226,7 +207,7 @@ msgstr ""
 msgid "Duration"
 msgstr ""
 
-#: src/SongList.cpp:77 src/OOList.cpp:100 src/CDWriter.cpp:201
+#: src/SongList.cpp:77 src/OOList.cpp:98 src/CDWriter.cpp:201
 #: src/CDWriter.cpp:526 src/CDWriter.cpp:540 src/ActorList.cpp:60
 msgid "Genre"
 msgstr ""
@@ -235,16 +216,16 @@ msgstr ""
 msgid "Song `%1' already exists!"
 msgstr ""
 
-#: src/SongList.cpp:188 src/OOList.cpp:209
+#: src/SongList.cpp:188 src/OOList.cpp:205
 msgid "Unknown genre!"
 msgstr ""
 
-#: src/OOList.cpp:79 src/CDWriter.cpp:201 src/CDWriter.cpp:524
+#: src/OOList.cpp:77 src/CDWriter.cpp:201 src/CDWriter.cpp:524
 #: src/CDWriter.cpp:538 src/ActorList.cpp:59
 msgid "Year"
 msgstr ""
 
-#: src/OOList.cpp:180 src/OOList.cpp:225 src/ActorList.cpp:169
+#: src/OOList.cpp:178 src/OOList.cpp:221 src/ActorList.cpp:169
 msgid "Entry `%1' already exists!"
 msgstr ""
 
@@ -574,80 +555,99 @@ msgstr ""
 msgid "-error: "
 msgstr ""
 
-#: src/PRecords.cpp:138
+#: src/PRecords.cpp:140
 msgid "Loaded %1 record"
 msgid_plural "Loaded %1 records"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/PRecords.cpp:141
+#: src/PRecords.cpp:143
 msgid " from %1 artist"
 msgid_plural " from %1 artists"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/PRecords.cpp:147
+#: src/PRecords.cpp:149
 msgid "Warnings loading records"
 msgstr ""
 
-#: src/PRecords.cpp:152
+#: src/PRecords.cpp:154
 msgid ""
 "Can't query available records!\n"
 "\n"
 "Reason: %1"
 msgstr ""
 
-#: src/PRecords.cpp:178
+#: src/PRecords.cpp:180
 msgid ""
 "Can't query the songs for record %1!\n"
 "\n"
 "Reason: %2"
 msgstr ""
 
-#: src/PRecords.cpp:366 src/PActors.cpp:381 src/PMovies.cpp:241
+#: src/PRecords.cpp:370 src/PActors.cpp:381 src/PMovies.cpp:275
 msgid "<ctl>Z"
 msgstr ""
 
-#: src/PRecords.cpp:369
+#: src/PRecords.cpp:373
 msgid "New _interpret"
 msgstr ""
 
-#: src/PRecords.cpp:370 src/PActors.cpp:385 src/PMovies.cpp:245
+#: src/PRecords.cpp:374 src/PActors.cpp:385 src/PMovies.cpp:279
 msgid "<ctl>N"
 msgstr ""
 
-#: src/PRecords.cpp:372
+#: src/PRecords.cpp:376
 msgid "_New record"
 msgstr ""
 
-#: src/PRecords.cpp:373 src/PActors.cpp:388 src/PMovies.cpp:248
+#: src/PRecords.cpp:377 src/PActors.cpp:388 src/PMovies.cpp:282
 msgid "<ctl><alt>N"
 msgstr ""
 
-#: src/PRecords.cpp:375
+#: src/PRecords.cpp:379
 msgid "New _song"
 msgstr ""
 
-#: src/PRecords.cpp:376
+#: src/PRecords.cpp:380
 msgid "<ctl><shft>N"
 msgstr ""
 
-#: src/PRecords.cpp:378 src/PActors.cpp:390 src/PMovies.cpp:250
+#: src/PRecords.cpp:382 src/PActors.cpp:390 src/PMovies.cpp:284
 msgid "_Delete"
 msgstr ""
 
-#: src/PRecords.cpp:379 src/PActors.cpp:391 src/PMovies.cpp:251
+#: src/PRecords.cpp:383 src/PActors.cpp:391 src/PMovies.cpp:285
 msgid "<ctl>Delete"
 msgstr ""
 
-#: src/PRecords.cpp:701 src/PMovies.cpp:584
+#: src/PRecords.cpp:385
+msgid "_Import from file-info ..."
+msgstr ""
+
+#: src/PRecords.cpp:386 src/PMovies.cpp:288
+msgid "<ctl>I"
+msgstr ""
+
+#: src/PRecords.cpp:397
+msgid "Select file(s) to import"
+msgstr ""
+
+#: src/PRecords.cpp:416
+msgid ""
+"Can't open file `%1'!\n"
+"\n"
+"Reason: %2"
+msgstr ""
+
+#: src/PRecords.cpp:865 src/PMovies.cpp:619
 msgid ""
 "Couldn't write data!\n"
 "\n"
 "Reason: %1"
 msgstr ""
 
-#: src/PRecords.cpp:704
+#: src/PRecords.cpp:868
 msgid "Error exporting records to HTML!"
 msgstr ""
 
@@ -700,40 +700,44 @@ msgstr ""
 msgid "Movies/Actors"
 msgstr ""
 
-#: src/PMovies.cpp:190
+#: src/PMovies.cpp:222
 msgid "_Original name"
 msgstr ""
 
-#: src/PMovies.cpp:244
+#: src/PMovies.cpp:278
 msgid "New _director"
 msgstr ""
 
-#: src/PMovies.cpp:247
+#: src/PMovies.cpp:281
 msgid "_New movie"
 msgstr ""
 
-#: src/PMovies.cpp:254
+#: src/PMovies.cpp:287
+msgid "_Import from IMDb.com ..."
+msgstr ""
+
+#: src/PMovies.cpp:290
 msgid "_Language"
 msgstr ""
 
-#: src/PMovies.cpp:385
+#: src/PMovies.cpp:420
 msgid "Loaded %1 movie"
 msgid_plural "Loaded %1 movies"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/PMovies.cpp:392
+#: src/PMovies.cpp:427
 msgid "Warnings loading movies"
 msgstr ""
 
-#: src/PMovies.cpp:397 src/PMovies.cpp:418
+#: src/PMovies.cpp:432 src/PMovies.cpp:453
 msgid ""
 "Can't query available movies!\n"
 "\n"
 "Reason: %1"
 msgstr ""
 
-#: src/PMovies.cpp:587
+#: src/PMovies.cpp:622
 msgid "Error exporting movies to HTML!"
 msgstr ""
 
@@ -783,4 +787,40 @@ msgstr ""
 
 #: src/SaveCeleb.cpp:84
 msgid "director"
+msgstr ""
+
+#: src/ImportIMDb.cpp:54
+msgid "Import from IMDb.com"
+msgstr ""
+
+#: src/ImportIMDb.cpp:58
+msgid "_Number or URL of the _movie:"
+msgstr ""
+
+#: src/ImportIMDb.cpp:134
+msgid "Director:"
+msgstr ""
+
+#: src/ImportIMDb.cpp:141
+msgid "Movie:"
+msgstr ""
+
+#: src/ImportIMDb.cpp:148
+msgid "Genre:"
+msgstr ""
+
+#: src/IMDbProgress.cpp:80
+msgid "Connecting to IMDb.com ..."
+msgstr ""
+
+#: src/IMDbProgress.cpp:116
+msgid "Receiving from IMDb.com: %1 bytes"
+msgstr ""
+
+#: src/IMDbProgress.cpp:246
+msgid "Invalid response: `%1'"
+msgstr ""
+
+#: src/IMDbProgress.cpp:253
+msgid "IMDb.com returned status code %1"
 msgstr ""

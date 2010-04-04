@@ -291,24 +291,24 @@ void Storage::setRole (unsigned int idCeleb, const char* role) throw (std::excep
 /// \param role: Role to set for celebrity
 /// \throw std::exception In case of error
 //-----------------------------------------------------------------------------
-void Storage::getStatistics (unsigned int counts[4]) throw (std::exception) {
-   memset (counts, '\0', sizeof (counts));
+void Storage::getStatistics (int counts[6]) throw (std::exception) {
    const char* query (
 #ifdef WITH_RECORDS
-		      "SELECT count(*) AS ci FROM Interprets UNION ALL SELECT count(*) AS cr FROM Records"
+		      "SELECT count(*) FROM Interprets UNION ALL SELECT count(*) FROM Records"
 #else
-		      "SELECT 0, 0"
+		      "SELECT -1, -1"
 #endif
 		      " UNION ALL "
 #ifdef WITH_MOVIES
-		      "SELECT count(*) AS cd FROM Directors UNION ALL SELECT count(*) AS cm FROM Movies"
+		      "SELECT count(*) FROM Directors UNION ALL SELECT count(*) FROM Movies"
 #else
-		      "SELECT 0, 0"
+		      "SELECT -1, -1"
 #endif
+		      " UNION ALL SELECT count(*) FROM Words UNION ALL SELECT count(*) FROM Articles"
 		      );
    Database::execute (query);
    while (Database::hasData ()) {
-      *counts++ = Database::getResultColumnAsUInt (0);
+      *counts++ = Database::getResultColumnAsInt (0);
       Database::getNextResultRow ();
    }
 }

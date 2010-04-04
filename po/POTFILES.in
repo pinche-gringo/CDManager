@@ -26,3 +26,5 @@ src/StorageRecord.cpp
 src/ActorList.cpp
 src/RelateMovie.cpp
 src/SaveCeleb.cpp
+src/ImportIMDb.cpp
+src/IMDbProgress.cpp

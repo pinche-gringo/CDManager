@@ -146,10 +146,14 @@ void ImportFromIMDb::okEvent () {
 //-----------------------------------------------------------------------------
 bool ImportFromIMDb::poll (boost::asio::io_service* svcIO) {
    Check1 (svcIO);
-   TRACE9 ("ImportFromIMDb::indicateWait (boost::asio::io_service*)");
+   TRACE9 ("ImportFromIMDb::poll (boost::asio::io_service*)");
 
-   svcIO->run ();
-   return true;
+   if (status == LOADING) {
+      svcIO->poll_one ();
+      delete svcIO;
+      return true;
+   }
+   return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -189,7 +193,6 @@ void ImportFromIMDb::connectToIMDb (boost::asio::io_service* svcIO) {
       (query, boost::bind (&ImportFromIMDb::resolved, this, svcIO,
 			   boost::asio::placeholders::error,
 			   boost::asio::placeholders::iterator));
-   svcIO->run_one ();
 }
 
 //-----------------------------------------------------------------------------
@@ -227,8 +230,10 @@ void ImportFromIMDb::showError (const Glib::ustring& msg, boost::asio::io_servic
 				boost::asio::ip::tcp::socket* sockIO) {
    Check1 (svcIO);
 
-   if (sockIO)
+   if (sockIO) {
       sockIO->close ();
+      delete sockIO;
+   }
    svcIO->stop ();
    status = QUERY;
    Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);

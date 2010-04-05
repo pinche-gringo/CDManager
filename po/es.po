@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2010-04-05 12:15+0200\n"
-"PO-Revision-Date: 2010-04-05 12:18+0200\n"
+"POT-Creation-Date: 2010-04-05 12:20+0200\n"
+"PO-Revision-Date: 2010-04-05 12:23+0200\n"
 "Last-Translator: Markus Schwab <g17m0@users.sourceforge.net>\n"
 "Language-Team: Spanish <g17m0@users.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -859,11 +859,11 @@ msgstr "director"
 
 #: src/ImportIMDb.cpp:54
 msgid "Import from IMDb.com"
-msgstr ""
+msgstr "Importar de IMDb.com"
 
 #: src/ImportIMDb.cpp:58
-msgid "_Number or URL of the _movie:"
-msgstr ""
+msgid "_Name, number or URL of the movie:"
+msgstr "_Nombre, número o URL de la película:"
 
 #: src/ImportIMDb.cpp:134
 msgid "Director:"
@@ -895,7 +895,7 @@ msgstr "IMDb.com retornó error %1"
 
 #: src/Statistics.cpp:50
 msgid "Statistical information"
-msgstr ""
+msgstr "Información estadística"
 
 #: src/Statistics.cpp:52
 msgid "The database contains:"
@@ -907,7 +907,7 @@ msgid ""
 "\n"
 "Reason: %1"
 msgstr ""
-"¡No puedo leer las informaciones estatisticas!\n"
+"¡No puedo leer las informaciones estadísticas!\n"
 "\n"
 "Causa: %1"
 

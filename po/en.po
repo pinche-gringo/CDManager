@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2010-04-05 12:15+0200\n"
+"POT-Creation-Date: 2010-04-05 12:20+0200\n"
 "PO-Revision-Date: 2010-03-16 19:30+0100\n"
 "Last-Translator: Markus Schwab <g17m0@users.sourceforge.net>\n"
 "Language-Team: English <g17m0@users.sourceforge.net>\n"
@@ -798,7 +798,7 @@ msgid "Import from IMDb.com"
 msgstr ""
 
 #: src/ImportIMDb.cpp:58
-msgid "_Number or URL of the _movie:"
+msgid "_Name, number or URL of the movie:"
 msgstr ""
 
 #: src/ImportIMDb.cpp:134

@@ -28,7 +28,7 @@
 namespace Gtk {
    class Label;
    class Table;
-   class ProgressBar;
+   class TreeView;
 }
 
 class IMDbProgress;
@@ -67,16 +67,22 @@ class ImportFromIMDb : public XGP::XDialog {
    void okEvent ();
 
  private:
-   volatile enum { QUERY, LOADING, CONFIRM } status;
+   volatile enum { QUERY, LOADING, CHOOSING, CONFIRM } status;
 
    // Prohibited manager functions
    ImportFromIMDb (const ImportFromIMDb& other);
    const ImportFromIMDb& operator= (const ImportFromIMDb& other);
 
    static bool removeProgressBar (Gtk::Table* client, IMDbProgress* progress);
+   static bool stopLoading (IMDbProgress* progress);
+   void continueLoading (Gtk::TreeView* list, IMDbProgress* progress);
+
+   void rowSelected (Gtk::TreeView* list);
 
    void inputChanged ();
    void showError (const Glib::ustring& msg);
+   void showSearchResults (const std::map<Glib::ustring, Glib::ustring>& results,
+			   IMDbProgress* progress);
    void showData (const Glib::ustring& director, const Glib::ustring& name,
 		  const Glib::ustring& genre, IMDbProgress* progress);
 };

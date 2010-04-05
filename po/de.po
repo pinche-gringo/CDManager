@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2010-04-05 12:20+0200\n"
-"PO-Revision-Date: 2010-04-05 12:22+0200\n"
+"POT-Creation-Date: 2010-04-05 20:37+0200\n"
+"PO-Revision-Date: 2010-04-05 20:39+0200\n"
 "Last-Translator: Markus Schwab <g17m0@users.sourceforge.net>\n"
 "Language-Team: German <g17m0@users.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -558,7 +558,7 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/CDWriter.cpp:432 src/RelateMovie.cpp:230
+#: src/CDWriter.cpp:432 src/RelateMovie.cpp:230 src/ImportIMDb.cpp:257
 msgid "Movie"
 msgstr "Filme"
 
@@ -849,41 +849,51 @@ msgstr "Interpret"
 msgid "director"
 msgstr "Regisseur"
 
-#: src/ImportIMDb.cpp:54
+#: src/ImportIMDb.cpp:67
 msgid "Import from IMDb.com"
 msgstr "Importieren von IMDb.com"
 
-#: src/ImportIMDb.cpp:58
+#: src/ImportIMDb.cpp:71
 msgid "_Name, number or URL of the movie:"
 msgstr "_Name, Nummer oder URL des Films:"
 
-#: src/ImportIMDb.cpp:134
+#: src/ImportIMDb.cpp:193
 msgid "Director:"
 msgstr "Regisseur:"
 
-#: src/ImportIMDb.cpp:141
+#: src/ImportIMDb.cpp:200
 msgid "Movie:"
 msgstr "Film:"
 
-#: src/ImportIMDb.cpp:148
+#: src/ImportIMDb.cpp:207
 msgid "Genre:"
 msgstr ""
 
-#: src/IMDbProgress.cpp:80
+#: src/IMDbProgress.cpp:111
 msgid "Connecting to IMDb.com ..."
 msgstr "Verbinden mit IMDb.com ..."
 
-#: src/IMDbProgress.cpp:116
+#: src/IMDbProgress.cpp:167
 msgid "Receiving from IMDb.com: %1 bytes"
 msgstr "Empfangene Daten von IMDb.com: %1 Bytes"
 
-#: src/IMDbProgress.cpp:246
+#: src/IMDbProgress.cpp:315
 msgid "Invalid response: `%1'"
 msgstr "Ungültige Antwort: \"%1\""
 
-#: src/IMDbProgress.cpp:253
+#: src/IMDbProgress.cpp:322
 msgid "IMDb.com returned status code %1"
 msgstr "IMDb.com liefert Fehler %1"
+
+#: src/IMDbProgress.cpp:404
+msgid "IMDb didn't find any matching movies!"
+msgstr "IMDb hat keine passenden Filme gefunden!"
+
+#: src/IMDbProgress.cpp:427
+msgid ""
+"Couldn't extract movie-information from IMDb! Maybe the site was "
+"redesigned ..."
+msgstr "Konnte keine Film-Information von IMDb ermittlen! Möglicherweise wurde die Website re-designed ..."
 
 #: src/Statistics.cpp:50
 msgid "Statistical information"

@@ -3,7 +3,7 @@
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movies
 //REFERENCES  :
-//TODO        :
+//TODO        : - Remove progress-bar when canceling
 //BUGS        :
 //REVISION    : $Revision$
 //AUTHOR      : Markus Schwab
@@ -107,7 +107,7 @@ void ImportFromIMDb::okEvent () {
       progress->sigError.connect (mem_fun (*this, &ImportFromIMDb::showError));
       progress->sigSuccess.connect (bind (mem_fun (*this, &ImportFromIMDb::showData), progress));
       progress->show ();
-      client->attach (*progress, 0, 2, 1, 2, Gtk::FILL | Gtk::EXPAND,
+      client->attach (*manage (progress), 0, 2, 1, 2, Gtk::FILL | Gtk::EXPAND,
 		     Gtk::FILL | Gtk::EXPAND, 5, 5);
    }
    else if (status == CONFIRM) {
@@ -119,13 +119,15 @@ void ImportFromIMDb::okEvent () {
 
 //-----------------------------------------------------------------------------
 /// Removes the progressbar
+/// \param client Client area from which remove the progressbar from
 /// \param progress Progressbar to remove
 /// \returns bool Always false
 //-----------------------------------------------------------------------------
-bool ImportFromIMDb::removeProgressBar (IMDbProgress* progress) {
-   TRACE9 ("ImportFromIMDb::removeProgressBar (IMDbProgress*)");
-   Check1 (progress);
-   delete progress;
+bool ImportFromIMDb::removeProgressBar (Gtk::Table* client, IMDbProgress* progress) {
+   TRACE9 ("ImportFromIMDb::removeProgressBar (Gtk::Table*, IMDbProgress*)");
+   Check1 (progress); Check1 (client);
+   progress->stop ();
+   client->remove (*progress);
    return false;
 }
 
@@ -141,8 +143,7 @@ void ImportFromIMDb::showData (const Glib::ustring& director, const Glib::ustrin
    TRACE9 ("ImportFromIMDb::showData (3x const Glib::ustring&, IMDbProgress*) - " << name);
    Check1 (progress); Check1 (client);
    progress->hide ();
-   client->remove (*progress);
-   Glib::signal_idle ().connect (bind (ptr_fun (&ImportFromIMDb::removeProgressBar), progress));
+   Glib::signal_idle ().connect (bind (ptr_fun (&ImportFromIMDb::removeProgressBar), client, progress));
 
    Gtk::Label* lbl (new Gtk::Label (_("Director:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER));
    lbl->show ();

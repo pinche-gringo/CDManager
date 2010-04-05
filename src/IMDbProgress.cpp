@@ -27,6 +27,8 @@
 
 #include <cdmgr-cfg.h>
 
+#include <cctype>
+
 #include <boost/bind.hpp>
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
@@ -51,6 +53,7 @@ static const char* HOST ("www.imdb.com");
 static const char* PORT ("http");
 
 static const char SKIP[] = "http://www.imdb.com/";
+static const char LINK[] = "a href=\"/title/tt";
 
 struct ConnectInfo {
    boost::asio::io_service svcIO;
@@ -121,19 +124,27 @@ void IMDbProgress::start (const Glib::ustring& movie) {
 }
 
 //-----------------------------------------------------------------------------
-/// Polls for available boost:asio-events
+/// Stops the communication
 /// \note It is not save to call this method while handling the callback of a signal
 //-----------------------------------------------------------------------------
 void IMDbProgress::stop () {
    TRACE3 ("IMDbProgress::stop ()");
    if (data) {
-      Check3 (conPoll.connected ()); Check3 (conProgress.connected ());
-      conPoll.disconnect ();
-      conProgress.disconnect ();
+      disconnect ();
 
       delete data;
       data = NULL;
    }
+}
+
+//-----------------------------------------------------------------------------
+/// Stops polling for events
+//-----------------------------------------------------------------------------
+void IMDbProgress::disconnect () {
+   if (conPoll.connected ())
+      conPoll.disconnect ();
+   if (conProgress.connected ())
+      conProgress.disconnect ();
 }
 
 //-----------------------------------------------------------------------------
@@ -352,15 +363,22 @@ void IMDbProgress::readHeaders (const boost::system::error_code& err) {
 }
 
 //-----------------------------------------------------------------------------
-/// Callback after reading (a part of) the content
+/// Callback after reading (a part of) the content. The parsed content
+/// is analysed if it contains a matching movie or IMDbs search page.
+///
+/// Depending on the content either the movie-information is extracted
+/// and listeners are informed about the extracted data or the most
+/// likely results of the search are extracted and the listeners are
+/// informed about them.
 /// \param err Error-information (in case of error)
 //-----------------------------------------------------------------------------
 void IMDbProgress::readContent (const boost::system::error_code& err) {
    TRACE9 ("IMDbProgress::readContent (boost::system::error_code&)");
    Check2 (data);
 
+   Glib::ustring msg;
    if (!err) {
-      std::string line;;
+      std::string line;
       std::istream response (&data->buffer);
       while (std::getline (response, line))
 	 data->contentIMDb += line;
@@ -370,24 +388,49 @@ void IMDbProgress::readContent (const boost::system::error_code& err) {
 			      boost::asio::transfer_at_least (1),
 			       boost::bind (&IMDbProgress::readContent, this,
 					    boost::asio::placeholders::error));
+      return;
    }
    else if (err == boost::asio::error::eof) {
-      TRACE4 ("IMDbProgress::readContent (boost::system::error_code&) - Final: " << data->contentIMDb.size ());
-
-      // Extract director
-      Glib::ustring director (extract (">Director", "<a href=\"/name", "/';\">", "</a>"));
       Glib::ustring name (extract ("<head>", NULL, "<title>", "</title>"));
-      Glib::ustring genre (extract (">Genre:<", "<a href=\"/Sections/Genres/", "/\">", "</a>"));
-      convert (director);
-      convert (name);
+      TRACE4 ("IMDbProgress::readContent (boost::system::error_code&) - Final: " << name << ": "
+	      << data->contentIMDb.size ());
 
-      TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Director: " << director);
-      TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Name: " << name);
-      TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Genre: " << genre);
-      sigSuccess (director, name, genre);
+      if (name == "IMDb Title Search") {           // IMDb's search page found
+	 std::map<Glib::ustring, Glib::ustring> movies;
+
+	 extractSearch (movies, data->contentIMDb);
+	 if (movies.empty ())
+	    msg = _("IMDb didn't find any matching movies!");
+	 else {
+	    disconnect ();
+	    sigAmbiguous.emit (movies);
+	    return;
+	 }
+      }
+      else {
+	 Glib::ustring director (extract (">Director", "<a href=\"/name", "/';\">", "</a>"));
+	 Glib::ustring genre (extract (">Genre:<", "<a href=\"/Sections/Genres/", "/\">", "</a>"));
+	 convert (director);
+	 convert (name);
+
+	 TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Director: " << director);
+	 TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Name: " << name);
+	 TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Genre: " << genre);
+
+	 if (director.size () || name.size () || genre.size ()) {
+	    disconnect ();
+	    sigSuccess (director, name, genre);
+	    return;
+	 }
+	 else
+	    msg = _("Couldn't extract movie-information from IMDb! Maybe the site was redesigned ...");
+      }
    }
    else
-      error (err.message ());
+      msg = err.message ();
+
+   disconnect ();
+   error (msg);
 }
 
 //-----------------------------------------------------------------------------
@@ -430,20 +473,65 @@ void IMDbProgress::convert (Glib::ustring& string) {
 }
 
 //-----------------------------------------------------------------------------
-/// Checks if the passed text is a number; skip leading zeros to
-/// prevent ANumeric to parse it as octadecimal number
+/// Checks if the passed text is a number
 /// \param nr Number to inspect
 /// \returns bool True, if the passed text is a number
 //-----------------------------------------------------------------------------
 bool IMDbProgress::isNumber (const Glib::ustring& nr) {
-   unsigned int i (0);
-   while ((i < nr.length ()) && (nr[i] == '0'))
-      ++i;
-
-   try {
-      return YGP::ANumeric (nr.substr (i)) > 0;
-   }
-   catch (std::invalid_argument&) { }
-   return false;
+   for (unsigned int i (0); i < nr.length (); ++i)
+      if (!isdigit (nr[i]))
+	 return false;
+   return true;
 }
 
+//-----------------------------------------------------------------------------
+/// Tries to extract IMDb-search results from the passed text. Found entries are
+/// added to the passed map (with the ID as key and the name as value).
+/// prevent ANumeric to parse it as octadecimal number
+/// \param nr Number to inspect
+/// \returns bool True, if the passed text is a number
+//-----------------------------------------------------------------------------
+void IMDbProgress::extractSearch (std::map<Glib::ustring, Glib::ustring>& target,
+				  const Glib::ustring& text) {
+   // Only analyse contents of "Popular Titles" section
+   Glib::ustring::size_type start (text.find ("<p><b>Popular Titles</b>"));
+   Glib::ustring::size_type end (text.find ("<p><b>", start + 10));
+   TRACE1 ("IMDbProgress::extractSearch (std::map&, const Glib::ustring&) - Search from " << start << '-' << end);
+
+   while (start < end) {
+      // Align with lines of result
+      start = text.find ("<tr>", start);
+      if ((start != Glib::ustring::npos) || (start > end)) {
+	 // The text is in the 3rd column
+	 for (unsigned int i (0); i < 2; ++i) {
+	    start = text.find ("<td", start + 3);
+	    if (start == Glib::ustring::npos)
+	       return;
+	 }
+
+	 // Extract the 7 digit long ID from the contained link
+	 start = text.find (LINK, start);
+	 if (start != Glib::ustring::npos) {
+	    start += sizeof (LINK) - 1;
+	    Glib::ustring id (text.substr (start, 7));
+
+	    // Continue to end of href and extract the name frmo there
+	    start = text.find ("\">", start + 7);
+	    if (start != Glib::ustring::npos) {
+	       start += 2;
+	       Glib::ustring::size_type endLink (text.find ("</a>", start));
+	       if (endLink != Glib::ustring::npos) {
+		  endLink = text.find (")", endLink + 4);
+		  if (endLink != Glib::ustring::npos) {
+		     target[id] = Glib::ustring (text, start, ++endLink - start);
+		     TRACE1 ("Search: " << id << " = " << Glib::ustring (text, start, endLink - start));
+		     start = endLink + 1;
+		     continue;
+		  }
+	       }
+	    }
+	 }
+      }
+      return;
+   }
+}

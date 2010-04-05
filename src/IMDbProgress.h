@@ -18,7 +18,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 
-#include <vector>
+#include <map>
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/placeholders.hpp>
@@ -47,11 +47,12 @@ class IMDbProgress : public Gtk::ProgressBar {
 
    void start (const Glib::ustring& idMovie);
    void stop ();
+   void disconnect ();
 
    typedef struct ConnectInfo ConnectInfo;
 
    sigc::signal<void, const Glib::ustring&> sigError;
-   sigc::signal<void, const std::vector<const Glib::ustring&> > sigAmbigous;
+   sigc::signal<void, const std::map<Glib::ustring, Glib::ustring> > sigAmbiguous;
    sigc::signal<void, const Glib::ustring&, const Glib::ustring&, const Glib::ustring&> sigSuccess;
 
  protected:
@@ -68,6 +69,8 @@ class IMDbProgress : public Gtk::ProgressBar {
    bool indicateWait ();
    void error (const Glib::ustring& msg);
 
+   static void extractSearch (std::map<Glib::ustring, Glib::ustring>& target,
+			      const Glib::ustring& text);
    Glib::ustring extract (const char* section, const char* subpart,
 			  const char* before, const char* after) const;
    static void convert (Glib::ustring& string);

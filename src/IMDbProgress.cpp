@@ -501,7 +501,7 @@ void IMDbProgress::extractSearch (std::map<Glib::ustring, Glib::ustring>& target
    while (start < end) {
       // Align with lines of result
       start = text.find ("<tr>", start);
-      if ((start != Glib::ustring::npos) || (start > end)) {
+      if ((start != Glib::ustring::npos) && (start < end)) {
 	 // The text is in the 3rd column
 	 for (unsigned int i (0); i < 2; ++i) {
 	    start = text.find ("<td", start + 3);
@@ -519,12 +519,15 @@ void IMDbProgress::extractSearch (std::map<Glib::ustring, Glib::ustring>& target
 	    start = text.find ("\">", start + 7);
 	    if (start != Glib::ustring::npos) {
 	       start += 2;
+
 	       Glib::ustring::size_type endLink (text.find ("</a>", start));
+	       Glib::ustring::size_type posReplace (endLink - start);
 	       if (endLink != Glib::ustring::npos) {
 		  endLink = text.find (")", endLink + 4);
 		  if (endLink != Glib::ustring::npos) {
-		     target[id] = Glib::ustring (text, start, ++endLink - start);
-		     TRACE1 ("Search: " << id << " = " << Glib::ustring (text, start, endLink - start));
+		     Glib::ustring name (text, start, ++endLink - start);
+		     name.replace (posReplace, 4, 0, '\0');
+		     target[id] = name;
 		     start = endLink + 1;
 		     continue;
 		  }

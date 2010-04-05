@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2010-04-04 16:22+0200\n"
-"PO-Revision-Date: 2010-04-04 16:23+0200\n"
+"POT-Creation-Date: 2010-04-05 12:15+0200\n"
+"PO-Revision-Date: 2010-04-05 12:18+0200\n"
 "Last-Translator: Markus Schwab <g17m0@users.sourceforge.net>\n"
 "Language-Team: Spanish <g17m0@users.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -16,55 +16,59 @@ msgstr ""
 "Content-Transfer-Encoding: 8-bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
-#: src/CDManager.cpp:128
+#: src/CDManager.cpp:131
 msgid "_CD"
 msgstr ""
 
-#: src/CDManager.cpp:129
+#: src/CDManager.cpp:132
 msgid "_Login"
 msgstr "_Conectar ..."
 
-#: src/CDManager.cpp:130
+#: src/CDManager.cpp:133
 msgid "<ctl>L"
 msgstr "<ctl>O"
 
-#: src/CDManager.cpp:134
+#: src/CDManager.cpp:137
 msgid "Log_out"
 msgstr "_Desconectar"
 
-#: src/CDManager.cpp:135
+#: src/CDManager.cpp:138
 msgid "<ctl>O"
 msgstr "<ctl>D"
 
-#: src/CDManager.cpp:138
+#: src/CDManager.cpp:141
 msgid "_Export to HTML"
 msgstr "_Exportar a HTML"
 
-#: src/CDManager.cpp:139
+#: src/CDManager.cpp:142
 msgid "<ctl>E"
 msgstr ""
 
-#: src/CDManager.cpp:144
+#: src/CDManager.cpp:147
 msgid "_Edit"
 msgstr "_Editar"
 
-#: src/CDManager.cpp:145
+#: src/CDManager.cpp:148
 msgid "_Options"
 msgstr "_Opciones"
 
-#: src/CDManager.cpp:147
+#: src/CDManager.cpp:150
+msgid "F12"
+msgstr ""
+
+#: src/CDManager.cpp:153
 msgid "F9"
 msgstr ""
 
-#: src/CDManager.cpp:149
+#: src/CDManager.cpp:155
 msgid "_Save preferences"
 msgstr "_Guardar preferencias"
 
-#: src/CDManager.cpp:150
+#: src/CDManager.cpp:156
 msgid "<ctl>F9"
 msgstr ""
 
-#: src/CDManager.cpp:183 src/CDWriter.cpp:262
+#: src/CDManager.cpp:189 src/CDWriter.cpp:262
 msgid ""
 "Can't read datafile containing the genres!\n"
 "\n"
@@ -74,23 +78,23 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/CDManager.cpp:198
+#: src/CDManager.cpp:204
 msgid "_Records"
 msgstr "_Discos"
 
-#: src/CDManager.cpp:204
+#: src/CDManager.cpp:210
 msgid "_Movies"
 msgstr "_Películas"
 
-#: src/CDManager.cpp:210
+#: src/CDManager.cpp:216
 msgid "_Actors"
 msgstr "_Actores"
 
-#: src/CDManager.cpp:213
+#: src/CDManager.cpp:219
 msgid "Connect to a database ..."
 msgstr "Conectar a base de datos .."
 
-#: src/CDManager.cpp:246
+#: src/CDManager.cpp:252
 msgid ""
 "Error saving data!\n"
 "\n"
@@ -100,7 +104,7 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/CDManager.cpp:264
+#: src/CDManager.cpp:277
 msgid ""
 "Copyright (C) 2004 - 2010 Markus Schwab\n"
 "e-mail: <g17m0@lusers.sourceforge.net>\n"
@@ -112,19 +116,19 @@ msgstr ""
 "\n"
 "Compilado el %1 a las %2"
 
-#: src/CDManager.cpp:288
+#: src/CDManager.cpp:301
 msgid "Database login"
 msgstr "Conectar a base de datos "
 
-#: src/CDManager.cpp:328
+#: src/CDManager.cpp:341
 msgid "Reading database ..."
 msgstr "Leyendo de base de datos ..."
 
-#: src/CDManager.cpp:389
+#: src/CDManager.cpp:402
 msgid "The data has been modified! Save those changes?"
 msgstr "¡Los datos han estado modificado! ¿Quiere guardar esos cambios?"
 
-#: src/CDManager.cpp:412
+#: src/CDManager.cpp:425
 msgid ""
 "Can't connect to database!\n"
 "\n"
@@ -134,11 +138,11 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/CDManager.cpp:415
+#: src/CDManager.cpp:428
 msgid "Login error"
 msgstr "Falla de conección"
 
-#: src/CDManager.cpp:425
+#: src/CDManager.cpp:438
 msgid ""
 "Can't query needed information!\n"
 "\n"
@@ -148,11 +152,11 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/CDManager.cpp:450
+#: src/CDManager.cpp:463
 msgid "Disconnected!"
 msgstr "¡Desconectado!"
 
-#: src/CDManager.cpp:473 src/CDWriter.cpp:726
+#: src/CDManager.cpp:486 src/CDWriter.cpp:726
 msgid ""
 "Can't create file `%1'!\n"
 "\n"
@@ -162,7 +166,7 @@ msgstr ""
 "\n"
 "Causa: %2"
 
-#: src/CDManager.cpp:495
+#: src/CDManager.cpp:508
 msgid ""
 "Can't store special names!\n"
 "\n"
@@ -172,11 +176,11 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/CDManager.cpp:542
+#: src/CDManager.cpp:555
 msgid "Exporting (language %1) ..."
 msgstr "Exportando (idioma %1) ..."
 
-#: src/CDManager.cpp:579
+#: src/CDManager.cpp:592
 msgid "Export Warning!"
 msgstr "¡Aviso exportando!"
 
@@ -627,7 +631,7 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/PRecords.cpp:180
+#: src/PRecords.cpp:179
 msgid ""
 "Can't query the songs for record %1!\n"
 "\n"
@@ -637,55 +641,55 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/PRecords.cpp:370 src/PActors.cpp:381 src/PMovies.cpp:275
+#: src/PRecords.cpp:368 src/PActors.cpp:381 src/PMovies.cpp:275
 msgid "<ctl>Z"
 msgstr ""
 
-#: src/PRecords.cpp:373
+#: src/PRecords.cpp:371
 msgid "New _interpret"
 msgstr "Nuevo _artista"
 
-#: src/PRecords.cpp:374 src/PActors.cpp:385 src/PMovies.cpp:279
+#: src/PRecords.cpp:372 src/PActors.cpp:385 src/PMovies.cpp:279
 msgid "<ctl>N"
 msgstr ""
 
-#: src/PRecords.cpp:376
+#: src/PRecords.cpp:374
 msgid "_New record"
 msgstr "_Nuevo disco"
 
-#: src/PRecords.cpp:377 src/PActors.cpp:388 src/PMovies.cpp:282
+#: src/PRecords.cpp:375 src/PActors.cpp:388 src/PMovies.cpp:282
 msgid "<ctl><alt>N"
 msgstr ""
 
-#: src/PRecords.cpp:379
+#: src/PRecords.cpp:377
 msgid "New _song"
 msgstr "Nueva canción"
 
-#: src/PRecords.cpp:380
+#: src/PRecords.cpp:378
 msgid "<ctl><shft>N"
 msgstr ""
 
-#: src/PRecords.cpp:382 src/PActors.cpp:390 src/PMovies.cpp:284
+#: src/PRecords.cpp:380 src/PActors.cpp:390 src/PMovies.cpp:284
 msgid "_Delete"
 msgstr "_Borrar"
 
-#: src/PRecords.cpp:383 src/PActors.cpp:391 src/PMovies.cpp:285
+#: src/PRecords.cpp:381 src/PActors.cpp:391 src/PMovies.cpp:285
 msgid "<ctl>Delete"
 msgstr ""
 
-#: src/PRecords.cpp:385
+#: src/PRecords.cpp:383
 msgid "_Import from file-info ..."
 msgstr "_Importar informaciones de archivos audio  ..."
 
-#: src/PRecords.cpp:386 src/PMovies.cpp:288
+#: src/PRecords.cpp:384 src/PMovies.cpp:288
 msgid "<ctl>I"
 msgstr ""
 
-#: src/PRecords.cpp:397
+#: src/PRecords.cpp:395
 msgid "Select file(s) to import"
 msgstr "Elige fichero(s) para importar"
 
-#: src/PRecords.cpp:416
+#: src/PRecords.cpp:414
 msgid ""
 "Can't open file `%1'!\n"
 "\n"
@@ -695,7 +699,7 @@ msgstr ""
 "\n"
 "Causa: %2"
 
-#: src/PRecords.cpp:865 src/PMovies.cpp:619
+#: src/PRecords.cpp:863 src/PMovies.cpp:619
 msgid ""
 "Couldn't write data!\n"
 "\n"
@@ -705,7 +709,7 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/PRecords.cpp:868
+#: src/PRecords.cpp:866
 msgid "Error exporting records to HTML!"
 msgstr "¡Error exportando discos a HTML!"
 
@@ -888,3 +892,45 @@ msgstr "Respuesta inválida: '%1'"
 #: src/IMDbProgress.cpp:253
 msgid "IMDb.com returned status code %1"
 msgstr "IMDb.com retornó error %1"
+
+#: src/Statistics.cpp:50
+msgid "Statistical information"
+msgstr ""
+
+#: src/Statistics.cpp:52
+msgid "The database contains:"
+msgstr "La base de datos contiene:"
+
+#: src/Statistics.cpp:61
+msgid ""
+"Can't query the statistical information!\n"
+"\n"
+"Reason: %1"
+msgstr ""
+"¡No puedo leer las informaciones estatisticas!\n"
+"\n"
+"Causa: %1"
+
+#: src/Statistics.cpp:67
+msgid "Interprets:"
+msgstr "Artistas:"
+
+#: src/Statistics.cpp:71
+msgid "Records:"
+msgstr "Discos:"
+
+#: src/Statistics.cpp:79
+msgid "Directors:"
+msgstr "Directores:"
+
+#: src/Statistics.cpp:83
+msgid "Movies:"
+msgstr "Películas:"
+
+#: src/Statistics.cpp:95
+msgid "First names:"
+msgstr "Nombres:"
+
+#: src/Statistics.cpp:99
+msgid "Articles:"
+msgstr "Artículos:"

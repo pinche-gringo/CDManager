@@ -122,6 +122,7 @@ void IMDbProgress::start (const Glib::ustring& movie) {
 
 //-----------------------------------------------------------------------------
 /// Polls for available boost:asio-events
+/// \note It is not save to call this method while handling the callback of a signal
 //-----------------------------------------------------------------------------
 void IMDbProgress::stop () {
    TRACE3 ("IMDbProgress::stop ()");

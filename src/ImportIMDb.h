@@ -73,6 +73,8 @@ class ImportFromIMDb : public XGP::XDialog {
    ImportFromIMDb (const ImportFromIMDb& other);
    const ImportFromIMDb& operator= (const ImportFromIMDb& other);
 
+   static bool removeProgressBar (IMDbProgress* progress);
+
    void inputChanged ();
    void showError (const Glib::ustring& msg);
    void showData (const Glib::ustring& director, const Glib::ustring& name,

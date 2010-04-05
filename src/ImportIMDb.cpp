@@ -118,6 +118,18 @@ void ImportFromIMDb::okEvent () {
 }
 
 //-----------------------------------------------------------------------------
+/// Removes the progressbar
+/// \param progress Progressbar to remove
+/// \returns bool Always false
+//-----------------------------------------------------------------------------
+bool ImportFromIMDb::removeProgressBar (IMDbProgress* progress) {
+   TRACE9 ("ImportFromIMDb::removeProgressBar (IMDbProgress*)");
+   Check1 (progress);
+   delete progress;
+   return false;
+}
+
+//-----------------------------------------------------------------------------
 /// Updates the dialog with the data read
 /// \param director Director of the parsed movie
 /// \param name Name of the parsed movie
@@ -126,10 +138,11 @@ void ImportFromIMDb::okEvent () {
 //-----------------------------------------------------------------------------
 void ImportFromIMDb::showData (const Glib::ustring& director, const Glib::ustring& name,
 			       const Glib::ustring& genre, IMDbProgress* progress) {
+   TRACE9 ("ImportFromIMDb::showData (3x const Glib::ustring&, IMDbProgress*) - " << name);
    Check1 (progress); Check1 (client);
    progress->hide ();
    client->remove (*progress);
-   delete progress;
+   Glib::signal_idle ().connect (bind (ptr_fun (&ImportFromIMDb::removeProgressBar), progress));
 
    Gtk::Label* lbl (new Gtk::Label (_("Director:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER));
    lbl->show ();

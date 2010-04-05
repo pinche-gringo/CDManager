@@ -62,6 +62,8 @@ class IMDbProgress : public Gtk::ProgressBar {
    IMDbProgress (const IMDbProgress& other);
    const IMDbProgress& operator= (const IMDbProgress& other);
 
+   static bool isNumber (const Glib::ustring& nr);
+
    bool poll ();
    bool indicateWait ();
    void error (const Glib::ustring& msg);

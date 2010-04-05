@@ -34,12 +34,15 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/read_until.hpp>
 
+#define CHECK 9
+#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ANumeric.h>
 
 #include "IMDbProgress.h"
 
+#define LOCALTEST
 #ifdef LOCALTEST
 static const char* HOST ("localhost");
 #else
@@ -47,8 +50,7 @@ static const char* HOST ("www.imdb.com");
 #endif
 static const char* PORT ("http");
 
-static const char SKIP[] = "www.imdb.com/title/";
-
+static const char SKIP[] = "http://www.imdb.com/";
 
 struct ConnectInfo {
    boost::asio::io_service svcIO;
@@ -74,7 +76,7 @@ struct ConnectInfo {
 /// Default constructor
 //-----------------------------------------------------------------------------
 IMDbProgress::IMDbProgress () : Gtk::ProgressBar (), data (NULL) {
-   TRACE9 ("IMDbProgress::IMDbProgress ()");
+   TRACE5 ("IMDbProgress::IMDbProgress ()");
 }
 
 //-----------------------------------------------------------------------------
@@ -82,7 +84,7 @@ IMDbProgress::IMDbProgress () : Gtk::ProgressBar (), data (NULL) {
 /// \param movie ID of movie to import
 //-----------------------------------------------------------------------------
 IMDbProgress::IMDbProgress (const Glib::ustring& movie) : Gtk::ProgressBar (), data (NULL) {
-   TRACE9 ("IMDbProgress::IMDbProgress (const Glib::ustring&) - " << movie);
+   TRACE5 ("IMDbProgress::IMDbProgress (const Glib::ustring&) - " << movie);
    start (movie);
 }
 
@@ -90,9 +92,8 @@ IMDbProgress::IMDbProgress (const Glib::ustring& movie) : Gtk::ProgressBar (), d
 /// Destructor
 //-----------------------------------------------------------------------------
 IMDbProgress::~IMDbProgress () {
-   TRACE9 ("IMDbProgress::~IMDbProgress ()");
+   TRACE6 ("IMDbProgress::~IMDbProgress ()");
    stop ();
-   TRACE9 ("IMDbProgress::~IMDbProgress () - Finish");
 }
 
 
@@ -102,7 +103,7 @@ IMDbProgress::~IMDbProgress () {
 ///              number on IMDb.com or its whole URL
 //-----------------------------------------------------------------------------
 void IMDbProgress::start (const Glib::ustring& movie) {
-   TRACE5 ("IMDbProgress::start (const Glib::ustring&) - " << movie);
+   TRACE1 ("IMDbProgress::start (const Glib::ustring&) - " << movie);
 
    Check1 (!data);
    delete data;
@@ -123,9 +124,8 @@ void IMDbProgress::start (const Glib::ustring& movie) {
 /// Polls for available boost:asio-events
 //-----------------------------------------------------------------------------
 void IMDbProgress::stop () {
-   TRACE9 ("IMDbProgress::stop ()");
+   TRACE3 ("IMDbProgress::stop ()");
    if (data) {
-      TRACE9 ("IMDbProgress::stop () - Doing");
       Check3 (conPoll.connected ()); Check3 (conProgress.connected ());
       conPoll.disconnect ();
       conProgress.disconnect ();
@@ -133,7 +133,6 @@ void IMDbProgress::stop () {
       delete data;
       data = NULL;
    }
-   TRACE9 ("IMDbProgress::stop () - Finish");
 }
 
 //-----------------------------------------------------------------------------
@@ -208,9 +207,16 @@ void IMDbProgress::error (const Glib::ustring& msg) {
 }
 
 //-----------------------------------------------------------------------------
-/// Callback after connecting to IMDb.com
+/// Callback after connecting to IMDb.com. Tries to load the movie
+/// specified at construction-time/by the last start()-call according
+/// to the following algorithm:
+///   - If it starts with http://www.imdb.com/ use the string as is
+///   - If it is "tt" followed by (exactly) 7 digits consider it an IMDb-ID
+///   - If it is a number consider it an IMDb-ID
+///   - Else perform a search within all titles
 /// \param err Error-information (in case of error)
 /// \param iEndpoints Iterator to remaining endpoints
+/// \note To search for a movie having a number as title (e.g. 1984) put it within quotes
 //-----------------------------------------------------------------------------
 void IMDbProgress::connected (const boost::system::error_code& err,
 			      boost::asio::ip::tcp::resolver::iterator iEndpoints) {
@@ -220,23 +226,26 @@ void IMDbProgress::connected (const boost::system::error_code& err,
    // The connection was successful. Send the request.
    if (!err) {
       std::ostream request (&data->buffer);
+      Glib::ustring path (data->movie);
 
-#ifndef LOCALTEST
-      // Strip everything except the IMDb-ID from the input
-      std::string path (data->movie);
-      if (!path.compare (0, 7, "http://"))
-	 path = path.substr (7);
-      if (!path.compare (0, sizeof (SKIP) - 1, SKIP))
-	 path = path.substr (sizeof (SKIP) - 1);
-      if (!path.compare (0, 2, "tt"))
-	 path = path.substr (2);
-      if (path[path.size () - 1] != '/')
-	 path += '/';
-
-      request << "GET /title/tt" << path << " HTTP/1.0\r\nHost: " << HOST
+#ifdef LOCALTEST
+      path = (path != "s") ? "index.html" : "search.html";
 #else
-      request << "GET /index.html HTTP/1.0\r\nHost: " << HOST
+      if (!path.compare (0, sizeof (SKIP) - 1, SKIP)) {
+	 // Starts with http://www.imdb.com/ -> Just skip this
+	 path = path.substr (sizeof (SKIP) - 1);
+	 if (path[path.length () - 1] != '/')
+	    path += '/';
+      }
+      else if ((path.length () == 9) && !path.compare (0, 2, "tt") && isNumber (path.substr (2)))
+	 path = "title/" + path + '/';
+      else if (isNumber (path) > 0)
+	 path = "title/tt" + Glib::ustring (7 - path.length (), '0') + path + '/';
+      else
+	 path = "find?s=tt&q=" + path;
 #endif
+      TRACE7 ("IMDbProgress::connected (boost::asio::streambuf*, boost::system::error_code&, iterator) - " << path);
+      request << "GET /" << path << " HTTP/1.0\r\nHost: " << HOST
 	      << "\r\nAccept: */*\r\nConnection: close\r\n\r\n";
 
       boost::asio::async_write (data->sockIO, data->buffer,
@@ -317,7 +326,7 @@ void IMDbProgress::readStatus (const boost::system::error_code& err) {
 /// \param err Error-information (in case of error)
 //-----------------------------------------------------------------------------
 void IMDbProgress::readHeaders (const boost::system::error_code& err) {
-   TRACE1 ("IMDbProgress::readHeaders (boost::system::error_code&)");
+   TRACE4 ("IMDbProgress::readHeaders (boost::system::error_code&)");
    Check2 (data);
 
    if (!err) {
@@ -362,7 +371,7 @@ void IMDbProgress::readContent (const boost::system::error_code& err) {
 					    boost::asio::placeholders::error));
    }
    else if (err == boost::asio::error::eof) {
-      TRACE9 ("IMDbProgress::readContent (boost::system::error_code&) - Final: " << data->contentIMDb.size ());
+      TRACE4 ("IMDbProgress::readContent (boost::system::error_code&) - Final: " << data->contentIMDb.size ());
 
       // Extract director
       Glib::ustring director (extract (">Director", "<a href=\"/name", "/';\">", "</a>"));
@@ -374,12 +383,10 @@ void IMDbProgress::readContent (const boost::system::error_code& err) {
       TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Director: " << director);
       TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Name: " << name);
       TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Genre: " << genre);
-
       sigSuccess (director, name, genre);
    }
    else
       error (err.message ());
-   TRACE9 ("IMDbProgress::readContent (boost::system::error_code&) - Finish");
 }
 
 //-----------------------------------------------------------------------------
@@ -420,3 +427,22 @@ void IMDbProgress::convert (Glib::ustring& string) {
    while ((pos = string.find ("&#x27")) != Glib::ustring::npos)
       string.replace (pos, 6, 1, '\'');
 }
+
+//-----------------------------------------------------------------------------
+/// Checks if the passed text is a number; skip leading zeros to
+/// prevent ANumeric to parse it as octadecimal number
+/// \param nr Number to inspect
+/// \returns bool True, if the passed text is a number
+//-----------------------------------------------------------------------------
+bool IMDbProgress::isNumber (const Glib::ustring& nr) {
+   unsigned int i (0);
+   while ((i < nr.length ()) && (nr[i] == '0'))
+      ++i;
+
+   try {
+      return YGP::ANumeric (nr.substr (i)) > 0;
+   }
+   catch (std::invalid_argument&) { }
+   return false;
+}
+

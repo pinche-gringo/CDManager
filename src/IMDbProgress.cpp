@@ -36,15 +36,12 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/read_until.hpp>
 
-#define CHECK 9
-#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/ANumeric.h>
 
 #include "IMDbProgress.h"
 
-#define LOCALTEST
 #ifdef LOCALTEST
 static const char* HOST ("localhost");
 #else
@@ -214,7 +211,7 @@ void IMDbProgress::resolved (const boost::system::error_code& err,
 /// \param msg Message to display
 //-----------------------------------------------------------------------------
 void IMDbProgress::error (const Glib::ustring& msg) {
-   stop ();
+   disconnect ();
    sigError.emit (msg);
 }
 
@@ -429,7 +426,6 @@ void IMDbProgress::readContent (const boost::system::error_code& err) {
    else
       msg = err.message ();
 
-   disconnect ();
    error (msg);
 }
 

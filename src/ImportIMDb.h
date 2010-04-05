@@ -80,7 +80,7 @@ class ImportFromIMDb : public XGP::XDialog {
    void rowSelected (Gtk::TreeView* list);
 
    void inputChanged ();
-   void showError (const Glib::ustring& msg);
+   void showError (const Glib::ustring& msg, IMDbProgress* progress);
    void showSearchResults (const std::map<Glib::ustring, Glib::ustring>& results,
 			   IMDbProgress* progress);
    void showData (const Glib::ustring& director, const Glib::ustring& name,

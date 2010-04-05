@@ -127,7 +127,7 @@ void ImportFromIMDb::okEvent () {
       ok->set_sensitive (false);
 
       IMDbProgress* progress (new IMDbProgress (txtID->get_text ()));
-      progress->sigError.connect (mem_fun (*this, &ImportFromIMDb::showError));
+      progress->sigError.connect (bind (mem_fun (*this, &ImportFromIMDb::showError), progress));
       progress->sigAmbiguous.connect (bind (mem_fun (*this, &ImportFromIMDb::showSearchResults), progress));
       progress->sigSuccess.connect (bind (mem_fun (*this, &ImportFromIMDb::showData), progress));
       progress->show ();
@@ -220,18 +220,21 @@ void ImportFromIMDb::showData (const Glib::ustring& director, const Glib::ustrin
 //-----------------------------------------------------------------------------
 /// Displays an error-message and makes the progress-bar stop
 /// \param msg Message to display
+/// \param progress Progress bar used for displaying the status; will be removed
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::showError (const Glib::ustring& msg) {
+void ImportFromIMDb::showError (const Glib::ustring& msg, IMDbProgress* progress) {
+   Gtk::MessageDialog (msg, Gtk::MESSAGE_ERROR).run ();
+   Glib::signal_idle ().connect (bind (ptr_fun (&ImportFromIMDb::removeProgressBar), client, progress));
+
    status = QUERY;
    inputChanged ();
-
-   Gtk::MessageDialog (msg, Gtk::MESSAGE_ERROR).run ();
+   txtID->set_sensitive ();
 }
 
 //-----------------------------------------------------------------------------
 /// Shows the results of an IMDb-search
 /// \param results Map containing found entries (ID/name)
-/// \param progress Progress bar used for displaying the status; will be removed
+/// \param progress Progress bar used for displaying the status; will be hidden
 //-----------------------------------------------------------------------------
 void ImportFromIMDb::showSearchResults (const std::map<Glib::ustring, Glib::ustring>& results,
 					IMDbProgress* progress) {

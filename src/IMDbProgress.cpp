@@ -250,8 +250,12 @@ void IMDbProgress::connected (const boost::system::error_code& err,
 	 path = "title/" + path + '/';
       else if (isNumber (path) > 0)
 	 path = "title/tt" + Glib::ustring (7 - path.length (), '0') + path + '/';
-      else
+      else {
+	 Glib::ustring::size_type pos (-1);
+	 while ((pos = path.find (' ', pos + 1)) != Glib::ustring::npos)
+	    path.replace (pos, 1, 1, '+');
 	 path = "find?s=tt&q=" + path;
+      }
 #endif
       TRACE7 ("IMDbProgress::connected (boost::asio::streambuf*, boost::system::error_code&, iterator) - " << path);
       request << "GET /" << path << " HTTP/1.0\r\nHost: " << HOST

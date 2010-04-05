@@ -55,7 +55,7 @@ ImportFromIMDb::ImportFromIMDb ()
 
    client->show ();
 
-   Gtk::Label* lbl (new Gtk::Label (_("_Number or URL of the _movie:"), true));
+   Gtk::Label* lbl (new Gtk::Label (_("_Name, number or URL of the movie:"), true));
    lbl->set_mnemonic_widget (*txtID);
    client->attach (*manage (lbl), 0, 1, 0, 1, Gtk::SHRINK, Gtk::SHRINK, 5, 5);
    client->attach (*txtID, 1, 2, 0, 1, Gtk::FILL | Gtk::EXPAND, Gtk::FILL | Gtk::EXPAND, 5, 5);

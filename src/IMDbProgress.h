@@ -52,7 +52,7 @@ class IMDbProgress : public Gtk::ProgressBar {
    typedef struct ConnectInfo ConnectInfo;
 
    sigc::signal<void, const Glib::ustring&> sigError;
-   sigc::signal<void, const std::map<Glib::ustring, Glib::ustring> > sigAmbiguous;
+   sigc::signal<void, const std::map<Glib::ustring, Glib::ustring>&> sigAmbiguous;
    sigc::signal<void, const Glib::ustring&, const Glib::ustring&, const Glib::ustring&> sigSuccess;
 
  protected:

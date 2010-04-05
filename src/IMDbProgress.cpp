@@ -40,7 +40,6 @@
 
 #include "IMDbProgress.h"
 
-
 #ifdef LOCALTEST
 static const char* HOST ("localhost");
 #else
@@ -73,36 +72,79 @@ struct ConnectInfo {
 
 //-----------------------------------------------------------------------------
 /// Default constructor
+//-----------------------------------------------------------------------------
+IMDbProgress::IMDbProgress () : Gtk::ProgressBar (), data (NULL) {
+   TRACE9 ("IMDbProgress::IMDbProgress ()");
+}
+
+//-----------------------------------------------------------------------------
+/// Constructor
 /// \param movie ID of movie to import
 //-----------------------------------------------------------------------------
-IMDbProgress::IMDbProgress (const Glib::ustring& movie) : Gtk::ProgressBar (),
-							  data (*new ConnectInfo (movie)) {
-   set_text (_("Connecting to IMDb.com ..."));
-   pulse ();
-
-   connectToIMDb ();
-
-   Glib::signal_timeout ().connect
-      (mem_fun (*this, &IMDbProgress::poll), 50);
-
-   Glib::signal_timeout ().connect
-      (mem_fun (*this, &IMDbProgress::indicateWait), 150);
+IMDbProgress::IMDbProgress (const Glib::ustring& movie) : Gtk::ProgressBar (), data (NULL) {
+   TRACE9 ("IMDbProgress::IMDbProgress (const Glib::ustring&) - " << movie);
+   start (movie);
 }
 
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------
 IMDbProgress::~IMDbProgress () {
+   TRACE9 ("IMDbProgress::~IMDbProgress ()");
+   stop ();
+   TRACE9 ("IMDbProgress::~IMDbProgress () - Finish");
 }
 
 
 //-----------------------------------------------------------------------------
+/// Starts the communication
+/// \param movie Movie to load; this can be either its name, its
+///              number on IMDb.com or its whole URL
+//-----------------------------------------------------------------------------
+void IMDbProgress::start (const Glib::ustring& movie) {
+   TRACE5 ("IMDbProgress::start (const Glib::ustring&) - " << movie);
+
+   Check1 (!data);
+   delete data;
+   data = new ConnectInfo (movie);
+   set_text (_("Connecting to IMDb.com ..."));
+   pulse ();
+
+   connectToIMDb ();
+
+   conPoll = Glib::signal_timeout ().connect
+      (mem_fun (*this, &IMDbProgress::poll), 50);
+
+   conProgress = Glib::signal_timeout ().connect
+      (mem_fun (*this, &IMDbProgress::indicateWait), 150);
+}
+
+//-----------------------------------------------------------------------------
 /// Polls for available boost:asio-events
+//-----------------------------------------------------------------------------
+void IMDbProgress::stop () {
+   TRACE9 ("IMDbProgress::stop ()");
+   if (data) {
+      TRACE9 ("IMDbProgress::stop () - Doing");
+      Check3 (conPoll.connected ()); Check3 (conProgress.connected ());
+      conPoll.disconnect ();
+      conProgress.disconnect ();
+
+      delete data;
+      data = NULL;
+   }
+   TRACE9 ("IMDbProgress::stop () - Finish");
+}
+
+//-----------------------------------------------------------------------------
+/// Polls for available boost:asio-events
+/// \returns bool Always true, indicating to continue with polling
 //-----------------------------------------------------------------------------
 bool IMDbProgress::poll () {
    TRACE9 ("IMDbProgress::poll ()");
+   Check2 (data);
 
-   data.svcIO.poll ();
+   data->svcIO.poll ();
    return true;
 }
 
@@ -112,9 +154,10 @@ bool IMDbProgress::poll () {
 /// After querying the information the progress-bar is removed
 //-----------------------------------------------------------------------------
 bool IMDbProgress::indicateWait () {
-   if (data.contentIMDb.size ()) {
+   Check2 (data);
+   if (data->contentIMDb.size ()) {
       Glib::ustring msg (_("Receiving from IMDb.com: %1 bytes"));
-      msg.replace (msg.find ("%1"), 2, YGP::ANumeric (data.contentIMDb.size ()).toString ());
+      msg.replace (msg.find ("%1"), 2, YGP::ANumeric (data->contentIMDb.size ()).toString ());
       set_text (msg);
    }
    pulse ();
@@ -126,11 +169,12 @@ bool IMDbProgress::indicateWait () {
 //-----------------------------------------------------------------------------
 void IMDbProgress::connectToIMDb () {
    TRACE5 ("IMDbProgress::connectToIMDb ()");
+   Check2 (data);
 
-   data.resolver.async_resolve (data.query, boost::bind (&IMDbProgress::resolved, this,
+   data->resolver.async_resolve (data->query, boost::bind (&IMDbProgress::resolved, this,
 							 boost::asio::placeholders::error,
 							 boost::asio::placeholders::iterator));
-   data.svcIO.poll ();
+   data->svcIO.poll ();
 }
 
 //-----------------------------------------------------------------------------
@@ -141,11 +185,12 @@ void IMDbProgress::connectToIMDb () {
 void IMDbProgress::resolved (const boost::system::error_code& err,
 			     boost::asio::ip::tcp::resolver::iterator iEndpoints) {
    TRACE7 ("IMDbProgress::resolved (boost::system::error_code&, iterator)");
+   Check2 (data);
 
    if (!err) {
       // Attempt a connection to the first endpoint in the list. Each endpoint
       // will be tried until we successfully establish a connection.
-      data.sockIO.async_connect
+      data->sockIO.async_connect
 	 (*iEndpoints, boost::bind (&IMDbProgress::connected, this,
 				    boost::asio::placeholders::error, iEndpoints));
    }
@@ -158,8 +203,7 @@ void IMDbProgress::resolved (const boost::system::error_code& err,
 /// \param msg Message to display
 //-----------------------------------------------------------------------------
 void IMDbProgress::error (const Glib::ustring& msg) {
-   data.sockIO.close ();
-   data.svcIO.stop ();
+   stop ();
    sigError.emit (msg);
 }
 
@@ -171,14 +215,15 @@ void IMDbProgress::error (const Glib::ustring& msg) {
 void IMDbProgress::connected (const boost::system::error_code& err,
 			      boost::asio::ip::tcp::resolver::iterator iEndpoints) {
    TRACE2 ("IMDbProgress::connected (boost::asio::streambuf*, boost::system::error_code&, iterator)");
+   Check2 (data);
 
    // The connection was successful. Send the request.
    if (!err) {
-      std::ostream request (&data.buffer);
+      std::ostream request (&data->buffer);
 
 #ifndef LOCALTEST
       // Strip everything except the IMDb-ID from the input
-      std::string path (data.movie);
+      std::string path (data->movie);
       if (!path.compare (0, 7, "http://"))
 	 path = path.substr (7);
       if (!path.compare (0, sizeof (SKIP) - 1, SKIP))
@@ -194,13 +239,13 @@ void IMDbProgress::connected (const boost::system::error_code& err,
 #endif
 	      << "\r\nAccept: */*\r\nConnection: close\r\n\r\n";
 
-      boost::asio::async_write (data.sockIO, data.buffer,
+      boost::asio::async_write (data->sockIO, data->buffer,
 				boost::bind (&IMDbProgress::requestWritten, this,
 					     boost::asio::placeholders::error));
    }
    else {
       // The connection failed. Try the next endpoint in the list.
-      data.sockIO.close ();
+      data->sockIO.close ();
       if (iEndpoints != boost::asio::ip::tcp::resolver::iterator ())
 	 resolved (err, ++iEndpoints);
       else
@@ -214,10 +259,11 @@ void IMDbProgress::connected (const boost::system::error_code& err,
 //-----------------------------------------------------------------------------
 void IMDbProgress::requestWritten (const boost::system::error_code& err) {
    TRACE1 ("IMDbProgress::requestWritten (const boost::system::error_code&)");
+   Check2 (data);
 
    if (!err) {
       // Read the response status line.
-      boost::asio::async_read_until (data.sockIO, data.buffer, "\r\n",
+      boost::asio::async_read_until (data->sockIO, data->buffer, "\r\n",
 				     boost::bind (&IMDbProgress::readStatus, this,
 						  boost::asio::placeholders::error));
    }
@@ -231,10 +277,11 @@ void IMDbProgress::requestWritten (const boost::system::error_code& err) {
 //-----------------------------------------------------------------------------
 void IMDbProgress::readStatus (const boost::system::error_code& err) {
    TRACE1 ("IMDbProgress::readStatus (boost::system::error_code&)");
+   Check2 (data);
 
    if (!err) {
       // Check that response is OK.
-      std::istream response (&data.buffer);
+      std::istream response (&data->buffer);
       std::string idHTTP;
       unsigned int nrStatus;
       std::string msgStatus;
@@ -257,7 +304,7 @@ void IMDbProgress::readStatus (const boost::system::error_code& err) {
       }
 
       // Read the response headers, which are terminated by a blank line.
-      boost::asio::async_read_until (data.sockIO, data.buffer, "\r\n\r\n",
+      boost::asio::async_read_until (data->sockIO, data->buffer, "\r\n\r\n",
 				     boost::bind (&IMDbProgress::readHeaders, this,
 						  boost::asio::placeholders::error));
    }
@@ -271,21 +318,22 @@ void IMDbProgress::readStatus (const boost::system::error_code& err) {
 //-----------------------------------------------------------------------------
 void IMDbProgress::readHeaders (const boost::system::error_code& err) {
    TRACE1 ("IMDbProgress::readHeaders (boost::system::error_code&)");
+   Check2 (data);
 
    if (!err) {
       // Skip the response headers.
-      std::istream response (&data.buffer);
+      std::istream response (&data->buffer);
       std::string line;
       while (std::getline (response, line) && (line != "\r"))
 	 ;
 
       // Read the remaining content
-      data.contentIMDb.clear ();
+      data->contentIMDb.clear ();
       while (std::getline (response, line))
-	 data.contentIMDb += line;
-      TRACE8 ("IMDbProgress::readHeaders (boost::system::error_code&) - " << data.contentIMDb);
+	 data->contentIMDb += line;
+      TRACE8 ("IMDbProgress::readHeaders (boost::system::error_code&) - " << data->contentIMDb);
 
-      boost::asio::async_read (data.sockIO, data.buffer, boost::asio::transfer_at_least (1),
+      boost::asio::async_read (data->sockIO, data->buffer, boost::asio::transfer_at_least (1),
 			       boost::bind (&IMDbProgress::readContent, this,
 					    boost::asio::placeholders::error));
    }
@@ -299,21 +347,22 @@ void IMDbProgress::readHeaders (const boost::system::error_code& err) {
 //-----------------------------------------------------------------------------
 void IMDbProgress::readContent (const boost::system::error_code& err) {
    TRACE9 ("IMDbProgress::readContent (boost::system::error_code&)");
+   Check2 (data);
 
    if (!err) {
       std::string line;;
-      std::istream response (&data.buffer);
+      std::istream response (&data->buffer);
       while (std::getline (response, line))
-	 data.contentIMDb += line;
+	 data->contentIMDb += line;
 
       // Continue reading remaining data until EOF.
-      boost::asio::async_read (data.sockIO, data.buffer,
+      boost::asio::async_read (data->sockIO, data->buffer,
 			      boost::asio::transfer_at_least (1),
 			       boost::bind (&IMDbProgress::readContent, this,
 					    boost::asio::placeholders::error));
    }
    else if (err == boost::asio::error::eof) {
-      TRACE9 ("IMDbProgress::readContent (boost::system::error_code&) - Final: " << data.contentIMDb);
+      TRACE9 ("IMDbProgress::readContent (boost::system::error_code&) - Final: " << data->contentIMDb.size ());
 
       // Extract director
       Glib::ustring director (extract (">Director", "<a href=\"/name", "/';\">", "</a>"));
@@ -330,6 +379,7 @@ void IMDbProgress::readContent (const boost::system::error_code& err) {
    }
    else
       error (err.message ());
+   TRACE9 ("IMDbProgress::readContent (boost::system::error_code&) - Finish");
 }
 
 //-----------------------------------------------------------------------------
@@ -341,23 +391,23 @@ void IMDbProgress::readContent (const boost::system::error_code& err) {
 //-----------------------------------------------------------------------------
 Glib::ustring IMDbProgress::extract (const char* section, const char* subpart,
 				     const char* before, const char* after) const {
-   Check1 (section); Check1 (before); Check1 (after);
+   Check1 (section); Check1 (before); Check1 (after); Check2 (data);
 
-   Glib::ustring::size_type i (data.contentIMDb.find (section));
+   Glib::ustring::size_type i (data->contentIMDb.find (section));
    if (i == std::string::npos)
       return Glib::ustring ();
 
    if (subpart)
-      if ((i = data.contentIMDb.find (subpart, i)) == std::string::npos)
+      if ((i = data->contentIMDb.find (subpart, i)) == std::string::npos)
 	 return Glib::ustring ();
 
-   i = data.contentIMDb.find (before, i);
+   i = data->contentIMDb.find (before, i);
    if (i == std::string::npos)
       return Glib::ustring ();
 
    i += strlen (before);
-   std::string::size_type end (data.contentIMDb.find (after, i));
-   return (end == std::string::npos) ? Glib::ustring () : data.contentIMDb.substr (i, end - i);
+   std::string::size_type end (data->contentIMDb.find (after, i));
+   return (end == std::string::npos) ? Glib::ustring () : data->contentIMDb.substr (i, end - i);
 }
 
 //-----------------------------------------------------------------------------

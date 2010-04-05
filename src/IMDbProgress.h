@@ -18,6 +18,8 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 
+#include <vector>
+
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/placeholders.hpp>
 
@@ -28,17 +30,33 @@
 
 /**Class reading data from IMDb while showing its status in itself (a
  * progress bar)
+ *
+ * Available signals:
+ *   - sigError: Emitted if an error occurs; the error-message is passed
+ *   - sigAmbigous: Emitted if a search finds more than one movie;
+                    Passes a list of matching entries
+ *   - sigSuccess: Emitted if a (single) movie was found; Passes the
+                   director, the movie (with year in parenthesises) and the genre
+ * \remarks Don't destroy the object within the signal-callbacks
  */
 class IMDbProgress : public Gtk::ProgressBar {
  public:
+   IMDbProgress ();
    IMDbProgress (const Glib::ustring& movie);
    virtual ~IMDbProgress ();
+
+   void start (const Glib::ustring& idMovie);
+   void stop ();
 
    typedef struct ConnectInfo ConnectInfo;
 
    sigc::signal<void, const Glib::ustring&> sigError;
+   sigc::signal<void, const std::vector<const Glib::ustring&> > sigAmbigous;
    sigc::signal<void, const Glib::ustring&, const Glib::ustring&, const Glib::ustring&> sigSuccess;
 
+ protected:
+   sigc::connection conPoll;
+   sigc::connection conProgress;
 
  private:
    IMDbProgress (const IMDbProgress& other);
@@ -62,7 +80,7 @@ class IMDbProgress : public Gtk::ProgressBar {
    void readHeaders (const boost::system::error_code& err);
    void readContent (const boost::system::error_code& err);
 
-   ConnectInfo& data;
+   ConnectInfo* data;
 };
 
 #endif

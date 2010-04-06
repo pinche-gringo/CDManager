@@ -277,7 +277,9 @@ void ImportFromIMDb::continueLoading (Gtk::TreeView* list, IMDbProgress* progres
 
    Gtk::TreeModel::Row row (*list->get_selection ()->get_selected ());
    MovieColumns colMovies;
-   progress->start (row[colMovies.id]);
    list->hide ();
    client->remove (*list);
+
+   progress->show ();
+   progress->start (row[colMovies.id]);
 }

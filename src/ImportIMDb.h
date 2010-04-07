@@ -75,7 +75,7 @@ class ImportFromIMDb : public XGP::XDialog {
 
    static bool removeProgressBar (Gtk::Table* client, IMDbProgress* progress);
    static bool stopLoading (IMDbProgress* progress);
-   void continueLoading (Gtk::TreeView* list, IMDbProgress* progress);
+   void continueLoading (Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress);
 
    void rowSelected (Gtk::TreeView* list);
 

@@ -37,6 +37,7 @@
 #include <gtkmm/treeview.h>
 #include <gtkmm/liststore.h>
 #include <gtkmm/messagedialog.h>
+#include <gtkmm/scrolledwindow.h>
 
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
@@ -71,9 +72,9 @@ ImportFromIMDb::ImportFromIMDb ()
    Gtk::Label* lbl (new Gtk::Label (_("_Name, number or URL of the movie:"), true));
    lbl->set_mnemonic_widget (*txtID);
    client->attach (*manage (lbl), 0, 1, 0, 1, Gtk::SHRINK, Gtk::SHRINK, 5, 5);
-   client->attach (*txtID, 1, 2, 0, 1, Gtk::FILL | Gtk::EXPAND, Gtk::FILL | Gtk::EXPAND, 5, 5);
+   client->attach (*txtID, 1, 2, 0, 1, Gtk::FILL | Gtk::EXPAND, Gtk::FILL | Gtk::SHRINK, 5, 5);
 
-   get_vbox ()->pack_start (*client, false, false, 5);
+   get_vbox ()->pack_start (*client, true, true, 5);
 
    txtID->signal_changed ().connect (mem_fun (*this, &ImportFromIMDb::inputChanged));
 
@@ -132,7 +133,7 @@ void ImportFromIMDb::okEvent () {
       progress->sigSuccess.connect (bind (mem_fun (*this, &ImportFromIMDb::showData), progress));
       progress->show ();
       client->attach (*manage (progress), 0, 2, 1, 2, Gtk::FILL | Gtk::EXPAND,
-		     Gtk::FILL | Gtk::EXPAND, 5, 5);
+		     Gtk::FILL | Gtk::SHRINK, 5, 5);
       break;
    }
 
@@ -244,6 +245,7 @@ void ImportFromIMDb::showSearchResults (const std::map<Glib::ustring, Glib::ustr
 
    MovieColumns colMovies;
    Glib::RefPtr<Gtk::ListStore> model (Gtk::ListStore::create (colMovies));
+   Gtk::ScrolledWindow& scrl (*new Gtk::ScrolledWindow);
    Gtk::TreeView& list (*new Gtk::TreeView (model));
 
    // Fill the lines into the list
@@ -254,9 +256,14 @@ void ImportFromIMDb::showSearchResults (const std::map<Glib::ustring, Glib::ustr
       row[colMovies.name] = i->second;
    }
 
+   scrl.set_shadow_type (Gtk::SHADOW_ETCHED_IN);
+   scrl.set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+   scrl.add (*manage (&list));
    list.append_column (_("Movie"), colMovies.name);
+   list.set_size_request (-1, 150);
+   scrl.show ();
    list.show ();
-   client->attach (*manage (&list), 0, 2, 2, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+   client->attach (*manage (&scrl), 0, 2, 2, 5, Gtk::FILL | Gtk::EXPAND, Gtk::FILL | Gtk::EXPAND, 5, 5);
 
    list.grab_focus ();
    list.get_selection ()->signal_changed ().connect
@@ -264,21 +271,23 @@ void ImportFromIMDb::showSearchResults (const std::map<Glib::ustring, Glib::ustr
 
    status = CHOOSING;
    ok->signal_clicked ().connect (bind (mem_fun (*this, &ImportFromIMDb::continueLoading),
-					&list, progress));
+					&scrl, &list, progress));
 }
 
 //-----------------------------------------------------------------------------
 /// Continues loading with the selected list-entry
+/// \param scrl Scrolledwindow containing the list
 /// \param list List to get entry to load from
 /// \param progress Progressbar to load
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::continueLoading (Gtk::TreeView* list, IMDbProgress* progress) {
-   Check1 (list); Check1 (progress); Check2 (client);
+void ImportFromIMDb::continueLoading (Gtk::ScrolledWindow* scrl, Gtk::TreeView* list,
+				      IMDbProgress* progress) {
+   Check1 (scrl); Check1 (list); Check1 (progress); Check2 (client);
 
    Gtk::TreeModel::Row row (*list->get_selection ()->get_selected ());
    MovieColumns colMovies;
-   list->hide ();
-   client->remove (*list);
+   scrl->hide ();
+   client->remove (*scrl);
 
    progress->show ();
    progress->start (row[colMovies.id]);

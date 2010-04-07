@@ -70,7 +70,7 @@ class IMDbProgress : public Gtk::ProgressBar {
    void error (const Glib::ustring& msg);
 
    static void extractSearch (std::map<Glib::ustring, Glib::ustring>& target,
-			      const Glib::ustring& text);
+			      const Glib::ustring& src, const Glib::ustring& text);
    Glib::ustring extract (const char* section, const char* subpart,
 			  const char* before, const char* after) const;
    static void convert (Glib::ustring& string);
@@ -80,6 +80,7 @@ class IMDbProgress : public Gtk::ProgressBar {
 		  boost::asio::ip::tcp::resolver::iterator iEndpoints);
    void connected (const boost::system::error_code& err,
 		   boost::asio::ip::tcp::resolver::iterator iEndpoints);
+   void sendRequest (const Glib::ustring& movie);
    void requestWritten (const boost::system::error_code& err);
    void readStatus (const boost::system::error_code& err);
    void readHeaders (const boost::system::error_code& err);

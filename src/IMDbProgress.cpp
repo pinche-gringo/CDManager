@@ -233,38 +233,8 @@ void IMDbProgress::connected (const boost::system::error_code& err,
    Check2 (data);
 
    // The connection was successful. Send the request.
-   if (!err) {
-      std::ostream request (&data->buffer);
-      Glib::ustring path (data->movie);
-
-#ifdef LOCALTEST
-      path = (path != "s") ? "index.html" : "search.html";
-#else
-      if (!path.compare (0, sizeof (SKIP) - 1, SKIP)) {
-	 // Starts with http://www.imdb.com/ -> Just skip this
-	 path = path.substr (sizeof (SKIP) - 1);
-	 if (path[path.length () - 1] != '/')
-	    path += '/';
-      }
-      else if ((path.length () == 9) && !path.compare (0, 2, "tt") && isNumber (path.substr (2)))
-	 path = "title/" + path + '/';
-      else if (isNumber (path) > 0)
-	 path = "title/tt" + Glib::ustring (7 - path.length (), '0') + path + '/';
-      else {
-	 Glib::ustring::size_type pos (-1);
-	 while ((pos = path.find (' ', pos + 1)) != Glib::ustring::npos)
-	    path.replace (pos, 1, 1, '+');
-	 path = "find?s=tt&q=" + path;
-      }
-#endif
-      TRACE7 ("IMDbProgress::connected (boost::asio::streambuf*, boost::system::error_code&, iterator) - " << path);
-      request << "GET /" << path << " HTTP/1.0\r\nHost: " << HOST
-	      << "\r\nAccept: */*\r\nConnection: close\r\n\r\n";
-
-      boost::asio::async_write (data->sockIO, data->buffer,
-				boost::bind (&IMDbProgress::requestWritten, this,
-					     boost::asio::placeholders::error));
-   }
+   if (!err)
+      sendRequest (data->movie);
    else {
       // The connection failed. Try the next endpoint in the list.
       data->sockIO.close ();
@@ -273,6 +243,44 @@ void IMDbProgress::connected (const boost::system::error_code& err,
       else
 	 resolved (boost::asio::error::host_not_found, iEndpoints);
    }
+}
+
+//-----------------------------------------------------------------------------
+/// Sending the request about a title to IMDb.com
+/// \param movie Identification of the movie; can be its name or identity
+//-----------------------------------------------------------------------------
+void IMDbProgress::sendRequest (const Glib::ustring& movie) {
+   Check1 (data);
+   std::ostream request (&data->buffer);
+   Glib::ustring path (movie);
+
+#ifdef LOCALTEST
+   path = (path != "s") ? "index.html" : "search.html";
+#else
+   if (!path.compare (0, sizeof (SKIP) - 1, SKIP)) {
+      // Starts with http://www.imdb.com/ -> Just skip this
+      path = path.substr (sizeof (SKIP) - 1);
+      if (path[path.length () - 1] != '/')
+	 path += '/';
+   }
+   else if ((path.length () == 9) && !path.compare (0, 2, "tt") && isNumber (path.substr (2)))
+      path = "title/" + path + '/';
+   else if (isNumber (path) > 0)
+      path = "title/tt" + Glib::ustring (7 - path.length (), '0') + path + '/';
+   else {
+      Glib::ustring::size_type pos (-1);
+      while ((pos = path.find (' ', pos + 1)) != Glib::ustring::npos)
+	 path.replace (pos, 1, 1, '+');
+      path = "find?s=tt&q=" + path;
+   }
+#endif
+   TRACE7 ("IMDbProgress::sendRequest (const Glib::ustring&) - " << path);
+   request << "GET /" << path << " HTTP/1.0\r\nHost: " << HOST
+	   << "\r\nAccept: */*\r\nConnection: close\r\n\r\n";
+
+   boost::asio::async_write (data->sockIO, data->buffer,
+			     boost::bind (&IMDbProgress::requestWritten, this,
+					  boost::asio::placeholders::error));
 }
 
 //-----------------------------------------------------------------------------
@@ -399,9 +407,14 @@ void IMDbProgress::readContent (const boost::system::error_code& err) {
       if (name == "IMDb Title Search") {           // IMDb's search page found
 	 std::map<Glib::ustring, Glib::ustring> movies;
 
-	 extractSearch (movies, data->contentIMDb);
+	 const char* sections[] = { "<p><b>Popular Titles</b>", "<p><b>Titles (Exact Matches)</b>",
+				    "<p><b>Titles (Partial Matches)</b>" };
+	 for (unsigned int i(0); i < (sizeof (sections) / sizeof (sections[0])); ++i)
+	    extractSearch (movies, data->contentIMDb, sections[i]);
 	 if (movies.empty ())
 	    msg = _("IMDb didn't find any matching movies!");
+	 else if (movies.size () == 1)
+	    sendRequest (movies.begin ()->first);
 	 else {
 	    disconnect ();
 	    sigAmbiguous.emit (movies);
@@ -468,8 +481,82 @@ Glib::ustring IMDbProgress::extract (const char* section, const char* subpart,
 void IMDbProgress::convert (Glib::ustring& string) {
    // At the moment only &#x27; is converted to '
    Glib::ustring::size_type pos (-1);
-   while ((pos = string.find ("&#x27")) != Glib::ustring::npos)
-      string.replace (pos, 6, 1, '\'');
+   static struct {
+      const Glib::ustring in;
+      const Glib::ustring out;
+   } conv[] = {
+      { "&#x22;", "\"" },         // "
+      { "&#x27;", "'" },          // '
+      { "&#xBF;", "\xC2\xBF" },   // ¿
+      { "&#xC0;", "\xC3\x80" },   // Á
+      { "&#xC1;", "\xC3\x81" },   // Á
+      { "&#xC2;", "\xC3\x82" },   // Â
+      { "&#xC3;", "\xC3\x83" },   // Ã
+      { "&#xC4;", "\xC3\x84" },   // Ä
+      { "&#xC5;", "\xC3\x85" },   // Å
+      { "&#xC6;", "\xC3\x86" },   // Æ
+      { "&#xC7;", "\xC3\x87" },   // Ç
+      { "&#xC8;", "\xC3\x88" },   // È
+      { "&#xC9;", "\xC3\x89" },   // É
+      { "&#xCA;", "\xC3\x8A" },   // Ê
+      { "&#xCB;", "\xC3\x8B" },   // Ë
+      { "&#xCC;", "\xC3\x8C" },   // Ì
+      { "&#xCD;", "\xC3\x8D" },   // Í
+      { "&#xCE;", "\xC3\x8E" },   // Î
+      { "&#xCF;", "\xC3\x8F" },   // Ï
+      { "&#xD0;", "\xC3\x90" },   // Ð
+      { "&#xD1;", "\xC3\x91" },   // Ñ
+      { "&#xD2;", "\xC3\x92" },   // Ò
+      { "&#xD3;", "\xC3\x93" },   // Ó
+      { "&#xD4;", "\xC3\x94" },   // Ô
+      { "&#xD5;", "\xC3\x95" },   // Õ
+      { "&#xD6;", "\xC3\x96" },   // Ö
+      { "&#xD7;", "\xC3\x97" },   // ×
+      { "&#xD8;", "\xC3\x98" },   // Ø
+      { "&#xD9;", "\xC3\x99" },   // Ù
+      { "&#xDA;", "\xC3\x9A" },   // Ú
+      { "&#xDB;", "\xC3\x9B" },   // Û
+      { "&#xDC;", "\xC3\x9C" },   // Ü
+      { "&#xDD;", "\xC3\x9D" },   // Ý
+      { "&#xDE;", "\xC3\x9E" },   // Þ
+      { "&#xDF;", "\xC3\x9F" },   // ß
+      { "&#xE0;", "\xC3\xA0" },   // à
+      { "&#xE1;", "\xC3\xA1" },   // á
+      { "&#xE2;", "\xC3\xA2" },   // â
+      { "&#xE3;", "\xC3\xA3" },   // ã
+      { "&#xE4;", "\xC3\xA4" },   // ä
+      { "&#xE5;", "\xC3\xA5" },   // å
+      { "&#xE6;", "\xC3\xA6" },   // æ
+      { "&#xE7;", "\xC3\xA7" },   // ç
+      { "&#xE8;", "\xC3\xA8" },   // è
+      { "&#xE9;", "\xC3\xA9" },   // é
+      { "&#xEA;", "\xC3\xAA" },   // ê
+      { "&#xEB;", "\xC3\xAB" },   // ë
+      { "&#xEC;", "\xC3\xAC" },   // ì
+      { "&#xED;", "\xC3\xAD" },   // í
+      { "&#xEE;", "\xC3\xAE" },   // î
+      { "&#xEF;", "\xC3\xAF" },   // ï
+      { "&#xF0;", "\xC3\xB0" },   // ð
+      { "&#xF1;", "\xC3\xB1" },   // ñ
+      { "&#xF2;", "\xC3\xB2" },   // ò
+      { "&#xF3;", "\xC3\xB3" },   // ó
+      { "&#xF4;", "\xC3\xB4" },   // ô
+      { "&#xF5;", "\xC3\xB5" },   // õ
+      { "&#xF6;", "\xC3\xB6" },   // ö
+      { "&#xF7;", "\xC3\xB7" },   // ÷
+      { "&#xF8;", "\xC3\xB8" },   // ø
+      { "&#xF9;", "\xC3\xB9" },   // ù
+      { "&#xFA;", "\xC3\xBA" },   // ú
+      { "&#xFB;", "\xC3\xBB" },   // û
+      { "&#xFC;", "\xC3\xBC" },   // ü
+      { "&#xFD;", "\xC3\xBD" },   // ý
+      { "&#xFE;", "\xC3\xBE" },   // þ
+      { "&#xFF;", "\xC3\xBF" }    // ÿ
+   };
+
+   for (unsigned int i (0); i < (sizeof (conv) / sizeof (*conv)); ++i)
+      while ((pos = string.find (conv[i].in)) != Glib::ustring::npos)
+	 string.replace (pos, conv[i].in.length (), conv[i].out);
 }
 
 //-----------------------------------------------------------------------------
@@ -487,46 +574,48 @@ bool IMDbProgress::isNumber (const Glib::ustring& nr) {
 //-----------------------------------------------------------------------------
 /// Tries to extract IMDb-search results from the passed text. Found entries are
 /// added to the passed map (with the ID as key and the name as value).
-/// prevent ANumeric to parse it as octadecimal number
-/// \param nr Number to inspect
+/// \param target Map where the found entries are written to
+/// \param src String to revise (HTML page read from IMDb)
+/// \param text Text of section heading the entried
 /// \returns bool True, if the passed text is a number
 //-----------------------------------------------------------------------------
 void IMDbProgress::extractSearch (std::map<Glib::ustring, Glib::ustring>& target,
-				  const Glib::ustring& text) {
+				  const Glib::ustring& src, const Glib::ustring& text) {
    // Only analyse contents of "Popular Titles" section
-   Glib::ustring::size_type start (text.find ("<p><b>Popular Titles</b>"));
-   Glib::ustring::size_type end (text.find ("<p><b>", start + 10));
+   Glib::ustring::size_type start (src.find (text));
+   Glib::ustring::size_type end (src.find ("<p><b>", start + 10));
    TRACE1 ("IMDbProgress::extractSearch (std::map&, const Glib::ustring&) - Search from " << start << '-' << end);
 
    while (start < end) {
       // Align with lines of result
-      start = text.find ("<tr>", start);
+      start = src.find ("<tr>", start);
       if ((start != Glib::ustring::npos) && (start < end)) {
-	 // The text is in the 3rd column
+	 // The name of the movie is in the 3rd column
 	 for (unsigned int i (0); i < 2; ++i) {
-	    start = text.find ("<td", start + 3);
+	    start = src.find ("<td", start + 3);
 	    if (start == Glib::ustring::npos)
 	       return;
 	 }
 
 	 // Extract the 7 digit long ID from the contained link
-	 start = text.find (LINK, start);
+	 start = src.find (LINK, start);
 	 if (start != Glib::ustring::npos) {
 	    start += sizeof (LINK) - 1;
-	    Glib::ustring id (text.substr (start, 7));
+	    Glib::ustring id (src.substr (start, 7));
 
 	    // Continue to end of href and extract the name frmo there
-	    start = text.find ("\">", start + 7);
+	    start = src.find ("\">", start + 7);
 	    if (start != Glib::ustring::npos) {
 	       start += 2;
 
-	       Glib::ustring::size_type endLink (text.find ("</a>", start));
+	       Glib::ustring::size_type endLink (src.find ("</a>", start));
 	       Glib::ustring::size_type posReplace (endLink - start);
 	       if (endLink != Glib::ustring::npos) {
-		  endLink = text.find (")", endLink + 4);
+		  endLink = src.find (")", endLink + 4);
 		  if (endLink != Glib::ustring::npos) {
-		     Glib::ustring name (text, start, ++endLink - start);
+		     Glib::ustring name (src, start, ++endLink - start);
 		     name.replace (posReplace, 4, 0, '\0');
+		     convert (name);
 		     target[id] = name;
 		     start = endLink + 1;
 		     continue;

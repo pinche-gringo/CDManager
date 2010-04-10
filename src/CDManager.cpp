@@ -146,7 +146,7 @@ CDManager::CDManager (Options& options)
 		   mem_fun (*this, &CDManager::exit));
    grpAction->add (apMenus[MEDIT] = Gtk::Action::create ("Edit", _("_Edit")));
    grpAction->add (Gtk::Action::create ("Options", _("_Options")));
-   grpAction->add (Gtk::Action::create ("Stats", Gtk::Stock::INFO),
+   grpAction->add (apMenus[STATISTICS] = Gtk::Action::create ("Stats", Gtk::Stock::INFO),
 		   Gtk::AccelKey (_("F12")),
 		   mem_fun (*this, &CDManager::showStatistics));
    grpAction->add (Gtk::Action::create ("Prefs", Gtk::Stock::PREFERENCES),
@@ -319,6 +319,7 @@ void CDManager::enableMenus (bool enable) {
 #if (WITH_RECORDS == 1) || (WITH_MOVIES == 1)
    apMenus[EXPORT]->set_sensitive (enable);
 #endif
+   apMenus[STATISTICS]->set_sensitive (enable);
    apMenus[SAVE_PREFS]->set_sensitive (enable);
 
    nb.set_sensitive (enable);

@@ -98,7 +98,7 @@ class CDManager : public XGP::XApplication {
    Gtk::Notebook  nb;
    Gtk::Statusbar status;
 
-   enum { LOGIN = 0, SAVE, LOGOUT, MEDIT, SAVE_PREFS,
+   enum { LOGIN = 0, SAVE, LOGOUT, MEDIT, STATISTICS, SAVE_PREFS,
 #if (WITH_RECORDS == 1) || (WITH_MOVIES == 1)
 	  EXPORT,
 #endif

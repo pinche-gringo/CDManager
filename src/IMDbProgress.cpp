@@ -1,5 +1,3 @@
-//$Id$
-
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movies
 //REFERENCES  :
@@ -479,84 +477,52 @@ Glib::ustring IMDbProgress::extract (const char* section, const char* subpart,
 /// \param string String to convert
 //-----------------------------------------------------------------------------
 void IMDbProgress::convert (Glib::ustring& string) {
-   // At the moment only &#x27; is converted to '
-   Glib::ustring::size_type pos (-1);
-   static struct {
-      const Glib::ustring in;
-      const Glib::ustring out;
-   } conv[] = {
-      { "&#x22;", "\"" },         // "
-      { "&#x27;", "'" },          // '
-      { "&#xBF;", "\xC2\xBF" },   // ¿
-      { "&#xC0;", "\xC3\x80" },   // Á
-      { "&#xC1;", "\xC3\x81" },   // Á
-      { "&#xC2;", "\xC3\x82" },   // Â
-      { "&#xC3;", "\xC3\x83" },   // Ã
-      { "&#xC4;", "\xC3\x84" },   // Ä
-      { "&#xC5;", "\xC3\x85" },   // Å
-      { "&#xC6;", "\xC3\x86" },   // Æ
-      { "&#xC7;", "\xC3\x87" },   // Ç
-      { "&#xC8;", "\xC3\x88" },   // È
-      { "&#xC9;", "\xC3\x89" },   // É
-      { "&#xCA;", "\xC3\x8A" },   // Ê
-      { "&#xCB;", "\xC3\x8B" },   // Ë
-      { "&#xCC;", "\xC3\x8C" },   // Ì
-      { "&#xCD;", "\xC3\x8D" },   // Í
-      { "&#xCE;", "\xC3\x8E" },   // Î
-      { "&#xCF;", "\xC3\x8F" },   // Ï
-      { "&#xD0;", "\xC3\x90" },   // Ð
-      { "&#xD1;", "\xC3\x91" },   // Ñ
-      { "&#xD2;", "\xC3\x92" },   // Ò
-      { "&#xD3;", "\xC3\x93" },   // Ó
-      { "&#xD4;", "\xC3\x94" },   // Ô
-      { "&#xD5;", "\xC3\x95" },   // Õ
-      { "&#xD6;", "\xC3\x96" },   // Ö
-      { "&#xD7;", "\xC3\x97" },   // ×
-      { "&#xD8;", "\xC3\x98" },   // Ø
-      { "&#xD9;", "\xC3\x99" },   // Ù
-      { "&#xDA;", "\xC3\x9A" },   // Ú
-      { "&#xDB;", "\xC3\x9B" },   // Û
-      { "&#xDC;", "\xC3\x9C" },   // Ü
-      { "&#xDD;", "\xC3\x9D" },   // Ý
-      { "&#xDE;", "\xC3\x9E" },   // Þ
-      { "&#xDF;", "\xC3\x9F" },   // ß
-      { "&#xE0;", "\xC3\xA0" },   // à
-      { "&#xE1;", "\xC3\xA1" },   // á
-      { "&#xE2;", "\xC3\xA2" },   // â
-      { "&#xE3;", "\xC3\xA3" },   // ã
-      { "&#xE4;", "\xC3\xA4" },   // ä
-      { "&#xE5;", "\xC3\xA5" },   // å
-      { "&#xE6;", "\xC3\xA6" },   // æ
-      { "&#xE7;", "\xC3\xA7" },   // ç
-      { "&#xE8;", "\xC3\xA8" },   // è
-      { "&#xE9;", "\xC3\xA9" },   // é
-      { "&#xEA;", "\xC3\xAA" },   // ê
-      { "&#xEB;", "\xC3\xAB" },   // ë
-      { "&#xEC;", "\xC3\xAC" },   // ì
-      { "&#xED;", "\xC3\xAD" },   // í
-      { "&#xEE;", "\xC3\xAE" },   // î
-      { "&#xEF;", "\xC3\xAF" },   // ï
-      { "&#xF0;", "\xC3\xB0" },   // ð
-      { "&#xF1;", "\xC3\xB1" },   // ñ
-      { "&#xF2;", "\xC3\xB2" },   // ò
-      { "&#xF3;", "\xC3\xB3" },   // ó
-      { "&#xF4;", "\xC3\xB4" },   // ô
-      { "&#xF5;", "\xC3\xB5" },   // õ
-      { "&#xF6;", "\xC3\xB6" },   // ö
-      { "&#xF7;", "\xC3\xB7" },   // ÷
-      { "&#xF8;", "\xC3\xB8" },   // ø
-      { "&#xF9;", "\xC3\xB9" },   // ù
-      { "&#xFA;", "\xC3\xBA" },   // ú
-      { "&#xFB;", "\xC3\xBB" },   // û
-      { "&#xFC;", "\xC3\xBC" },   // ü
-      { "&#xFD;", "\xC3\xBD" },   // ý
-      { "&#xFE;", "\xC3\xBE" },   // þ
-      { "&#xFF;", "\xC3\xBF" }    // ÿ
-   };
+   Glib::ustring::size_type start (0);
+   while ((start = string.find ("&#x", start)) != Glib::ustring::npos) {
+      TRACE1 ("IMDbProgress::convert (Glib::ustring&) - Found at " << start);
 
-   for (unsigned int i (0); i < (sizeof (conv) / sizeof (*conv)); ++i)
-      while ((pos = string.find (conv[i].in)) != Glib::ustring::npos)
-	 string.replace (pos, conv[i].in.length (), conv[i].out);
+      Glib::ustring::size_type pos (start + 3);
+      Glib::ustring::size_type end (string.find (';', pos));
+      int unicode (0);
+      if (end != Glib::ustring::npos)
+	 while (pos < end) {
+	    unicode <<= 4;
+	    char ch (string[pos++]);
+	    if (isdigit (ch))
+	       unicode |= (ch - '0');
+	    else if ((ch >= 'A') && (ch <= 'F'))
+	       unicode |= ch - 'A' + 10;
+	    else if ((ch >= 'a') && (ch <= 'f'))
+	       unicode |= ch - 'a' + 10;
+	 }
+
+      TRACE8 ("IMDbProgress::convert (Glib::ustring&) - Unicode: " << std::hex << unicode << std::dec);
+      Glib::ustring subst;
+      if (unicode < 0x80)
+	 subst = (char)unicode;
+      else if (unicode < 0x800) {
+	 subst = (char)(0xC0 + (unicode >> 6));
+	 subst += (char)(0x80 + (unicode & 0x3F));
+      }
+      else if (unicode < 0x10000) {
+	 subst = (char)(0xE0 + (unicode >> 12));
+	 subst += (char)(0x80 + ((unicode >> 6) & 0x3F));
+	 subst += (char)(0x80 + (unicode & 0x3F));
+      }
+      else if (unicode < 0x110000) {
+	 subst = (char)(0xF0 + (unicode >> 18));
+	 subst += (char)(0x80 + ((unicode >> 12) & 0x3F));
+	 subst += (char)(0x80 + ((unicode >> 6) & 0x3F));
+	 subst += (char)(0x80 + (unicode & 0x3F));
+      }
+      else {
+	 start = end;
+	 continue;
+      }
+
+      string.replace (start, end - start + 1, subst);
+      start += subst.length ();
+   }
 }
 
 //-----------------------------------------------------------------------------

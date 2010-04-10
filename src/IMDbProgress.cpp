@@ -156,8 +156,6 @@ bool IMDbProgress::poll () {
 
 //-----------------------------------------------------------------------------
 /// Updates the progress-bar while information is still loaded.
-///
-/// After querying the information the progress-bar is removed
 //-----------------------------------------------------------------------------
 bool IMDbProgress::indicateWait () {
    Check2 (data);
@@ -411,8 +409,11 @@ void IMDbProgress::readContent (const boost::system::error_code& err) {
 	    extractSearch (movies, data->contentIMDb, sections[i]);
 	 if (movies.empty ())
 	    msg = _("IMDb didn't find any matching movies!");
-	 else if (movies.size () == 1)
-	    sendRequest (movies.begin ()->first);
+	 else if (movies.size () == 1) {
+	    Glib::signal_idle ().connect
+	       (bind (mem_fun (*this, &IMDbProgress::reStart), movies.begin ()->first));
+	    return;
+	 }
 	 else {
 	    disconnect ();
 	    sigAmbiguous.emit (movies);
@@ -592,4 +593,14 @@ void IMDbProgress::extractSearch (std::map<Glib::ustring, Glib::ustring>& target
       }
       return;
    }
+}
+
+//-----------------------------------------------------------------------------
+/// Restarts loading a movie
+/// \param idMovie (New) identification of a movie
+/// \returns bool Always false
+//-----------------------------------------------------------------------------
+bool IMDbProgress::reStart (const Glib::ustring& idMovie) {
+   stop ();
+   start (idMovie);
 }

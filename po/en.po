@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 0.8\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2010-04-05 20:37+0200\n"
+"POT-Creation-Date: 2010-04-10 22:13+0200\n"
 "PO-Revision-Date: 2010-03-16 19:30+0100\n"
 "Last-Translator: Markus Schwab <g17m0@users.sourceforge.net>\n"
 "Language-Team: English <g17m0@users.sourceforge.net>\n"
@@ -114,55 +114,55 @@ msgstr ""
 msgid "Database login"
 msgstr ""
 
-#: src/CDManager.cpp:341
+#: src/CDManager.cpp:342
 msgid "Reading database ..."
 msgstr ""
 
-#: src/CDManager.cpp:402
+#: src/CDManager.cpp:403
 msgid "The data has been modified! Save those changes?"
 msgstr ""
 
-#: src/CDManager.cpp:425
+#: src/CDManager.cpp:426
 msgid ""
 "Can't connect to database!\n"
 "\n"
 "Reason: %1"
 msgstr ""
 
-#: src/CDManager.cpp:428
+#: src/CDManager.cpp:429
 msgid "Login error"
 msgstr ""
 
-#: src/CDManager.cpp:438
+#: src/CDManager.cpp:439
 msgid ""
 "Can't query needed information!\n"
 "\n"
 "Reason: %1"
 msgstr ""
 
-#: src/CDManager.cpp:463
+#: src/CDManager.cpp:464
 msgid "Disconnected!"
 msgstr ""
 
-#: src/CDManager.cpp:486 src/CDWriter.cpp:726
+#: src/CDManager.cpp:487 src/CDWriter.cpp:726
 msgid ""
 "Can't create file `%1'!\n"
 "\n"
 "Reason: %2."
 msgstr ""
 
-#: src/CDManager.cpp:508
+#: src/CDManager.cpp:509
 msgid ""
 "Can't store special names!\n"
 "\n"
 "Reason: %1."
 msgstr ""
 
-#: src/CDManager.cpp:555
+#: src/CDManager.cpp:556
 msgid "Exporting (language %1) ..."
 msgstr ""
 
-#: src/CDManager.cpp:592
+#: src/CDManager.cpp:593
 msgid "Export Warning!"
 msgstr ""
 
@@ -521,7 +521,7 @@ msgid ""
 "Reason: %2"
 msgstr ""
 
-#: src/CDWriter.cpp:432 src/RelateMovie.cpp:230 src/ImportIMDb.cpp:257
+#: src/CDWriter.cpp:432 src/RelateMovie.cpp:230 src/ImportIMDb.cpp:262
 msgid "Movie"
 msgstr ""
 
@@ -793,47 +793,47 @@ msgstr ""
 msgid "director"
 msgstr ""
 
-#: src/ImportIMDb.cpp:67
+#: src/ImportIMDb.cpp:68
 msgid "Import from IMDb.com"
 msgstr ""
 
-#: src/ImportIMDb.cpp:71
+#: src/ImportIMDb.cpp:72
 msgid "_Name, number or URL of the movie:"
 msgstr ""
 
-#: src/ImportIMDb.cpp:193
+#: src/ImportIMDb.cpp:194
 msgid "Director:"
 msgstr ""
 
-#: src/ImportIMDb.cpp:200
+#: src/ImportIMDb.cpp:201
 msgid "Movie:"
 msgstr ""
 
-#: src/ImportIMDb.cpp:207
+#: src/ImportIMDb.cpp:208
 msgid "Genre:"
 msgstr ""
 
-#: src/IMDbProgress.cpp:111
+#: src/IMDbProgress.cpp:109
 msgid "Connecting to IMDb.com ..."
 msgstr ""
 
-#: src/IMDbProgress.cpp:167
+#: src/IMDbProgress.cpp:163
 msgid "Receiving from IMDb.com: %1 bytes"
 msgstr ""
 
-#: src/IMDbProgress.cpp:315
+#: src/IMDbProgress.cpp:319
 msgid "Invalid response: `%1'"
 msgstr ""
 
-#: src/IMDbProgress.cpp:322
+#: src/IMDbProgress.cpp:326
 msgid "IMDb.com returned status code %1"
 msgstr ""
 
-#: src/IMDbProgress.cpp:404
+#: src/IMDbProgress.cpp:411
 msgid "IMDb didn't find any matching movies!"
 msgstr ""
 
-#: src/IMDbProgress.cpp:427
+#: src/IMDbProgress.cpp:439
 msgid ""
 "Couldn't extract movie-information from IMDb! Maybe the site was "
 "redesigned ..."

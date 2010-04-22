@@ -1,3 +1,271 @@
+2010-04-22 19:30:57 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * ChangeLog: Changes of V1.0.00 documented
+
+2010-04-10 22:13:57 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * po/*.po: Actualised
+
+2010-04-10 22:11:39 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/IMDbProgress: Fixed loading movie if a search only returned one entry
+
+2010-04-10 21:46:45 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb: convert() handles Unicode to UTF-8
+
+2010-04-10 21:45:31 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/CDManager: Disabling statistics if not logged in
+
+2010-04-07 21:47:18 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb: Prettified list of found movies
+
+2010-04-07 21:42:19 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/IMDbProgress: Added titles from exact and partial match; Converting entries
+
+2010-04-06 19:44:43 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb.cpp: Showing progress bar again (after selecting a search-result)
+
+2010-04-05 20:41:51 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * po/*.po: Added error-messages while parsing answers from IMDb
+
+2010-04-05 20:36:44 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/IMDbProgress.cpp: When searching for movies, replace blanks with + in search
+
+2010-04-05 20:26:45 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportFromIMDb: Fixed trap after displaying error
+
+2010-04-05 20:12:25 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb: Showing search-results; selecting one continues loading it
+
+2010-04-05 19:42:30 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/IMDbProgress: sigAmbiguos passes found entries by reference
+
+2010-04-05 19:40:48 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/IMDbProgress.cpp: Fixed terminating loop; Stripping separting </a>
+
+2010-04-05 17:31:08 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/IMDbProgress: First draft of parsing search-page
+
+2010-04-05 14:56:55 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb: Managing the progressbar to automatically remove it at cancel
+
+2010-04-05 14:56:29 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/IMDbProgress.cpp: Added information about when calling stop() is allowed
+
+2010-04-05 14:47:42 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/IMDbProgress: Search distinguishes between URL, name and number
+
+2010-04-05 13:22:45 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/IMDbProgress.cpp: Loading can be started and stopped
+
+2010-04-05 13:21:40 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb: Delaying removing the progress-bar
+
+2010-04-05 12:25:07 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb.cpp: Fixed typo
+
+2010-04-05 12:24:00 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * po/*.po: Translating forgotten messages
+
+2010-04-05 12:19:19 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * po/*.po: Added messages for statistics
+
+2010-04-04 22:32:07 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Statistics: Showing actor-stats; Showing SQL-errors
+
+2010-04-04 22:31:33 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Minor optimisation showing message dialogs
+
+2010-04-04 21:53:56 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Statistics-Dialog: Showing count of articles and names
+
+2010-04-04 21:33:27 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/Statistics.cpp: Improved alignment
+
+2010-04-04 21:29:07 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * NEWS: Formatting
+
+2010-04-04 21:28:15 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Added Statistics-dialog
+
+2010-04-04 16:57:08 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb: Converting HTML-characters in the parsed text to characters
+
+2010-04-04 16:41:14 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/IMDbProgress.cpp: Correctly extracting director-info if thera are 2 or more
+
+2010-04-04 16:40:09 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb.cpp: showData() sets the status to CONFIRM
+
+2010-04-04 16:24:40 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * po/*.po: Added messages from IMDb-import
+
+2010-04-04 16:24:18 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportFromIMDb: Improved messages
+
+2010-04-04 16:15:33 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * po/POTFILES.in: Added files for IMDb-import
+
+2010-04-04 16:15:06 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Version 1.0
+
+2010-04-04 16:13:27 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportFromIMDb: Passing name of movie to import
+
+2010-04-04 16:09:08 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/Makefile.am: Added IMDbProgress
+
+2010-04-04 16:08:46 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportFromIMDb: Using sub-classed Gtk::ProgressBar to read from IMDb
+
+2010-04-04 14:04:31 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb: Cleanup of asio-ressources
+
+2010-04-04 13:05:05 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb: Don't use io_service::run() but run_one() and poll()
+
+2010-04-04 11:37:57 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb: Use define to switch between test- and production environment
+
+2010-03-29 12:14:22 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Movies: Import from IMDb is not modal anymore
+
+2010-03-29 01:16:29 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb.cpp: Accessing IMDb.com (and not localhost)
+
+2010-03-29 00:46:16 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Movies: Setting values imported from IMDb
+
+2010-03-29 00:44:10 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/SaveCeleb.cpp: Removed checks & traces
+
+2010-03-29 00:11:10 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/Genres.cpp: Don't derive from std::vector anymore
+
+2010-03-28 23:45:30 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/PMovies: First draft of adding a movie after import from IMDb
+
+2010-03-28 23:31:10 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/PMovies: ImportFromIMDb is modal; Delete save-same-director-dialog
+
+2010-03-28 23:29:31 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb: Close dialog if commit-signal returns true
+
+2010-03-28 23:28:45 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/SaveCeleb: Don't auto-delete dialog at button-event
+
+2010-03-28 23:02:25 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/PMovie: First draft of importing from IMDb
+
+2010-03-28 23:01:08 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/SaveCeleb: Added perform(); Made getIdOfSelection() public
+
+2010-03-28 20:18:19 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb: Showing parsed info; emitting signal with info
+
+2010-03-23 18:24:34 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb: Extracting name and genre
+
+2010-03-23 17:26:02 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb.cpp: Extracting director
+
+2010-03-21 22:43:47 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * README: Fixed typo
+
+2010-03-21 22:33:52 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/PRecords.cpp: Formatting
+
+2010-03-21 22:31:56 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * configure.ac: Checking for needed boost-headers
+
+2010-03-21 22:27:31 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * INSTALL: Actualised dependencies
+
+2010-03-19 21:08:54 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb.cpp: Reading the whole file from the server
+
+2010-03-19 20:34:03 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Movies: Reading response from IMDb.com
+
+2010-03-19 19:52:43 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Movies: Added import from IMDb
+
+2010-03-19 19:22:11 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb.cpp: Fixed connecting
+
+2010-03-19 18:42:02 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/Makefile.am: Handling ImportIMDb
+
+2010-03-19 18:41:24 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb: Initial version
+
+2010-03-19 11:03:42 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * CDManager: Moved menu 'Import from file' to 'Edit'-menu of records
+
 2010-03-17 12:20:46 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
 
 	* ChangeLog: Changes of V0.8.41 documented

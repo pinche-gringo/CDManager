@@ -1,9 +1,7 @@
 #ifndef IMPORTIMDB_H
 #define IMPORTIMDB_H
 
-//$Id$
-
-// This file is part of CDManager.
+// This file is part of CDManager
 //
 // CDManager is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

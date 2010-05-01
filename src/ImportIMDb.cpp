@@ -1,16 +1,12 @@
-//$Id$
-
 //PROJECT     : CDManager
 //SUBSYSTEM   : Movies
 //REFERENCES  :
-//TODO        : - Remove progress-bar when canceling
 //BUGS        :
-//REVISION    : $Revision$
 //AUTHOR      : Markus Schwab
 //CREATED     : 19.03.2010
 //COPYRIGHT   : Copyright (C) 2010
 
-// This file is part of CDManager.
+// This file is part of CDManager
 //
 // CDManager is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

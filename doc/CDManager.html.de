@@ -1,23 +1,24 @@
 <!-- -*-HTML-*- -->
 <!--
-  Copyright (C) 2004 - 2006, 2010 Markus Schwab (g17m0@lycos.com)
+   Copyright (C) 2004 - 2006, 2010 Markus Schwab (g17m0@users.sourceforge.net)
 
-  This is free software; you can redistribute it and/or
-  modify it under the terms of the GNU General Public
-  License as published by the Free Software Foundation; either
-  version 2 of the License, or (at your option) any later version.
+   This file is part of libYGP.
 
-  This is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  General Public License for more details.
+   libYGP is free software: you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
 
-  You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+   libYGP is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with libYGP.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//DE"
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
         "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
@@ -46,19 +47,22 @@
     <p>Der CD-Manager ist ein Utility zum Verwalten von Platten und Filmen.</p>
 
     <p>Er kann unter anderem die verwalteten Datentr&auml;ger zu
-      HTML-Seiten exportieren und Platten von Musikst&uuml;cken im
-      MP3-Format (sofern sie ein ID3-Tag aufweisen) oder im OGG-Format
-      importieren.</p>
+      HTML-Seiten exportieren, Filminformation
+      von <a href="http://www.imdb.com/">IMDb.com</a> &uuml;bernehmen
+      und Platten von Musikst&uuml;cken im MP3-Format (sofern sie ein
+      ID3-Tag aufweisen) oder im OGG-Format importieren.</p>
 
-    <p>Vertrieben wird das Programm unter der GNU General Public License, die
-      prinizipell folgendes aussagt (Details findet man in der in diesem Paket
-      enthaltenen Datei <tt>COPYING</tt> oder auf der
-      <a href="http://www.gnu.org">GNU Homepage (http://www.gnu.org)</a>):</p>
+    <p>Vertrieben wird das Programm unter
+      der <a href="http://www.gnu.org">GNU</a> <a href="http://www.gnu.org/licenses/gpl.html">General
+      Public License</a>, die prinizipell folgendes aussagt (Details
+      findet man in der in diesem Paket enthaltenen
+      Datei <tt>COPYING</tt> oder auf der GNU Homepage
+      (http://www.gnu.org)):</p>
 
     <blockquote><em><p>Dieses Programm ist freie Software. Sie k&ouml;nnen es
         unter den Bedingungen der GNU General Public License, wie von der
         Free Software Foundation herausgegeben, weitergeben und/oder
-        modifizieren, entweder unter Version 2 der Lizenz oder (wenn Sie
+        modifizieren, entweder unter Version 3 der Lizenz oder (wenn Sie
         es w&uuml;nschen) jeder sp&auml;teren Version.</p>
 
       <p>Der Vertrieb dieses Programms erfolgt in der Hoffnung,
@@ -95,8 +99,9 @@
     <p>Neue Entr&auml;ge k&ouml;nnen durch Ausw&auml;hlen des
       passenden Eintrags im <tt>Bearbeiten</tt> Men&uuml; oder durch
       Importieren des ID3-Tags von MP3-Musikst&uuml;cken bzw. von
-      OGG-Dateien (Men&uuml; <tt>Importieren von Datei-Info</tt> inm
-      <tt>CD</tt> Men&uuml;).</p>
+      OGG-Dateien (Men&uuml; <tt>Importiere Kommentare von
+      Musikdateien</tt> im
+      <tt>Bearbeiten</tt> Men&uuml;).</p>
 
     <p>Innerhalb der (ausgew&auml;hlten) Liste kann nach
       Eintr&auml;gen gesucht werden. Die Suche wird einfach durch
@@ -113,7 +118,10 @@
 
     <p>Neue Eintr&auml;ge k&ouml;nnen durch Ausw&auml;hlen des
       entsprechenden Eintrags im <tt>Bearbeiten</tt> Men&uuml;
-      hinzugef&uuml;gt werden.</p>
+      hinzugef&uuml;gt werden oder durch Importieren
+      von <a href="http://www.imdb.com">www.imdb.com</a>
+      (Men&uuml; <tt>Importiere von IMDb.com</tt> im
+      <tt>Bearbeiten</tt> Men&uuml;).</p>
 
     <p>Genau wie bei den Platten kann innerhalb der (aktiven) Liste
       kann nach Eintr&auml;gen gesucht werden (siehe oben).</p>
@@ -145,19 +153,32 @@
       eingegeben. Diese Information wird zum Verbinden mit der
       Datenbank verwendet.</p>
 
-    <h3>Import</h3>
-    <p>Dieser Dialog wird mittels <tt>Importieren von Datei-Info
-      ...</tt> im <tt>CDs</tt> Men&uuml; ausgew&auml;lt. Er
-      erm&ouml;glicht ein Durchwandern der Verzeichnisstruktur und die
-      Auswahl von Dateien, die dann nach &mdash; je nach Dateityp
-      &mdash; einem ID3-Tag f&uuml;r MP3-Dateien oder
-      OGG-Dateiinformationen durchsucht werden. Diese Information wird
-      in die Datenbank importiert.</p>
+    <h3>Import von Musik</h3>
+    <p>Dieser Dialog wird mittels <tt>Importiere Kommentare von
+      Musikdateien</tt> im
+      <tt>Bearbeiten</tt> Men&uuml; ausgew&auml;lt. Er erm&ouml;glicht
+      ein Durchwandern der Verzeichnisstruktur und die Auswahl von
+      Dateien, die dann nach &mdash; je nach Dateityp &mdash; einem
+      ID3-Tag f&uuml;r MP3-Dateien oder OGG-Dateiinformationen
+      durchsucht werden. Diese Information wird in die Datenbank
+      importiert.</p>
 
     <p>Beachte, da&szlig; dieser Import Doppel-Eintr&auml;ge
       verursachen kann, wenn die Namen unterschiedlich geschrieben
       sind oder die L&auml;gen der ID3-Information (max. 30/32
       Zeichen) &uuml;berschreiten.</p>
+
+    <h3>Import von Filmen (IMDb.com)</h3>
+    <p>Dieser Dialog wird mittels <tt>Importiere von IMDb.com</tt> im
+      <tt>Bearbeiten</tt> Men&uuml; ausgew&auml;lt. Gesucht kann
+      entweder nach Name, ID oder URL. Liefert die Suche kein
+      eindeutiges Ergebnis (bei der Suche nach Namen), kann aus den
+      gefundenen Eintr&auml;ge der gew&uuml;nsche ausgew&auml;hlt
+      werden. Diese Information wird in die Datenbank importiert.</p>
+
+    <h3>Informationen</h3>
+    <p>Diverse statistische Information kann mittels <tt>Informationen</tt> im
+      <tt>Optionen</tt>-Men&uuml; angezeigt werden.</p>
 
     <h3>Einstellungen</h3>
     <p>Der <i>Einstellungen-Dialog</i> wird mit <tt>Einstellungen ...</tt> im
@@ -183,12 +204,14 @@
 </pre>
 
     <h2>Danksagung</h2>
-    <p>Dank an die Leute von MySQL f&uuml;r deren gro&szlig;artige Datenbank
-      und die mysql++ library.</p>
+    <p>Dank an die Leute von MySQL f&uuml;r deren gro&szlig;artige
+      Datenbank und die mysql++ library, sowie an Fabian Hernandez
+      (<a href="http://cocoknight.com">http://cocoknight.com</a>)
+      f&uuml; das Erstellen des Autor-Logos.</p>
 
     <hr noshade="noshade" size="2">
     <address>
-      <a href="mailto:g17m0@lycos.com">Markus Schwab (g17m0@lycos.com)</a><br>
+      <a href="mailto:g17m0@lycos.com">Markus Schwab (g17m0@users.sourceforge.net)</a><br>
     </address>
   </body>
 </html>

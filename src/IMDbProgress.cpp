@@ -36,6 +36,7 @@
 
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
+#include <YGP/Utility.h>
 #include <YGP/ANumeric.h>
 
 #include "IMDbProgress.h"
@@ -396,7 +397,7 @@ void IMDbProgress::readContent (const boost::system::error_code& err) {
       return;
    }
    else if (err == boost::asio::error::eof) {
-      Glib::ustring name (extract ("<head>", NULL, "<title>", "</title>"));
+      std::string name (extract ("<head>", NULL, "<title>", "</title>"));
       TRACE4 ("IMDbProgress::readContent (boost::system::error_code&) - Final: " << name << ": "
 	      << data->contentIMDb.size ());
 
@@ -421,10 +422,10 @@ void IMDbProgress::readContent (const boost::system::error_code& err) {
 	 }
       }
       else {
-	 Glib::ustring director (extract (">Director", "<a href=\"/name", "/';\">", "</a>"));
+	 std::string director (extract (">Director", "<a href=\"/name", "/';\">", "</a>"));
 	 Glib::ustring genre (extract (">Genre:<", "<a href=\"/Sections/Genres/", "/\">", "</a>"));
-	 convert (director);
-	 convert (name);
+	 YGP::convertHTMLUnicode2UTF8 (director);
+	 YGP::convertHTMLUnicode2UTF8 (name);
 
 	 TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Director: " << director);
 	 TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Name: " << name);
@@ -474,59 +475,6 @@ Glib::ustring IMDbProgress::extract (const char* section, const char* subpart,
 }
 
 //-----------------------------------------------------------------------------
-/// Converts special HTML-characters in string to its equivalent character
-/// \param string String to convert
-//-----------------------------------------------------------------------------
-void IMDbProgress::convert (Glib::ustring& string) {
-   Glib::ustring::size_type start (0);
-   while ((start = string.find ("&#x", start)) != Glib::ustring::npos) {
-      TRACE1 ("IMDbProgress::convert (Glib::ustring&) - Found at " << start);
-
-      Glib::ustring::size_type pos (start + 3);
-      Glib::ustring::size_type end (string.find (';', pos));
-      int unicode (0);
-      if (end != Glib::ustring::npos)
-	 while (pos < end) {
-	    unicode <<= 4;
-	    char ch (string[pos++]);
-	    if (isdigit (ch))
-	       unicode |= (ch - '0');
-	    else if ((ch >= 'A') && (ch <= 'F'))
-	       unicode |= ch - 'A' + 10;
-	    else if ((ch >= 'a') && (ch <= 'f'))
-	       unicode |= ch - 'a' + 10;
-	 }
-
-      TRACE8 ("IMDbProgress::convert (Glib::ustring&) - Unicode: " << std::hex << unicode << std::dec);
-      Glib::ustring subst;
-      if (unicode < 0x80)
-	 subst = (char)unicode;
-      else if (unicode < 0x800) {
-	 subst = (char)(0xC0 + (unicode >> 6));
-	 subst += (char)(0x80 + (unicode & 0x3F));
-      }
-      else if (unicode < 0x10000) {
-	 subst = (char)(0xE0 + (unicode >> 12));
-	 subst += (char)(0x80 + ((unicode >> 6) & 0x3F));
-	 subst += (char)(0x80 + (unicode & 0x3F));
-      }
-      else if (unicode < 0x110000) {
-	 subst = (char)(0xF0 + (unicode >> 18));
-	 subst += (char)(0x80 + ((unicode >> 12) & 0x3F));
-	 subst += (char)(0x80 + ((unicode >> 6) & 0x3F));
-	 subst += (char)(0x80 + (unicode & 0x3F));
-      }
-      else {
-	 start = end;
-	 continue;
-      }
-
-      string.replace (start, end - start + 1, subst);
-      start += subst.length ();
-   }
-}
-
-//-----------------------------------------------------------------------------
 /// Checks if the passed text is a number
 /// \param nr Number to inspect
 /// \returns bool True, if the passed text is a number
@@ -570,7 +518,7 @@ void IMDbProgress::extractSearch (std::map<Glib::ustring, Glib::ustring>& target
 	    start += sizeof (LINK) - 1;
 	    Glib::ustring id (src.substr (start, 7));
 
-	    // Continue to end of href and extract the name frmo there
+	    // Continue to end of href and extract the name from there
 	    start = src.find ("\">", start + 7);
 	    if (start != Glib::ustring::npos) {
 	       start += 2;
@@ -580,9 +528,9 @@ void IMDbProgress::extractSearch (std::map<Glib::ustring, Glib::ustring>& target
 	       if (endLink != Glib::ustring::npos) {
 		  endLink = src.find (")", endLink + 4);
 		  if (endLink != Glib::ustring::npos) {
-		     Glib::ustring name (src, start, ++endLink - start);
+		     std::string name (src, start, ++endLink - start);
 		     name.replace (posReplace, 4, 0, '\0');
-		     convert (name);
+		     YGP::convertHTMLUnicode2UTF8 (name);
 		     target[id] = name;
 		     start = endLink + 1;
 		     continue;
@@ -603,4 +551,5 @@ void IMDbProgress::extractSearch (std::map<Glib::ustring, Glib::ustring>& target
 bool IMDbProgress::reStart (const Glib::ustring& idMovie) {
    stop ();
    start (idMovie);
+   return false;
 }

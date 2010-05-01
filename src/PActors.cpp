@@ -23,6 +23,8 @@
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
 
+#include <cdmgr-cfg.h>
+
 #include <boost/shared_ptr.hpp>
 
 #include <gtkmm/stock.h>

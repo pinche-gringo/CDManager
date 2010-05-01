@@ -23,6 +23,7 @@
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
 
+#define DONT_CONVERT
 #include <cdmgr-cfg.h>
 
 #include <cstring>

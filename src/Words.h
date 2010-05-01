@@ -17,6 +17,8 @@
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
 
+#include <stdexcept>
+
 #include <glibmm/ustring.h>
 
 

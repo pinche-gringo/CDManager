@@ -23,6 +23,8 @@
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
 
+#include <sys/stat.h>
+
 #include <string>
 
 #include <boost/tokenizer.hpp>

@@ -23,6 +23,8 @@
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
 
+#include <cdmgr-cfg.h>
+
 #include <gtkmm/stock.h>
 #include <gtkmm/label.h>
 #include <gtkmm/table.h>

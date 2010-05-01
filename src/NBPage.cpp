@@ -23,6 +23,8 @@
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
 
+#include <gtkmm/statusbar.h>
+
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 

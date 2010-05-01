@@ -1,5 +1,6 @@
 Overview of changes in version 1.0.01:
 
+  - Import from IMDb.com handles HTTP redirects (HTTP status 302)
   - Put under GPL version 3 (previously GPL version 2)
 
 

@@ -271,7 +271,8 @@ void IMDbProgress::sendRequest (const Glib::ustring& movie) {
       path = "find?s=tt&q=" + path;
    }
 #endif
-   TRACE7 ("IMDbProgress::sendRequest (const Glib::ustring&) - " << path);
+
+   TRACE7 ("IMDbProgress::sendRequest (const Glib::ustring&) - " << path << '/' << path.length ());
    request << "GET /" << path << " HTTP/1.0\r\nHost: " << HOST
 	   << "\r\nAccept: */*\r\nConnection: close\r\n\r\n";
 
@@ -323,11 +324,41 @@ void IMDbProgress::readStatus (const boost::system::error_code& err) {
 	 return;
       }
 
-      if (nrStatus != 200) {
-	 Glib::ustring msg (_("IMDb.com returned status code %1"));
+      switch (nrStatus) {
+      case 200:  // HTTP OK
+	 break;
+
+      case 302: {  // HTTP Moved temporarily
+	 std::string url, loc;
+	 char ch;
+
+	 do {
+	    response >> loc >> ch;
+	    response.putback (ch);
+	    std::getline (response, url);
+	    TRACE8 ("IMDbProgress::readStatus (boost::system::error_code&) - Location: " << loc);
+	 } while (response && (loc.substr (0, 9) != "Location:"));
+	 if (response && url.length ()) {
+	    // Strip trailing whitespaces
+	    Glib::ustring::size_type end (url.length ());
+	    while (isspace (url[--end]))
+	       ;
+	    url.replace (end, url.length () - 1, 0, '\0');
+	    Glib::signal_idle ().connect
+	       (bind (mem_fun (*this, &IMDbProgress::reStart), url));
+	 }
+	 else
+	    error (_("HTTP status code 302 does not contain a location"));
+	 return;
+      }
+
+      default: {  // Other error
+	 Glib::ustring msg (_("IMDb.com returned status code %1 %2"));
 	 msg.replace (msg.find ("%1"), 2, YGP::ANumeric (nrStatus).toString ());
+	 msg.replace (msg.find ("%2"), 2, msgStatus);
 	 error (msg);
 	 return;
+      }
       }
 
       // Read the response headers, which are terminated by a blank line.

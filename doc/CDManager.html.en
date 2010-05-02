@@ -1,22 +1,21 @@
 <!-- -*-HTML-*- -->
-<!-- $Id: CDManager.html.en,v 1.5 2006/04/25 04:05:16 markus Rel $ -->
-
 <!--
-  Copyright (C) 2004 - 2006 Markus Schwab (g17m0@lycos.com)
+   Copyright (C) 2004 - 2006, 2010 Markus Schwab (g17m0@users.sourceforge.net)
 
-  This is free software; you can redistribute it and/or
-  modify it under the terms of the GNU General Public
-  License as published by the Free Software Foundation; either
-  version 2 of the License, or (at your option) any later version.
+   This file is part of libYGP.
 
-  This is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  General Public License for more details.
+   libYGP is free software: you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
 
-  You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+   libYGP is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with libYGP.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
@@ -31,7 +30,7 @@
 
     <meta name="DC.Creator" content="Markus Schwab">
     <meta name="DC.Date" content="2004-12-05">
-    <meta name="DC.Rights" content="Copyright (C) 2004 - 2006; distributed under the GNU Free Documentation License">
+    <meta name="DC.Rights" content="Copyright (C) 2004 - 2006, 2010; distributed under the GNU Free Documentation License">
   </head>
 
   <body>
@@ -47,9 +46,11 @@
 
     <p>The CD-Manager is an utility to manage records and movies.</p>
 
-    <p>Its features include exporting the managed media to HTML pages
-      and importing records from songs in MP3 (having an ID3 tag) or
-      OGG format (having comment headers).</p>
+    <p>Its features include exporting the managed media to HTML pages,
+      importing movie information
+      from <a href="http://www.imdb.com/">IMDB.com</a> and importing
+      records from songs in MP3 (having an ID3 tag) or OGG format
+      (having comment headers).</p>
 
     <p>It is distributed under the GNU General Public License, which
       basically says like this (see the file <tt>COPYING</tt> along with
@@ -57,10 +58,11 @@
         (http://www.gnu.org)</a> for more details):</p>
 
     <blockquote><em><p>This is free software; you can redistribute it
-          and/or modify it under the terms of the GNU General Public
-          License as published by the Free Software Foundation; either
-          version 2 of the License, or (at your option) any later
-          version.</p>
+          and/or modify it under the terms of
+          the <a href="http://www.gnu.org">GNU</a> <a href="http://www.gnu.org/licenses/gpl.html">General
+          Public License</a> as published by the Free Software
+          Foundation; either version 3 of the License, or (at your
+          option) any later version.</p>
 
         <p>This is distributed in the hope that it will be useful, but
           WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -92,7 +94,7 @@
 
     <p>New entries can be added by selecting the appropriate entry in
       the <tt>Edit</tt> menu or by importing the ID3-tag from MP3- or
-      OGG files (Menu <tt>Import from file-info</tt> in the <tt>CD</tt>
+      OGG files (Menu <tt>Import from file-info</tt> in the <tt>Edit</tt>
       menu).</p>
 
     <p>Entries can be searched for (in the active list) by just
@@ -106,7 +108,10 @@
       edited &ldquo;inline&rdquo; (see above).</p>
 
     <p>New entries can be added by selecting the appropriate entry in
-      the <tt>Edit</tt> menu.</p>
+      the <tt>Edit</tt> menu or by import them
+      from <a href="http://www.imdb.com">www.imdb.com</a>
+      (Entry <tt>Import from IMDb.com</tt> in the <tt>Edit</tt>
+      menu).</p>
 
     <p>Equal to the record pages, it is possible to searched for
       Entries (see above).</p>
@@ -134,9 +139,9 @@
       user-id an (optionally) a password. This information is used to
       connect to the database.</p>
 
-    <h3>Import</h3>
+    <h3>Import of music</h3>
     <p>This dialog is displayed by selecting <tt>Import from file-info
-      ...</tt> from the <tt>CDs</tt> menu. It enables to browse
+      ...</tt> from the <tt>Edit</tt> menu. It enables to browse
       through the directory structure and the selection of files. All
       those files are &mdash; depending on the type of the file
       &mdash; either searched for an ID3 tag for MP3 files or for the
@@ -146,6 +151,20 @@
     <p>Note that this import might produce double entries, if names
       are differently written or they exceed the the size of the ID3
       information (which is limited to 30/32 characters).</p>
+
+    <h3>Import of movies (IMDb.com)</h3>
+    <p>This dialog is displayed by selecting <tt>Import from
+    IMDb.com</tt> in the <tt>Edit</tt> menu. It allows to search for a
+    movie by specifying either the name of a movie, its URL or
+    IMDb.com identification. If the search (of a name) results in a
+    list of matching entries, they are displayed and the proper entry
+    can be selected. Its information is imported into the
+    database.</p>
+
+    <h3>Information</h3>
+    <p>Provides some statistical information (number of movies and
+    records). It can be accessed via <tt>Information</t> in
+    the <tt>CDs</tt> menu.</p>
 
     <h3>Settings</h3>
     <p>The <i>Settings-Dialog</i> is invoked with <tt>Preferences ...</tt> from
@@ -171,11 +190,13 @@
 
     <h2>Credits</h2>
     <p>Thanks to the folks at MySQL for their great database and the
-      mysql++ library.</p>
+      mysql++ library and to Fabian Hernandez
+      (<a href="http://cocoknight.com">http://cocoknight.com</a>) for
+      creating the author's logo.</p>
 
     <hr noshade="noshade" size="2">
     <address>
-      <a href="mailto:g17m0@lycos.com">Markus Schwab (g17m0@lycos.com)</a><br>
+      <a href="mailto:g17m0@lycos.com">Markus Schwab (g17m0@users.sourceforge.net)</a><br>
     </address>
   </body>
 </html>

@@ -17,6 +17,8 @@
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
 
+#include <cdmgr-cfg.h>
+
 #include <string>
 
 #if WITH_MOVIES == 1

@@ -113,6 +113,7 @@ CDManager::CDManager (Options& options)
 		     "    <separator/>"
 		     "    <menuitem action='Export'/>"
 #endif
+		     "    <menuitem action='Stats'/>"
 		     "    <separator/>"
 		     "    <menuitem action='FQuit'/>"
 		     "  </menu>"
@@ -121,8 +122,6 @@ CDManager::CDManager (Options& options)
 		     "  </menu>"
 		     "  <placeholder name='Other'/>"
 		     "  <menu action='Options'>"
-		     "    <menuitem action='Stats'/>"
-		     "    <separator/>"
 		     "    <menuitem action='Prefs'/>"
 		     "    <menuitem action='SavePrefs'/>"
 		     "  </menu>");
@@ -141,13 +140,13 @@ CDManager::CDManager (Options& options)
 		   Gtk::AccelKey (_("<ctl>E")),
 		   mem_fun (*this, &CDManager::export2HTML));
 #endif
+   grpAction->add (apMenus[STATISTICS] = Gtk::Action::create ("Stats", Gtk::Stock::INFO),
+		   Gtk::AccelKey (_("F12")),
+		   mem_fun (*this, &CDManager::showStatistics));
    grpAction->add (Gtk::Action::create ("FQuit", Gtk::Stock::QUIT),
 		   mem_fun (*this, &CDManager::exit));
    grpAction->add (apMenus[MEDIT] = Gtk::Action::create ("Edit", _("_Edit")));
    grpAction->add (Gtk::Action::create ("Options", _("_Options")));
-   grpAction->add (apMenus[STATISTICS] = Gtk::Action::create ("Stats", Gtk::Stock::INFO),
-		   Gtk::AccelKey (_("F12")),
-		   mem_fun (*this, &CDManager::showStatistics));
    grpAction->add (Gtk::Action::create ("Prefs", Gtk::Stock::PREFERENCES),
 		   Gtk::AccelKey (_("F9")),
 		   mem_fun (*this, &CDManager::editPreferences));

@@ -177,8 +177,8 @@ void IMDbProgress::connectToIMDb () {
    Check2 (data);
 
    data->resolver.async_resolve (data->query, boost::bind (&IMDbProgress::resolved, this,
-							 boost::asio::placeholders::error,
-							 boost::asio::placeholders::iterator));
+							   boost::asio::placeholders::error,
+							   boost::asio::placeholders::iterator));
    data->svcIO.poll ();
 }
 
@@ -401,7 +401,7 @@ void IMDbProgress::readHeaders (const boost::system::error_code& err) {
 
 //-----------------------------------------------------------------------------
 /// Callback after reading (a part of) the content. The parsed content
-/// is analysed if it contains a matching movie or IMDbs search page.
+/// is analysed if it contains a matching movie or IMDb's search page.
 ///
 /// Depending on the content either the movie-information is extracted
 /// and listeners are informed about the extracted data or the most

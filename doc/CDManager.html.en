@@ -163,7 +163,7 @@
 
     <h3>Information</h3>
     <p>Provides some statistical information (number of movies and
-    records). It can be accessed via <tt>Information</t> in
+    records). It can be accessed via <tt>Information</tt> in
     the <tt>CDs</tt> menu.</p>
 
     <h3>Settings</h3>

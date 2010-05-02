@@ -1,37 +1,36 @@
 <!-- -*-HTML-*- -->
-<!-- $Id: CDManager.html.es,v 1.4 2006/04/25 04:05:16 markus Rel $ -->
-
 <!--
-  Copyright (C) 2004 - 2006 Markus Schwab (g17m0@lycos.com)
+   Copyright (C) 2004 - 2006, 2010 Markus Schwab (g17m0@users.sourceforge.net)
 
-  This is free software; you can redistribute it and/or
-  modify it under the terms of the GNU General Public
-  License as published by the Free Software Foundation; either
-  version 2 of the License, or (at your option) any later version.
+   This file is part of libYGP.
 
-  This is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  General Public License for more details.
+   libYGP is free software: you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
 
-  You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+   libYGP is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with libYGP.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//ES"
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
         "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
   <head>
-    <title>CDManager - utiliad para manajar discos y pel&iacute;culas</title>
+    <title>CDManager - utilidad para administrar discos y pel&iacute;culas</title>
     <meta name="description" content="Documentaci&oacute;n del CD-Manager">
     <meta name="keywords" content="documentacion, documentaci&oacute;n, docu, CD, movie,
                 record, manager, disco, pelicula, pel&iacute;cula, CDManager, CD-Manager">
 
     <meta name="DC.Creator" content="Markus Schwab">
     <meta name="DC.Date" content="2004-12-05">
-    <meta name="DC.Rights" content="Copyright (C) 2004 - 2006, distributed under the GNU Free Documentation License">
+    <meta name="DC.Rights" content="Copyright (C) 2004 - 2006, 2010; distributed under the GNU Free Documentation License">
   </head>
 
   <body>
@@ -45,7 +44,7 @@
 
     <h2><a name="Intro"></a>Introduci&oacute;n</h2>
 
-    <p>El CD-Manager es una utiliad para manajar discos y pel&iacute;culas.</p>
+    <p>El CD-Manager es una utiliad para administrar discos y pel&iacute;culas.</p>
 
     <p>Sus habilitades incluyen exportar la informaci&oacute;n
       guardada a p&aacute;ginas HTML y importar desde canciones en el

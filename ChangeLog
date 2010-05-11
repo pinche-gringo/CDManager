@@ -1,3 +1,61 @@
+2010-05-11 20:08:48 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * ChangeLog: Changes of V1.0.01 documented
+
+        * po/*.po: Updated
+
+2010-05-11 20:02:48 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Updated the documentation
+
+2010-05-02 17:37:04 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * doc/CDManager.html.en: Fixed typo
+
+2010-05-02 17:34:09 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * doc/*: Fixes
+
+2010-05-02 17:33:25 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * doc/CDManager.html.en: Updated
+
+2010-05-02 17:32:54 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/CDManager.cpp: Moved Information-menu to CD
+
+2010-05-02 15:00:38 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/Writer: Including cdmanger-cfg.h in Writer.h
+
+2010-05-02 12:35:33 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/ImportIMDb.cpp: Formatting; Typo in comment
+
+2010-05-01 16:56:20 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * IMDb-import: Handling HTTP-status code 302 (Redirect)
+
+2010-05-01 16:55:27 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * AUTHORS: Updated mail-address; Mentioning Fabian as creator of the logo
+
+2010-05-01 15:40:29 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * doc/CDManager.html.de: Updated
+
+2010-05-01 12:44:41 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Fixed removed includes
+
+2010-05-01 12:20:52 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Put under GPL version 3
+
+2010-05-01 11:58:49 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Moved methods to convert Unicode to UTF-8 to YGP::Utility; needing libYGP-0.9.41
+
 2010-04-22 19:30:57 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
 
         * ChangeLog: Changes of V1.0.00 documented

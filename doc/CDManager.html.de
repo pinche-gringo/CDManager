@@ -2,20 +2,20 @@
 <!--
    Copyright (C) 2004 - 2006, 2010 Markus Schwab (g17m0@users.sourceforge.net)
 
-   This file is part of libYGP.
+   This file is part of CDManager.
 
-   libYGP is free software: you can redistribute it and/or modify it
+   CDManager is free software: you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
-   libYGP is distributed in the hope that it will be useful, but
+   CDManager is distributed in the hope that it will be useful, but
    WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with libYGP.  If not, see <http://www.gnu.org/licenses/>.
+   along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
@@ -52,11 +52,12 @@
       und Platten von Musikst&uuml;cken im MP3-Format (sofern sie ein
       ID3-Tag aufweisen) oder im OGG-Format importieren.</p>
 
-    <p>Vertrieben wird das Programm unter
-      der <a href="http://www.gnu.org">GNU</a> <a href="http://www.gnu.org/licenses/gpl.html">General
+    <p>Vertrieben wird das Programm unter der
+      GNU <a href="http://www.gnu.org/licenses/gpl.html">General
       Public License</a>, die prinizipell folgendes aussagt (Details
       findet man in der in diesem Paket enthaltenen
-      Datei <tt>COPYING</tt> oder auf der GNU Homepage
+      Datei <tt>COPYING</tt> oder auf
+      der <a href="http://www.gnu.org">GNU Homepage</a>
       (http://www.gnu.org)):</p>
 
     <blockquote><em><p>Dieses Programm ist freie Software. Sie k&ouml;nnen es
@@ -72,9 +73,9 @@
         GNU General Public License.</p></em></blockquote>
 
     <h2><a name="Mainwindow"></a>Das Hauptfenster</h2>
-    <p>Das Hauptfenster enth&auml;lt ein Notebook mit drei Reitern;
-      eines f&uuml;r die Platten, eines f&uuml;r die Filme und das
-      dritte für die Schauspieler.</p>
+    <p>Das Hauptfenster enth&auml;lt ein Notebook mit (bis zu) drei
+      Reitern; eines f&uuml;r die Platten, eines f&uuml;r die Filme
+      und das dritte für die Schauspieler.</p>
 
     <h3>Platten-Reiter</h3>
     <p>Diese Seite enth&auml;lt zwei Listen; die linke zeigt die gespeicherten

@@ -2,20 +2,20 @@
 <!--
    Copyright (C) 2004 - 2006, 2010 Markus Schwab (g17m0@users.sourceforge.net)
 
-   This file is part of libYGP.
+   This file is part of CDManager.
 
-   libYGP is free software: you can redistribute it and/or modify it
+   CDManager is free software: you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
-   libYGP is distributed in the hope that it will be useful, but
+   CDManager is distributed in the hope that it will be useful, but
    WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with libYGP.  If not, see <http://www.gnu.org/licenses/>.
+   along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
@@ -52,10 +52,12 @@
       records from songs in MP3 (having an ID3 tag) or OGG format
       (having comment headers).</p>
 
-    <p>It is distributed under the GNU General Public License, which
-      basically says like this (see the file <tt>COPYING</tt> along with
-      this package or the <a href="http://www.gnu.org/">GNU homepage
-        (http://www.gnu.org)</a> for more details):</p>
+    <p>It is distributed under the
+      GNU <a href="http://www.gnu.org/licenses/gpl.html">General
+      Public License</a>, which basically says like this (see the
+      file <tt>COPYING</tt> along with this package or
+      the <a href="http://www.gnu.org/">GNU website</a>
+      (http://www.gnu.org) for more details):</p>
 
     <blockquote><em><p>This is free software; you can redistribute it
           and/or modify it under the terms of
@@ -71,7 +73,7 @@
           details.</p></em></blockquote>
 
     <h2><a name="Mainwindow"></a>Main window</h2>
-    <p>The main window contains a notebook with three pages; one for the
+    <p>The main window contains a notebook with (up to) three pages; one for the
       records, one for the movies and one for actors.</p>
 
     <h3>Records page</h3>

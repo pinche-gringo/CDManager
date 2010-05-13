@@ -1,3 +1,9 @@
+Overview of changes in version 1.0.02:
+
+  - Movies: Fixed import from IMDb of movies having the type appended
+  - Movies: Fixed "New movie" adding two entries
+
+
 Overview of changes in version 1.0.01:
 
   - Import from IMDb.com handles HTTP redirects (HTTP status 302)

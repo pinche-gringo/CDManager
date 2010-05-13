@@ -130,8 +130,6 @@ void PMovies::newMovie () {
    TRACE9 ("void PMovies::newMovie () - Found director " << movies.getDirectorAt (p)->getName ());
 
    HMovie movie (new Movie);
-   addMovie (movie, p);
-
    Gtk::TreeIter i (addMovie (movie, *p));
    Gtk::TreePath path (movies.getModel ()->get_path (i));
    movies.set_cursor (path, *movies.get_column (0), true);
@@ -832,7 +830,6 @@ void PMovies::closeDialog (int, const Gtk::Dialog* dlg) {
 //-----------------------------------------------------------------------------
 /// Imports the passed movie-information and adds them appropiately to the
 /// list of movies.
-///
 /// Algorithm: If the name of the director does exist, ask if they are equal.
 ///    The movie is added to the respective director
 /// \param director Name of the director
@@ -843,20 +840,23 @@ bool PMovies::importMovie (const Glib::ustring& director, const Glib::ustring& m
 			   const Glib::ustring& genre) {
    TRACE5 ("PMovies::importMovie (3x const Glib::ustring&) - " << director << ": " << movie);
 
-   Glib::ustring nameMovie;
+   Glib::ustring nameMovie (movie);
    YGP::AYear year;
 
+   // Strip trailing type of movie (IMDb adds " (x)" for certain types of movies)
+   if ((nameMovie.size () > 4) && (nameMovie[nameMovie.size () - 1] == ')')
+       && (nameMovie[nameMovie.size () - 3] == '(') && (nameMovie[nameMovie.size () - 4] == ' '))
+      nameMovie = nameMovie.substr (0, nameMovie.size () - 4);
+
    // Check if the movie has the year in parenthesis appended
-   std::string::size_type pos (movie.rfind (" (", movie.size () - 2));
-   if ((movie[movie.size () - 1] == ')') && (pos != std::string::npos)) {
+   std::string::size_type pos (nameMovie.rfind (" (", nameMovie.size () - 2));
+   if ((nameMovie[nameMovie.size () - 1] == ')') && (pos != std::string::npos)) {
       try {
-	 year = movie.substr (pos + 2, movie.size () - pos - 3);
-	 nameMovie = movie.substr (0, pos);
+	 year = nameMovie.substr (pos + 2, nameMovie.size () - pos - 3);
+	 nameMovie = nameMovie.substr (0, pos);
       }
       catch (std::invalid_argument& err) { }
    }
-   else
-      nameMovie = movie;
 
    // Create the new director
    HDirector hDirector (new Director);
@@ -897,7 +897,6 @@ bool PMovies::importMovie (const Glib::ustring& director, const Glib::ustring& m
    }
    else
       iNewDirector = addDirector (hDirector);
-
 
    int idGenre (movies.getGenre (genre));
    if (idGenre == -1)

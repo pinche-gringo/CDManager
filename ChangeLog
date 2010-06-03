@@ -1,3 +1,9 @@
+2010-05-13 22:11:32 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * ChangeLog, configure.ac: Version 1.0.02
+
+        * Movies: Fixes
+
 2010-05-11 20:08:48 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
 
         * ChangeLog: Changes of V1.0.01 documented

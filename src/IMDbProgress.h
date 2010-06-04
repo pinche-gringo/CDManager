@@ -17,6 +17,8 @@
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
 
+#include <vector>
+
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/placeholders.hpp>
 
@@ -38,6 +40,16 @@
  */
 class IMDbProgress : public Gtk::ProgressBar {
  public:
+   typedef enum { POPULAR, EXACT, PARTIAL } match;
+   typedef struct _IMDbEntries {
+      std::string url;
+      Glib::ustring title;
+      match flag;
+
+      _IMDbEntries (const std::string& url, const Glib::ustring& title, match flag)
+	 : url (url), title (title), flag (flag) { }
+   } IMDbEntries;
+
    IMDbProgress ();
    IMDbProgress (const Glib::ustring& movie);
    virtual ~IMDbProgress ();
@@ -49,7 +61,7 @@ class IMDbProgress : public Gtk::ProgressBar {
    typedef struct ConnectInfo ConnectInfo;
 
    sigc::signal<void, const Glib::ustring&> sigError;
-   sigc::signal<void, const std::map<Glib::ustring, Glib::ustring>&> sigAmbiguous;
+   sigc::signal<void, const std::vector<IMDbEntries>& > sigAmbiguous;
    sigc::signal<void, const Glib::ustring&, const Glib::ustring&, const Glib::ustring&> sigSuccess;
 
  protected:
@@ -68,8 +80,8 @@ class IMDbProgress : public Gtk::ProgressBar {
    bool indicateWait ();
    void error (const Glib::ustring& msg);
 
-   static void extractSearch (std::map<Glib::ustring, Glib::ustring>& target,
-			      const Glib::ustring& src, const Glib::ustring& text);
+   static void extractSearch (std::vector<IMDbEntries>& target, const Glib::ustring& src,
+			      const char** texts, unsigned int offset);
    Glib::ustring extract (const char* section, const char* subpart,
 			  const char* before, const char* after) const;
    static void convert (Glib::ustring& string);

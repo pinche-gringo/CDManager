@@ -22,6 +22,7 @@
 #include <YGP/Check.h>
 #include <XGP/XDialog.h>
 
+#include "IMDbProgress.h"
 
 namespace Gtk {
    class Label;
@@ -29,7 +30,6 @@ namespace Gtk {
    class TreeView;
 }
 
-class IMDbProgress;
 
 /**Dialog allowing to import information from a movie from IMDb.com
  *
@@ -79,7 +79,7 @@ class ImportFromIMDb : public XGP::XDialog {
 
    void inputChanged ();
    void showError (const Glib::ustring& msg, IMDbProgress* progress);
-   void showSearchResults (const std::map<Glib::ustring, Glib::ustring>& results,
+   void showSearchResults (const std::vector<IMDbProgress::IMDbEntries>& results,
 			   IMDbProgress* progress);
    void showData (const Glib::ustring& director, const Glib::ustring& name,
 		  const Glib::ustring& genre, IMDbProgress* progress);

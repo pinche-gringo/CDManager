@@ -161,8 +161,8 @@ bool IMDbProgress::poll () {
 bool IMDbProgress::indicateWait () {
    Check2 (data);
    if (data->contentIMDb.size ()) {
-      Glib::ustring msg (_("Receiving from IMDb.com: %1 bytes"));
-      msg.replace (msg.find ("%1"), 2, YGP::ANumeric (data->contentIMDb.size ()).toString ());
+      Glib::ustring msg (_("Receiving from IMDb.com: %1 KB"));
+      msg.replace (msg.find ("%1"), 2, YGP::ANumeric (data->contentIMDb.size () >> 10).toString ());
       set_text (msg);
    }
    pulse ();
@@ -433,17 +433,17 @@ void IMDbProgress::readContent (const boost::system::error_code& err) {
 	      << data->contentIMDb.size ());
 
       if (name == "IMDb Title Search") {           // IMDb's search page found
-	 std::map<Glib::ustring, Glib::ustring> movies;
+	 std::vector<IMDbEntries> movies;
 
 	 const char* sections[] = { "<p><b>Popular Titles</b>", "<p><b>Titles (Exact Matches)</b>",
 				    "<p><b>Titles (Partial Matches)</b>" };
 	 for (unsigned int i(0); i < (sizeof (sections) / sizeof (sections[0])); ++i)
-	    extractSearch (movies, data->contentIMDb, sections[i]);
+	    extractSearch (movies, data->contentIMDb, sections, i);
 	 if (movies.empty ())
 	    msg = _("IMDb didn't find any matching movies!");
 	 else if (movies.size () == 1) {
 	    Glib::signal_idle ().connect
-	       (bind (mem_fun (*this, &IMDbProgress::reStart), movies.begin ()->first));
+	       (bind (mem_fun (*this, &IMDbProgress::reStart), movies.begin ()->url));
 	    return;
 	 }
 	 else {
@@ -520,15 +520,15 @@ bool IMDbProgress::isNumber (const Glib::ustring& nr) {
 //-----------------------------------------------------------------------------
 /// Tries to extract IMDb-search results from the passed text. Found entries are
 /// added to the passed map (with the ID as key and the name as value).
-/// \param target Map where the found entries are written to
+/// \param target Vector where the found entries are written to
 /// \param src String to revise (HTML page read from IMDb)
-/// \param text Text of section heading the entried
+/// \param text Array of texts for section heading the entried
+/// \param offset Offset of text to search for
 /// \returns bool True, if the passed text is a number
 //-----------------------------------------------------------------------------
-void IMDbProgress::extractSearch (std::map<Glib::ustring, Glib::ustring>& target,
-				  const Glib::ustring& src, const Glib::ustring& text) {
-   // Only analyse contents of "Popular Titles" section
-   Glib::ustring::size_type start (src.find (text));
+void IMDbProgress::extractSearch (std::vector<IMDbEntries>& target, const Glib::ustring& src,
+				  const char** texts, unsigned int offset) {
+   Glib::ustring::size_type start (src.find (texts[offset]));
    Glib::ustring::size_type end (src.find ("<p><b>", start + 10));
    TRACE1 ("IMDbProgress::extractSearch (std::map&, const Glib::ustring&) - Search from " << start << '-' << end);
 
@@ -562,7 +562,7 @@ void IMDbProgress::extractSearch (std::map<Glib::ustring, Glib::ustring>& target
 		     std::string name (src, start, ++endLink - start);
 		     name.replace (posReplace, 4, 0, '\0');
 		     YGP::convertHTMLUnicode2UTF8 (name);
-		     target[id] = name;
+		     target.push_back(IMDbEntries (id, name, (match)(POPULAR + offset)));
 		     start = endLink + 1;
 		     continue;
 		  }

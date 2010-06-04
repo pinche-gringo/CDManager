@@ -233,7 +233,7 @@ void ImportFromIMDb::showError (const Glib::ustring& msg, IMDbProgress* progress
 /// \param results Map containing found entries (ID/name)
 /// \param progress Progress bar used for displaying the status; will be hidden
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::showSearchResults (const std::map<Glib::ustring, Glib::ustring>& results,
+void ImportFromIMDb::showSearchResults (const std::vector<IMDbProgress::IMDbEntries>& results,
 					IMDbProgress* progress) {
    Check1 (progress); Check1 (client);
    progress->hide ();
@@ -245,11 +245,11 @@ void ImportFromIMDb::showSearchResults (const std::map<Glib::ustring, Glib::ustr
    Gtk::TreeView& list (*new Gtk::TreeView (model));
 
    // Fill the lines into the list
-   for (std::map<Glib::ustring, Glib::ustring>::const_iterator i (results.begin ());
+   for (std::vector<IMDbProgress::IMDbEntries>::const_iterator i (results.begin ());
 	i != results.end (); ++i) {
       Gtk::TreeModel::Row row (*model->append ());
-      row[colMovies.id] = i->first;
-      row[colMovies.name] = i->second;
+      row[colMovies.id] = i->url;
+      row[colMovies.name] = i->title;
    }
 
    scrl.set_shadow_type (Gtk::SHADOW_ETCHED_IN);

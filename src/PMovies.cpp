@@ -264,6 +264,7 @@ void PMovies::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActi
 	  "<menuitem action='MDelete'/>"
 	  "<separator/>"
 	  "<menuitem action='MImport'/>"
+	  "<menuitem action='MImportDescr'/>"
 	  "</placeholder></menu>"
 	  "<placeholder name='Other'><menu action='Lang'>");
 
@@ -282,6 +283,8 @@ void PMovies::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActi
 		   mem_fun (*this, &PMovies::deleteSelection));
    grpAction->add (Gtk::Action::create ("MImport", _("_Import from IMDb.com ...")),
 		   Gtk::AccelKey (_("<ctl>I")), mem_fun (*this, &PMovies::importFromIMDb));
+   grpAction->add (Gtk::Action::create ("MImportDescr", _("_Import descriptions from IMDb.com ...")),
+		   Gtk::AccelKey (_("<shft><ctl>I")), mem_fun (*this, &PMovies::importDescriptionFromIMDb));
 
    grpAction->add (Gtk::Action::create ("Lang", _("_Language")));
    addLanguageMenus (ui, grpAction);
@@ -812,6 +815,27 @@ void PMovies::clear () {
 //-----------------------------------------------------------------------------
 void PMovies::importFromIMDb () {
    TRACE9 ("PMovies::importFromIMDb ()");
+   ImportFromIMDb* dlg (ImportFromIMDb::create ());
+   dlg->sigLoaded.connect (mem_fun (*this, &PMovies::importMovie));
+   dlg->signal_response ().connect (bind (ptr_fun (&PMovies::closeDialog), dlg));
+}
+
+//-----------------------------------------------------------------------------
+/// Opens a dialog allowing to import information for a movie from IMDb.com
+//-----------------------------------------------------------------------------
+void PMovies::importDescriptionFromIMDb () {
+   TRACE9 ("PMovies::importDescriptionFromIMDb ()");
+   std::vector<HMovie> iMovies;
+   for (std::vector<HDirector>::const_iterator d (directors.begin ());
+	d != directors.end(); ++d) {
+      const std::vector<HMovie>& dMovies (relMovies.getObjects(*d));
+      for (std::vector<HMovie>::const_iterator m (dMovies.begin ());
+	   m != dMovies.end (); ++m)
+	 if ((*m)->getDescription ().empty ())
+	    iMovies.push_back (*m);
+   }
+   TRACE5 ("PMovies::importDescriptionFromIMDb () - To process: " << iMovies.size ());
+
    ImportFromIMDb* dlg (ImportFromIMDb::create ());
    dlg->sigLoaded.connect (mem_fun (*this, &PMovies::importMovie));
    dlg->signal_response ().connect (bind (ptr_fun (&PMovies::closeDialog), dlg));

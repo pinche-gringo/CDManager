@@ -26,6 +26,7 @@
 
 #include <YGP/AYear.h>
 #include <YGP/Entity.h>
+#include <XGP/XAttribute.h>
 
 #include "CDType.h"
 #include "Language.h"
@@ -51,6 +52,8 @@ class Movie : public YGP::Entity {
    int                  getType () const { return type; }
    const std::string&   getLanguage () const { return lang; }
    const std::string&   getTitles () const { return titles; }
+   const Glib::ustring& getDescription () const { return summary; }
+   const std::string&   getImage () const { return icon; }
 
    void setId       (unsigned long int value) { id = value; }
    void setName     (const Glib::ustring& value);
@@ -66,6 +69,8 @@ class Movie : public YGP::Entity {
       type = CDType::getInstance ()[value]; }
    void setLanguage (const std::string& value) { lang = value; }
    void setTitles   (const std::string& value) { titles = value; }
+   void setDescription (const Glib::ustring& value) { summary = value; }
+   void setImage    (const std::string& value) { icon = value; }
 
    static Glib::ustring removeIgnored (const Glib::ustring& name);
    static bool compByName (const HMovie& a, const HMovie& b);
@@ -83,6 +88,8 @@ class Movie : public YGP::Entity {
    int               type;     // %attrib%; Media; 0
    std::string       lang;     // %attrib%; Lang
    std::string       titles;   // %attrib%; Subtitles
+   Glib::ustring     summary;  // %attrib%; Description
+   std::string       icon;     // %attrib%; Icon
 };
 
 #endif

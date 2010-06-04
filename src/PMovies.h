@@ -92,6 +92,7 @@ class PMovies : public NBPage {
    void undoDirector (const Undo& last);
 
    void importFromIMDb ();
+   void importDescriptionFromIMDb ();
    static void closeDialog (int, const Gtk::Dialog* dlg);
 
    void movieSelected ();

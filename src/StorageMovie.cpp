@@ -70,7 +70,7 @@ void StorageMovie::loadNames (const std::vector<HDirector>& directors,
 unsigned int StorageMovie::loadMovies (std::map<unsigned int, std::vector<HMovie> >& aMovies,
 			       YGP::StatusObject& stat) throw (std::exception) {
    Database::execute ("SELECT id, name, director, year, genre, type, languages"
-		      ", subtitles FROM Movies ORDER BY director, year, name");
+		      ", subtitles, summary, image FROM Movies ORDER BY director, year, name");
    if (Database::resultSize ()) {
       HMovie movie;
       unsigned int tmp;
@@ -92,6 +92,8 @@ unsigned int StorageMovie::loadMovies (std::map<unsigned int, std::vector<HMovie
 	    movie->setType (Database::getResultColumnAsUInt (5));
 	    movie->setLanguage (Database::getResultColumnAsString (6));
 	    movie->setTitles (Database::getResultColumnAsString (7));
+	    movie->setDescription (Database::getResultColumnAsString (8));
+	    movie->setImage (Database::getResultColumnAsString (9));
 	    aMovies[Database::getResultColumnAsUInt (2)].push_back (movie);
 	 }
 	 catch (std::exception& e) {

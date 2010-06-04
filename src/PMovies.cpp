@@ -466,9 +466,12 @@ void PMovies::saveData () throw (std::exception) {
    std::vector<HEntity> aSaved;
    std::vector<HEntity>::iterator posSaved (aSaved.end ());
 
+   // Save all data in the undo-buffer. Successfully saved data is removed
+   // this buffer. This means sucessful saving disables undo
    while (aUndo.size ()) {
       Undo last (aUndo.top ());
 
+      // Only save each entries once (when if it is changed more then once)
       posSaved = lower_bound (aSaved.begin (), aSaved.end (), last.getEntity ());
       if ((posSaved == aSaved.end ()) || (*posSaved != last.getEntity ())) {
 	 switch (last.what ()) {

@@ -1,3 +1,9 @@
+Overview of changes in version 1.1.00:
+
+  - Movies: Added image and description (loaded from IMDb)
+            Execute "make addIMDbInfo" in the SQL directory to update the DB
+
+
 Overview of changes in version 1.0.02:
 
   - Movies: Fixed import from IMDb of movies having the type appended

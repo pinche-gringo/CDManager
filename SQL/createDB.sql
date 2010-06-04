@@ -20,6 +20,8 @@ CREATE TABLE Movies
      type       INT UNSIGNED    NOT NULL DEFAULT 0,
      languages  VARCHAR(14)     NOT NULL,
      subtitles  VARCHAR(29)     NOT NULL,
+     summary    VARCHAR(512)    NOT NULL,
+     image      VARCHAR(8192)   NOT NULL,
      PRIMARY KEY (id), KEY movieNames (name)) DEFAULT CHARSET=utf8;
 
 CREATE TABLE MovieNames

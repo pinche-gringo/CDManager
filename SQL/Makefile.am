@@ -13,4 +13,8 @@ populateDB:
 
 updateDB_Subtitles:
 	@echo Changing length of subtitle-column in Movie-table
-	echo "ALTER TABLE Movies MODIFY subtitles VARCHAR(29) NOT NULL;"|mysql -u root -p
+	echo "ALTER TABLE Movies MODIFY subtitles VARCHAR(29) NOT NULL;"|mysql -u root -p CDMedia
+
+addIMDbInfo:
+	@echo Adding description columns to Movie-table
+	echo "ALTER TABLE Movies ADD (summary VARCHAR(512) NOT NULL, image VARCHAR(8192) NOT NULL);"|mysql -u root -p CDMedia

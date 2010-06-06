@@ -79,7 +79,7 @@ class ImportFromIMDb : public XGP::XDialog {
 
    void inputChanged ();
    void showError (const Glib::ustring& msg, IMDbProgress* progress);
-   void showSearchResults (const std::vector<IMDbProgress::IMDbEntries>& results,
+   void showSearchResults (const std::map<IMDbProgress::match, IMDbProgress::IMDbEntries>& results,
 			   IMDbProgress* progress);
    void showData (const Glib::ustring& director, const Glib::ustring& name,
 		  const Glib::ustring& genre, IMDbProgress* progress);

@@ -17,7 +17,8 @@
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#include <vector>
+#include <map>
+#include <list>
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/placeholders.hpp>
@@ -41,14 +42,19 @@
 class IMDbProgress : public Gtk::ProgressBar {
  public:
    typedef enum { POPULAR, EXACT, PARTIAL } match;
-   typedef struct _IMDbEntries {
+   typedef struct _IMDbEntry {
       std::string url;
       Glib::ustring title;
-      match flag;
+      Glib::ustring summary;
+      std::string image;
 
-      _IMDbEntries (const std::string& url, const Glib::ustring& title, match flag)
-	 : url (url), title (title), flag (flag) { }
-   } IMDbEntries;
+      _IMDbEntry (const std::string& url, const Glib::ustring& title)
+	 : url (url), title (title), summary (), image () { }
+      _IMDbEntry (const std::string& url, const Glib::ustring& title,
+		    const Glib::ustring& summary, const std::string& icon)
+	 : url (url), title (title), summary (summary), image (icon) { }
+   } IMDbEntry;
+   typedef std::list<IMDbEntry> IMDbEntries;
 
    IMDbProgress ();
    IMDbProgress (const Glib::ustring& movie);
@@ -61,7 +67,7 @@ class IMDbProgress : public Gtk::ProgressBar {
    typedef struct ConnectInfo ConnectInfo;
 
    sigc::signal<void, const Glib::ustring&> sigError;
-   sigc::signal<void, const std::vector<IMDbEntries>& > sigAmbiguous;
+   sigc::signal<void, const std::map<match, IMDbEntries>&> sigAmbiguous;
    sigc::signal<void, const Glib::ustring&, const Glib::ustring&, const Glib::ustring&> sigSuccess;
 
  protected:
@@ -80,7 +86,7 @@ class IMDbProgress : public Gtk::ProgressBar {
    bool indicateWait ();
    void error (const Glib::ustring& msg);
 
-   static void extractSearch (std::vector<IMDbEntries>& target, const Glib::ustring& src,
+   static void extractSearch (IMDbEntries& target, const Glib::ustring& src,
 			      const char** texts, unsigned int offset);
    Glib::ustring extract (const char* section, const char* subpart,
 			  const char* before, const char* after) const;

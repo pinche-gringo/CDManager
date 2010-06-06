@@ -31,10 +31,12 @@
 #include <gtkmm/stock.h>
 #include <gtkmm/entry.h>
 #include <gtkmm/treeview.h>
-#include <gtkmm/liststore.h>
+#include <gtkmm/treestore.h>
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/scrolledwindow.h>
 
+#define CHECK 9
+#define TRACELEVEL 1
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 
@@ -233,23 +235,31 @@ void ImportFromIMDb::showError (const Glib::ustring& msg, IMDbProgress* progress
 /// \param results Map containing found entries (ID/name)
 /// \param progress Progress bar used for displaying the status; will be hidden
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::showSearchResults (const std::vector<IMDbProgress::IMDbEntries>& results,
+void ImportFromIMDb::showSearchResults (const std::map<IMDbProgress::match, IMDbProgress::IMDbEntries>& results,
 					IMDbProgress* progress) {
    Check1 (progress); Check1 (client);
    progress->hide ();
    Glib::signal_idle ().connect (bind (ptr_fun (&ImportFromIMDb::stopLoading), progress));
 
    MovieColumns colMovies;
-   Glib::RefPtr<Gtk::ListStore> model (Gtk::ListStore::create (colMovies));
+   Glib::RefPtr<Gtk::TreeStore> model (Gtk::TreeStore::create (colMovies));
    Gtk::ScrolledWindow& scrl (*new Gtk::ScrolledWindow);
    Gtk::TreeView& list (*new Gtk::TreeView (model));
 
    // Fill the lines into the list
-   for (std::vector<IMDbProgress::IMDbEntries>::const_iterator i (results.begin ());
-	i != results.end (); ++i) {
-      Gtk::TreeModel::Row row (*model->append ());
-      row[colMovies.id] = i->url;
-      row[colMovies.name] = i->title;
+   Glib::ustring matches[] = { _("Popular Titles"), _("Exact match"), _("Partial match") };
+   for (unsigned int i (0); i < (sizeof (matches) / sizeof (matches[0])); ++i) {
+      Gtk::TreeModel::Row match (*model->append ());
+      match[colMovies.name] = matches[i];
+      const IMDbProgress::IMDbEntries& movies (results.at ((IMDbProgress::match)i));
+      for (IMDbProgress::IMDbEntries::const_iterator m (movies.begin ()); m != movies.end (); ++m) {
+	 Gtk::TreeModel::Row row (*model->append (match.children ()));
+	 row[colMovies.id] = m->url;
+	 row[colMovies.name] = m->title;
+      }
+
+      if (i != ((sizeof (matches) / sizeof (matches[0]))) - 1)
+	 list.expand_row (model->get_path (match), false);
    }
 
    scrl.set_shadow_type (Gtk::SHADOW_ETCHED_IN);

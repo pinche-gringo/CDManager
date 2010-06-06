@@ -465,17 +465,19 @@ void IMDbProgress::readContent (const boost::system::error_code& err) {
 	 std::string director (extract (">Director", "<a href=\"/name", "/';\">", "</a>"));
 	 Glib::ustring genre (extract (">Genre:<", "<a href=\"/Sections/Genres/", "/\">", "</a>"));
 	 std::string summary (extract (">Plot:<", "info-content", "\">", " <a"));
+	 std::string image (extract ("photo", "poster", "src=\"", "\" /></a>"));
 	 YGP::convertHTMLUnicode2UTF8 (director);
 	 YGP::convertHTMLUnicode2UTF8 (name);
 	 YGP::convertHTMLUnicode2UTF8 (summary);
 
 	 TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Director: " << director);
 	 TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Name: " << name);
-	 TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Summary: " << summary);
 	 TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Genre: " << genre);
+	 TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Summary: " << summary);
+	 TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Icon: " << image);
 
-	 if (director.size () || name.size () || genre.size ()) {
-	    IMDbEntry entry (director, name, genre, summary, "");
+	 if (director.size () || name.size ()) {
+	    IMDbEntry entry (director, name, genre, summary, image);
 	    disconnect ();
 	    sigSuccess (entry);
 	    return;
@@ -502,20 +504,14 @@ Glib::ustring IMDbProgress::extract (const char* section, const char* subpart,
    Check1 (section); Check1 (before); Check1 (after); Check2 (data);
 
    Glib::ustring::size_type i (data->contentIMDb.find (section));
-   if (i == std::string::npos)
-      return Glib::ustring ();
-
-   if (subpart)
-      if ((i = data->contentIMDb.find (subpart, i)) == std::string::npos)
-	 return Glib::ustring ();
-
-   i = data->contentIMDb.find (before, i);
-   if (i == std::string::npos)
-      return Glib::ustring ();
-
-   i += strlen (before);
-   std::string::size_type end (data->contentIMDb.find (after, i));
-   return (end == std::string::npos) ? Glib::ustring () : data->contentIMDb.substr (i, end - i);
+   if (i != std::string::npos)
+      if (!subpart || ((i = data->contentIMDb.find (subpart, i)) != std::string::npos))
+	 if ((i = data->contentIMDb.find (before, i)) != std::string::npos) {
+	    i += strlen (before);
+	    std::string::size_type end (data->contentIMDb.find (after, i));
+	    return (end == std::string::npos) ? Glib::ustring () : data->contentIMDb.substr (i, end - i);
+	 }
+   return Glib::ustring ();
 }
 
 //-----------------------------------------------------------------------------

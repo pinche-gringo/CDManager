@@ -83,6 +83,8 @@ class ImportFromIMDb : public XGP::XDialog {
 			   IMDbProgress* progress);
    void showData (const Glib::ustring& director, const Glib::ustring& name,
 		  const Glib::ustring& genre, IMDbProgress* progress);
+
+   sigc::connection connOK;
 };
 
 #endif

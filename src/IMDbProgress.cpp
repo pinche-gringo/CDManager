@@ -34,8 +34,6 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/read_until.hpp>
 
-#define CHECK 9
-#define TRACELEVEL 8
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/Utility.h>
@@ -455,7 +453,6 @@ void IMDbProgress::readContent (const boost::system::error_code& err) {
 		     (bind (mem_fun (*this, &IMDbProgress::reStart), movies[(match)i].begin ()->url));
 		  return;
 	       }
-	    Check (0);
 	 }
 	 else {
 	    disconnect ();

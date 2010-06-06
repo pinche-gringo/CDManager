@@ -35,8 +35,6 @@
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/scrolledwindow.h>
 
-#define CHECK 9
-#define TRACELEVEL 1
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 
@@ -62,7 +60,7 @@ class MovieColumns : public Gtk::TreeModel::ColumnRecord {
 ImportFromIMDb::ImportFromIMDb ()
    : XGP::XDialog (XGP::XDialog::NONE), sigLoaded (), client (new Gtk::Table (5, 2)),
      txtID (new Gtk::Entry), lblDirector (NULL), lblMovie (NULL), lblGenre (NULL),
-     contentIMDb (), status (QUERY) {
+     contentIMDb (), status (QUERY), connOK () {
    set_title (_("Import from IMDb.com"));
 
    client->show ();
@@ -276,7 +274,7 @@ void ImportFromIMDb::showSearchResults (const std::map<IMDbProgress::match, IMDb
       (bind (mem_fun (*this, &ImportFromIMDb::rowSelected), &list));
 
    status = CHOOSING;
-   ok->signal_clicked ().connect (bind (mem_fun (*this, &ImportFromIMDb::continueLoading),
+   connOK = ok->signal_clicked ().connect (bind (mem_fun (*this, &ImportFromIMDb::continueLoading),
 					&scrl, &list, progress));
 }
 
@@ -289,6 +287,8 @@ void ImportFromIMDb::showSearchResults (const std::map<IMDbProgress::match, IMDb
 void ImportFromIMDb::continueLoading (Gtk::ScrolledWindow* scrl, Gtk::TreeView* list,
 				      IMDbProgress* progress) {
    Check1 (scrl); Check1 (list); Check1 (progress); Check2 (client);
+   Check3 (connOK.connected ());
+   connOK.disconnect ();
 
    Gtk::TreeModel::Row row (*list->get_selection ()->get_selected ());
    MovieColumns colMovies;

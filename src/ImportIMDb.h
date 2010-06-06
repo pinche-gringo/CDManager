@@ -59,6 +59,7 @@ class ImportFromIMDb : public XGP::XDialog {
    Gtk::Label* lblDirector;                ///< Label displaying the director
    Gtk::Label* lblMovie;          ///< Label displaying the movie (with year)
    Gtk::Label* lblGenre;         ///< Label displaying the genre of the movie
+   Gtk::Label* lblSummary;      ///< Label displaying the summary of the plot
 
    Glib::ustring contentIMDb;                ///< Page received from IMDb.com
 
@@ -79,10 +80,9 @@ class ImportFromIMDb : public XGP::XDialog {
 
    void inputChanged ();
    void showError (const Glib::ustring& msg, IMDbProgress* progress);
-   void showSearchResults (const std::map<IMDbProgress::match, IMDbProgress::IMDbEntries>& results,
+   void showSearchResults (const std::map<IMDbProgress::match, IMDbProgress::IMDbSearchEntries>& results,
 			   IMDbProgress* progress);
-   void showData (const Glib::ustring& director, const Glib::ustring& name,
-		  const Glib::ustring& genre, IMDbProgress* progress);
+   void showData (const IMDbProgress::IMDbEntry& entry, IMDbProgress* progress);
 
    sigc::connection connOK;
 };

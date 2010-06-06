@@ -42,19 +42,26 @@
 class IMDbProgress : public Gtk::ProgressBar {
  public:
    typedef enum { POPULAR, EXACT, PARTIAL } match;
-   typedef struct _IMDbEntry {
+   typedef struct _IMDbSearchEntry {
       std::string url;
       Glib::ustring title;
+
+      _IMDbSearchEntry (const std::string& url, const Glib::ustring& title)
+         : url (url), title (title) { }
+   } IMDbSearchEntry;
+   typedef std::list<IMDbSearchEntry> IMDbSearchEntries;
+
+   typedef struct _IMDbEntry {
+      Glib::ustring director;
+      Glib::ustring title;
+      Glib::ustring genre;
       Glib::ustring summary;
       std::string image;
 
-      _IMDbEntry (const std::string& url, const Glib::ustring& title)
-	 : url (url), title (title), summary (), image () { }
-      _IMDbEntry (const std::string& url, const Glib::ustring& title,
-		    const Glib::ustring& summary, const std::string& icon)
-	 : url (url), title (title), summary (summary), image (icon) { }
+      _IMDbEntry (const Glib::ustring& director, const Glib::ustring& title, const Glib::ustring& genre,
+		  const Glib::ustring& summary, const std::string& icon)
+         : director (director), title (title), genre (genre), summary (summary), image (icon) { }
    } IMDbEntry;
-   typedef std::list<IMDbEntry> IMDbEntries;
 
    IMDbProgress ();
    IMDbProgress (const Glib::ustring& movie);
@@ -67,8 +74,8 @@ class IMDbProgress : public Gtk::ProgressBar {
    typedef struct ConnectInfo ConnectInfo;
 
    sigc::signal<void, const Glib::ustring&> sigError;
-   sigc::signal<void, const std::map<match, IMDbEntries>&> sigAmbiguous;
-   sigc::signal<void, const Glib::ustring&, const Glib::ustring&, const Glib::ustring&> sigSuccess;
+   sigc::signal<void, const std::map<match, IMDbSearchEntries>&> sigAmbiguous;
+   sigc::signal<void, const IMDbEntry&> sigSuccess;
 
  protected:
    sigc::connection conPoll;
@@ -86,7 +93,7 @@ class IMDbProgress : public Gtk::ProgressBar {
    bool indicateWait ();
    void error (const Glib::ustring& msg);
 
-   static void extractSearch (IMDbEntries& target, const Glib::ustring& src,
+   static void extractSearch (IMDbSearchEntries& target, const Glib::ustring& src,
 			      const char** texts, unsigned int offset);
    Glib::ustring extract (const char* section, const char* subpart,
 			  const char* before, const char* after) const;

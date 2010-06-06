@@ -34,6 +34,7 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/read_until.hpp>
 
+#define TRACELEVEL 1
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/Utility.h>
@@ -433,7 +434,7 @@ void IMDbProgress::readContent (const boost::system::error_code& err) {
 	      << data->contentIMDb.size ());
 
       if (name == "IMDb Title Search") {           // IMDb's search page found
-	 std::map<match, IMDbEntries> movies;
+	 std::map<match, IMDbSearchEntries> movies;
 	 unsigned int cMovies (0);
 
 	 const char* sections[] = { "<p><b>Popular Titles</b>", "<p><b>Titles (Exact Matches)</b>",
@@ -463,16 +464,20 @@ void IMDbProgress::readContent (const boost::system::error_code& err) {
       else {
 	 std::string director (extract (">Director", "<a href=\"/name", "/';\">", "</a>"));
 	 Glib::ustring genre (extract (">Genre:<", "<a href=\"/Sections/Genres/", "/\">", "</a>"));
+	 std::string summary (extract (">Plot:<", "info-content", "\">", " <a"));
 	 YGP::convertHTMLUnicode2UTF8 (director);
 	 YGP::convertHTMLUnicode2UTF8 (name);
+	 YGP::convertHTMLUnicode2UTF8 (summary);
 
 	 TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Director: " << director);
 	 TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Name: " << name);
+	 TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Summary: " << summary);
 	 TRACE1 ("IMDbProgress::readContent (boost::system::error_code&) - Genre: " << genre);
 
 	 if (director.size () || name.size () || genre.size ()) {
+	    IMDbEntry entry (director, name, genre, summary, "");
 	    disconnect ();
-	    sigSuccess (director, name, genre);
+	    sigSuccess (entry);
 	    return;
 	 }
 	 else
@@ -534,7 +539,7 @@ bool IMDbProgress::isNumber (const Glib::ustring& nr) {
 /// \param offset Offset of text to search for
 /// \returns bool True, if the passed text is a number
 //-----------------------------------------------------------------------------
-void IMDbProgress::extractSearch (IMDbEntries& target, const Glib::ustring& src,
+void IMDbProgress::extractSearch (IMDbSearchEntries& target, const Glib::ustring& src,
 				  const char** texts, unsigned int offset) {
    Glib::ustring::size_type start (src.find (texts[offset]));
    Glib::ustring::size_type end (src.find ("<p><b>", start + 10));
@@ -570,7 +575,7 @@ void IMDbProgress::extractSearch (IMDbEntries& target, const Glib::ustring& src,
 		     std::string name (src, start, ++endLink - start);
 		     name.replace (posReplace, 4, 0, '\0');
 		     YGP::convertHTMLUnicode2UTF8 (name);
-		     target.push_back(IMDbEntry (id, name));
+		     target.push_back(IMDbSearchEntry (id, name));
 		     start = endLink + 1;
 		     continue;
 		  }

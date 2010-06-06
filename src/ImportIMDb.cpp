@@ -60,7 +60,7 @@ class MovieColumns : public Gtk::TreeModel::ColumnRecord {
 ImportFromIMDb::ImportFromIMDb ()
    : XGP::XDialog (XGP::XDialog::NONE), sigLoaded (), client (new Gtk::Table (5, 2)),
      txtID (new Gtk::Entry), lblDirector (NULL), lblMovie (NULL), lblGenre (NULL),
-     contentIMDb (), status (QUERY), connOK () {
+     lblSummary (NULL), contentIMDb (), status (QUERY), connOK () {
    set_title (_("Import from IMDb.com"));
 
    client->show ();
@@ -175,38 +175,43 @@ bool ImportFromIMDb::stopLoading (IMDbProgress* progress) {
 
 //-----------------------------------------------------------------------------
 /// Updates the dialog with the data read
-/// \param director Director of the parsed movie
-/// \param name Name of the parsed movie
-/// \param genre Genre of the parsed movie
+/// \param entry Found IMDbEntry
 /// \param progress Progress bar used for displaying the status; will be removed
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::showData (const Glib::ustring& director, const Glib::ustring& name,
-			       const Glib::ustring& genre, IMDbProgress* progress) {
+void ImportFromIMDb::showData (const IMDbProgress::IMDbEntry& entry, IMDbProgress* progress) {
    TRACE9 ("ImportFromIMDb::showData (3x const Glib::ustring&, IMDbProgress*) - " << name);
    Check1 (progress); Check1 (client);
    progress->hide ();
    Glib::signal_idle ().connect (bind (ptr_fun (&ImportFromIMDb::removeProgressBar), client, progress));
 
-   Gtk::Label* lbl (new Gtk::Label (_("Director:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER));
+   Gtk::Label* lbl (new Gtk::Label (_("Director:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
    lbl->show ();
    client->attach (*manage (lbl), 0, 1, 2, 3, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-   lblDirector = new Gtk::Label (director, Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER);
+   lblDirector = new Gtk::Label (entry.director, Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
    lblDirector->show ();
    client->attach (*manage (lblDirector), 1, 2, 2, 3, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
 
-   lbl = new Gtk::Label (_("Movie:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER);
+   lbl = new Gtk::Label (_("Movie:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
    lbl->show ();
    client->attach (*manage (lbl), 0, 1, 3, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-   lblMovie = new Gtk::Label (name, Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER);
+   lblMovie = new Gtk::Label (entry.title, Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
    lblMovie->show ();
    client->attach (*manage (lblMovie), 1, 2, 3, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
 
-   lbl = new Gtk::Label (_("Genre:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER);
+   lbl = new Gtk::Label (_("Genre:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
    lbl->show ();
    client->attach (*manage (lbl), 0, 1, 4, 5, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-   lblGenre = new Gtk::Label (genre, Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER);
+   lblGenre = new Gtk::Label (entry.genre, Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
    lblGenre->show ();
    client->attach (*manage (lblGenre), 1, 2, 4, 5, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+
+   lbl = new Gtk::Label (_("Plot summary:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
+   lbl->show ();
+   client->attach (*manage (lbl), 0, 1, 5, 6, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+   lblSummary = new Gtk::Label (entry.summary, Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
+   lblSummary->set_line_wrap ();
+   lblSummary->show ();
+   client->attach (*manage (lblSummary), 1, 2, 5, 6, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
 
    ok->set_label (Gtk::Stock::OK.id);
    ok->set_sensitive ();
@@ -233,7 +238,7 @@ void ImportFromIMDb::showError (const Glib::ustring& msg, IMDbProgress* progress
 /// \param results Map containing found entries (ID/name)
 /// \param progress Progress bar used for displaying the status; will be hidden
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::showSearchResults (const std::map<IMDbProgress::match, IMDbProgress::IMDbEntries>& results,
+void ImportFromIMDb::showSearchResults (const std::map<IMDbProgress::match, IMDbProgress::IMDbSearchEntries>& results,
 					IMDbProgress* progress) {
    Check1 (progress); Check1 (client);
    progress->hide ();
@@ -249,8 +254,8 @@ void ImportFromIMDb::showSearchResults (const std::map<IMDbProgress::match, IMDb
    for (unsigned int i (0); i < (sizeof (matches) / sizeof (matches[0])); ++i) {
       Gtk::TreeModel::Row match (*model->append ());
       match[colMovies.name] = matches[i];
-      const IMDbProgress::IMDbEntries& movies (results.at ((IMDbProgress::match)i));
-      for (IMDbProgress::IMDbEntries::const_iterator m (movies.begin ()); m != movies.end (); ++m) {
+      const IMDbProgress::IMDbSearchEntries& movies (results.at ((IMDbProgress::match)i));
+      for (IMDbProgress::IMDbSearchEntries::const_iterator m (movies.begin ()); m != movies.end (); ++m) {
 	 Gtk::TreeModel::Row row (*model->append (match.children ()));
 	 row[colMovies.id] = m->url;
 	 row[colMovies.name] = m->title;

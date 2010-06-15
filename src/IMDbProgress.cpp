@@ -34,7 +34,6 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/read_until.hpp>
 
-#define TRACELEVEL 1
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/Utility.h>

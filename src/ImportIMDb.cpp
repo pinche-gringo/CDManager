@@ -72,6 +72,7 @@ ImportFromIMDb::ImportFromIMDb ()
 
    get_vbox ()->pack_start (*client, true, true, 5);
 
+   txtID->set_activates_default ();
    txtID->signal_changed ().connect (mem_fun (*this, &ImportFromIMDb::inputChanged));
 
    ok = new Gtk::Button (Gtk::Stock::GO_FORWARD);
@@ -108,7 +109,12 @@ void ImportFromIMDb::inputChanged () {
 //-----------------------------------------------------------------------------
 void ImportFromIMDb::rowSelected (Gtk::TreeView* list) {
    Check2 (ok); Check2 (list);
-   ok->set_sensitive (list->get_selection ()->get_selected ());
+   Gtk::TreeIter sel (list->get_selection ()->get_selected ());
+   if (sel) {
+      Gtk::TreeModel::Row row (*sel);
+      ok->set_sensitive (row.parent ());
+   }
+   ok->set_sensitive (false);
 }
 
 //-----------------------------------------------------------------------------
@@ -272,6 +278,9 @@ void ImportFromIMDb::showSearchResults (const std::map<IMDbProgress::match, IMDb
    list.set_size_request (-1, 150);
    scrl.show ();
    list.show ();
+   list.signal_row_activated ().connect (bind (mem_fun (*this, &ImportFromIMDb::rowActivated),
+					       &scrl, &list, progress));
+
    client->attach (*manage (&scrl), 0, 2, 2, 5, Gtk::FILL | Gtk::EXPAND, Gtk::FILL | Gtk::EXPAND, 5, 5);
 
    list.grab_focus ();
@@ -291,15 +300,45 @@ void ImportFromIMDb::showSearchResults (const std::map<IMDbProgress::match, IMDb
 //-----------------------------------------------------------------------------
 void ImportFromIMDb::continueLoading (Gtk::ScrolledWindow* scrl, Gtk::TreeView* list,
 				      IMDbProgress* progress) {
+   Gtk::TreeRow row (*list->get_selection ()->get_selected ());
+   if (!row)
+      return;
+
+   loadRow (row, scrl, list, progress);
+}
+
+//-----------------------------------------------------------------------------
+/// Continues with loading the film identified by the passed row
+/// \param row Row to load
+/// \param scrl Scrolledwindow containing the list
+/// \param list List to get entry to load from
+/// \param progress Progressbar to load
+//-----------------------------------------------------------------------------
+void ImportFromIMDb::loadRow (Gtk::TreeRow& row, Gtk::ScrolledWindow* scrl,
+			      Gtk::TreeView* list, IMDbProgress* progress) {
    Check1 (scrl); Check1 (list); Check1 (progress); Check2 (client);
+
    Check3 (connOK.connected ());
    connOK.disconnect ();
-
-   Gtk::TreeModel::Row row (*list->get_selection ()->get_selected ());
-   MovieColumns colMovies;
    scrl->hide ();
    client->remove (*scrl);
 
    progress->show ();
-   progress->start (row[colMovies.id]);
+   progress->start (row[MovieColumns ().id]);
+}
+
+//-----------------------------------------------------------------------------
+/// Callback after double-clicking a row; continues loading this entry
+/// \param path Activated path
+/// \param column Column in path
+/// \param scrl Scrolledwindow containing the list
+/// \param list List to get entry to load from
+/// \param progress Progressbar to load
+//-----------------------------------------------------------------------------
+void ImportFromIMDb::rowActivated (const Gtk::TreePath& path, Gtk::TreeViewColumn* column,
+				   Gtk::ScrolledWindow* scrl, Gtk::TreeView* list,
+				   IMDbProgress* progress) {
+   Check1 (list);
+   Gtk::TreeRow row (*(list->get_model ()->get_iter (path)));
+   loadRow (row, scrl, list, progress);
 }

@@ -27,7 +27,11 @@
 namespace Gtk {
    class Label;
    class Table;
+   class TreeRow;
    class TreeView;
+   class TreePath;
+   class TreeViewColumn;
+   class ScrolledWindow;
 }
 
 
@@ -75,8 +79,12 @@ class ImportFromIMDb : public XGP::XDialog {
    static bool removeProgressBar (Gtk::Table* client, IMDbProgress* progress);
    static bool stopLoading (IMDbProgress* progress);
    void continueLoading (Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress);
-
+   void loadSelection (Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress);
+   void rowActivated (const Gtk::TreePath& path, Gtk::TreeViewColumn* column, Gtk::ScrolledWindow* scrl,
+		      Gtk::TreeView* list, IMDbProgress* progress);
    void rowSelected (Gtk::TreeView* list);
+   void loadRow (Gtk::TreeRow& row, Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress);
+
 
    void inputChanged ();
    void showError (const Glib::ustring& msg, IMDbProgress* progress);

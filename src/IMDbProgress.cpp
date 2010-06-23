@@ -464,7 +464,7 @@ void IMDbProgress::readContent (const boost::system::error_code& err) {
 	 std::string director (extract (">Director", "<a href=\"/name", "/';\">", "</a>"));
 	 Glib::ustring genre (extract (">Genre:<", "<a href=\"/Sections/Genres/", "/\">", "</a>"));
 	 std::string summary (extract (">Plot:<", "info-content", "\">", " <a"));
-	 std::string image (extract ("photo", "poster", "src=\"", "\" /></a>"));
+	 std::string image (extract ("photo", "poster", "src=\"http://", "\""));
 	 YGP::convertHTMLUnicode2UTF8 (director);
 	 YGP::convertHTMLUnicode2UTF8 (name);
 	 YGP::convertHTMLUnicode2UTF8 (summary);

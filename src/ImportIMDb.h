@@ -55,7 +55,8 @@ class ImportFromIMDb : public XGP::XDialog {
    }
 
    /// Signal emitted, when the loaed movie-information is confirmed
-   sigc::signal<bool, const Glib::ustring&, const Glib::ustring&, const Glib::ustring&> sigLoaded;
+   sigc::signal<bool, const Glib::ustring&, const Glib::ustring&,
+      const Glib::ustring&, const Glib::ustring&> sigLoaded;
 
  protected:
    Gtk::Table* client;            ///< Pointer to the client information area
@@ -91,6 +92,8 @@ class ImportFromIMDb : public XGP::XDialog {
    void showSearchResults (const std::map<IMDbProgress::match, IMDbProgress::IMDbSearchEntries>& results,
 			   IMDbProgress* progress);
    void showData (const IMDbProgress::IMDbEntry& entry, IMDbProgress* progress);
+   void addIcon (const std::string& image, IMDbProgress* progress);
+   bool loadIcon (const std::string& image, IMDbProgress* progress);
 
    sigc::connection connOK;
 };

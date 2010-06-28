@@ -68,6 +68,7 @@ class IMDbProgress : public Gtk::ProgressBar {
    virtual ~IMDbProgress ();
 
    void start (const Glib::ustring& idMovie);
+   void loadIcon (const std::string& icon);
    void stop ();
    void disconnect ();
 
@@ -76,6 +77,7 @@ class IMDbProgress : public Gtk::ProgressBar {
    sigc::signal<void, const Glib::ustring&> sigError;
    sigc::signal<void, const std::map<match, IMDbSearchEntries>&> sigAmbiguous;
    sigc::signal<void, const IMDbEntry&> sigSuccess;
+   sigc::signal<void, const std::string&> sigIcon;
 
  protected:
    sigc::connection conPoll;
@@ -84,8 +86,6 @@ class IMDbProgress : public Gtk::ProgressBar {
  private:
    IMDbProgress (const IMDbProgress& other);
    const IMDbProgress& operator= (const IMDbProgress& other);
-
-   static bool isNumber (const Glib::ustring& nr);
 
    bool reStart (const Glib::ustring& idMovie);
 
@@ -99,18 +99,22 @@ class IMDbProgress : public Gtk::ProgressBar {
 			  const char* before, const char* after) const;
    static void convert (Glib::ustring& string);
 
-   void connectToIMDb ();
+   void connect ();
    void resolved (const boost::system::error_code& err,
 		  boost::asio::ip::tcp::resolver::iterator iEndpoints);
    void connected (const boost::system::error_code& err,
 		   boost::asio::ip::tcp::resolver::iterator iEndpoints);
-   void sendRequest (const Glib::ustring& movie);
+   void sendRequest ();
    void requestWritten (const boost::system::error_code& err);
    void readStatus (const boost::system::error_code& err);
    void readHeaders (const boost::system::error_code& err);
    void readContent (const boost::system::error_code& err);
+   void readMovie (Glib::ustring& msg);
+   void readImage ();
 
    ConnectInfo* data;
+
+   enum { NONE, TITLE, IMAGE } status;
 };
 
 #endif

@@ -32,7 +32,6 @@
 
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
-#include <YGP/CRegExp.h>
 #include <YGP/StatusObj.h>
 
 #include <XGP/MessageDlg.h>

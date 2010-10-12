@@ -33,10 +33,10 @@
  *
  * Available signals:
  *   - sigError: Emitted if an error occurs; the error-message is passed
- *   - sigAmbigous: Emitted if a search finds more than one movie;
+ *   - sigAmbigous: Emitted if a search finds more than one film;
                     Passes a list of matching entries
- *   - sigSuccess: Emitted if a (single) movie was found; Passes the
-                   director, the movie (with year in parenthesises) and the genre
+ *   - sigSuccess: Emitted if a (single) film was found; Passes the
+                   director, the film (with year in parenthesises) and the genre
  * \remarks Don't destroy the object within the signal-callbacks
  */
 class IMDbProgress : public Gtk::ProgressBar {
@@ -64,10 +64,10 @@ class IMDbProgress : public Gtk::ProgressBar {
    } IMDbEntry;
 
    IMDbProgress ();
-   IMDbProgress (const Glib::ustring& movie);
+   IMDbProgress (const Glib::ustring& film);
    virtual ~IMDbProgress ();
 
-   void start (const Glib::ustring& idMovie);
+   void start (const Glib::ustring& idFilm);
    void loadIcon (const std::string& icon);
    void stop ();
    void disconnect ();
@@ -87,7 +87,7 @@ class IMDbProgress : public Gtk::ProgressBar {
    IMDbProgress (const IMDbProgress& other);
    const IMDbProgress& operator= (const IMDbProgress& other);
 
-   bool reStart (const Glib::ustring& idMovie);
+   bool reStart (const Glib::ustring& idFilm);
 
    bool poll ();
    bool indicateWait ();
@@ -109,7 +109,7 @@ class IMDbProgress : public Gtk::ProgressBar {
    void readStatus (const boost::system::error_code& err);
    void readHeaders (const boost::system::error_code& err);
    void readContent (const boost::system::error_code& err);
-   void readMovie (Glib::ustring& msg);
+   void readFilm (Glib::ustring& msg);
    void readImage ();
 
    ConnectInfo* data;

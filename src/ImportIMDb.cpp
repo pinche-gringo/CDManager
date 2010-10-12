@@ -25,8 +25,7 @@
 
 #include <cdmgr-cfg.h>
 
-#include <istream>
-#include <ostream>
+#include <gdkmm/pixbufloader.h>
 
 #include <gtkmm/label.h>
 #include <gtkmm/stock.h>
@@ -37,6 +36,8 @@
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/scrolledwindow.h>
 
+#define CHECK 9
+#define TRACELEVEL 9
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 
@@ -67,7 +68,7 @@ ImportFromIMDb::ImportFromIMDb ()
 
    client->show ();
 
-   Gtk::Label* lbl (new Gtk::Label (_("_Name, number or URL of the movie:"), true));
+   Gtk::Label* lbl (new Gtk::Label (_("Film (_Name, number or URL):"), true));
    lbl->set_mnemonic_widget (*txtID);
    client->attach (*manage (lbl), 0, 1, 0, 1, Gtk::SHRINK, Gtk::SHRINK, 5, 5);
    client->attach (*txtID, 1, 2, 0, 1, Gtk::FILL | Gtk::EXPAND, Gtk::FILL | Gtk::SHRINK, 5, 5);
@@ -114,9 +115,11 @@ void ImportFromIMDb::rowSelected (Gtk::TreeView* list) {
    Gtk::TreeIter sel (list->get_selection ()->get_selected ());
    if (sel) {
       Gtk::TreeModel::Row row (*sel);
+      TRACE1 ("ImportFromIMDb::rowSelected (Gtk::TreeView*) - " << row.parent ())
       ok->set_sensitive (row.parent ());
    }
-   ok->set_sensitive (false);
+   else
+      ok->set_sensitive (false);
 }
 
 //-----------------------------------------------------------------------------
@@ -190,13 +193,22 @@ bool ImportFromIMDb::stopLoading (IMDbProgress* progress) {
 void ImportFromIMDb::addIcon (const std::string& image, IMDbProgress* progress) {
    TRACE1 ("ImportFromIMDb::addIcon (const std::string&, IMDbProgress*) - " << image.length ());
 
-   Gtk::Image img (new Gtk::Image (Gdk::Pixbuf::create_from_inline (lenData, pIconData)));
-   lbl = new Gtk::Label (_("Movie:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
-   lbl->show ();
-   client->attach (*manage (lbl), 0, 1, 3, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-   lblMovie = new Gtk::Label (entry.title, Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
-   lblMovie->show ();
-   client->attach (*manage (lblMovie), 1, 2, 3, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+   Glib::RefPtr<Gdk::PixbufLoader>  picLoader (Gdk::PixbufLoader::create ());
+   try {
+      picLoader->write ((const guint8*)image.data (), (gsize)image.size ());
+      picLoader->close ();
+      Gtk::Image* img (new Gtk::Image (picLoader->get_pixbuf ()));
+      TRACE9 ("ImportFromIMDb::addIcon (const std::string&, IMDbProgress*) - Dimensions: " << img->get_width () << '/' << img->get_height ());
+      img->show ();
+      client->attach (*manage (img), 1, 2, 2, 5, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+   }
+   catch (Glib::Error& e) {
+      TRACE1 ("Error: " << e.what ());
+   }
+   // catch (Gdk::PixbufError& e) { }
+   // catch (Glib::FileError& e) { }
+
+   progress->hide ();
    Glib::signal_idle ().connect (bind (ptr_fun (&ImportFromIMDb::removeProgressBar), client, progress));
 }
 
@@ -209,7 +221,6 @@ void ImportFromIMDb::addIcon (const std::string& image, IMDbProgress* progress) 
 bool ImportFromIMDb::loadIcon (const std::string& image, IMDbProgress* progress) {
    TRACE1 ("ImportFromIMDb::loadIcon (const std::string&, IMDbProgress*) - " << image);
    Check1 (progress); Check1 (image.size ());
-   progress->stop ();
    progress->loadIcon (image);
    progress->sigIcon.connect (bind (mem_fun (*this, &ImportFromIMDb::addIcon), progress));
    return false;
@@ -221,11 +232,13 @@ bool ImportFromIMDb::loadIcon (const std::string& image, IMDbProgress* progress)
 /// \param progress Progress bar used for displaying the status; will be removed
 //-----------------------------------------------------------------------------
 void ImportFromIMDb::showData (const IMDbProgress::IMDbEntry& entry, IMDbProgress* progress) {
-   TRACE9 ("ImportFromIMDb::showData (3x const Glib::ustring&, IMDbProgress*) - " << name);
+   TRACE9 ("ImportFromIMDb::showData (3x const Glib::ustring&, IMDbProgress*) - " << entry.title);
    Check1 (progress); Check1 (client);
 
-   if (entry.image.size ())
+   if (entry.image.size ()) {
+      Glib::signal_idle ().connect (bind (ptr_fun (&ImportFromIMDb::stopLoading), progress));
       Glib::signal_idle ().connect (bind (mem_fun (*this, &ImportFromIMDb::loadIcon), entry.image, progress));
+   }
    else {
       progress->hide ();
       Glib::signal_idle ().connect (bind (ptr_fun (&ImportFromIMDb::removeProgressBar), client, progress));
@@ -258,7 +271,7 @@ void ImportFromIMDb::showData (const IMDbProgress::IMDbEntry& entry, IMDbProgres
    lblSummary = new Gtk::Label (entry.summary, Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
    lblSummary->set_line_wrap ();
    lblSummary->show ();
-   client->attach (*manage (lblSummary), 1, 2, 5, 6, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+   client->attach (*manage (lblSummary), 1, 3, 5, 6, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
 
    ok->set_label (Gtk::Stock::OK.id);
    ok->set_sensitive ();
@@ -272,6 +285,7 @@ void ImportFromIMDb::showData (const IMDbProgress::IMDbEntry& entry, IMDbProgres
 /// \param progress Progress bar used for displaying the status; will be removed
 //-----------------------------------------------------------------------------
 void ImportFromIMDb::showError (const Glib::ustring& msg, IMDbProgress* progress) {
+   TRACE9 ("ImportFromIMDb::showError (const Glib::ustring&, IMDbProgress*) - " << msg);
    Gtk::MessageDialog (msg, Gtk::MESSAGE_ERROR).run ();
    Glib::signal_idle ().connect (bind (ptr_fun (&ImportFromIMDb::removeProgressBar), client, progress));
 

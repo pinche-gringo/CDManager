@@ -71,7 +71,7 @@ class ImportFromIMDb : public XGP::XDialog {
    void okEvent ();
 
  private:
-   volatile enum { QUERY, LOADING, CHOOSING, CONFIRM } status;
+   volatile enum { QUERY, LOADING, CHOOSING, CONFIRM, IMGLOAD } status;
 
    // Prohibited manager functions
    ImportFromIMDb (const ImportFromIMDb& other);

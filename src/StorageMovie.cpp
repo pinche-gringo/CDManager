@@ -116,8 +116,10 @@ unsigned int StorageMovie::loadMovies (std::map<unsigned int, std::vector<HMovie
 //-----------------------------------------------------------------------------
 void StorageMovie::saveMovie (const HMovie movie, unsigned int idDirector) throw (std::exception) {
    std::stringstream query;
-   query << (movie->getId () ? "UPDATE Movies" : "INSERT INTO Movies")
-	 << " SET name=\"" << Database::escapeDBValue (movie->getName (""))
+   query << (movie->getId () ? "UPDATE" : "INSERT INTO")
+	 << " Movies SET name=\"" << Database::escapeDBValue (movie->getName (""))
+	 << "\", summary=\"" << Database::escapeDBValue (movie->getDescription ())
+	 << "\", image=\"" << Database::escapeDBValue (movie->getImage ())
 	 << "\", genre=" << movie->getGenre () << ", languages=\""
 	 << movie->getLanguage () << "\", subtitles=\""
 	 << movie->getTitles () << "\", type=" << movie->getType ()

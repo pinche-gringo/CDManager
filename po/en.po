@@ -7,10 +7,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 1.0\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2010-05-11 20:03+0200\n"
+"POT-Creation-Date: 2010-06-03 18:02+0200\n"
 "PO-Revision-Date: 2010-05-11 20:06+0200\n"
 "Last-Translator: Markus Schwab <g17m0@users.sourceforge.net>\n"
 "Language-Team: English <g17m0@users.sourceforge.net>\n"
+"Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=ISO-8859-1\n"
 "Content-Transfer-Encoding: 8-bit\n"
@@ -589,7 +590,7 @@ msgid ""
 "Reason: %2"
 msgstr ""
 
-#: src/PRecords.cpp:366 src/PActors.cpp:379 src/PMovies.cpp:273
+#: src/PRecords.cpp:366 src/PActors.cpp:379 src/PMovies.cpp:271
 msgid "<ctl>Z"
 msgstr ""
 
@@ -597,7 +598,7 @@ msgstr ""
 msgid "New _interpret"
 msgstr ""
 
-#: src/PRecords.cpp:370 src/PActors.cpp:383 src/PMovies.cpp:277
+#: src/PRecords.cpp:370 src/PActors.cpp:383 src/PMovies.cpp:275
 msgid "<ctl>N"
 msgstr ""
 
@@ -605,7 +606,7 @@ msgstr ""
 msgid "_New record"
 msgstr ""
 
-#: src/PRecords.cpp:373 src/PActors.cpp:386 src/PMovies.cpp:280
+#: src/PRecords.cpp:373 src/PActors.cpp:386 src/PMovies.cpp:278
 msgid "<ctl><alt>N"
 msgstr ""
 
@@ -617,11 +618,11 @@ msgstr ""
 msgid "<ctl><shft>N"
 msgstr ""
 
-#: src/PRecords.cpp:378 src/PActors.cpp:388 src/PMovies.cpp:282
+#: src/PRecords.cpp:378 src/PActors.cpp:388 src/PMovies.cpp:280
 msgid "_Delete"
 msgstr ""
 
-#: src/PRecords.cpp:379 src/PActors.cpp:389 src/PMovies.cpp:283
+#: src/PRecords.cpp:379 src/PActors.cpp:389 src/PMovies.cpp:281
 msgid "<ctl>Delete"
 msgstr ""
 
@@ -629,7 +630,7 @@ msgstr ""
 msgid "_Import from file-info ..."
 msgstr ""
 
-#: src/PRecords.cpp:382 src/PMovies.cpp:286
+#: src/PRecords.cpp:382 src/PMovies.cpp:284
 msgid "<ctl>I"
 msgstr ""
 
@@ -644,7 +645,7 @@ msgid ""
 "Reason: %2"
 msgstr ""
 
-#: src/PRecords.cpp:861 src/PMovies.cpp:617
+#: src/PRecords.cpp:861 src/PMovies.cpp:615
 msgid ""
 "Couldn't write data!\n"
 "\n"
@@ -704,44 +705,44 @@ msgstr ""
 msgid "Movies/Actors"
 msgstr ""
 
-#: src/PMovies.cpp:220
+#: src/PMovies.cpp:218
 msgid "_Original name"
 msgstr ""
 
-#: src/PMovies.cpp:276
+#: src/PMovies.cpp:274
 msgid "New _director"
 msgstr ""
 
-#: src/PMovies.cpp:279
+#: src/PMovies.cpp:277
 msgid "_New movie"
 msgstr ""
 
-#: src/PMovies.cpp:285
+#: src/PMovies.cpp:283
 msgid "_Import from IMDb.com ..."
 msgstr ""
 
-#: src/PMovies.cpp:288
+#: src/PMovies.cpp:286
 msgid "_Language"
 msgstr ""
 
-#: src/PMovies.cpp:418
+#: src/PMovies.cpp:416
 msgid "Loaded %1 movie"
 msgid_plural "Loaded %1 movies"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/PMovies.cpp:425
+#: src/PMovies.cpp:423
 msgid "Warnings loading movies"
 msgstr ""
 
-#: src/PMovies.cpp:430 src/PMovies.cpp:451
+#: src/PMovies.cpp:428 src/PMovies.cpp:449
 msgid ""
 "Can't query available movies!\n"
 "\n"
 "Reason: %1"
 msgstr ""
 
-#: src/PMovies.cpp:620
+#: src/PMovies.cpp:618
 msgid "Error exporting movies to HTML!"
 msgstr ""
 

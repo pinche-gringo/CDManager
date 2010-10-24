@@ -34,8 +34,6 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/read_until.hpp>
 
-#define CHECK 9
-#define TRACELEVEL 7
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/Utility.h>
@@ -125,7 +123,7 @@ IMDbProgress::IMDbProgress () : Gtk::ProgressBar (), data (NULL), status (NONE) 
 /// Constructor
 /// \param film ID of film to import
 //-----------------------------------------------------------------------------
-IMDbProgress::IMDbProgress (const Glib::ustring& film) : Gtk::ProgressBar (), data (NULL) {
+IMDbProgress::IMDbProgress (const Glib::ustring& film) : Gtk::ProgressBar (), data (NULL), status (NONE) {
    TRACE5 ("IMDbProgress::IMDbProgress (const Glib::ustring&) - " << film);
    start (film);
 }
@@ -427,8 +425,10 @@ void IMDbProgress::readHeaders (const boost::system::error_code& err) {
       // Read the remaining content
       data->response.clear ();
       char buffer[256];
-      while (response.read (buffer, sizeof(buffer)))
+      do  {
+	 response.read (buffer, sizeof(buffer));
 	 data->response.append (buffer, response.gcount ());
+      } while (response);
 
       boost::asio::async_read (data->sockIO, data->buffer, boost::asio::transfer_at_least (1),
 			       boost::bind (&IMDbProgress::readContent, this,
@@ -449,16 +449,17 @@ void IMDbProgress::readHeaders (const boost::system::error_code& err) {
 /// \param err Error-information (in case of error)
 //-----------------------------------------------------------------------------
 void IMDbProgress::readContent (const boost::system::error_code& err) {
-   TRACE8 ("IMDbProgress::readContent (boost::system::error_code&)");
+   TRACE7 ("IMDbProgress::readContent (boost::system::error_code&)");
    Check2 (data);
 
    Glib::ustring msg;
    if (!err) {
-      char line[256];
-
       std::istream response (&data->buffer);
-      while (response.read (line, sizeof (line)))
-	 data->response.append (line, response.gcount ());
+      char buffer[256];
+      do  {
+	 response.read (buffer, sizeof(buffer));
+	 data->response.append (buffer, response.gcount ());
+      } while (response);
 
       // Continue reading remaining data until EOF.
       boost::asio::async_read (data->sockIO, data->buffer,
@@ -493,8 +494,6 @@ void IMDbProgress::readImage () {
    sigIcon.emit (data->response);
 }
 
-#include <fstream>
-
 //-----------------------------------------------------------------------------
 /// Extracts information about a film from the read input and emits a signal
 /// informing about the read data
@@ -505,16 +504,12 @@ void IMDbProgress::readFilm (Glib::ustring& msg) {
    std::string name (extract ("<head>", NULL, "<title>", "</title>"));
    TRACE4 ("IMDbProgress::readFilm (boost::system::error_code&) - Final: " << name << ": " << data->response.size ());
 
-   std::ofstream o ("/tmp/resp.html");
-   o << data->response;
-   o.close();
-
    if (name == "IMDb Title Search") {           // IMDb's search page found
       std::map<match, IMDbSearchEntries> films;
       unsigned int cFilms (0);
 
       const char* sections[] = { "<p><b>Popular Titles</b>", "<p><b>Titles (Exact Matches)</b>",
-				 "<p><b>Titles (Partial Matches)</b>" };
+				 "<p><b>Titles (Partial Matches)</b>", "<p><b>Titles (Approx Matches)</b>" };
       for (unsigned int i(0); i < (sizeof (sections) / sizeof (sections[0])); ++i) {
 	 extractSearch (films[(match)i], data->response, sections, i);
 	 cFilms += films[(match)i].size ();
@@ -535,8 +530,9 @@ void IMDbProgress::readFilm (Glib::ustring& msg) {
       }
    }
    else {
+      name.erase (name.length () - 7);
       std::string director (extract ("Director:", " href=\"/name/nm", ">", "</a>"));
-      Glib::ustring genre (extract ("Genres:", "<a href=\"/genre/", "/\">", "</a>"));
+      Glib::ustring genre (extract ("Genres:</h4>", "<a href=\"/genre/", "\">", "</a>"));
       std::string summary (extract ("<h2>Storyline</h2>", NULL, "<p>", "\n"));
       std::string image (extract ("img_primary", "<img", "src=\"", "\""));
       YGP::convertHTMLUnicode2UTF8 (director);

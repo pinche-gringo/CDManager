@@ -1,5 +1,5 @@
 //PROJECT     : CDManager
-//SUBSYSTEM   : Movies
+//SUBSYSTEM   : Films
 //REFERENCES  :
 //TODO        :
 //BUGS        :
@@ -54,7 +54,7 @@
 
 
 //-----------------------------------------------------------------------------
-/// Constructor: Creates a widget handling movies
+/// Constructor: Creates a widget handling films
 /// \param status: Statusbar to display status-messages
 /// \param menuSave: Menu-entry to save the database
 /// \param genres: Genres to use in actor-list
@@ -862,10 +862,11 @@ void PMovies::closeDialog (int, const Gtk::Dialog* dlg) {
 /// \param director Name of the director
 /// \param movie Name of the movie with year in parenthesis at the end
 /// \param genre Genre of the movie
+/// \param summary Synopsis of the film
 //-----------------------------------------------------------------------------
 bool PMovies::importMovie (const Glib::ustring& director, const Glib::ustring& movie,
-			   const Glib::ustring& genre) {
-   TRACE5 ("PMovies::importMovie (3x const Glib::ustring&) - " << director << ": " << movie);
+			   const Glib::ustring& genre, const Glib::ustring& summary) {
+   TRACE5 ("PMovies::importMovie (4x const Glib::ustring&) - " << director << ": " << movie);
 
    Glib::ustring nameMovie (movie);
    YGP::AYear year;
@@ -933,6 +934,7 @@ bool PMovies::importMovie (const Glib::ustring& director, const Glib::ustring& m
    hMovie->setGenre (idGenre);
    hMovie->setName (nameMovie);
    hMovie->setYear (year);
+   hMovie->setDescription (summary);
    addMovie (hMovie, iNewDirector);
    return true;
 }

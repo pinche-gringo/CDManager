@@ -40,6 +40,11 @@ AC_CHECK_HEADERS(boost/shared_ptr.hpp boost/tokenizer.hpp boost/bind.hpp boost/a
 
 dnl Checks for libraries.
 AC_CHECK_LIB(stdc++, main)
+AC_CHECK_LIB(boost_system, main,, AC_MSG_ERROR([Required library boost_filesystem not found!
+Either it can't be found in your default link-path (check the LIBS-environment
+variable) or install it using your package-manager or from its website at
+http://www.boost.org]))
+
 
 PKG_CHECK_MODULES(DEPS, glibmm-2.4 >= 2.4.0 YGP >= 0.9.41)
 PKG_CHECK_MODULES(XGP, gtkmm-2.4 >= 2.6.0 gthread-2.0 > 2.2.0 XGP >= 0.9.30)
@@ -52,7 +57,7 @@ AC_ARG_WITH(mysql,
 	           [search for MySQL in DIR/include and DIR/lib]),
     [MYSQL_lib_check=$withval/lib/mysql $with_mysql/lib
      MYSQL_inc_check=$withval/include/mysql],
-    [MYSQL_lib_check="/usr/local/mysql/lib/mysql /usr/local/lib/mysql /opt/mysql/lib/mysql /usr/lib/mysql /usr/local/mysql/lib /usr/local/lib /opt/mysql/lib /usr/lib"
+    [MYSQL_lib_check="/usr/local/mysql/lib/mysql /usr/local/lib/mysql /opt/mysql/lib/mysql /usr/lib/mysql /usr/local/mysql/lib /usr/local/lib /opt/mysql/lib /usr/lib /usr/lib64 /usr/lib64/mysql"
      MYSQL_inc_check="/usr/local/mysql/include/mysql /usr/local/include/mysql /opt/mysql/include/mysql /usr/include/mysql"])
 
 AC_ARG_WITH(mysql-lib,
@@ -122,7 +127,7 @@ AC_ARG_WITH(mysqlpp,
 	           [search for MySQL++ in DIR/include and DIR/lib]),
     [MYSQLPP_lib_check=$withval/mysql++ $withval/lib
      MYSQLPP_inc_check=$withval/mysql++],
-    [MYSQLPP_lib_check="/usr/local/mysql++/lib/mysql++ /usr/local/lib/mysql++ /opt/mysql++/lib/mysql++ /usr/lib/mysql++ /usr/local/mysql++/lib /usr/local/lib /opt/mysql++/lib /usr/lib"
+    [MYSQLPP_lib_check="/usr/local/mysql++/lib/mysql++ /usr/local/lib/mysql++ /opt/mysql++/lib/mysql++ /usr/lib/mysql++ /usr/local/mysql++/lib /usr/local/lib /opt/mysql++/lib /usr/lib /usr/lib64 /usr/lib64"
      MYSQLPP_inc_check="/usr/local/mysql/include/mysql++ /usr/local/include/mysql++ /opt/mysql/include/mysql++ /usr/include/mysql++"])
 
 AC_ARG_WITH(mysqlpp-lib,

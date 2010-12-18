@@ -718,7 +718,6 @@ void CDWriter::createFile (const std::string& filename, const char* lang, std::o
    std::string utf8file (filename);
    utf8file += '.';
    utf8file += lang;
-   utf8file += ".utf8";
    file.open (utf8file.c_str ());
    if (!file) {
       Glib::ustring msg (_("Can't create file `%1'!\n\nReason: %2."));

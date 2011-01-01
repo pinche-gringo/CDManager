@@ -39,7 +39,7 @@ class ActorColumns : public Gtk::TreeModel::ColumnRecord {
    Gtk::TreeModelColumn<bool>          editable;
 };
 
-/**Class to hold a list of actors (with the movies, they have played in)
+/**Class to hold a list of actors (with the films, they have played in)
  */
 class ActorList : public Gtk::TreeView {
  public:
@@ -59,7 +59,7 @@ class ActorList : public Gtk::TreeView {
 
    /// Returns the handle at the passed position
    /// \param iter: Iterator to position in the list
-   /// \returns HMovie: Handle of the selected line
+   /// \returns HFilm: Handle of the selected line
    HEntity getEntityAt (const Gtk::TreeIter iter) const {
       HEntity hEntity ((*iter)[colActors.entry]);
       return hEntity;

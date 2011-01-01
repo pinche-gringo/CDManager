@@ -1,12 +1,12 @@
 ## Process this file with automake to produce Makefile.in
 
-SRC_MOVIE=MovieList.cpp MovieList.h StorageMovie.cpp StorageMovie.h	\
+SRC_FILM=FilmList.cpp FilmList.h StorageFilm.cpp StorageFilm.h	\
 IMDbProgress.cpp IMDbProgress.h ImportIMDb.cpp ImportIMDb.h		\
-PMovies.cpp PMovies.h
-SRC_GENMOVIE=Director.h Movie.cpp Movie.h
-if WITH_MOVIES
-   USE_MOVIE=$(SRC_MOVIE)
-   USE_GENMOVIE=$(SRC_GENMOVIE)
+PFilms.cpp PFilms.h
+SRC_GENFILM=Director.h Film.cpp Film.h
+if WITH_FILMS
+   USE_FILM=$(SRC_FILM)
+   USE_GENFILM=$(SRC_GENFILM)
 endif
 
 SRC_RECORD=RecordList.cpp RecordList.h SongList.cpp SongList.h	\
@@ -18,7 +18,7 @@ if WITH_RECORDS
 endif
 
 SRC_ACTOR=StorageActor.cpp StorageActor.h ActorList.cpp ActorList.h	\
-RelateMovie.h RelateMovie.cpp PActors.cpp PActors.h
+RelateFilm.h RelateFilm.cpp PActors.cpp PActors.h
 SRC_GENACTOR=Actor.h
 if WITH_ACTORS
    USE_ACTOR=$(SRC_ACTOR)
@@ -32,7 +32,7 @@ bin_PROGRAMS=CDManager CDWriter
 AM_CPPFLAGS = @INCLUDES@ -I../Common @DEPS_CFLAGS@ -Wall
 
 libCDMgr_la_SOURCES=Options.h Celebrity.cpp Celebrity.h CDType.cpp	\
-CDType.h Words.cpp Words.h Genres.cpp Genres.h $(USE_GENMOVIE)		\
+CDType.h Words.cpp Words.h Genres.cpp Genres.h $(USE_GENFILM)		\
 $(USE_GENREC) $(USE_GENACTOR)
 
 libCDMgr_la_LIBADD=@DEPS_LIBS@
@@ -41,7 +41,7 @@ CDManager_SOURCES=NBPage.cpp Storage.cpp NBPage.h Storage.h		\
 SaveCeleb.cpp SaveCeleb.h Settings.cpp Settings.h LangDlg.cpp		\
 LangDlg.h OOList.cpp OOList.h LangImg.cpp LangImg.h WordDlg.cpp		\
 WordDlg.h Language.cpp Language.h DB.cpp DB.h Statistics.cpp		\
-Statistics.h $(USE_MOVIE) $(USE_RECORD) $(USE_ACTOR) CDManager.h	\
+Statistics.h $(USE_FILM) $(USE_RECORD) $(USE_ACTOR) CDManager.h	\
 CDManager.cpp CDAppl.cpp CDAppl.h IconAuthor.h IconProgram.h
 
 CDManager_CPPFLAGS=@INCLUDES@ -I../Common @DEPS_CFLAGS@ @XGP_CFLAGS@ -DUSE_LANGUAGEPIXMAPS -Wall
@@ -51,7 +51,7 @@ CDWriter_SOURCES=CDWriter.cpp CDWriter.h Writer.cpp Writer.h \
 		 Language.cpp Language.h
 CDWriter_LDFLAGS=-lCDMgr @DEPS_LIBS@ @LTLIBINTL@
 
-AllMetaInfo: Options.meta Celebrity.meta Movie.meta Record.meta
+AllMetaInfo: Options.meta Celebrity.meta Film.meta Record.meta
 
 Options.meta: Options.h
 	mgeni.pl Options.h > Options.meta
@@ -59,11 +59,11 @@ Options.meta: Options.h
 Celebrity.meta: Celebrity.h
 	mgeni.pl Celebrity.h > Celebrity.meta
 
-Movie.meta: Movie.h
-	mgeni.pl Movie.h > Movie.meta
+Film.meta: Film.h
+	mgeni.pl Film.h > Film.meta
 
 Record.meta: Record.h
 	mgeni.pl Record.h > Record.meta
 
-EXTRA_DIST=Options.meta Celebrity.meta Movie.meta Record.meta $(SRC_MOVIE) \
-$(SRC_GENMOVIE) $(SRC_RECORD) $(SRC_GENREC) $(SRC_ACTOR) $(SRC_GENACTOR)
+EXTRA_DIST=Options.meta Celebrity.meta Film.meta Record.meta $(SRC_FILM) \
+$(SRC_GENFILM) $(SRC_RECORD) $(SRC_GENREC) $(SRC_ACTOR) $(SRC_GENACTOR)

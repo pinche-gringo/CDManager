@@ -13,10 +13,10 @@ file COPYING for details.
 Description
 -----------
 
-The CDManager manages records and movies (stored on CD or DVD media). The
+The CDManager manages records and films (stored on CD or DVD media). The
 managed information can be exported to HTML documents. The highlight of the
-program is likely its ability to store movies in different languages
-simultanously (e.g. the movie "Lock, Stock & two smoking barrels" with its
+program is likely its ability to store films in different languages
+simultanously (e.g. the film "Lock, Stock & two smoking barrels" with its
 german name "Bube, Dame, König, Gras" and its spanish name "Juegos, Trampas
 & dos armas").
 
@@ -51,11 +51,11 @@ Setting up the database
   MySQL documentation for how to do so.
 
 
-Changing the genres of records/movies
--------------------------------------
+Changing the genres of records/films
+------------------------------------
 
   The file "Genres.dat" in the "data" directory contains the genres of
-  both records and movies (as I use them). The syntax is like those of
+  both records and films (as I use them). The syntax is like those of
   INI-files and should be self-explainatory.
 
   Note that one should not change the numbers for any genre, as they
@@ -115,7 +115,7 @@ Exporting the database to HTML documents
   "xx.png" (with "xx" again the two-letter code for the language).
 
   The generated documents include css-files for formatting
-  (records.css and movies.css, respectively). I use the following:
+  (records.css and films.css, respectively). I use the following:
 
 td.header { white-space:nowrap; vertical-align:Middle; background-color:#55879b;
             color:white; text-align:Center; font-weight:bold;

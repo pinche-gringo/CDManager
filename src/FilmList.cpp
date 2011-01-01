@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009, 2010
+//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009 - 2011
 
 // This file is part of CDManager
 //
@@ -44,7 +44,7 @@
 #include "CDType.h"
 #include "LangDlg.h"
 
-#include "MovieList.h"
+#include "FilmList.h"
 
 
 typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
@@ -54,12 +54,12 @@ typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
 /// Default constructor
 /// \param genres: Genres which should be displayed in the 3rd column
 //-----------------------------------------------------------------------------
-MovieList::MovieList (const Genres& genres)
+FilmList::FilmList (const Genres& genres)
    : OwnerObjectList (genres)
      , mTypes (Gtk::ListStore::create (colTypes)) {
-   TRACE9 ("MovieList::MovieList (const Genres&)");
-   mOwnerObjects = Gtk::TreeStore::create (colMovies);
-   init (colMovies);
+   TRACE9 ("FilmList::FilmList (const Genres&)");
+   mOwnerObjects = Gtk::TreeStore::create (colFilms);
+   init (colFilms);
 
    // Add column "Type"
    Gtk::CellRendererCombo* renderer (new Gtk::CellRendererCombo ());
@@ -69,12 +69,12 @@ MovieList::MovieList (const Genres& genres)
    Gtk::TreeViewColumn* column (new Gtk::TreeViewColumn
 				(_("Type"), *Gtk::manage (renderer)));
    append_column (*Gtk::manage (column));
-   column->add_attribute (renderer->property_text (), colMovies.type);
-   column->add_attribute (renderer->property_visible(), colMovies.chgAll);
+   column->add_attribute (renderer->property_text (), colFilms.type);
+   column->add_attribute (renderer->property_visible(), colFilms.chgAll);
    column->set_resizable ();
 
    renderer->signal_edited ().connect
-      (bind (mem_fun (*this, &MovieList::valueChanged), 0));
+      (bind (mem_fun (*this, &FilmList::valueChanged), 0));
 
    CDType& type (CDType::getInstance ());
    for (CDType::const_iterator t (type.begin ()); t != type.end (); ++t) {
@@ -84,34 +84,34 @@ MovieList::MovieList (const Genres& genres)
 
    // Add column "Languages"
    column = new Gtk::TreeViewColumn (_("Language(s)"));
-   column->pack_start (colMovies.lang1, false);
-   column->pack_start (colMovies.lang2, false);
-   column->pack_start (colMovies.lang3, false);
-   column->pack_start (colMovies.lang4, false);
-   column->pack_start (colMovies.lang5, false);
+   column->pack_start (colFilms.lang1, false);
+   column->pack_start (colFilms.lang2, false);
+   column->pack_start (colFilms.lang3, false);
+   column->pack_start (colFilms.lang4, false);
+   column->pack_start (colFilms.lang5, false);
 
    append_column (*Gtk::manage (column));
    column->set_resizable ();
    column->add_attribute (column->get_first_cell_renderer ()
-			  ->property_visible(), colMovies.chgAll);
+			  ->property_visible(), colFilms.chgAll);
 
    // Add column "Subtitles"
    column = new Gtk::TreeViewColumn (_("Subtitles(s)"));
-   column->pack_start (colMovies.sub1, false);
-   column->pack_start (colMovies.sub2, false);
-   column->pack_start (colMovies.sub3, false);
-   column->pack_start (colMovies.sub4, false);
-   column->pack_start (colMovies.sub5, false);
-   column->pack_start (colMovies.sub6, false);
-   column->pack_start (colMovies.sub7, false);
-   column->pack_start (colMovies.sub8, false);
-   column->pack_start (colMovies.sub9, false);
-   column->pack_start (colMovies.sub10, false);
+   column->pack_start (colFilms.sub1, false);
+   column->pack_start (colFilms.sub2, false);
+   column->pack_start (colFilms.sub3, false);
+   column->pack_start (colFilms.sub4, false);
+   column->pack_start (colFilms.sub5, false);
+   column->pack_start (colFilms.sub6, false);
+   column->pack_start (colFilms.sub7, false);
+   column->pack_start (colFilms.sub8, false);
+   column->pack_start (colFilms.sub9, false);
+   column->pack_start (colFilms.sub10, false);
 
    append_column (*Gtk::manage (column));
    column->set_resizable ();
    column->add_attribute (column->get_first_cell_renderer ()
-			  ->property_visible(), colMovies.chgAll);
+			  ->property_visible(), colFilms.chgAll);
 
    set_rules_hint ();
 }
@@ -119,40 +119,40 @@ MovieList::MovieList (const Genres& genres)
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------
-MovieList::~MovieList () {
-   TRACE9 ("MovieList::~MovieList ()");
+FilmList::~FilmList () {
+   TRACE9 ("FilmList::~FilmList ()");
 }
 
 
 //-----------------------------------------------------------------------------
-/// Appends a movie to the list
-/// \param movie: Movie to add
-/// \param director: Director of the movie
+/// Appends a film to the list
+/// \param film: Film to add
+/// \param director: Director of the film
 /// \returns Gtk::TreeModel::Row: Inserted row
 //-----------------------------------------------------------------------------
-Gtk::TreeModel::Row MovieList::append (HMovie& movie,
+Gtk::TreeModel::Row FilmList::append (HFilm& film,
 				       const Gtk::TreeModel::Row& director) {
-   TRACE3 ("MovieList::append (HMovie&, Gtk::TreeModel::Row) - "
-	   << (movie ? movie->getName ().c_str () : "None"));
-   Check1 (movie);
+   TRACE3 ("FilmList::append (HFilm&, Gtk::TreeModel::Row) - "
+	   << (film ? film->getName ().c_str () : "None"));
+   Check1 (film);
 
-   HEntity obj (movie);
-   Gtk::TreeModel::Row newMovie (OwnerObjectList::append (obj, director));
-   update (newMovie);
-   return newMovie;
+   HEntity obj (film);
+   Gtk::TreeModel::Row newFilm (OwnerObjectList::append (obj, director));
+   update (newFilm);
+   return newFilm;
 }
 
 //-----------------------------------------------------------------------------
-/// Returns the handle (casted to a HMovie) at the passed position
+/// Returns the handle (casted to a HFilm) at the passed position
 /// \param iter: Iterator to position in the list
-/// \returns HMovie: Handle of the selected line
+/// \returns HFilm: Handle of the selected line
 //-----------------------------------------------------------------------------
-HMovie MovieList::getMovieAt (const Gtk::TreeIter iter) const {
+HFilm FilmList::getFilmAt (const Gtk::TreeIter iter) const {
    Check2 ((*iter)->parent ());
-   HMovie movie (boost::dynamic_pointer_cast<Movie> (getObjectAt (iter))); Check3 (movie);
-   TRACE7 ("CDManager::getMovieAt (const Gtk::TreeIter&) - Selected movie: " <<
-	   movie->getId () << '/' << movie->getName ());
-   return movie;
+   HFilm film (boost::dynamic_pointer_cast<Film> (getObjectAt (iter))); Check3 (film);
+   TRACE7 ("CDManager::getFilmAt (const Gtk::TreeIter&) - Selected film: " <<
+	   film->getId () << '/' << film->getName ());
+   return film;
 }
 
 //-----------------------------------------------------------------------------
@@ -160,8 +160,8 @@ HMovie MovieList::getMovieAt (const Gtk::TreeIter iter) const {
 /// \param object: Object to change
 /// \param value: Value to set
 //-----------------------------------------------------------------------------
-void MovieList::setName (HEntity& object, const Glib::ustring& value) {
-   (boost::dynamic_pointer_cast<Movie> (object))->setName (value);
+void FilmList::setName (HEntity& object, const Glib::ustring& value) {
+   (boost::dynamic_pointer_cast<Film> (object))->setName (value);
 }
 
 //-----------------------------------------------------------------------------
@@ -170,8 +170,8 @@ void MovieList::setName (HEntity& object, const Glib::ustring& value) {
 /// \param value: Value to set
 /// \throw std::exception: In case of an error
 //-----------------------------------------------------------------------------
-void MovieList::setYear (HEntity& object, const Glib::ustring& value) throw (std::exception) {
-   (boost::dynamic_pointer_cast<Movie> (object))->setYear (value);
+void FilmList::setYear (HEntity& object, const Glib::ustring& value) throw (std::exception) {
+   (boost::dynamic_pointer_cast<Film> (object))->setYear (value);
 }
 
 //-----------------------------------------------------------------------------
@@ -179,16 +179,16 @@ void MovieList::setYear (HEntity& object, const Glib::ustring& value) throw (std
 /// \param object: Object to change
 /// \param value: Value to set
 //-----------------------------------------------------------------------------
-void MovieList::setGenre (HEntity& object, unsigned int value) {
-   (boost::dynamic_pointer_cast<Movie> (object))->setGenre (value);
+void FilmList::setGenre (HEntity& object, unsigned int value) {
+   (boost::dynamic_pointer_cast<Film> (object))->setGenre (value);
 }
 
 //-----------------------------------------------------------------------------
 /// Returns the name of the first column
 /// \returns Glib::ustring: The name of the first colum
 //-----------------------------------------------------------------------------
-Glib::ustring MovieList::getColumnName () const {
-   return _("Director/Movie");
+Glib::ustring FilmList::getColumnName () const {
+   return _("Director/Film");
 }
 
 //-----------------------------------------------------------------------------
@@ -197,11 +197,11 @@ Glib::ustring MovieList::getColumnName () const {
 /// \param a: Second entry to compare
 /// \returns int: Value as strcmp
 //-----------------------------------------------------------------------------
-int MovieList::sortEntity (const Gtk::TreeModel::iterator& a,
+int FilmList::sortEntity (const Gtk::TreeModel::iterator& a,
 			   const Gtk::TreeModel::iterator& b) const {
-   HMovie ha (getMovieAt (a));
-   HMovie hb (getMovieAt (b));
-   int rc (Movie::removeIgnored (ha->getName ()).compare (Movie::removeIgnored (hb->getName ())));
+   HFilm ha (getFilmAt (a));
+   HFilm hb (getFilmAt (b));
+   int rc (Film::removeIgnored (ha->getName ()).compare (Film::removeIgnored (hb->getName ())));
    return rc ? rc : (ha->getName () < hb->getName ());
 }
 
@@ -211,9 +211,9 @@ int MovieList::sortEntity (const Gtk::TreeModel::iterator& a,
 /// \param value: New value of entry
 /// \param column: Changed column
 //-----------------------------------------------------------------------------
-void MovieList::valueChanged (const Glib::ustring& path,
+void FilmList::valueChanged (const Glib::ustring& path,
 			      const Glib::ustring& value, unsigned int column) {
-   TRACE7 ("MovieList::valueChanged (2x const Glib::ustring&, unsigned int) - "
+   TRACE7 ("FilmList::valueChanged (2x const Glib::ustring&, unsigned int) - "
 	   << path << "->" << value);
    Check2 (column < 2);
 
@@ -221,7 +221,7 @@ void MovieList::valueChanged (const Glib::ustring& path,
 
    try {
       if (row.parent ()) {
-	 HMovie movie (getMovieAt (row));
+	 HFilm film (getFilmAt (row));
 	 Glib::ustring oldValue;
 	 switch (column) {
 	 case 0: {
@@ -230,21 +230,21 @@ void MovieList::valueChanged (const Glib::ustring& path,
 	       Glib::ustring e (_("Unknown type of media!"));
 	       throw (YGP::InvalidValue (e));
 	    }
-	    movie->setType (value);
-	    oldValue = row[colMovies.type];
-	    row[colMovies.type] = value;
+	    film->setType (value);
+	    oldValue = row[colFilms.type];
+	    row[colFilms.type] = value;
 	    break; }
 
 	 case 1:
-	    oldValue = movie->getLanguage ();
+	    oldValue = film->getLanguage ();
 	    setLanguage (row, value);
-	    movie->setLanguage (value);
+	    film->setLanguage (value);
 	    break;
 
 	 case 2:
-	    oldValue = movie->getTitles ();
+	    oldValue = film->getTitles ();
 	    setTitles (row, value);
-	    movie->setTitles (value);
+	    film->setTitles (value);
 	    break;
 
 	 default:
@@ -270,8 +270,8 @@ void MovieList::valueChanged (const Glib::ustring& path,
 /// \param e: Generated event
 /// \returns bool: Whatever the default-method would return
 //-----------------------------------------------------------------------------
-bool MovieList::on_button_press_event (GdkEventButton* e) {
-   TRACE9 ("MovieList::on_button_press_event (GdkEventButton*)");
+bool FilmList::on_button_press_event (GdkEventButton* e) {
+   TRACE9 ("FilmList::on_button_press_event (GdkEventButton*)");
    Check1 (e);
 
    Glib::RefPtr<Gtk::TreeSelection> selection (get_selection ());
@@ -294,26 +294,26 @@ bool MovieList::on_button_press_event (GdkEventButton* e) {
       // If event is within the language or the subitles column
       if ((e->x > areaLang.get_x ())
 	  && (e->x <= (areaSub.get_x () + areaSub.get_width ()))) {
-	 TRACE9 ("MovieList::on_button_press_event (GdkEventButton*) - "
+	 TRACE9 ("FilmList::on_button_press_event (GdkEventButton*) - "
 		 << areaLang.get_x () << '-' << e->x << '-'
 		 << (areaSub.get_x () + areaSub.get_width ()));
 	 // Create the popup-window
-	 HMovie movie (getMovieAt (oldSel)); Check3 (movie);
+	 HFilm film (getFilmAt (oldSel)); Check3 (film);
 	 if (e->x < areaSub.get_x ()) {
-	    std::string languages (movie->getLanguage ());
+	    std::string languages (film->getLanguage ());
 	    LanguageDialog dlg (languages, 5);
 	    dlg.run ();
 
-	    if (languages != movie->getLanguage ())
+	    if (languages != film->getLanguage ())
 	       valueChanged (path.to_string (), languages, 1);
 	 }
 	 else {
-	    std::string titles (movie->getTitles ());
+	    std::string titles (film->getTitles ());
 	    LanguageDialog dlg (titles, 10, false);
 	    dlg.set_title (_("Select subtitles"));
 	    dlg.run ();
 
-	    if (titles != movie->getTitles ())
+	    if (titles != film->getTitles ())
 	       valueChanged (path.to_string (), titles, 2);
 	 }
 
@@ -327,13 +327,13 @@ bool MovieList::on_button_press_event (GdkEventButton* e) {
 /// \param row: Row to set the languages for
 /// \param languages: Languages to show
 //-----------------------------------------------------------------------------
-void MovieList::setLanguage (Gtk::TreeModel::Row& row, const std::string& languages) {
+void FilmList::setLanguage (Gtk::TreeModel::Row& row, const std::string& languages) {
    tokenizer langs (languages, boost::char_separator<char> (","));
    tokenizer::iterator l (langs.begin ());
    bool countSet (false);
    static const Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> >* columns[] =
-      { &colMovies.lang1, &colMovies.lang2, &colMovies.lang3, &colMovies.lang4,
-	&colMovies.lang5 };
+      { &colFilms.lang1, &colFilms.lang2, &colFilms.lang3, &colFilms.lang4,
+	&colFilms.lang5 };
 
    for (unsigned int i (0); i < (sizeof (columns) / sizeof (*columns)); ++i)
       if (l != langs.end ()) {
@@ -343,7 +343,7 @@ void MovieList::setLanguage (Gtk::TreeModel::Row& row, const std::string& langua
       else {
 	 row[(*columns)[i]] = Glib::RefPtr<Gdk::Pixbuf> ();
 	 if (!countSet) {
-	    row[colMovies.langs] = i;
+	    row[colFilms.langs] = i;
 	    countSet = true;
 	 }
       }
@@ -354,14 +354,14 @@ void MovieList::setLanguage (Gtk::TreeModel::Row& row, const std::string& langua
 /// \param row: Row to set the subtitles for
 /// \param titles: Subtitles to show
 //-----------------------------------------------------------------------------
-void MovieList::setTitles (Gtk::TreeModel::Row& row, const std::string& titles) {
+void FilmList::setTitles (Gtk::TreeModel::Row& row, const std::string& titles) {
    tokenizer langs (titles, boost::char_separator<char> (","));
    tokenizer::iterator l (langs.begin ());
    bool countSet (false);
    static const Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> >* columns[] =
-      { &colMovies.sub1, &colMovies.sub2, &colMovies.sub3, &colMovies.sub4,
-	&colMovies.sub5, &colMovies.sub6, &colMovies.sub7, &colMovies.sub8,
-	&colMovies.sub9, &colMovies.sub10 };
+      { &colFilms.sub1, &colFilms.sub2, &colFilms.sub3, &colFilms.sub4,
+	&colFilms.sub5, &colFilms.sub6, &colFilms.sub7, &colFilms.sub8,
+	&colFilms.sub9, &colFilms.sub10 };
 
    for (unsigned int i (0); i < (sizeof (columns) / sizeof (*columns)); ++i)
       if (l != langs.end ()) {
@@ -372,45 +372,45 @@ void MovieList::setTitles (Gtk::TreeModel::Row& row, const std::string& titles) 
 	 TRACE1 ("Set Title: " << titles << " = " << i);
 	 row[(*columns)[i]] = Glib::RefPtr<Gdk::Pixbuf> ();
 	 if (!countSet) {
-	    row[colMovies.titles] = i;
+	    row[colFilms.titles] = i;
 	    countSet = true;
 	 }
       }
 }
 
 //-----------------------------------------------------------------------------
-/// Updates the displayed movies, showing them in the passed language
-/// \param lang: Language, in which the movies should be displayed
+/// Updates the displayed films, showing them in the passed language
+/// \param lang: Language, in which the films should be displayed
 //-----------------------------------------------------------------------------
-void MovieList::update (const std::string& lang) {
-   TRACE9 ("MovieList::update (const std::string&) - " << lang);
+void FilmList::update (const std::string& lang) {
+   TRACE9 ("FilmList::update (const std::string&) - " << lang);
 
    for (Gtk::TreeModel::const_iterator d (mOwnerObjects->children ().begin ());
 	d != mOwnerObjects->children ().end (); ++d) {
       for (Gtk::TreeIter m (d->children ().begin ()); m != d->children ().end (); ++m) {
-	 HMovie movie (getMovieAt (m)); Check3 (movie);
-	 TRACE9 ("MovieList::update (const std::string&) - Updating " << movie->getName (lang));
-	 (*m)[colOwnerObjects->name] = movie->getName (lang);
+	 HFilm film (getFilmAt (m)); Check3 (film);
+	 TRACE9 ("FilmList::update (const std::string&) - Updating " << film->getName (lang));
+	 (*m)[colOwnerObjects->name] = film->getName (lang);
       }
    }
 }
 
 //-----------------------------------------------------------------------------
-/// Updates the displayed movies; actualizes the displayed values with the
+/// Updates the displayed films; actualises the displayed values with the
 /// values stored in the object in the entity-column
 /// \param row: Row to update
 //-----------------------------------------------------------------------------
-void MovieList::update (Gtk::TreeModel::Row& row) {
+void FilmList::update (Gtk::TreeModel::Row& row) {
    if (row->parent ()) {
-      HMovie movie (getMovieAt (row));
-      row[colMovies.name] = movie->getName ();
-      row[colMovies.year] = movie->getYear ().toString ();
-      changeGenre (row, movie->getGenre ());
+      HFilm film (getFilmAt (row));
+      row[colFilms.name] = film->getName ();
+      row[colFilms.year] = film->getYear ().toString ();
+      changeGenre (row, film->getGenre ());
 
-      row[colMovies.type] = CDType::getInstance ()[movie->getType ()];
+      row[colFilms.type] = CDType::getInstance ()[film->getType ()];
 
-      setLanguage (row, movie->getLanguage ());
-      setTitles (row, movie->getTitles ());
+      setLanguage (row, film->getLanguage ());
+      setTitles (row, film->getTitles ());
    }
    OwnerObjectList::update (row);
 }

@@ -1,5 +1,5 @@
-#ifndef PMOVIES_H
-#define PMOVIES_H
+#ifndef PFILMS_H
+#define PFILMS_H
 
 // This file is part of CDManager
 //
@@ -23,16 +23,16 @@
 
 #include <YGP/Relation.h>
 
-#include "Movie.h"
+#include "Film.h"
 #include "Director.h"
-#include "MovieList.h"
+#include "FilmList.h"
 
 #include "NBPage.h"
 
 
 // Forward declarations
 class Genres;
-class MovieList;
+class FilmList;
 class LanguageImg;
 
 namespace Gtk {
@@ -40,12 +40,12 @@ namespace Gtk {
 }
 
 
-/**Class handling the movies notebook-page
+/**Class handling the films notebook-page
  */
-class PMovies : public NBPage {
+class PFilms : public NBPage {
  public:
-   PMovies (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave, const Genres& genres);
-   virtual ~PMovies ();
+   PFilms (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave, const Genres& genres);
+   virtual ~PFilms ();
 
    virtual void loadData ();
    virtual void saveData () throw (std::exception);
@@ -59,19 +59,19 @@ class PMovies : public NBPage {
 
    void addLanguageMenus (Glib::ustring& menu, Glib::RefPtr<Gtk::ActionGroup> grpAction);
 
-   static HMovie findMovie (const std::vector<HDirector>& directors,
-			    const YGP::Relation1_N<HDirector, HMovie>& relMovies,
+   static HFilm findFilm (const std::vector<HDirector>& directors,
+			    const YGP::Relation1_N<HDirector, HFilm>& relFilms,
 			    unsigned int id);
 
-   const MovieList& getMovieList () const { return movies; }
+   const FilmList& getFilmList () const { return films; }
    const std::vector<HDirector>& getDirectors () const { return directors; }
-   const YGP::Relation1_N<HDirector, HMovie>& getRelMovies () const { return relMovies; }
+   const YGP::Relation1_N<HDirector, HFilm>& getRelFilms () const { return relFilms; }
 
  private:
-   PMovies ();
+   PFilms ();
 
-   PMovies (const PMovies& other);
-   const PMovies& operator= (const PMovies& other);
+   PFilms (const PFilms& other);
+   const PFilms& operator= (const PFilms& other);
 
    void loadData (const std::string& lang);
 
@@ -80,37 +80,37 @@ class PMovies : public NBPage {
    void changeLanguage (const std::string& lang);
 
    void directorChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
-   void movieChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
+   void filmChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
 
    void newDirector ();
    Gtk::TreeModel::iterator addDirector (HDirector& hDirector);
-   void newMovie ();
-   Gtk::TreeModel::iterator addMovie (HMovie& hMovie, Gtk::TreeIter pos);
-   void deleteMovie (const Gtk::TreeIter& movie);
+   void newFilm ();
+   Gtk::TreeModel::iterator addFilm (HFilm& hFilm, Gtk::TreeIter pos);
+   void deleteFilm (const Gtk::TreeIter& film);
 
-   void undoMovie (const Undo& last);
+   void undoFilm (const Undo& last);
    void undoDirector (const Undo& last);
 
    void importFromIMDb ();
    void importDescriptionFromIMDb ();
    static void closeDialog (int, const Gtk::Dialog* dlg);
 
-   void movieSelected ();
-   HMovie findMovie (unsigned int id) const {
-      return findMovie (directors, relMovies, id);
+   void filmSelected ();
+   HFilm findFilm (unsigned int id) const {
+      return findFilm (directors, relFilms, id);
    }
 
-   bool importMovie (const Glib::ustring& director, const Glib::ustring& movie,
+   bool importFilm (const Glib::ustring& director, const Glib::ustring& film,
 		     const Glib::ustring& genre, const Glib::ustring& summary);
 
    LanguageImg* imgLang;
 
-   MovieList movies;                              // GUI-element holding movies
+   FilmList films;                              // GUI-element holding films
 
    // Model
-   enum { DIRECTOR, MOVIE };
+   enum { DIRECTOR, FILM };
    std::vector<HDirector> directors;
-   YGP::Relation1_N<HDirector, HMovie> relMovies;
+   YGP::Relation1_N<HDirector, HFilm> relFilms;
 
    std::map<std::string, bool> loadedLangs;
 };

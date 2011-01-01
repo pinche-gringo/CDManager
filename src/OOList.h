@@ -54,7 +54,7 @@ class OwnerObjectColumns : public Gtk::TreeModel::ColumnRecord {
 };
 
 
-/**Class to hold a list of movies
+/**Class to hold a list of entries
  */
 class OwnerObjectList : public Gtk::TreeView {
  public:

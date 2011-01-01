@@ -1,6 +1,6 @@
 <!-- -*-HTML-*- -->
 <!--
-   Copyright (C) 2004 - 2006, 2010 Markus Schwab (g17m0@users.sourceforge.net)
+   Copyright (C) 2004 - 2006, 2010, 2011 Markus Schwab (g17m0@users.sourceforge.net)
 
    This file is part of CDManager.
 
@@ -23,9 +23,9 @@
 
 <html>
   <head>
-    <title>CDManager - utility to manage records and movies</title>
+    <title>CDManager - utility to manage records and films</title>
     <meta name="description" content="Documentation of the CD-Manager">
-    <meta name="keywords" content="Documentation, Docu, CD, movie,
+    <meta name="keywords" content="Documentation, Docu, CD, film,
                 record, manager, CDManager, CD-Manager">
 
     <meta name="DC.Creator" content="Markus Schwab">
@@ -44,10 +44,10 @@
 
     <h2><a name="Intro"></a>Introduction</h2>
 
-    <p>The CD-Manager is an utility to manage records and movies.</p>
+    <p>The CD-Manager is an utility to manage records and films.</p>
 
     <p>Its features include exporting the managed media to HTML pages,
-      importing movie information
+      importing film information
       from <a href="http://www.imdb.com/">IMDB.com</a> and importing
       records from songs in MP3 (having an ID3 tag) or OGG format
       (having comment headers).</p>
@@ -74,7 +74,7 @@
 
     <h2><a name="Mainwindow"></a>Main window</h2>
     <p>The main window contains a notebook with (up to) three pages; one for the
-      records, one for the movies and one for actors.</p>
+      records, one for the films and one for actors.</p>
 
     <h3>Records page</h3>
     <p>This page contains two list; the left one holds the stored
@@ -103,9 +103,9 @@
       writing the text to find. While searching the keys <tt>Up</tt>
       and <tt>Down</tt> find the previous/next matching entry.</p>
 
-    <h3>Movies page</h3>
+    <h3>Films page</h3>
 
-    <p>This page contains the movies, sorted by director and (within
+    <p>This page contains the films, sorted by director and (within
       director by year). As with the records, its contents can be
       edited &ldquo;inline&rdquo; (see above).</p>
 
@@ -130,8 +130,8 @@
     <p>Equal to the record pages, it is possible to searched for
       Entries (see above).</p>
 
-    <p>The menu <tt>View</tt> allows to switch between showing movies
-      for each actor or all actors of a movie.</p>
+    <p>The menu <tt>View</tt> allows to switch between showing films
+      for each actor or all actors of a film.</p>
 
     <h2><a name="Dialogs"></a>Dialogs</h2>
 
@@ -154,17 +154,17 @@
       are differently written or they exceed the the size of the ID3
       information (which is limited to 30/32 characters).</p>
 
-    <h3>Import of movies (IMDb.com)</h3>
+    <h3>Import of films (IMDb.com)</h3>
     <p>This dialog is displayed by selecting <tt>Import from
     IMDb.com</tt> in the <tt>Edit</tt> menu. It allows to search for a
-    movie by specifying either the name of a movie, its URL or
+    film by specifying either the name of a film, its URL or
     IMDb.com identification. If the search (of a name) results in a
     list of matching entries, they are displayed and the proper entry
     can be selected. Its information is imported into the
     database.</p>
 
     <h3>Information</h3>
-    <p>Provides some statistical information (number of movies and
+    <p>Provides some statistical information (number of films and
     records). It can be accessed via <tt>Information</tt> in
     the <tt>CDs</tt> menu.</p>
 

@@ -22,7 +22,7 @@
 #include <YGP/IVIOAppl.h>
 
 
-/**Application to write records and movies to HTML pages.
+/**Application to write records and films to HTML pages.
  *
  *The data to write to is read from stdin.
 */
@@ -56,7 +56,7 @@ class CDWriter : public YGP::IVIOApplication {
 
    static void writeHeader (const char* lang, const char* format,
 			    std::ostream& stream, bool upSorted = true,
-			    const char* lead = "Movies");
+			    const char* lead = "Films");
 
    static const longOptions lo[];
 

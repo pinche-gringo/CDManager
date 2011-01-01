@@ -1,5 +1,5 @@
-#ifndef MOVIE_H
-#define MOVIE_H
+#ifndef FILM_H
+#define FILM_H
 
 // This file is part of CDManager
 //
@@ -31,18 +31,18 @@
 #include "CDType.h"
 #include "Language.h"
 
-class Movie;
-typedef boost::shared_ptr<Movie> HMovie;
+class Film;
+typedef boost::shared_ptr<Film> HFilm;
 
-/**Class to hold a movie
+/**Class to hold a film
  */
-class Movie : public YGP::Entity {
+class Film : public YGP::Entity {
  public:
-   Movie ();
-   Movie (const Movie& other);
-   virtual ~Movie ();
+   Film ();
+   Film (const Film& other);
+   virtual ~Film ();
 
-   Movie& operator= (const Movie& other);
+   Film& operator= (const Film& other);
 
    unsigned long int    getId () const { return id; }
    const Glib::ustring& getName () { return getName (currLang); }
@@ -73,10 +73,10 @@ class Movie : public YGP::Entity {
    void setImage    (const std::string& value) { icon = value; }
 
    static Glib::ustring removeIgnored (const Glib::ustring& name);
-   static bool compByName (const HMovie& a, const HMovie& b);
-   static bool compByYear (const HMovie& a, const HMovie& b);
-   static bool compByGenre (const HMovie& a, const HMovie& b);
-   static bool compByMedia (const HMovie& a, const HMovie& b);
+   static bool compByName (const HFilm& a, const HFilm& b);
+   static bool compByYear (const HFilm& a, const HFilm& b);
+   static bool compByGenre (const HFilm& a, const HFilm& b);
+   static bool compByMedia (const HFilm& a, const HFilm& b);
 
    static std::string currLang;
 

@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 23.12.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009, 2010
+//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009 - 2011
 
 // This file is part of CDManager
 //
@@ -38,7 +38,7 @@
 
 
 XGP::XAttributeEntry<std::string> Settings::* Settings::fields[] =
-   { &Settings::txtOutput, &Settings::hdrMovie, &Settings::ftrMovie,
+   { &Settings::txtOutput, &Settings::hdrFilm, &Settings::ftrFilm,
      &Settings::hdrRecord, &Settings::ftrRecord };
 
 Settings* Settings::instance (NULL);
@@ -50,8 +50,8 @@ Settings* Settings::instance (NULL);
 //-----------------------------------------------------------------------------
 Settings::Settings (Options& options)
    : XGP::XDialog (OKCANCEL),
-     txtOutput (options.dirOutput), hdrMovie (options.mHeader),
-     ftrMovie (options.mFooter), hdrRecord (options.rHeader),
+     txtOutput (options.dirOutput), hdrFilm (options.mHeader),
+     ftrFilm (options.mFooter), hdrRecord (options.rHeader),
      ftrRecord (options.rFooter),
      wordDialog (WordDialog::makeDialog ()) {
    Check3 (!instance);
@@ -64,8 +64,8 @@ Settings::Settings (Options& options)
    Gtk::Table& pagExport (*manage (new Gtk::Table (5, 2)));
 
    Glib::ustring lbls[sizeof (fields) / sizeof (*fields)] =
-      { _("Output _directory:"), _("_Header for movies:"),
-	_("_Footer for movies:"), _("Header for _records:"),
+      { _("Output _directory:"), _("_Header for films:"),
+	_("_Footer for films:"), _("Header for _records:"),
 	_("Foo_ter for records:") };
 
    Gtk::Label* lbl;

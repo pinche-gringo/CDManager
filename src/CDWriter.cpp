@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 07.01.2005
-//COPYRIGHT   : Copyright (C) 2005 - 2007, 2009, 2010
+//COPYRIGHT   : Copyright (C) 2005 - 2007, 2009 - 2011
 
 // This file is part of CDManager
 //
@@ -53,8 +53,8 @@
 #include "Writer.h"
 #include "Language.h"
 
-#if WITH_MOVIES == 1
-#  include "Movie.h"
+#if WITH_FILMS == 1
+#  include "Film.h"
 #  include "Director.h"
 #endif
 
@@ -74,9 +74,9 @@ const YGP::IVIOApplication::longOptions CDWriter::lo[] = {
    { "recHeader", 'r' },
    { "recFooter", 'R' },
 #endif
-#if WITH_MOVIES == 1
-   { "movieHeader", 'm' },
-   { "movieFooter", 'M' },
+#if WITH_FILMS == 1
+   { "filmHeader", 'm' },
+   { "filmFooter", 'M' },
 #endif
    { "outputDir", 'd' },
    { NULL, '\0' } };
@@ -101,9 +101,9 @@ void CDWriter::showHelp () const {
 	     << "  -r, --recHeader ..... " << _("File to use as header for records\n")
 	     << "  -R, --recFooter ..... " << _("File to use as footer for records\n")
 #endif
-#if WITH_MOVIES == 1
-	     << "  -m, --movieHeader ... " << _("File to use as header for movies\n")
-	     << "  -M, --movieFooter ... " << _("File to use as footer for movies\n")
+#if WITH_FILMS == 1
+	     << "  -m, --filmHeader ... " << _("File to use as header for films\n")
+	     << "  -M, --filmFooter ... " << _("File to use as footer for films\n")
 #endif
              << "  -V, --version ....... " << _("Output version information and exit\n")
              << "  -h, -?, --help ...... " << _("Displays this help and exit\n\n");
@@ -127,7 +127,7 @@ bool CDWriter::handleOption (const char option) {
          std::cerr << name () << _("-warning: No directory specified! Ignoring option `d'\n");
       break; }
 
-#if WITH_MOVIES == 1
+#if WITH_FILMS == 1
    case 'm':
    case 'M': {
       const char* pFile (getOptionValue ());
@@ -171,10 +171,10 @@ bool CDWriter::handleOption (const char option) {
 /// \param lang: Language code; Used for links to documents
 /// \param format: Format of header; A sequence of the following characters
 ///     - d: Director
-///     - n: Name of movie
-///     - y: Year the movie was made
-///     - g: Genre of movie
-///     - m: Media containing the movie
+///     - n: Name of film
+///     - y: Year the film was made
+///     - g: Genre of film
+///     - m: Media containing the film
 ///     - l: Language(s)
 ///     - [: Start of <div>-tag
 ///     - ]: End of <div>-tag
@@ -239,7 +239,7 @@ int CDWriter::perform (int argc, const char** argv) {
       return - 1;
    }
 
-   Genres movieGenres, recGenres;
+   Genres filmGenres, recGenres;
 
    try {
       if (!atoi (argv[1]))
@@ -248,7 +248,7 @@ int CDWriter::perform (int argc, const char** argv) {
       Words::access (atoi (argv[1]));
       TRACE9 ("Words: " << Words::getMemoryKey () << ": " << Words::cArticles () << '/' << Words::cNames ());
 
-      Genres::loadFromFile (DATADIR "Genres.dat", recGenres, movieGenres, *argv);
+      Genres::loadFromFile (DATADIR "Genres.dat", recGenres, filmGenres, *argv);
    }
    catch (std::invalid_argument& e) {
       std::string msg (_("-error: Can't access reserved words!\n\nReason: %1"));
@@ -263,9 +263,9 @@ int CDWriter::perform (int argc, const char** argv) {
       return -3;
    }
 
-#if WITH_MOVIES == 1
-   Movie::currLang = *argv;
-   Glib::ustring transTitleMovie (_("Movies (by %1)"));
+#if WITH_FILMS == 1
+   Film::currLang = *argv;
+   Glib::ustring transTitleFilm (_("Films (by %1)"));
 #endif
 #if WITH_RECORDS == 1
    Glib::ustring transTitleRecord (_("Records (by %1)"));
@@ -276,9 +276,9 @@ int CDWriter::perform (int argc, const char** argv) {
       Glib::ustring& source;
       std::string    target;
    } htmlData[] = {
-#if WITH_MOVIES == 1
-      { opt.getMHeader (), transTitleMovie },
-      { opt.getMFooter (), transTitleMovie }
+#if WITH_FILMS == 1
+      { opt.getMHeader (), transTitleFilm },
+      { opt.getMFooter (), transTitleFilm }
 #  if WITH_RECORDS == 1
       ,
 #  endif
@@ -310,28 +310,28 @@ int CDWriter::perform (int argc, const char** argv) {
    } // end-for
 
    size_t pos (0);
-#if WITH_MOVIES == 1
-   std::ofstream fileMovie;
-   createFile (opt.getDirOutput () + "Movies.html", argv[0], fileMovie);
+#if WITH_FILMS == 1
+   std::ofstream fileFilm;
+   createFile (opt.getDirOutput () + "Films.html", argv[0], fileFilm);
 
-   // Writing the title for movies
-   std::string titleMovie (htmlData[0].target);
+   // Writing the title for films
+   std::string titleFilm (htmlData[0].target);
    pos = 0;
-   while ((pos = titleMovie.find ("%1", pos)) != std::string::npos)
-      titleMovie.replace (pos, 2, _("Director"));
-   fileMovie << titleMovie;
+   while ((pos = titleFilm.find ("%1", pos)) != std::string::npos)
+      titleFilm.replace (pos, 2, _("Director"));
+   fileFilm << titleFilm;
 
-   writeHeader (argv[0], "[d-n-y-g-m-l]", fileMovie);
+   writeHeader (argv[0], "[d-n-y-g-m-l]", fileFilm);
 
-   std::string movieFormat ("%n|%y|%g|%t|%l");
-   MovieWriter movieWriter (movieFormat, movieGenres);
-   movieWriter.printStart (fileMovie, "");
+   std::string filmFormat ("%n|%y|%g|%t|%l");
+   FilmWriter filmWriter (filmFormat, filmGenres);
+   filmWriter.printStart (fileFilm, "");
 
-   HMovie movie;
+   HFilm film;
    HDirector director;
-   std::vector<HMovie> movies;
+   std::vector<HFilm> films;
    std::vector<HDirector> directors;
-   YGP::Relation1_N<HDirector, HMovie> relMovies ("movies");
+   YGP::Relation1_N<HDirector, HFilm> relFilms ("films");
    std::string usedLanguages;
 #endif
 
@@ -340,7 +340,7 @@ int CDWriter::perform (int argc, const char** argv) {
    createFile (opt.getDirOutput () + "Records.html", argv[0], fileRec);
 
    // Writing the title for records
-   std::string titleRec (htmlData[WITH_MOVIES << 1].target);
+   std::string titleRec (htmlData[WITH_FILMS << 1].target);
    pos = 0;
    while ((pos = titleRec.find ("%1", pos)) != std::string::npos)
       titleRec.replace (pos, 2, _("Interpret"));
@@ -359,14 +359,14 @@ int CDWriter::perform (int argc, const char** argv) {
    YGP::Relation1_N<HInterpret, HRecord> relRecords ("records");
 #endif
 
-   // Read input from stdin; both movies and records can be handled
+   // Read input from stdin; both films and records can be handled
    char type;
    std::cin >> type;
    while (!std::cin.eof ()) {
       try {
 	 TRACE4 ("CDWriter::perform (int, char**) - Type: " << type);
 	 switch (type) {
-#if WITH_MOVIES == 1
+#if WITH_FILMS == 1
 	 case 'D':
 	    director.reset (new Director);
 	    std::cin >> *director;
@@ -376,17 +376,17 @@ int CDWriter::perform (int argc, const char** argv) {
 
 	 case 'M': {
 	    Check3 (director);
-	    movie.reset (new Movie);
-	    std::cin >> *movie;
-	    TRACE9 ("CDWriter::perform (int, char**) - Movie: " << movie->getName ());
-	    if (!relMovies.isRelated (director))
-	       movieWriter.writeDirector (director, fileMovie);
+	    film.reset (new Film);
+	    std::cin >> *film;
+	    TRACE9 ("CDWriter::perform (int, char**) - Film: " << film->getName ());
+	    if (!relFilms.isRelated (director))
+	       filmWriter.writeDirector (director, fileFilm);
 
-	    relMovies.relate (director, movie);
-	    movieWriter.writeMovie (movie, director, fileMovie);
-	    movies.push_back (movie);
+	    relFilms.relate (director, film);
+	    filmWriter.writeFilm (film, director, fileFilm);
+	    films.push_back (film);
 
-	    boost::tokenizer<boost::char_separator<char> > langs (movie->getLanguage (),
+	    boost::tokenizer<boost::char_separator<char> > langs (film->getLanguage (),
 								  boost::char_separator<char> (","));
 	    for (boost::tokenizer<boost::char_separator<char> >::iterator i (langs.begin ());
 		 i != langs.end (); ++i) {
@@ -427,7 +427,7 @@ int CDWriter::perform (int argc, const char** argv) {
       }
       catch (std::exception& error) {
 	 const char* types ("DMIR");
-	 const char* what[] = { N_("Director"), N_("Movie"), N_("Interpret"), N_("Record") };
+	 const char* what[] = { N_("Director"), N_("Film"), N_("Interpret"), N_("Record") };
 	 Check9 ((sizeof (types) / sizeof (*types)) == (sizeof (what) / sizeof (*what)));
 	 const char* i (strchr (types, type));
 	 Glib::ustring entity (_(i ? what[i - types] : N_("unknown entity")));
@@ -445,39 +445,39 @@ int CDWriter::perform (int argc, const char** argv) {
       std::cin >> type;
    } // end-while not eof
 
-#if WITH_MOVIES == 1
-   movieWriter.printEnd (fileMovie);
-   fileMovie << htmlData[1].target;
-   fileMovie.close ();
+#if WITH_FILMS == 1
+   filmWriter.printEnd (fileFilm);
+   fileFilm << htmlData[1].target;
+   fileFilm.close ();
 
    // Write reverse file
-   createFile (opt.getDirOutput () + "Moviesdown.html", argv[0], fileMovie);
-   fileMovie << titleMovie;
-   writeHeader (argv[0], "[d-n-y-g-m-l]", fileMovie, false);
+   createFile (opt.getDirOutput () + "Filmsdown.html", argv[0], fileFilm);
+   fileFilm << titleFilm;
+   writeHeader (argv[0], "[d-n-y-g-m-l]", fileFilm, false);
 
-   movieWriter.printStart (fileMovie, "");
+   filmWriter.printStart (fileFilm, "");
    for (std::vector<HDirector>::reverse_iterator i (directors.rbegin ());
 	i != directors.rend (); ++i)
-      if (relMovies.isRelated (*i)) {
-	 movieWriter.writeDirector (*i, fileMovie);
+      if (relFilms.isRelated (*i)) {
+	 filmWriter.writeDirector (*i, fileFilm);
 
-	 const std::vector<HMovie>& dirMovies (relMovies.getObjects (*i));
-	 Check3 (dirMovies.size ());
-	 for (std::vector<HMovie>::const_iterator m (dirMovies.begin ());
-	      m != dirMovies.end (); ++m)
-	    movieWriter.writeMovie (*m, *i, fileMovie);
+	 const std::vector<HFilm>& dirFilms (relFilms.getObjects (*i));
+	 Check3 (dirFilms.size ());
+	 for (std::vector<HFilm>::const_iterator m (dirFilms.begin ());
+	      m != dirFilms.end (); ++m)
+	    filmWriter.writeFilm (*m, *i, fileFilm);
       }
-   movieWriter.printEnd (fileMovie);
-   fileMovie << htmlData[1].target;
-   fileMovie.close ();
+   filmWriter.printEnd (fileFilm);
+   fileFilm << htmlData[1].target;
+   fileFilm.close ();
 
-   typedef bool (*PFNCMPMOVIE) (const HMovie&, const HMovie&);
+   typedef bool (*PFNCMPFILM) (const HFilm&, const HFilm&);
 #endif
 
 #if WITH_RECORDS == 1
    recWriter.printEnd (fileRec);
    fileRec.flush ();
-   fileRec << htmlData[(WITH_MOVIES << 1) + 1].target;
+   fileRec << htmlData[(WITH_FILMS << 1) + 1].target;
    fileRec.close ();
 
    // Write reverse file
@@ -498,7 +498,7 @@ int CDWriter::perform (int argc, const char** argv) {
 	    recWriter.writeRecord (*m, *i, fileRec);
       }
    recWriter.printEnd (fileRec);
-   fileRec << htmlData[(WITH_MOVIES << 1) + 1].target;
+   fileRec << htmlData[(WITH_FILMS << 1) + 1].target;
    fileRec.close ();
 
    typedef bool (*PFNCMPRECORD) (const HRecord&, const HRecord&);
@@ -514,16 +514,16 @@ int CDWriter::perform (int argc, const char** argv) {
       const char* lead;
       unsigned int type;
    } aOutputs[] = {
-#if WITH_MOVIES == 1
-	// Entries for movies
-      { "[n]|[d]|[y]|[g]|[m]|[l]", "Movies-Name.html", "Movies-Namedown.html",
-	"%n|%d|%y|%g|%t|%l", N_("Name"), (void*)&Movie::compByName, "Movies", 0 },
-      { "[y]|[n]|[d]|[g]|[m]|[l]", "Movies-Year.html", "Movies-Yeardown.html",
-	"%y|%n|%d|%g|%t|%l", N_("Year"), (void*)&Movie::compByYear, "Movies", 0 },
-      { "[g]|[n]|[d]|[y]|[m]|[l]", "Movies-Genre.html", "Movies-Genredown.html",
-	"%g|%n|%d|%y|%t|%l", N_("Genre"), (void*)&Movie::compByGenre, "Movies", 0 },
-      { "[m]|[n]|[d]|[y]|[g]|[l]", "Movies-Media.html", "Movies-Mediadown.html",
-	"%t|%n|%d|%y|%g|%l", N_("Media"), (void*)&Movie::compByMedia, "Movies", 0 }
+#if WITH_FILMS == 1
+	// Entries for films
+      { "[n]|[d]|[y]|[g]|[m]|[l]", "Films-Name.html", "Films-Namedown.html",
+	"%n|%d|%y|%g|%t|%l", N_("Name"), (void*)&Film::compByName, "Films", 0 },
+      { "[y]|[n]|[d]|[g]|[m]|[l]", "Films-Year.html", "Films-Yeardown.html",
+	"%y|%n|%d|%g|%t|%l", N_("Year"), (void*)&Film::compByYear, "Films", 0 },
+      { "[g]|[n]|[d]|[y]|[m]|[l]", "Films-Genre.html", "Films-Genredown.html",
+	"%g|%n|%d|%y|%t|%l", N_("Genre"), (void*)&Film::compByGenre, "Films", 0 },
+      { "[m]|[n]|[d]|[y]|[g]|[l]", "Films-Media.html", "Films-Mediadown.html",
+	"%t|%n|%d|%y|%g|%l", N_("Media"), (void*)&Film::compByMedia, "Films", 0 }
 #  if WITH_RECORDS == 1
       ,
 #  endif
@@ -541,7 +541,7 @@ int CDWriter::perform (int argc, const char** argv) {
 
    std::ofstream fileOut;
    std::string strTitle;
-   // This combines writing movies and records
+   // This combines writing films and records
    for (unsigned int i (0); i < (sizeof (aOutputs) / sizeof (*aOutputs)); ++i) {
       createFile (opt.getDirOutput () + aOutputs[i].file, argv[0], fileOut);
       strTitle = htmlData[aOutputs[i].type << 1].target;
@@ -572,19 +572,19 @@ int CDWriter::perform (int argc, const char** argv) {
       }
       else
 #endif
-#if WITH_MOVIES == 1
+#if WITH_FILMS == 1
       {
-	 std::sort (movies.begin (), movies.end (), (PFNCMPMOVIE)aOutputs[i].fnCompare);
+	 std::sort (films.begin (), films.end (), (PFNCMPFILM)aOutputs[i].fnCompare);
 
-	 movieFormat = aOutputs[i].format;
-	 MovieWriter writer (movieFormat, movieGenres);
+	 filmFormat = aOutputs[i].format;
+	 FilmWriter writer (filmFormat, filmGenres);
 	 writer.printStart (fileOut, header.str ());
 
 	 HDirector director;
-	 for (std::vector<HMovie>::const_iterator m (movies.begin ());
-	      m != movies.end (); ++m) {
-	    director = relMovies.getParent (*m); Check3 (director);
-	    writer.writeMovie (*m, director, fileOut);
+	 for (std::vector<HFilm>::const_iterator m (films.begin ());
+	      m != films.end (); ++m) {
+	    director = relFilms.getParent (*m); Check3 (director);
+	    writer.writeFilm (*m, director, fileOut);
 	 }
 	 writer.printEnd (fileOut);
       }
@@ -614,16 +614,16 @@ int CDWriter::perform (int argc, const char** argv) {
       }
       else
 #endif
-#if WITH_MOVIES == 1
+#if WITH_FILMS == 1
       {
-	 MovieWriter writer (movieFormat, movieGenres);
+	 FilmWriter writer (filmFormat, filmGenres);
 	 writer.printStart (fileOut, rheader.str ());
 
-	 for (std::vector<HMovie>::reverse_iterator m (movies.rbegin ());
-	      m != movies.rend (); ++m) {
+	 for (std::vector<HFilm>::reverse_iterator m (films.rbegin ());
+	      m != films.rend (); ++m) {
 	    HDirector director;
-	    director = relMovies.getParent (*m); Check3 (director);
-	    writer.writeMovie (*m, director, fileOut);
+	    director = relFilms.getParent (*m); Check3 (director);
+	    writer.writeFilm (*m, director, fileOut);
 	 }
 	 writer.printEnd (fileOut);
       }
@@ -633,14 +633,14 @@ int CDWriter::perform (int argc, const char** argv) {
       fileOut.close ();
    }
 
-#if WITH_MOVIES == 1
-   // Export movies by language
-   createFile (opt.getDirOutput () + "Movies-Lang.html", argv[0], fileOut);
-   titleMovie = htmlData[0].target;
+#if WITH_FILMS == 1
+   // Export films by language
+   createFile (opt.getDirOutput () + "Films-Lang.html", argv[0], fileOut);
+   titleFilm = htmlData[0].target;
    pos = 0;
-   while ((pos = titleMovie.find ("%1", pos)) != std::string::npos)
-      titleMovie.replace (pos, 2, _("Language"));
-   fileOut << titleMovie;
+   while ((pos = titleFilm.find ("%1", pos)) != std::string::npos)
+      titleFilm.replace (pos, 2, _("Language"));
+   fileOut << titleFilm;
 
    writeHeader (argv[0], "[n-d-y-g-m]", fileOut, false);
 
@@ -653,9 +653,9 @@ int CDWriter::perform (int argc, const char** argv) {
 		   << l->second.getInternational () << "</a> |";
    fileOut << "</div>";
 
-   movieFormat = "%l|%n|%d||%y|%g|%t";
-   MovieWriter langWriter (movieFormat, movieGenres);
-   std::sort (movies.begin (), movies.end (), &Movie::compByName);
+   filmFormat = "%l|%n|%d||%y|%g|%t";
+   FilmWriter langWriter (filmFormat, filmGenres);
+   std::sort (films.begin (), films.end (), &Film::compByName);
 
    langWriter.printStart (fileOut, "");
 
@@ -669,13 +669,13 @@ int CDWriter::perform (int argc, const char** argv) {
 	 writeHeader (argv[0], "[=]![n]![d]![y]![g]![m]", fileOut, false);
 	 fileOut << "</td></tr>";
 
-	 for (std::vector<HMovie>::const_iterator m (movies.begin ());
-	      m != movies.end (); ++m)
+	 for (std::vector<HFilm>::const_iterator m (films.begin ());
+	      m != films.end (); ++m)
 	    if (((*m)->getLanguage ().find (l->first) != std::string::npos)
 		|| ((*m)->getTitles ().find (l->first) != std::string::npos)) {
 	       HDirector director;
-	       director = relMovies.getParent (*m); Check3 (director);
-	       langWriter.writeMovie (*m, director, fileOut);
+	       director = relFilms.getParent (*m); Check3 (director);
+	       langWriter.writeFilm (*m, director, fileOut);
 	 }
       }
    }
@@ -698,7 +698,7 @@ const char* CDWriter::description () const {
       (name () + std::string ( " V" VERSION " - ")
        + std::string (_("Compiled on"))
        + std::string (" " __DATE__ " - " __TIME__ "\n\n")
-       + std::string (_("Copyright (C) 2005 - 2007, 2009 Markus Schwab; e-mail: g17m0@users.sourceforge.net"
+       + std::string (_("Copyright (C) 2005 - 2007, 2009, 2011 Markus Schwab; e-mail: g17m0@users.sourceforge.net"
 			"\nDistributed under the terms of the GNU General "
 			"Public License")));
    return version.c_str ();

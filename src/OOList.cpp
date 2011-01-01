@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 25.11.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009, 2010
+//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009 - 2011
 
 // This file is part of CDManager
 //
@@ -531,7 +531,7 @@ void OwnerObjectList::selectRow (const Gtk::TreeModel::const_iterator& i) {
 }
 
 //-----------------------------------------------------------------------------
-/// Updates the displayed movies, showing them in the passed language
+/// Sets the entry to display
 /// \param row: Row to update
 /// \param obj: Object, whose values to set
 //-----------------------------------------------------------------------------
@@ -541,7 +541,7 @@ void OwnerObjectList::set (Gtk::TreeModel::Row& row, const HEntity& obj) {
 }
 
 //-----------------------------------------------------------------------------
-/// Updates the displayed movies, showing them in the passed language
+/// Updates the displayed entry
 /// \param row: Row to update
 //-----------------------------------------------------------------------------
 void OwnerObjectList::update (Gtk::TreeModel::Row& row) {

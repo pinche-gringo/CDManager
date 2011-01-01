@@ -56,7 +56,7 @@ Common options for configure
   --prefix=<path>		# default: /usr/local
   --disable-nls                 # Disable national language support
   --disable-actors		# To don't store actor-information
-  --disable-movies		# To not handle a certain type of media
+  --disable-films		# To not handle a certain type of media
   --disable-records
   --with-mysql[-{lib,include}]	# Path to mysql header/libs
   --with-mysqlpp[-{lib,include}]

@@ -1,5 +1,5 @@
-#ifndef STORAGEMOVIE_H
-#define STORAGEMOVIE_H
+#ifndef STORAGEFILM_H
+#define STORAGEFILM_H
 
 // This file is part of CDManager
 //
@@ -22,7 +22,7 @@
 
 #include <YGP/Relation.h>
 
-#include "Movie.h"
+#include "Film.h"
 #include "Director.h"
 
 #include "Storage.h"
@@ -34,30 +34,30 @@ namespace YGP {
 };
 
 
-/**Class to access the stored movies
+/**Class to access the stored films
  */
-class StorageMovie : public Storage {
+class StorageFilm : public Storage {
  public:
    static void loadDirectors (std::vector<HDirector>& target, YGP::StatusObject& stat) {
       loadCelebrities (target, "Directors", stat); }
-   static unsigned int loadMovies (std::map<unsigned int, std::vector<HMovie> >& aMovies,
+   static unsigned int loadFilms (std::map<unsigned int, std::vector<HFilm> >& aFilms,
 				   YGP::StatusObject& stat) throw (std::exception);
-   static void saveMovie (const HMovie movie, unsigned int idDirector) throw (std::exception);
-   static void deleteMovie (unsigned int idMovie) throw (std::exception);
+   static void saveFilm (const HFilm film, unsigned int idDirector) throw (std::exception);
+   static void deleteFilm (unsigned int idFilm) throw (std::exception);
    static void deleteDirector (unsigned int idDirector) throw (std::exception);
-   static void deleteMovieNames (unsigned int idMovie) throw (std::exception);
-   static void saveMovieName (const HMovie movie, const std::string& lang) throw (std::exception);
+   static void deleteFilmNames (unsigned int idFilm) throw (std::exception);
+   static void saveFilmName (const HFilm film, const std::string& lang) throw (std::exception);
 
    static void loadNames (const std::vector<HDirector>& directors,
-			  const YGP::Relation1_N<HDirector, HMovie>& relMovies,
+			  const YGP::Relation1_N<HDirector, HFilm>& relFilms,
 			  const std::string& lang) throw (std::exception);
 
  private:
-   StorageMovie ();
-   StorageMovie (const StorageMovie& other);
-   virtual ~StorageMovie ();
+   StorageFilm ();
+   StorageFilm (const StorageFilm& other);
+   virtual ~StorageFilm ();
 
-   const StorageMovie& operator= (const StorageMovie& other);
+   const StorageFilm& operator= (const StorageFilm& other);
 };
 
 #endif

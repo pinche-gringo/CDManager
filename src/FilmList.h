@@ -1,5 +1,5 @@
-#ifndef MOVIELIST_H
-#define MOVIELIST_H
+#ifndef FILMLIST_H
+#define FILMLIST_H
 
 // This file is part of CDManager
 //
@@ -20,7 +20,7 @@
 #include <gtkmm/treeview.h>
 #include <gtkmm/liststore.h>
 
-#include "Movie.h"
+#include "Film.h"
 #include "Director.h"
 
 #include "OOList.h"
@@ -39,11 +39,11 @@ class TypeColumns : public Gtk::TreeModel::ColumnRecord {
 };
 
 
-/**Class for the columns in the movie list
+/**Class for the columns in the film list
  */
-class MovieColumns : public OwnerObjectColumns {
+class FilmColumns : public OwnerObjectColumns {
  public:
-   MovieColumns () : OwnerObjectColumns () {
+   FilmColumns () : OwnerObjectColumns () {
       add (type); add (lang1); add (lang2); add (lang3); add (lang4);
       add (lang5); add (langs); add (sub1); add (sub2); add (sub3); add (sub4);
       add (sub5); add (sub6); add (sub7); add (sub8); add (sub9); add (sub10); add (titles); }
@@ -69,18 +69,18 @@ class MovieColumns : public OwnerObjectColumns {
 };
 
 
-/**Class to hold a list of movies
+/**Class to hold a list of films
  */
-class MovieList : public OwnerObjectList {
+class FilmList : public OwnerObjectList {
  public:
-   MovieList (const Genres& genres);
-   virtual ~MovieList ();
+   FilmList (const Genres& genres);
+   virtual ~FilmList ();
 
    Gtk::TreeModel::Row append (const HDirector& director) {
       return OwnerObjectList::append (director); }
-   Gtk::TreeModel::Row append (HMovie& movie, const Gtk::TreeModel::Row& director);
+   Gtk::TreeModel::Row append (HFilm& film, const Gtk::TreeModel::Row& director);
 
-   HMovie getMovieAt (const Gtk::TreeIter iterator) const;
+   HFilm getFilmAt (const Gtk::TreeIter iterator) const;
    HDirector getDirectorAt (const Gtk::TreeIter iterator) const {
       return getCelebrityAt (iterator); }
 
@@ -105,11 +105,11 @@ class MovieList : public OwnerObjectList {
    void setTitles (Gtk::TreeModel::Row& row, const std::string& titles);
 
  private:
-   MovieList (const MovieList& other);
-   const MovieList& operator= (const MovieList& other);
+   FilmList (const FilmList& other);
+   const FilmList& operator= (const FilmList& other);
 
    TypeColumns  colTypes;
-   MovieColumns colMovies;
+   FilmColumns colFilms;
 
    Glib::RefPtr<Gtk::ListStore> mTypes;
 };

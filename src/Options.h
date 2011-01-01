@@ -52,8 +52,8 @@ class Options : public YGP::Entity {
    Options (const Options& other);
    const Options& operator= (const Options& other);
 
-   std::string mHeader;             // %attrib%; MovieHead;       "Movies.head"
-   std::string mFooter;             // %attrib%; MovieFoot;       "Movies.foot"
+   std::string mHeader;             // %attrib%; FilmHead;         "Films.head"
+   std::string mFooter;             // %attrib%; FilmFoot;         "Films.foot"
    std::string rHeader;             // %attrib%; RecordHead;     "Records.head"
    std::string rFooter;             // %attrib%; RecordFoot;     "Records.foot"
    std::string dirOutput;           // %attrib%; OutputDir;     "/var/www/cds/"

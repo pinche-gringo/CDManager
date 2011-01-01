@@ -24,17 +24,17 @@
 
 #include <YGP/Relation.h>
 
-#include "Movie.h"
+#include "Film.h"
 #include "Director.h"
 #include "ActorList.h"
-#include "RelateMovie.h"
+#include "RelateFilm.h"
 
 #include "NBPage.h"
 
 
 // Forward declarations
 class Genres;
-class PMovies;
+class PFilms;
 
 
 /**Class handling the actor notebook-page
@@ -42,7 +42,7 @@ class PMovies;
 class PActors : public NBPage {
  public:
    PActors (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave,
-	    const Genres& genres, PMovies& movies);
+	    const Genres& genres, PFilms& films);
    virtual ~PActors ();
 
    virtual void loadData ();
@@ -53,7 +53,7 @@ class PActors : public NBPage {
    virtual void undo ();
    virtual void clear ();
 
-   HMovie findMovie (unsigned int id) const;
+   HFilm findFilm (unsigned int id) const;
 
  private:
    PActors ();
@@ -67,46 +67,46 @@ class PActors : public NBPage {
    void newActor ();
    void undoActor (const Undo& last);
 
-   void actorPlaysInMovie ();
-   void relateMovies (const HActor& actor, const std::vector<HMovie>& movies);
-   void showMovies (const HActor& actor, const std::vector<HMovie>& newMovies);
+   void actorPlaysInFilm ();
+   void relateFilms (const HActor& actor, const std::vector<HFilm>& films);
+   void showFilms (const HActor& actor, const std::vector<HFilm>& newFilms);
 
    void viewByActor ();
-   void viewByMovie ();
+   void viewByFilm ();
 
    void changeAllEntries (const HEntity& entry, Gtk::TreeIter begin, Gtk::TreeIter end);
-   void saveRelatedMovies (const HActor& actor) throw (std::exception);
+   void saveRelatedFilms (const HActor& actor) throw (std::exception);
 
    ActorList actors;                              // GUI-element holding actors
 
    // Model
-   enum { ACTOR, MOVIES };
+   enum { ACTOR, FILMS };
 
    std::vector<HActor> aActors;
-   YGP::RelationN_M<HActor, HMovie> relActors;
+   YGP::RelationN_M<HActor, HFilm> relActors;
 
-   // Reference to movie-page
-   PMovies& movies;
+   // Reference to film-page
+   PFilms& films;
 
    // Menus for switching view
    unsigned int actView;
    Glib::RefPtr<Gtk::RadioAction> menuView[2];
 
-   // Info for undoing relating actors and movies
+   // Info for undoing relating actors and films
    class RelUndo : public YGP::Entity {
     public:
       RelUndo () { }
-      RelUndo (const std::vector<HMovie>& aMovies) : movies (aMovies) { }
+      RelUndo (const std::vector<HFilm>& aFilms) : films (aFilms) { }
       ~RelUndo () { }
 
-      void setRelatedMovies (const std::vector<HMovie>& aMovies) { movies = aMovies; }
-      const std::vector<HMovie>& getRelatedMovies () const { return movies; }
+      void setRelatedFilms (const std::vector<HFilm>& aFilms) { films = aFilms; }
+      const std::vector<HFilm>& getRelatedFilms () const { return films; }
 
     private:
       RelUndo (const RelUndo&);
       RelUndo& operator= (const RelUndo&);
 
-      std::vector<HMovie> movies;
+      std::vector<HFilm> films;
    };
 };
 

@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009, 2010
+//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009 - 2011
 
 // This file is part of CDManager
 //
@@ -324,7 +324,7 @@ void SongList::setGenre (Gtk::TreeIter& iter, unsigned int genre) {
 }
 
 //-----------------------------------------------------------------------------
-/// Updates the displayed movies; actualizes the displayed values with the
+/// Updates the displayed songs; actualises the displayed values with the
 /// values stored in the object in the entity-column
 /// \param row: Row to update
 //-----------------------------------------------------------------------------

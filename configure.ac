@@ -208,7 +208,7 @@ dnl Checks for library functions.
 
 dnl Enable special features
 ACTORS=0
-MOVIES=0
+FILMS=0
 RECORDS=0
 AC_ARG_ENABLE(debug,
               AC_HELP_STRING([--enable-debug=LEVEL],
@@ -230,17 +230,17 @@ AC_ARG_ENABLE(actors,
               AC_HELP_STRING([--disable-actors],
                              [Disables handling of actors]))
 if test "$enable_actors" != "no"; then
-   if test "$enable_movies" = "no"; then
-      AC_MSG_WARN([--enable-actors needs the movies enabled! Enabling both ...])
-      enable_movies=yes
+   if test "$enable_films" = "no"; then
+      AC_MSG_WARN([--enable-actors needs films enabled! Enabling both ...])
+      enable_films=yes
    fi
    ACTORS=1
 fi
-AC_ARG_ENABLE(movies,
-              AC_HELP_STRING([--disable-movies],
-                             [Disables handling of movies]))
-if test "$enable_movies" != "no"; then
-   MOVIES=1
+AC_ARG_ENABLE(films,
+              AC_HELP_STRING([--disable-films],
+                             [Disables handling of films]))
+if test "$enable_films" != "no"; then
+   FILMS=1
 fi
 AC_ARG_ENABLE(records,
               AC_HELP_STRING([--disable-records],
@@ -249,7 +249,7 @@ if test "$enable_records" != "no"; then
    RECORDS=1
 fi
 
-PAGES=$(($ACTORS+$MOVIES+$RECORDS))
+PAGES=$(($ACTORS+$FILMS+$RECORDS))
 AC_MSG_CHECKING([the number of enabled pages])
 AC_MSG_RESULT([$PAGES])
 if test $PAGES -eq 0; then
@@ -258,11 +258,11 @@ fi
 
 
 AC_DEFINE_UNQUOTED(WITH_ACTORS, $ACTORS, [Define if actors should be handled])
-AC_DEFINE_UNQUOTED(WITH_MOVIES, $MOVIES, [Define if movies should be handled])
+AC_DEFINE_UNQUOTED(WITH_FILMS, $FILMS, [Define if films should be handled])
 AC_DEFINE_UNQUOTED(WITH_RECORDS, $RECORDS, [Define if records should be handled])
 
 AM_CONDITIONAL(WITH_ACTORS, test $ACTORS -eq 1)
-AM_CONDITIONAL(WITH_MOVIES, test $MOVIES -eq 1)
+AM_CONDITIONAL(WITH_FILMS, test $FILMS -eq 1)
 AM_CONDITIONAL(WITH_RECORDS, test $RECORDS -eq 1)
 
 

@@ -1,11 +1,11 @@
 //PROJECT     : CDManager
-//SUBSYSTEM   : Movie
+//SUBSYSTEM   : Film
 //REFERENCES  :
 //TODO        :
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 29.11.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009, 2010
+//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009 - 2011
 
 // This file is part of CDManager
 //
@@ -30,7 +30,7 @@
 // #include <XGP/XAttribute.h>  // Needed for specialization of YGP::Attribute for Glib::ustring
 
 #include "Words.h"
-#include "Movie.h"
+#include "Film.h"
 
 
 // Specialization of YGP::Attribute for the name-map
@@ -39,12 +39,12 @@ namespace YGP {
 template <> inline
 bool Attribute<std::map<std::string, Glib::ustring> >::assignFromString (const char* value) const {
    Check3 (value);
-   attr_[Movie::currLang] = value;
+   attr_[Film::currLang] = value;
    return true;
 }
 template <> inline
 std::string Attribute<std::map<std::string, Glib::ustring> >::getValue () const {
-   return (attr_.find (Movie::currLang) == attr_.end ()) ? attr_[""] : attr_[Movie::currLang]; }
+   return (attr_.find (Film::currLang) == attr_.end ()) ? attr_[""] : attr_[Film::currLang]; }
 template <> inline
 std::string Attribute<std::map<std::string, Glib::ustring> >::getFormattedValue () const {
    return getValue (); }
@@ -52,16 +52,16 @@ std::string Attribute<std::map<std::string, Glib::ustring> >::getFormattedValue 
 }
 
 
-#include "Movie.meta"
+#include "Film.meta"
 
 
-std::string Movie::currLang;
+std::string Film::currLang;
 
 
 //-----------------------------------------------------------------------------
 /// Copyonstructor
 //-----------------------------------------------------------------------------
-Movie::Movie (const Movie& other)
+Film::Film (const Film& other)
    : id (other.id), name (other.name), year (other.year),
      genre (other.genre), type (other.type), lang (other.lang),
      titles (other.titles) {
@@ -71,9 +71,9 @@ Movie::Movie (const Movie& other)
 //-----------------------------------------------------------------------------
 /// Assignment operator
 /// \param other Object to assign
-/// \returns Movie& Reference to self
+/// \returns Film& Reference to self
 //-----------------------------------------------------------------------------
-Movie& Movie::operator= (const Movie& other) {
+Film& Film::operator= (const Film& other) {
    if (this != &other) {
       if (!id)
 	 id = other.id;
@@ -93,18 +93,18 @@ Movie& Movie::operator= (const Movie& other) {
 /// \param name Name to manipulate
 /// \returns Glib::ustring Changed name
 //-----------------------------------------------------------------------------
-Glib::ustring Movie::removeIgnored (const Glib::ustring& name) {
+Glib::ustring Film::removeIgnored (const Glib::ustring& name) {
    return Words::removeArticle (name);
 }
 
 //-----------------------------------------------------------------------------
-/// Sorts movies by name with respect to the "logical" sense (e.g. ignore
+/// Sorts films by name with respect to the "logical" sense (e.g. ignore
 /// articles)
-/// \param a First movie
-/// \param b Second movie
+/// \param a First film
+/// \param b Second film
 /// \returns bool True, if a->name < b->name
 //-----------------------------------------------------------------------------
-bool Movie::compByName (const HMovie& a, const HMovie& b) {
+bool Film::compByName (const HFilm& a, const HFilm& b) {
    Check1 (a.isDefined ()); Check1 (b.isDefined ());
    Glib::ustring aname (removeIgnored (a->getName ()));
    Glib::ustring bname (removeIgnored (b->getName ()));
@@ -115,12 +115,12 @@ bool Movie::compByName (const HMovie& a, const HMovie& b) {
 }
 
 //-----------------------------------------------------------------------------
-/// Sorts movies by year.
-/// \param a First movie
-/// \param b Second movie
+/// Sorts films by year.
+/// \param a First film
+/// \param b Second film
 /// \returns bool True, if a->year < b->year
 //-----------------------------------------------------------------------------
-bool Movie::compByYear (const HMovie& a, const HMovie& b) {
+bool Film::compByYear (const HFilm& a, const HFilm& b) {
    Check1 (a.isDefined ()); Check1 (b.isDefined ());
    int rc (a->year - b->year);
    if (!rc) {
@@ -132,59 +132,59 @@ bool Movie::compByYear (const HMovie& a, const HMovie& b) {
 }
 
 //-----------------------------------------------------------------------------
-/// Sorts movies by genre.
-/// \param a First movie
-/// \param b Second movie
+/// Sorts films by genre.
+/// \param a First film
+/// \param b Second film
 /// \returns bool True, if a->genre < b->genre
 //-----------------------------------------------------------------------------
-bool Movie::compByGenre (const HMovie& a, const HMovie& b) {
+bool Film::compByGenre (const HFilm& a, const HFilm& b) {
    Check1 (a.isDefined ()); Check1 (b.isDefined ());
    int rc (a->genre - b->genre);
    return rc ? (rc < 0) : compByName (a, b);
 }
 
 //-----------------------------------------------------------------------------
-/// Sorts movies by media.
-/// \param a First movie
-/// \param b Second movie
+/// Sorts films by media.
+/// \param a First film
+/// \param b Second film
 /// \returns bool True, if a->type < b->type
 //-----------------------------------------------------------------------------
-bool Movie::compByMedia (const HMovie& a, const HMovie& b) {
+bool Film::compByMedia (const HFilm& a, const HFilm& b) {
    Check1 (a.isDefined ()); Check1 (b.isDefined ());
    int rc (a->type - b->type);
    return rc ? (rc < 0) : compByName (a, b);
 }
 
 //-----------------------------------------------------------------------------
-/// Gets the name of the movie for the specified language. If such a name does
+/// Gets the name of the film for the specified language. If such a name does
 /// not exist, use the international one.
-/// \param a First movie
-/// \param b Second movie
+/// \param a First film
+/// \param b Second film
 /// \returns bool True, if a->type < b->type
 //-----------------------------------------------------------------------------
-const Glib::ustring& Movie::getName (const std::string& lang) {
+const Glib::ustring& Film::getName (const std::string& lang) {
    Check2 (name.find ("") != name.end ());
    std::map<std::string, Glib::ustring>::const_iterator i (name.find (lang));
    return ((i != name.end ()) ? i->second : name[""]);
 }
 
 //-----------------------------------------------------------------------------
-/// Sets the name of the movie. If the name is empty, it is removed
-/// If the default-name of the movie is not set, use the passed value.
-/// \param value New name of the movie
+/// Sets the name of the film. If the name is empty, it is removed
+/// If the default-name of the film is not set, use the passed value.
+/// \param value New name of the film
 //-----------------------------------------------------------------------------
-void Movie::setName (const Glib::ustring& value) {
+void Film::setName (const Glib::ustring& value) {
    setName (value, (name.find ("") != name.end ()) ? currLang : "");
 }
 
 //-----------------------------------------------------------------------------
-/// Sets the name in a certain language of the movie. If the name is
-/// empty, it is removed If the default-name of the movie is not set,
+/// Sets the name in a certain language of the film. If the name is
+/// empty, it is removed If the default-name of the film is not set,
 /// use the passed value.
-/// \param value New name of the movie
+/// \param value New name of the film
 /// \param lang Specification of language
 //-----------------------------------------------------------------------------
-void Movie::setName (const Glib::ustring& value, const std::string& lang) {
+void Film::setName (const Glib::ustring& value, const std::string& lang) {
    if (value.empty ()) {
       std::map<std::string, Glib::ustring>::iterator i (name.find (currLang));
       if (i != name.end ()) {

@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
-//COPYRIGHT   : Copyright (C) 2006, 2007, 2009, 2010
+//COPYRIGHT   : Copyright (C) 2006, 2007, 2009 - 2011
 
 // This file is part of CDManager
 //
@@ -718,7 +718,7 @@ void PRecords::saveData () throw (std::exception) {
 }
 
 //-----------------------------------------------------------------------------
-/// Removes the selected movies or directors from the listbox. Depending movies
+/// Removes the selected records or interprets from the listbox. Depending objects
 /// are deleted too.
 //-----------------------------------------------------------------------------
 void PRecords::deleteSelection () {

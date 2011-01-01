@@ -1,11 +1,11 @@
 //PROJECT     : CDManager
-//SUBSYSTEM   : Movies
+//SUBSYSTEM   : Films
 //REFERENCES  :
 //TODO        : - Used edit-fields instead of labes; to reuse dialog for edit of info
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 19.03.2010
-//COPYRIGHT   : Copyright (C) 2010
+//COPYRIGHT   : Copyright (C) 2010, 2011
 
 // This file is part of CDManager
 //
@@ -46,9 +46,9 @@
 
 /**Class defining the columns for the list of results of the IMDb-search
  */
-class MovieColumns : public Gtk::TreeModel::ColumnRecord {
+class FilmColumns : public Gtk::TreeModel::ColumnRecord {
  public:
-   MovieColumns () : Gtk::TreeModel::ColumnRecord () { add (id); add (name); }
+   FilmColumns () : Gtk::TreeModel::ColumnRecord () { add (id); add (name); }
 
    Gtk::TreeModelColumn<Glib::ustring> id;
    Gtk::TreeModelColumn<Glib::ustring> name;
@@ -60,7 +60,7 @@ class MovieColumns : public Gtk::TreeModel::ColumnRecord {
 //-----------------------------------------------------------------------------
 ImportFromIMDb::ImportFromIMDb ()
    : XGP::XDialog (XGP::XDialog::NONE), sigLoaded (), client (new Gtk::Table (7, 2)),
-     txtID (new Gtk::Entry), lblDirector (NULL), lblMovie (NULL), lblGenre (NULL),
+     txtID (new Gtk::Entry), lblDirector (NULL), lblFilm (NULL), lblGenre (NULL),
      lblSummary (NULL), contentIMDb (), status (QUERY), connOK () {
    set_title (_("Import from IMDb.com"));
 
@@ -147,8 +147,8 @@ void ImportFromIMDb::okEvent () {
       break;
 
    case CONFIRM:
-      Check3 (lblDirector); Check3 (lblMovie); Check3 (lblGenre);
-      if (sigLoaded.emit (lblDirector->get_text (), lblMovie->get_text (),
+      Check3 (lblDirector); Check3 (lblFilm); Check3 (lblGenre);
+      if (sigLoaded.emit (lblDirector->get_text (), lblFilm->get_text (),
 			  lblGenre->get_text (), lblSummary->get_text ()))
 	 response (Gtk::RESPONSE_OK);
 
@@ -185,7 +185,7 @@ bool ImportFromIMDb::stopLoading (IMDbProgress* progress) {
 }
 
 //-----------------------------------------------------------------------------
-/// Adds an icon to the movie information
+/// Adds an icon to the film information
 /// \param image Image description
 /// \param progress Progress bar used for displaying the status; will be removed
 //-----------------------------------------------------------------------------
@@ -212,7 +212,7 @@ void ImportFromIMDb::addIcon (const std::string& image, IMDbProgress* progress) 
 }
 
 //-----------------------------------------------------------------------------
-/// Adds an icon to the movie information
+/// Adds an icon to the film information
 /// \param image Image description
 /// \param progress Progress bar used for displaying the status; will be removed
 /// \returns bool Always false
@@ -251,12 +251,12 @@ void ImportFromIMDb::showData (const IMDbProgress::IMDbEntry& entry, IMDbProgres
    lblDirector->show ();
    client->attach (*manage (lblDirector), 1, 2, 2, 3, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
 
-   lbl = new Gtk::Label (_("Movie:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
+   lbl = new Gtk::Label (_("Film:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
    lbl->show ();
    client->attach (*manage (lbl), 0, 1, 3, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-   lblMovie = new Gtk::Label (entry.title, Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
-   lblMovie->show ();
-   client->attach (*manage (lblMovie), 1, 2, 3, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+   lblFilm = new Gtk::Label (entry.title, Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
+   lblFilm->show ();
+   client->attach (*manage (lblFilm), 1, 2, 3, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
 
    lbl = new Gtk::Label (_("Genre:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
    lbl->show ();
@@ -307,8 +307,8 @@ void ImportFromIMDb::showSearchResults (const std::map<IMDbProgress::match, IMDb
    progress->hide ();
    Glib::signal_idle ().connect (bind (ptr_fun (&ImportFromIMDb::stopLoading), progress));
 
-   MovieColumns colMovies;
-   Glib::RefPtr<Gtk::TreeStore> model (Gtk::TreeStore::create (colMovies));
+   FilmColumns colFilms;
+   Glib::RefPtr<Gtk::TreeStore> model (Gtk::TreeStore::create (colFilms));
    Gtk::ScrolledWindow& scrl (*new Gtk::ScrolledWindow);
    Gtk::TreeView& list (*new Gtk::TreeView (model));
 
@@ -316,12 +316,12 @@ void ImportFromIMDb::showSearchResults (const std::map<IMDbProgress::match, IMDb
    Glib::ustring matches[] = { _("Popular Titles"), _("Exact match"), _("Partial match"), _("Approximate match") };
    for (unsigned int i (0); i < (sizeof (matches) / sizeof (matches[0])); ++i) {
       Gtk::TreeModel::Row match (*model->append ());
-      match[colMovies.name] = matches[i];
-      const IMDbProgress::IMDbSearchEntries& movies (results.at ((IMDbProgress::match)i));
-      for (IMDbProgress::IMDbSearchEntries::const_iterator m (movies.begin ()); m != movies.end (); ++m) {
+      match[colFilms.name] = matches[i];
+      const IMDbProgress::IMDbSearchEntries& films (results.at ((IMDbProgress::match)i));
+      for (IMDbProgress::IMDbSearchEntries::const_iterator m (films.begin ()); m != films.end (); ++m) {
 	 Gtk::TreeModel::Row row (*model->append (match.children ()));
-	 row[colMovies.id] = m->url;
-	 row[colMovies.name] = m->title;
+	 row[colFilms.id] = m->url;
+	 row[colFilms.name] = m->title;
       }
 
       if (i != ((sizeof (matches) / sizeof (matches[0]))) - 1)
@@ -331,7 +331,7 @@ void ImportFromIMDb::showSearchResults (const std::map<IMDbProgress::match, IMDb
    scrl.set_shadow_type (Gtk::SHADOW_ETCHED_IN);
    scrl.set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
    scrl.add (*manage (&list));
-   list.append_column (_("Movie"), colMovies.name);
+   list.append_column (_("Film"), colFilms.name);
    list.set_size_request (-1, 150);
    scrl.show ();
    list.show ();
@@ -381,7 +381,7 @@ void ImportFromIMDb::loadRow (Gtk::TreeRow& row, Gtk::ScrolledWindow* scrl,
    client->remove (*scrl);
 
    progress->show ();
-   progress->start (row[MovieColumns ().id]);
+   progress->start (row[FilmColumns ().id]);
 }
 
 //-----------------------------------------------------------------------------

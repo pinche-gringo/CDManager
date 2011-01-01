@@ -11,7 +11,7 @@ CREATE TABLE Directors
     (id	        BIGINT UNSIGNED NOT NULL REFERENCES Celebrities(id),
      PRIMARY KEY (id));
 
-CREATE TABLE Movies
+CREATE TABLE Films
     (name       VARCHAR (64)    NOT NULL,
      id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
      year       YEAR            NOT NULL DEFAULT 0,
@@ -22,21 +22,21 @@ CREATE TABLE Movies
      subtitles  VARCHAR(29)     NOT NULL,
      summary    VARCHAR(512)    NOT NULL,
      image      VARCHAR(8192)   NOT NULL,
-     PRIMARY KEY (id), KEY movieNames (name)) DEFAULT CHARSET=utf8;
+     PRIMARY KEY (id), KEY filmNames (name)) DEFAULT CHARSET=utf8;
 
-CREATE TABLE MovieNames
-    (id         BIGINT UNSIGNED NOT NULL REFERENCES Movies(id),
+CREATE TABLE FilmNames
+    (id         BIGINT UNSIGNED NOT NULL REFERENCES Films(id),
      name       VARCHAR (64)    NOT NULL,
      language   CHAR(2)         NOT NULL,
-     PRIMARY KEY (id, language), KEY movieTranslations (id)) DEFAULT CHARSET=utf8;
+     PRIMARY KEY (id, language), KEY filmTranslations (id)) DEFAULT CHARSET=utf8;
 
 CREATE TABLE Actors
     (id	        BIGINT UNSIGNED NOT NULL REFERENCES Celebrities(id),
      PRIMARY KEY (id));
 
-CREATE TABLE ActorsInMovies
+CREATE TABLE ActorsInFilms
     (idActor    BIGINT UNSIGNED NOT NULL REFERENCES Celebrities(id),
-     idMovie    BIGINT UNSIGNED NOT NULL REFERENCES Movies(id));
+     idFilm    BIGINT UNSIGNED NOT NULL REFERENCES Films(id));
 
 CREATE TABLE Interprets
     (id	        BIGINT UNSIGNED NOT NULL REFERENCES Celebrities(id),

@@ -1,6 +1,6 @@
 <!-- -*-HTML-*- -->
 <!--
-   Copyright (C) 2004 - 2006, 2010 Markus Schwab (g17m0@users.sourceforge.net)
+   Copyright (C) 2004 - 2006, 2010, 2011 Markus Schwab (g17m0@users.sourceforge.net)
 
    This file is part of CDManager.
 
@@ -25,7 +25,7 @@
   <head>
     <title>CDManager - utilidad para administrar discos y pel&iacute;culas</title>
     <meta name="description" content="Documentaci&oacute;n del CD-Manager">
-    <meta name="keywords" content="documentacion, documentaci&oacute;n, docu, CD, movie,
+    <meta name="keywords" content="documentacion, documentaci&oacute;n, docu, CD, film,
                 record, manager, disco, pelicula, pel&iacute;cula, CDManager, CD-Manager">
 
     <meta name="DC.Creator" content="Markus Schwab">

@@ -9,15 +9,15 @@
 
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta name="author" content="CDManager">
-    <meta name="description" content="Movies">
+    <meta name="description" content="Films">
 
-    <meta name="keywords" content="movie">
+    <meta name="keywords" content="film">
 
     <meta name="DC.Creator" content="CDManager">
     <meta name="DC.Date" content="@DATE@">
     <meta name="DC.Rights" content="Copyright (C) @YEAR@, distributed under the GNU General Public License">
 
-    <link rel="stylesheet" type="text/css" href="movies.css">
+    <link rel="stylesheet" type="text/css" href="films.css">
   </head>
 
   <body>

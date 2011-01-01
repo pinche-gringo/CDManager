@@ -1,8 +1,9 @@
 Overview of changes in version 1.1.00:
 
-  - Movies: Added image and description (loaded from IMDb)
-            Execute "make addIMDbInfo" in the SQL directory to update the DB
-  - Movies: Sort IMDb suggestion as IMDb does (Popular, Exact/Partial match)
+  - Films: Sort IMDb suggestion as IMDb does (Popular, Exact/Partial match)
+  - Films: Added image and description (loaded from IMDb)
+  - Films: Renamed all occurences of "Movie" to "Film"
+           Execute "make upgrade10_11" in the SQL directory to update the DB
 
 
 Overview of changes in version 1.0.02:

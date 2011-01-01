@@ -1,5 +1,5 @@
-#ifndef RELATEMOVIE_H
-#define RELATEMOVIE_H
+#ifndef RELATEFILM_H
+#define RELATEFILM_H
 
 // This file is part of CDManager
 //
@@ -24,7 +24,7 @@
 #include <glibmm/refptr.h>
 
 #include "Actor.h"
-#include "Movie.h"
+#include "Film.h"
 #include "Director.h"
 
 #include <XGP/XDialog.h>
@@ -42,83 +42,83 @@ namespace Gtk {
 typedef boost::shared_ptr<YGP::Entity> HEntity;
 
 
-/**Dialog to permit connecting movies to an actor
+/**Dialog to permit connecting films to an actor
  */
-class RelateMovie : public XGP::XDialog {
+class RelateFilm : public XGP::XDialog {
  private:
-   /**Class describing the columns in the movie-view
+   /**Class describing the columns in the film-view
     */
-   struct MovieColumns : public Gtk::TreeModel::ColumnRecord {
+   struct FilmColumns : public Gtk::TreeModel::ColumnRecord {
     public:
-      MovieColumns () { add (hMovie); add (movie); }
+      FilmColumns () { add (hFilm); add (film); }
 
-      Gtk::TreeModelColumn<HMovie>  hMovie;
-      Gtk::TreeModelColumn<Glib::ustring> movie;
+      Gtk::TreeModelColumn<HFilm>  hFilm;
+      Gtk::TreeModelColumn<Glib::ustring> film;
    };
 
 
-   /**Class describing the columns in the all movies-view
+   /**Class describing the columns in the all films-view
     */
-   class AllMovieColumns : public Gtk::TreeModel::ColumnRecord {
+   class AllFilmColumns : public Gtk::TreeModel::ColumnRecord {
     public:
-      AllMovieColumns () { add (entry); add (name); }
+      AllFilmColumns () { add (entry); add (name); }
 
       Gtk::TreeModelColumn<HEntity> entry;
       Gtk::TreeModelColumn<Glib::ustring> name;
    };
 
  public:
-   virtual ~RelateMovie ();
+   virtual ~RelateFilm ();
 
-   static RelateMovie* create (const HActor& actor, const std::vector<HMovie>& movies,
-			       const Glib::RefPtr<Gtk::TreeStore> allMovies) {
-      RelateMovie* dlg (new RelateMovie (actor, movies, allMovies));
-      dlg->signal_response ().connect (mem_fun (*dlg, &RelateMovie::free));
+   static RelateFilm* create (const HActor& actor, const std::vector<HFilm>& films,
+			       const Glib::RefPtr<Gtk::TreeStore> allFilms) {
+      RelateFilm* dlg (new RelateFilm (actor, films, allFilms));
+      dlg->signal_response ().connect (mem_fun (*dlg, &RelateFilm::free));
       return dlg;
    }
-   static RelateMovie* create (const HActor& actor, const Glib::RefPtr<Gtk::TreeStore> allMovies) {
-      RelateMovie* dlg (new RelateMovie (actor, allMovies));
-      dlg->signal_response ().connect (mem_fun (*dlg, &RelateMovie::free));
+   static RelateFilm* create (const HActor& actor, const Glib::RefPtr<Gtk::TreeStore> allFilms) {
+      RelateFilm* dlg (new RelateFilm (actor, allFilms));
+      dlg->signal_response ().connect (mem_fun (*dlg, &RelateFilm::free));
       return dlg;
    }
 
-   sigc::signal<void, const HActor&, const std::vector<HMovie>&> signalRelateMovies;
+   sigc::signal<void, const HActor&, const std::vector<HFilm>&> signalRelateFilms;
 
  private:
-   RelateMovie (const HActor& actor, const Glib::RefPtr<Gtk::TreeStore> allMovies);
-   RelateMovie (const HActor& actor, const std::vector<HMovie>& movies,
-		const Glib::RefPtr<Gtk::TreeStore> allMovies);
+   RelateFilm (const HActor& actor, const Glib::RefPtr<Gtk::TreeStore> allFilms);
+   RelateFilm (const HActor& actor, const std::vector<HFilm>& films,
+		const Glib::RefPtr<Gtk::TreeStore> allFilms);
 
    void init ();
 
    //Prohibited manager functions
-   RelateMovie ();
-   RelateMovie (const RelateMovie& other);
-   const RelateMovie& operator= (const RelateMovie& other);
+   RelateFilm ();
+   RelateFilm (const RelateFilm& other);
+   const RelateFilm& operator= (const RelateFilm& other);
 
    virtual void okEvent ();
 
-   void insertMovie (const HMovie& movie);
-   void addMovie (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*);
-   void removeMovie (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*);
+   void insertFilm (const HFilm& film);
+   void addFilm (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*);
+   void removeFilm (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*);
 
    void addSelected ();
    void removeSelected ();
 
-   void moviesSelected ();
-   void allMoviesSelected ();
+   void filmsSelected ();
+   void allFilmsSelected ();
 
-   MovieColumns    colMovies;
-   AllMovieColumns colAllMovies;
+   FilmColumns    colFilms;
+   AllFilmColumns colAllFilms;
 
-   Glib::RefPtr<Gtk::ListStore> mMovies;
-   Glib::RefPtr<Gtk::TreeStore> availMovies;
+   Glib::RefPtr<Gtk::ListStore> mFilms;
+   Glib::RefPtr<Gtk::TreeStore> availFilms;
 
-   Gtk::Button& addMovies;
-   Gtk::Button& removeMovies;
+   Gtk::Button& addFilms;
+   Gtk::Button& removeFilms;
 
-   Gtk::TreeView& lstMovies;
-   Gtk::TreeView& lstAllMovies;
+   Gtk::TreeView& lstFilms;
+   Gtk::TreeView& lstAllFilms;
 
    HActor actor;
 };

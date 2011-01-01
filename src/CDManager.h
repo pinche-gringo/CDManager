@@ -19,8 +19,8 @@
 
 #include <cdmgr-cfg.h>
 
-#if !defined (WITH_ACTORS) || !defined (WITH_RECORDS) || !defined (WITH_MOVIES)
-#  error Need WITH_ACTORS, WITH_RECORDS and WITH_MOVIES defined
+#if !defined (WITH_ACTORS) || !defined (WITH_RECORDS) || !defined (WITH_FILMS)
+#  error Need WITH_ACTORS, WITH_RECORDS and WITH_FILMS defined
 #endif
 
 #include <map>
@@ -64,7 +64,7 @@ class CDManager : public XGP::XApplication {
    void save ();
    void showLogin ();
    void logout ();
-#if (WITH_RECORDS == 1) || (WITH_MOVIES == 1)
+#if (WITH_RECORDS == 1) || (WITH_FILMS == 1)
    void export2HTML ();
 #endif
 
@@ -92,20 +92,20 @@ class CDManager : public XGP::XApplication {
    static const char* const DBNAME;
 
    Genres recGenres;
-   Genres movieGenres;
+   Genres filmGenres;
 
    Gtk::Notebook  nb;
    Gtk::Statusbar status;
 
    enum { LOGIN = 0, SAVE, LOGOUT, MEDIT, STATISTICS, SAVE_PREFS,
-#if (WITH_RECORDS == 1) || (WITH_MOVIES == 1)
+#if (WITH_RECORDS == 1) || (WITH_FILMS == 1)
 	  EXPORT,
 #endif
    	  LAST };
    Glib::RefPtr<Gtk::Action> apMenus[LAST];
    Options& opt;
 
-   NBPage* pages[WITH_ACTORS + WITH_MOVIES + WITH_RECORDS];
+   NBPage* pages[WITH_ACTORS + WITH_FILMS + WITH_RECORDS];
 };
 
 #endif

@@ -35,9 +35,9 @@ namespace Gtk {
 }
 
 
-/**Dialog allowing to import information from a movie from IMDb.com
+/**Dialog allowing to import information from a film from IMDb.com
  *
- * After entering an movie identification (a number or the URL to
+ * After entering an film identification (a number or the URL to
  * IMDb.com) the matching page on IMDb.com is read and the relevant
  * information is filtered out and displayed for confirmation.
  */
@@ -54,7 +54,7 @@ class ImportFromIMDb : public XGP::XDialog {
       return dlg;
    }
 
-   /// Signal emitted, when the loaed movie-information is confirmed
+   /// Signal emitted, when the loaed film-information is confirmed
    sigc::signal<bool, const Glib::ustring&, const Glib::ustring&,
       const Glib::ustring&, const Glib::ustring&> sigLoaded;
 
@@ -62,8 +62,8 @@ class ImportFromIMDb : public XGP::XDialog {
    Gtk::Table* client;            ///< Pointer to the client information area
    Gtk::Entry* txtID;                ///< Textfield, where user enters the ID
    Gtk::Label* lblDirector;                ///< Label displaying the director
-   Gtk::Label* lblMovie;          ///< Label displaying the movie (with year)
-   Gtk::Label* lblGenre;         ///< Label displaying the genre of the movie
+   Gtk::Label* lblFilm;            ///< Label displaying the film (with year)
+   Gtk::Label* lblGenre;          ///< Label displaying the genre of the film
    Gtk::Label* lblSummary;      ///< Label displaying the summary of the plot
 
    Glib::ustring contentIMDb;                ///< Page received from IMDb.com

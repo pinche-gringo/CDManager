@@ -24,14 +24,14 @@
 #include <YGP/Exception.h>
 
 
-/**Class to handle the genres of both records and movies.
+/**Class to handle the genres of both records and films.
  */
 class Genres {
  public:
    Genres () { }
    virtual ~Genres () { }
 
-   static void loadFromFile (const char* file, Genres& records, Genres& movies,
+   static void loadFromFile (const char* file, Genres& records, Genres& films,
 			     const char* languages) throw (YGP::ParseError, YGP::FileError);
 
    int getId (const Glib::ustring& genre) const;

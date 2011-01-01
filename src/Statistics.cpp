@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 04.04.2010
-//COPYRIGHT   : Copyright (C) 2010
+//COPYRIGHT   : Copyright (C) 2010, 2011
 
 // This file is part of CDManager
 //
@@ -72,13 +72,13 @@ Statistics::Statistics ()
    pClient->attach (*lbl, 3, 4, 1, 2, Gtk::FILL, Gtk::FILL, 5);
 #endif
 
-#ifdef WITH_MOVIES
-   // Add movie information
+#ifdef WITH_FILMS
+   // Add film information
    lbl = manage (new Gtk::Label (_("Directors:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
    pClient->attach (*lbl, 0, 1, 2, 3, Gtk::FILL, Gtk::FILL, 5);
    lbl = manage (new Gtk::Label (YGP::ANumeric (stats[4]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));
    pClient->attach (*lbl, 1, 2, 2, 3, Gtk::FILL, Gtk::FILL, 15);
-   lbl = manage (new Gtk::Label (_("Movies:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
+   lbl = manage (new Gtk::Label (_("Films:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
    pClient->attach (*lbl, 2, 3, 2, 3, Gtk::FILL, Gtk::FILL, 5);
    lbl = manage (new Gtk::Label (YGP::ANumeric (stats[5]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));
    pClient->attach (*lbl, 3, 4, 2, 3, Gtk::FILL, Gtk::FILL, 5);
@@ -86,7 +86,7 @@ Statistics::Statistics ()
 
    // Add names and articles
 #ifdef WITH_ACTORS
-#  if defined WITH_RECORDS or defined WITH_MOVIES
+#  if defined WITH_RECORDS or defined WITH_FILMS
    pClient->attach (*manage (new Gtk::HSeparator ()), 0, 7, 3, 4, Gtk::FILL, Gtk::FILL, 5, 10);
 #  endif
 

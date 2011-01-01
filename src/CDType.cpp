@@ -1,11 +1,11 @@
 //PROJECT     : CDManager
-//SUBSYSTEM   : Movie
+//SUBSYSTEM   : Film
 //REFERENCES  :
 //TODO        :
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 29.11.2004
-//COPYRIGHT   : Copyright (C) 2004, 2005, 2010
+//COPYRIGHT   : Copyright (C) 2004, 2005, 2010, 2011
 
 // This file is part of CDManager
 //

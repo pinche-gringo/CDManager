@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 21.01.2006
-//COPYRIGHT   : Copyright (C) 2006, 2009, 2010
+//COPYRIGHT   : Copyright (C) 2006, 2009 - 2011
 
 // This file is part of CDManager
 //
@@ -285,7 +285,7 @@ void Storage::setRole (unsigned int idCeleb, const char* role) throw (std::excep
 //-----------------------------------------------------------------------------
 /// Queries the number of entries in the database
 /// \param counts Array receiving the statistical information in order
-///               words/articles/interpret/records/director/movies/actors
+///               words/articles/interpret/records/director/films/actors
 /// \param role: Role to set for celebrity
 /// \throw std::exception In case of error
 /// \remarks If some pages are disabled the responding columns are returned as -1
@@ -298,8 +298,8 @@ void Storage::getStatistics (int counts[7]) throw (std::exception) {
 		      "SELECT -1 UNION ALL SELECT -1"
 #endif
 		      " UNION ALL "
-#ifdef WITH_MOVIES
-		      "SELECT count(*) FROM Directors UNION ALL SELECT count(*) FROM Movies"
+#ifdef WITH_FILMS
+		      "SELECT count(*) FROM Directors UNION ALL SELECT count(*) FROM Films"
 #else
 		      "SELECT -1 UNION ALL SELECT -1"
 #endif

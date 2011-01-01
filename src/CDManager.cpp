@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2010
+//COPYRIGHT   : Copyright (C) 2004 - 2011
 
 // This file is part of CDManager
 //
@@ -62,15 +62,15 @@
 #if WITH_ACTORS == 1
 #  include "PActors.h"
 #endif
-#if WITH_MOVIES == 1
+#if WITH_FILMS == 1
 #  include <boost/tokenizer.hpp>
-#  include "PMovies.h"
+#  include "PFilms.h"
 #endif
 #if WITH_RECORDS == 1
 #  include "PRecords.h"
 #endif
 
-#if (WITH_RECORDS == 1) || (WITH_MOVIES == 1)
+#if (WITH_RECORDS == 1) || (WITH_FILMS == 1)
 #  include <YGP/Process.h>
 #  include <boost/tokenizer.hpp>
 #endif
@@ -109,7 +109,7 @@ CDManager::CDManager (Options& options)
 		     "    <menuitem action='Login'/>"
 		     "    <menuitem action='SaveDB'/>"
 		     "    <menuitem action='Logout'/>"
-#if (WITH_RECORDS == 1) || (WITH_MOVIES == 1)
+#if (WITH_RECORDS == 1) || (WITH_FILMS == 1)
 		     "    <separator/>"
 		     "    <menuitem action='Export'/>"
 #endif
@@ -135,7 +135,7 @@ CDManager::CDManager (Options& options)
    grpAction->add (apMenus[LOGOUT] = Gtk::Action::create ("Logout", _("Log_out")),
 		   Gtk::AccelKey (_("<ctl>O")),
 		   mem_fun (*this, &CDManager::logout));
-#if (WITH_RECORDS == 1) || (WITH_MOVIES == 1)
+#if (WITH_RECORDS == 1) || (WITH_FILMS == 1)
    grpAction->add (apMenus[EXPORT] = Gtk::Action::create ("Export", _("_Export to HTML")),
 		   Gtk::AccelKey (_("<ctl>E")),
 		   mem_fun (*this, &CDManager::export2HTML));
@@ -165,7 +165,7 @@ CDManager::CDManager (Options& options)
 
    enableMenus (false);
 
-   nb.set_show_tabs (WITH_ACTORS + WITH_RECORDS + WITH_MOVIES - 1);
+   nb.set_show_tabs (WITH_ACTORS + WITH_RECORDS + WITH_FILMS - 1);
 
    getClient ()->pack_start (*mgrUI->get_widget("/Menu"), Gtk::PACK_SHRINK);
    getClient ()->pack_start (nb, Gtk::PACK_EXPAND_WIDGET);
@@ -180,8 +180,8 @@ CDManager::CDManager (Options& options)
 	 pLang = getenv ("LANG");
 #endif
       }
-      Genres::loadFromFile (DATADIR "Genres.dat", recGenres, movieGenres, pLang);
-      TRACE8 ("Genres: " << recGenres.size () << '/' << movieGenres.size ());
+      Genres::loadFromFile (DATADIR "Genres.dat", recGenres, filmGenres, pLang);
+      TRACE8 ("Genres: " << recGenres.size () << '/' << filmGenres.size ());
    }
    catch (std::exception& e) {
       Glib::ustring msg (_("Can't read datafile containing the genres!\n\nReason: %1"));
@@ -202,15 +202,15 @@ CDManager::CDManager (Options& options)
    nb.append_page (*manage (pgRecords->getWindow ()), _("_Records"), true);
 #endif
 
-#if WITH_MOVIES == 1
-   PMovies* pgMovies = (new PMovies (status, apMenus[SAVE], movieGenres));
-   pages[WITH_RECORDS] = pgMovies;
-   nb.append_page (*manage (pgMovies->getWindow ()), _("_Movies"), true);
+#if WITH_FILMS == 1
+   PFilms* pgFilms = (new PFilms (status, apMenus[SAVE], filmGenres));
+   pages[WITH_RECORDS] = pgFilms;
+   nb.append_page (*manage (pgFilms->getWindow ()), _("_Films"), true);
 #endif
 
 #if WITH_ACTORS == 1
-   NBPage* pgActor = (new PActors (status, apMenus[SAVE], movieGenres, *pgMovies));
-   pages[WITH_RECORDS + WITH_MOVIES] = pgActor;
+   NBPage* pgActor = (new PActors (status, apMenus[SAVE], filmGenres, *pgFilms));
+   pages[WITH_RECORDS + WITH_FILMS] = pgActor;
    nb.append_page (*manage (pgActor->getWindow ()), _("_Actors"), true);
 #endif
    nb.signal_switch_page ().connect (mem_fun (*this, &CDManager::pageSwitched), false);
@@ -272,7 +272,7 @@ void CDManager::editPreferences () {
 /// Shows the about box for the program
 //-----------------------------------------------------------------------------
 void CDManager::showAboutbox () {
-   std::string ver (_("Copyright (C) 2004 - 2010 Markus Schwab"
+   std::string ver (_("Copyright (C) 2004 - 2011 Markus Schwab"
                       "\ne-mail: <g17m0@lusers.sourceforge.net>\n\nCompiled on %1 at %2"));
    ver.replace (ver.find ("%1"), 2, __DATE__);
    ver.replace (ver.find ("%2"), 2, __TIME__);
@@ -314,7 +314,7 @@ void CDManager::showLogin () {
 void CDManager::enableMenus (bool enable) {
    apMenus[LOGOUT]->set_sensitive (enable);
    apMenus[MEDIT]->set_sensitive (enable);
-#if (WITH_RECORDS == 1) || (WITH_MOVIES == 1)
+#if (WITH_RECORDS == 1) || (WITH_FILMS == 1)
    apMenus[EXPORT]->set_sensitive (enable);
 #endif
    apMenus[STATISTICS]->set_sensitive (enable);
@@ -477,8 +477,8 @@ void CDManager::savePreferences () {
 
 	 YGP::INIFile::write (inifile, "Export", opt);
 
-#ifdef WITH_MOVIES
-	 inifile << "\n[Movies]\nLanguage=" << Movie::currLang << '\n';
+#ifdef WITH_FILMS
+	 inifile << "\n[Films]\nLanguage=" << Film::currLang << '\n';
 #endif
       }
       else {
@@ -511,7 +511,7 @@ void CDManager::savePreferences () {
    }
 }
 
-#if (WITH_RECORDS == 1) || (WITH_MOVIES == 1)
+#if (WITH_RECORDS == 1) || (WITH_FILMS == 1)
 //-----------------------------------------------------------------------------
 /// Exports the stored information to HTML documents
 //-----------------------------------------------------------------------------
@@ -523,7 +523,7 @@ void CDManager::export2HTML () {
    }
 
    // Load data
-   for (unsigned int i (0); i < (WITH_RECORDS + WITH_MOVIES); ++i)
+   for (unsigned int i (0); i < (WITH_RECORDS + WITH_FILMS); ++i)
       if (!pages[i]->isLoaded ())
 	 pages[i]->loadData ();
 
@@ -542,9 +542,9 @@ void CDManager::export2HTML () {
 			  "--recHeader", opt.getRHeader ().c_str (),
 			  "--recFooter", opt.getRFooter ().c_str (),
 #endif
-#if WITH_MOVIES == 1
-			  "--movieHeader", opt.getMHeader ().c_str (),
-			  "--movieFooter", opt.getMFooter ().c_str (),
+#if WITH_FILMS == 1
+			  "--filmHeader", opt.getMHeader ().c_str (),
+			  "--filmFooter", opt.getMFooter ().c_str (),
 #endif
 			  NULL, key.c_str (), NULL };
    const unsigned int POS_LANG ((sizeof (args) / sizeof (*args)) - 3);
@@ -574,7 +574,7 @@ void CDManager::export2HTML () {
 	    throw std::runtime_error (strerror (errno));
 	 pid = YGP::Process::execIOConnected ("CDWriter", args, pipes);
 
-	 for (unsigned int i (0); i < (WITH_RECORDS + WITH_MOVIES); ++i)
+	 for (unsigned int i (0); i < (WITH_RECORDS + WITH_FILMS); ++i)
 	    pages[i]->export2HTML (pipes[1], *l);
 	 close (pipes[1]);
 

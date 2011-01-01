@@ -4,7 +4,7 @@
 #
 # Package source files
 src/CDManager.cpp
-src/MovieList.cpp
+src/FilmList.cpp
 src/RecordList.cpp
 src/SongList.cpp
 src/OOList.cpp
@@ -19,12 +19,12 @@ src/CDWriter.cpp
 src/Words.cpp
 src/PRecords.cpp
 src/PActors.cpp
-src/PMovies.cpp
+src/PFilms.cpp
 src/Storage.cpp
-src/StorageMovie.cpp
+src/StorageFilm.cpp
 src/StorageRecord.cpp
 src/ActorList.cpp
-src/RelateMovie.cpp
+src/RelateFilm.cpp
 src/SaveCeleb.cpp
 src/ImportIMDb.cpp
 src/IMDbProgress.cpp

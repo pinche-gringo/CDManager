@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 13.01.2005
-//COPYRIGHT   : Copyright (C) 2005 - 2007, 2009, 2010
+//COPYRIGHT   : Copyright (C) 2005 - 2007, 2009 - 2011
 
 // This file is part of CDManager
 //
@@ -45,11 +45,11 @@
 /// language to use.
 /// \param file: File to load the data from
 /// \param records: Object, to load the record genres into
-/// \param movie: Object, to load the movie genres into
+/// \param film: Object, to load the film genres into
 /// \param languages: Colon-separated list of languages
 /// \throw YGP::ParseError, YGP::FileError: In case of an error
 //-----------------------------------------------------------------------------
-void Genres::loadFromFile (const char* file, Genres& records, Genres& movies,
+void Genres::loadFromFile (const char* file, Genres& records, Genres& films,
 			   const char* languages) throw (YGP::ParseError, YGP::FileError) {
    Check1 (file); Check1 (languages);
    std::string name (file);
@@ -84,8 +84,8 @@ void Genres::loadFromFile (const char* file, Genres& records, Genres& movies,
    } // end-while
 
    YGP::INIFile _inifile_ (name.c_str ());
-   YGP::INIList<Glib::ustring, std::vector<Glib::ustring> > lstMovies ("Movies", movies.genres);
-   _inifile_.addSection (lstMovies);
+   YGP::INIList<Glib::ustring, std::vector<Glib::ustring> > lstFilms ("Films", films.genres);
+   _inifile_.addSection (lstFilms);
    YGP::INIList<Glib::ustring, std::vector<Glib::ustring> > lstRecords ("Records", records.genres);
    _inifile_.addSection (lstRecords);
 

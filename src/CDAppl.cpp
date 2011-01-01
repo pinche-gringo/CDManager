@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.12.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009, 2010
+//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009 - 2011
 
 // This file is part of CDManager
 //
@@ -29,8 +29,8 @@
 
 #include <YGP/INIFile.h>
 
-#if WITH_MOVIES == 1
-#  include "Movie.h"
+#if WITH_FILMS == 1
+#  include "Film.h"
 #endif
 #include "CDManager.h"
 
@@ -69,13 +69,13 @@ void CDAppl::showHelp () const {
 		 "  User=user\n"
 		 "  Password=pwd\n\n"
 		 "  [Export]\n"
-		 "  MovieHead=Movies.head\n"
-		 "  MovieFoot=Movies.foot\n"
+		 "  FilmHead=Films.head\n"
+		 "  FilmFoot=Films.foot\n"
 		 "  RecordHead=Records.head\n"
 		 "  RecordFoot=Records.foot\n"
 		 "  OutputDir=/var/www/cds/\n"
-#if WITH_MOVIES == 1
-		 "  \n  [Movies]\n"
+#if WITH_FILMS == 1
+		 "  \n  [Films]\n"
 		 "  Language=de\n"
 #endif
 		 );
@@ -141,10 +141,10 @@ void CDAppl::readINIFile (const char* pFile) {
       // Export-otions
       INIOBJ (options, Export);
 
-#if WITH_MOVIES == 1
-      // Language in which to show the movies
-      INISECTION (Movies);
-      INIATTR2 (Movies, std::string, Movie::currLang, Language);
+#if WITH_FILMS == 1
+      // Language in which to show the films
+      INISECTION (Films);
+      INIATTR2 (Films, std::string, Film::currLang, Language);
 #endif
 
       INIFILE_READ ();
@@ -198,7 +198,7 @@ const char* CDAppl::description () const {
       (PACKAGE " V" VERSION " - "
        + std::string (_("Compiled on"))
        + std::string (" " __DATE__ " - " __TIME__ "\n\n")
-       + std::string (_("Copyright (C) 2004 - 2010 Markus Schwab; e-mail: g17m0@users.sourceforge.net"
+       + std::string (_("Copyright (C) 2004 - 2011 Markus Schwab; e-mail: g17m0@users.sourceforge.net"
 			"\nDistributed under the terms of the GNU General "
 			"Public License")));
    return version.c_str ();

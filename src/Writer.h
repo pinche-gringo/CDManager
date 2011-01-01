@@ -21,8 +21,8 @@
 
 #include <string>
 
-#if WITH_MOVIES == 1
-#  include "Movie.h"
+#if WITH_FILMS == 1
+#  include "Film.h"
 #  include "Director.h"
 #endif
 #if WITH_RECORDS == 1
@@ -36,28 +36,28 @@
 #include <YGP/TableWriter.h>
 
 
-#if WITH_MOVIES == 1
-/**Class to write movies as HTML-tables
+#if WITH_FILMS == 1
+/**Class to write films as HTML-tables
  */
-class MovieWriter : public YGP::TableWriter {
+class FilmWriter : public YGP::TableWriter {
  public:
-   MovieWriter (const std::string& format, Genres& genres)
+   FilmWriter (const std::string& format, Genres& genres)
       : YGP::TableWriter (format, TBLW_HTML_PARAMS), oddLine (true), genres (genres) { }
-   virtual ~MovieWriter ();
+   virtual ~FilmWriter ();
 
-   void writeMovie    (const HMovie& movie, const HDirector& director, std::ostream& out);
+   void writeFilm    (const HFilm& film, const HDirector& director, std::ostream& out);
    void writeDirector (const HDirector& director, std::ostream& out);
 
  protected:
    virtual std::string getSubstitute (const char ctrl, bool extend = false) const;
 
  private:
-   MovieWriter (const MovieWriter& other);
-   const MovieWriter& operator= (const MovieWriter& other);
+   FilmWriter (const FilmWriter& other);
+   const FilmWriter& operator= (const FilmWriter& other);
 
    static std::string addLanguageLinks (const std::string& languages);
 
-   HMovie    hMovie;
+   HFilm     hFilm;
    HDirector hDirector;
 
    bool oddLine;

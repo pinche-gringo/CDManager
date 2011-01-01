@@ -51,8 +51,8 @@ class Settings : public XGP::XDialog {
    virtual void okEvent ();
 
    XGP::XAttributeEntry<std::string> txtOutput;
-   XGP::XAttributeEntry<std::string> hdrMovie;
-   XGP::XAttributeEntry<std::string> ftrMovie;
+   XGP::XAttributeEntry<std::string> hdrFilm;
+   XGP::XAttributeEntry<std::string> ftrFilm;
    XGP::XAttributeEntry<std::string> hdrRecord;
    XGP::XAttributeEntry<std::string> ftrRecord;
 

@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.09.2005
-//COPYRIGHT   : Copyright (C) 2005 - 2007, 2009, 2010
+//COPYRIGHT   : Copyright (C) 2005 - 2007, 2009 - 2011
 
 // This file is part of CDManager
 //
@@ -37,7 +37,7 @@
 #include <XGP/XValue.h>
 #include <XGP/MessageDlg.h>
 
-#include "Movie.h"
+#include "Film.h"
 #include "Actor.h"
 
 #include "ActorList.h"
@@ -53,7 +53,7 @@ ActorList::ActorList (const Genres& genres) : genres (genres) {
 
    set_model (mOwnerObjects);
 
-   append_column (_("Actors/Movies"), colActors.name);
+   append_column (_("Actors/Films"), colActors.name);
    append_column (_("Year"), colActors.year);
    append_column (_("Genre"), colActors.genre);
 
@@ -102,7 +102,7 @@ Gtk::TreeRow ActorList::insert (const HEntity& entity, const Gtk::TreeIter& pos)
 //-----------------------------------------------------------------------------
 /// Appends a actor to the list
 /// \param entity: Entity to add
-/// \param artist: Actor starring in the movie
+/// \param artist: Actor starring in the film
 /// \returns Gtk::TreeModel::Row: Inserted row
 //-----------------------------------------------------------------------------
 Gtk::TreeRow ActorList::append (const HEntity& entity, const Gtk::TreeIter& pos) {
@@ -121,12 +121,12 @@ Gtk::TreeRow ActorList::append (const HEntity& entity, const Gtk::TreeIter& pos)
 //-----------------------------------------------------------------------------
 void ActorList::update (Gtk::TreeRow& row) {
    HEntity obj (row[colActors.entry]);
-   HMovie movie (boost::dynamic_pointer_cast<Movie> (obj));
-   if (movie) {
-      row[colActors.name] = movie->getName ();
-      row[colActors.year] = movie->getYear ().toString ();
+   HFilm film (boost::dynamic_pointer_cast<Film> (obj));
+   if (film) {
+      row[colActors.name] = film->getName ();
+      row[colActors.year] = film->getYear ().toString ();
 
-      unsigned int g (movie->getGenre ());
+      unsigned int g (film->getGenre ());
       if (g >= genres.size ())
 	 g = 0;
       row[colActors.genre] = genres.getGenre (g);
@@ -274,7 +274,7 @@ int ActorList::sortByName (const Gtk::TreeModel::iterator& a, const Gtk::TreeMod
    HEntity entity (ra[colActors.entry]);
    int rc ((typeid (*entity.get ()) == typeid (Actor))
 	   ? Actor::removeIgnored (ra[colActors.name]).compare (Actor::removeIgnored (rb[colActors.name]))
-	   : Movie::removeIgnored (ra[colActors.name]).compare (Movie::removeIgnored (rb[colActors.name])));
+	   : Film::removeIgnored (ra[colActors.name]).compare (Film::removeIgnored (rb[colActors.name])));
    if (!rc)
       rc = ((Glib::ustring)ra[colActors.name]).compare ((Glib::ustring)rb[colActors.name]);
    return rc;
@@ -300,9 +300,9 @@ int ActorList::sortByYear (const Gtk::TreeModel::iterator& a, const Gtk::TreeMod
       yb = boost::dynamic_pointer_cast<Actor> (entity)->getBorn ();
    }
    else {
-      ya = boost::dynamic_pointer_cast<Movie> (entity)->getYear ();
+      ya = boost::dynamic_pointer_cast<Film> (entity)->getYear ();
       entity = rb[colActors.entry];
-      yb = boost::dynamic_pointer_cast<Movie> (entity)->getYear ();
+      yb = boost::dynamic_pointer_cast<Film> (entity)->getYear ();
    }
    return ya.compare (yb);
 }

@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 27.11.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009, 2010
+//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009 - 2011
 
 // This file is part of CDManager
 //
@@ -37,11 +37,11 @@
 #include "Writer.h"
 
 
-#if WITH_MOVIES == 1
+#if WITH_FILMS == 1
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------
-MovieWriter::~MovieWriter () {
+FilmWriter::~FilmWriter () {
 }
 
 
@@ -51,33 +51,33 @@ MovieWriter::~MovieWriter () {
 /// \param extend: Flag, if extended substitution is wanted
 /// \returns std::string: Substituted string
 //-----------------------------------------------------------------------------
-std::string MovieWriter::getSubstitute (const char ctrl, bool extend) const {
-   if (hMovie) {
+std::string FilmWriter::getSubstitute (const char ctrl, bool extend) const {
+   if (hFilm) {
       Check2 (hDirector);
 
       switch (ctrl) {
       case 'n':
-	 return YGP::TableWriter::changeHTMLSpecialChars (hMovie->getName ());
+	 return YGP::TableWriter::changeHTMLSpecialChars (hFilm->getName ());
 	 break;
 
       case 'y':
-	 return hMovie->getYear ().toString ();
+	 return hFilm->getYear ().toString ();
 
       case 'g':
-	 Check3 (hMovie->getGenre () < genres.size ());
-	 return YGP::TableWriter::changeHTMLSpecialChars (genres.getGenre (hMovie->getGenre ()));
+	 Check3 (hFilm->getGenre () < genres.size ());
+	 return YGP::TableWriter::changeHTMLSpecialChars (genres.getGenre (hFilm->getGenre ()));
 
       case 'd':
 	 return YGP::TableWriter::changeHTMLSpecialChars (hDirector->getName ());
 
       case 't':
-	 return YGP::TableWriter::changeHTMLSpecialChars (CDType::getInstance ()[hMovie->getType ()]);
+	 return YGP::TableWriter::changeHTMLSpecialChars (CDType::getInstance ()[hFilm->getType ()]);
 
       case 'l': {
-	 std::string output (addLanguageLinks (hMovie->getLanguage ()));
-	 if (hMovie->getTitles ().size ()) {
+	 std::string output (addLanguageLinks (hFilm->getLanguage ()));
+	 if (hFilm->getTitles ().size ()) {
 	    output += " &ndash; ";
-	    output += addLanguageLinks (hMovie->getTitles ());
+	    output += addLanguageLinks (hFilm->getTitles ());
 	 }
 	 return output;
       }
@@ -85,7 +85,7 @@ std::string MovieWriter::getSubstitute (const char ctrl, bool extend) const {
    }
    else {
       Check2 (hDirector);
-      Check3 (!hMovie);
+      Check3 (!hFilm);
 
       if (ctrl == 'n')
 	 return YGP::TableWriter::changeHTMLSpecialChars (hDirector->getName ());
@@ -94,15 +94,15 @@ std::string MovieWriter::getSubstitute (const char ctrl, bool extend) const {
 }
 
 //-----------------------------------------------------------------------------
-/// Writes a movie into the table
-/// \param movie: Movie to write
-/// \param director: Director of movie
+/// Writes a film into the table
+/// \param film: Film to write
+/// \param director: Director of film
 /// \param out: Stream to write to
 //-----------------------------------------------------------------------------
-void MovieWriter::writeMovie (const HMovie& movie, const HDirector& director,
+void FilmWriter::writeFilm (const HFilm& film, const HDirector& director,
 			      std::ostream& out) {
-   Check2 (!hMovie); Check2 (!hDirector);
-   hMovie = movie;
+   Check2 (!hFilm); Check2 (!hDirector);
+   hFilm = film;
    hDirector = director;
 
    std::string value;
@@ -112,7 +112,7 @@ void MovieWriter::writeMovie (const HMovie& movie, const HDirector& director,
       out << "<td>" << value << "</td>";
    out << "</tr>\n";
 
-   hMovie.reset ();
+   hFilm.reset ();
    hDirector.reset ();
 }
 
@@ -121,8 +121,8 @@ void MovieWriter::writeMovie (const HMovie& movie, const HDirector& director,
 /// \param director: Director to write
 /// \param out: Stream to write to
 //-----------------------------------------------------------------------------
-void MovieWriter::writeDirector (const HDirector& director, std::ostream& out) {
-   Check2 (!hMovie); Check2 (!hDirector);
+void FilmWriter::writeDirector (const HDirector& director, std::ostream& out) {
+   Check2 (!hFilm); Check2 (!hDirector);
    hDirector = director;
    out << "<tr><td>&nbsp;" << rowEnd << "\n"
        << "<tr><td colspan=\"5\" class=\"owner\">" << hDirector->getName () << rowEnd;
@@ -136,7 +136,7 @@ void MovieWriter::writeDirector (const HDirector& director, std::ostream& out) {
 /// \param languages: List of languages (comma-separated)
 /// \returns HTML-text of links to languages
 //-----------------------------------------------------------------------------
-std::string MovieWriter::addLanguageLinks (const std::string& languages) {
+std::string FilmWriter::addLanguageLinks (const std::string& languages) {
    std::string output;
 
    boost::tokenizer<boost::char_separator<char> > langs (languages,

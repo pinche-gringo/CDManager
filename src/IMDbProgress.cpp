@@ -59,14 +59,14 @@ struct ConnectInfo {
    std::string response;
 
    /// Constructor
-   ConnectInfo (const Glib::ustring& url);
+   ConnectInfo (const std::string& url);
    ~ConnectInfo () {
       sockIO.close ();
       svcIO.stop ();
    }
 
  private:
-   static bool isNumber (const Glib::ustring& nr);
+   static bool isNumber (const std::string& nr);
 };
 
 
@@ -74,29 +74,29 @@ struct ConnectInfo {
 /// Constructor
 /// \param id String identifying the film to load; can be an URL, an IMDb ID or a film name
 //-----------------------------------------------------------------------------
-ConnectInfo::ConnectInfo (const Glib::ustring& id)
+ConnectInfo::ConnectInfo (const std::string& id)
    : svcIO (), resolver (svcIO), sockIO (svcIO), buffer (), host (HOST), path (), response () {
-   Glib::ustring::size_type pos (Glib::ustring::npos);
+   std::string::size_type pos (std::string::npos);
    if (!id.compare (0, sizeof (HTTP) - 1, HTTP)
-       && ((pos = id.find ('/', sizeof (HTTP))) != Glib::ustring::npos)) {
+       && ((pos = id.find ('/', sizeof (HTTP))) != std::string::npos)) {
       // Starts with http:// and has a slash (/) separating host and path
       host = id.substr (sizeof (HTTP) - 1, pos - sizeof (HTTP) + 1);
-      path = id.substr (pos);
+      path = id.substr (pos + 1);
    }
    else {
       // Doesn't seem to be an URL; so check for IMDb identifier or name
       if ((id.length () == 9) && !id.compare (0, 2, "tt") && isNumber (id.substr (2)))
 	 path = "title/" + id + '/';
       else if (isNumber (id) > 0)
-	 path = "title/tt" + Glib::ustring (7 - id.length (), '0') + id + '/';
+	 path = "title/tt" + std::string (7 - id.length (), '0') + id + '/';
       else {
 	 path = id;
-	 while ((pos = path.find (' ', pos + 1)) != Glib::ustring::npos)
+	 while ((pos = path.find (' ', pos + 1)) != std::string::npos)
 	    path.replace (pos, 1, 1, '+');
 	 path = "find?s=tt&q=" + path;
       }
    }
-   TRACE1 ("ConnectInfo::ConnectInfo (const Glib::ustring&) - " << host << " - " << path);
+   TRACE1 ("ConnectInfo::ConnectInfo (const std::string&) - " << host << " - " << path);
 }
 
 
@@ -105,7 +105,7 @@ ConnectInfo::ConnectInfo (const Glib::ustring& id)
 /// \param nr Number to inspect
 /// \returns bool True, if the passed text is a number
 //-----------------------------------------------------------------------------
-bool ConnectInfo::isNumber (const Glib::ustring& nr) {
+bool ConnectInfo::isNumber (const std::string& nr) {
    for (unsigned int i (0); i < nr.length (); ++i)
       if (!isdigit (nr[i]))
 	 return false;
@@ -144,8 +144,8 @@ IMDbProgress::~IMDbProgress () {
 ///                   number on IMDb.com or its whole URL
 /// \param isImage Flag if identifier specifies an image
 //-----------------------------------------------------------------------------
-void IMDbProgress::start (const Glib::ustring& identifier, bool isImage) {
-   TRACE1 ("IMDbProgress::start (const Glib::ustring&) - " << identifier);
+void IMDbProgress::start (const std::string& identifier, bool isImage) {
+   TRACE1 ("IMDbProgress::start (const std::string&) - " << identifier);
 
    Check1 (!data); Check1 (status == NONE);
    if (isImage) {
@@ -299,7 +299,7 @@ void IMDbProgress::sendRequest () {
    Check1 (data);
    std::ostream request (&data->buffer);
 
-   TRACE7 ("IMDbProgress::sendRequest (const Glib::ustring&) - " << data->path);
+   TRACE7 ("IMDbProgress::sendRequest () - " << data->path);
    request << "GET /" << data->path << " HTTP/1.0\r\nHost: " << data->host
 	   << "\r\nAccept: */*\r\nConnection: close\r\n\r\n";
 
@@ -351,6 +351,7 @@ void IMDbProgress::readStatus (const boost::system::error_code& err) {
 	 return;
       }
 
+      TRACE1 ("Status " << nrStatus);
       switch (nrStatus) {
       case 200:  // HTTP OK
 	 break;
@@ -363,14 +364,16 @@ void IMDbProgress::readStatus (const boost::system::error_code& err) {
 	    response >> loc >> ch;
 	    response.putback (ch);
 	    std::getline (response, url);
-	    TRACE8 ("IMDbProgress::readStatus (boost::system::error_code&) - Location: " << loc);
+	    TRACE8 ("IMDbProgress::readStatus (boost::system::error_code&) - Location: " << url << '/' << url.length ());
 	 } while (response && (loc.substr (0, 9) != "Location:"));
 	 if (response && url.length ()) {
 	    // Strip trailing whitespaces
-	    Glib::ustring::size_type end (url.length ());
+	    std::string::size_type end (url.length ());
 	    while (isspace (url[--end]))
-	       ;
-	    url.replace (end, url.length () - 1, 0, '\0');
+	       TRACE1 ("Removing " << url[end]);
+	    url.replace (end + 1, url.length () - 1, 0, '\0');
+	    Check1 (url[url.length () - 1])
+	    TRACE1 ("Size " <<  end << '/' << url.length ());
 	    Glib::signal_idle ().connect
 	       (bind (mem_fun (*this, &IMDbProgress::reStart), url));
 	 }
@@ -582,39 +585,39 @@ Glib::ustring IMDbProgress::extract (const char* section, const char* subpart,
 /// \param offset Offset of text to search for
 /// \returns bool True, if the passed text is a number
 //-----------------------------------------------------------------------------
-void IMDbProgress::extractSearch (IMDbSearchEntries& target, const Glib::ustring& src,
+void IMDbProgress::extractSearch (IMDbSearchEntries& target, const std::string& src,
 				  const char** texts, unsigned int offset) {
-   Glib::ustring::size_type start (src.find (texts[offset]));
-   Glib::ustring::size_type end (src.find ("<p><b>", start + 10));
-   TRACE1 ("IMDbProgress::extractSearch (std::map&, const Glib::ustring&) - Search from " << start << '-' << end);
+   std::string::size_type start (src.find (texts[offset]));
+   std::string::size_type end (src.find ("<p><b>", start + 10));
+   TRACE1 ("IMDbProgress::extractSearch (std::map&, const std::string&) - Search from " << start << '-' << end);
 
    while (start < end) {
       // Align with lines of result
       start = src.find ("<tr>", start);
-      if ((start != Glib::ustring::npos) && (start < end)) {
+      if ((start != std::string::npos) && (start < end)) {
 	 // The name of the film is in the 3rd column
 	 for (unsigned int i (0); i < 2; ++i) {
 	    start = src.find ("<td", start + 3);
-	    if (start == Glib::ustring::npos)
+	    if (start == std::string::npos)
 	       return;
 	 }
 
 	 // Extract the 7 digit long ID from the contained link
 	 start = src.find (LINK, start);
-	 if (start != Glib::ustring::npos) {
+	 if (start != std::string::npos) {
 	    start += sizeof (LINK) - 1;
-	    Glib::ustring id (src.substr (start, 7));
+	    std::string id (src.substr (start, 7));
 
 	    // Continue to end of href and extract the name from there
 	    start = src.find ("\">", start + 7);
-	    if (start != Glib::ustring::npos) {
+	    if (start != std::string::npos) {
 	       start += 2;
 
-	       Glib::ustring::size_type endLink (src.find ("</a>", start));
-	       Glib::ustring::size_type posReplace (endLink - start);
-	       if (endLink != Glib::ustring::npos) {
+	       std::string::size_type endLink (src.find ("</a>", start));
+	       std::string::size_type posReplace (endLink - start);
+	       if (endLink != std::string::npos) {
 		  endLink = src.find (")", endLink + 4);
-		  if (endLink != Glib::ustring::npos) {
+		  if (endLink != std::string::npos) {
 		     std::string name (src, start, ++endLink - start);
 		     name.replace (posReplace, 4, 0, '\0');
 		     YGP::convertHTMLUnicode2UTF8 (name);
@@ -635,7 +638,7 @@ void IMDbProgress::extractSearch (IMDbSearchEntries& target, const Glib::ustring
 /// \param idFilm (New) identification of a film
 /// \returns bool Always false
 //-----------------------------------------------------------------------------
-bool IMDbProgress::reStart (const Glib::ustring& idFilm) {
+bool IMDbProgress::reStart (const std::string& idFilm) {
    stop ();
    start (idFilm);
    return false;

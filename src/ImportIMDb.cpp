@@ -50,7 +50,7 @@ class FilmColumns : public Gtk::TreeModel::ColumnRecord {
  public:
    FilmColumns () : Gtk::TreeModel::ColumnRecord () { add (id); add (name); }
 
-   Gtk::TreeModelColumn<Glib::ustring> id;
+   Gtk::TreeModelColumn<std::string> id;
    Gtk::TreeModelColumn<Glib::ustring> name;
 };
 
@@ -61,7 +61,7 @@ class FilmColumns : public Gtk::TreeModel::ColumnRecord {
 ImportFromIMDb::ImportFromIMDb ()
    : XGP::XDialog (XGP::XDialog::NONE), sigLoaded (), client (new Gtk::Table (7, 2)),
      txtID (new Gtk::Entry), lblDirector (NULL), lblFilm (NULL), lblGenre (NULL),
-     lblSummary (NULL), contentIMDb (), status (QUERY), connOK () {
+     lblSummary (NULL), image (NULL), status (QUERY), connOK () {
    set_title (_("Import from IMDb.com"));
 
    client->show ();
@@ -132,7 +132,7 @@ void ImportFromIMDb::okEvent () {
       txtID->set_sensitive (false);
       ok->set_sensitive (false);
 
-      IMDbProgress* progress (new IMDbProgress (txtID->get_text ()));
+      IMDbProgress* progress (new IMDbProgress (Glib::locale_from_utf8 (txtID->get_text ())));
       progress->sigError.connect (bind (mem_fun (*this, &ImportFromIMDb::showError), progress));
       progress->sigAmbiguous.connect (bind (mem_fun (*this, &ImportFromIMDb::showSearchResults), progress));
       progress->sigSuccess.connect (bind (mem_fun (*this, &ImportFromIMDb::showData), progress));
@@ -146,11 +146,19 @@ void ImportFromIMDb::okEvent () {
       // Do nothing; any action is performed by other handlers
       break;
 
-   case CONFIRM:
+   case CONFIRM: {
       Check3 (lblDirector); Check3 (lblFilm); Check3 (lblGenre);
-      if (sigLoaded.emit (lblDirector->get_text (), lblFilm->get_text (),
-			  lblGenre->get_text (), lblSummary->get_text ()))
+      gchar buffer[8192];
+      gchar* gbuf (buffer);
+      gsize bufSize (sizeof(buffer));
+      image->get_pixbuf ()->save_to_buffer(gbuf, bufSize, "jpeg");
+
+      std::string strBuffer (buffer, bufSize);
+      if (sigLoaded.emit (lblDirector->get_text (), lblFilm->get_text (), lblGenre->get_text (),
+			  lblSummary->get_text (), strBuffer))
 	 response (Gtk::RESPONSE_OK);
+      break;
+   }
 
    default:
       TRACE1 ("Status: " << status);
@@ -187,20 +195,21 @@ bool ImportFromIMDb::stopLoading (IMDbProgress* progress) {
 
 //-----------------------------------------------------------------------------
 /// Adds an icon to the film information
-/// \param image Image description
+/// \param bufImage Image description
 /// \param progress Progress bar used for displaying the status; will be removed
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::addIcon (const std::string& image, IMDbProgress* progress) {
-   TRACE1 ("ImportFromIMDb::addIcon (const std::string&, IMDbProgress*) - " << image.length ());
+void ImportFromIMDb::addIcon (const std::string& bufImage, IMDbProgress* progress) {
+   TRACE1 ("ImportFromIMDb::addIcon (const std::string&, IMDbProgress*) - " << bufImage.length ());
 
    Glib::RefPtr<Gdk::PixbufLoader>  picLoader (Gdk::PixbufLoader::create ());
    try {
-      picLoader->write ((const guint8*)image.data (), (gsize)image.size ());
+      picLoader->write ((const guint8*)bufImage.data (), (gsize)bufImage.size ());
       picLoader->close ();
-      Gtk::Image* img (new Gtk::Image (picLoader->get_pixbuf ()->scale_simple (87, 128, Gdk::INTERP_BILINEAR)));
-      TRACE9 ("ImportFromIMDb::addIcon (const std::string&, IMDbProgress*) - Dimensions: " << img->get_width () << '/' << img->get_height ());
-      img->show ();
-      client->attach (*manage (img), 2, 3, 0, 6, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+      Check1 (!image);
+      image = new Gtk::Image (picLoader->get_pixbuf ()->scale_simple (87, 128, Gdk::INTERP_BILINEAR));
+      TRACE9 ("ImportFromIMDb::addIcon (const std::string&, IMDbProgress*) - Dimensions: " << image->get_width () << '/' << image->get_height ());
+      image->show ();
+      client->attach (*manage (image), 2, 3, 0, 6, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
    }
    catch (Gdk::PixbufError& e) { }
    catch (Glib::FileError& e) { }
@@ -208,6 +217,7 @@ void ImportFromIMDb::addIcon (const std::string& image, IMDbProgress* progress) 
       TRACE1 ("Error: " << e.what ());
    }
 
+   status = CONFIRM;
    progress->hide ();
    Glib::signal_idle ().connect (bind (ptr_fun (&ImportFromIMDb::removeProgressBar), client, progress));
 }
@@ -241,6 +251,7 @@ void ImportFromIMDb::showData (const IMDbProgress::IMDbEntry& entry, IMDbProgres
       Glib::signal_idle ().connect (bind (mem_fun (*this, &ImportFromIMDb::loadIcon), entry.image, progress));
    }
    else {
+      status = CONFIRM;
       progress->hide ();
       Glib::signal_idle ().connect (bind (ptr_fun (&ImportFromIMDb::removeProgressBar), client, progress));
    }
@@ -276,8 +287,6 @@ void ImportFromIMDb::showData (const IMDbProgress::IMDbEntry& entry, IMDbProgres
 
    ok->set_label (Gtk::Stock::OK.id);
    ok->set_sensitive ();
-
-   status = CONFIRM;
 }
 
 //-----------------------------------------------------------------------------

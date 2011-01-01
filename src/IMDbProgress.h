@@ -67,7 +67,7 @@ class IMDbProgress : public Gtk::ProgressBar {
    IMDbProgress (const Glib::ustring& film);
    virtual ~IMDbProgress ();
 
-   void start (const Glib::ustring& identifier, bool isImage = false);
+   void start (const std::string& identifier, bool isImage = false);
    void stop ();
    void disconnect ();
 
@@ -86,13 +86,13 @@ class IMDbProgress : public Gtk::ProgressBar {
    IMDbProgress (const IMDbProgress& other);
    const IMDbProgress& operator= (const IMDbProgress& other);
 
-   bool reStart (const Glib::ustring& idFilm);
+   bool reStart (const std::string& idFilm);
 
    bool poll ();
    bool indicateWait ();
    void error (const Glib::ustring& msg);
 
-   static void extractSearch (IMDbSearchEntries& target, const Glib::ustring& src,
+   static void extractSearch (IMDbSearchEntries& target, const std::string& src,
 			      const char** texts, unsigned int offset);
    Glib::ustring extract (const char* section, const char* subpart,
 			  const char* before, const char* after) const;

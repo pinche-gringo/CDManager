@@ -26,6 +26,7 @@
 
 namespace Gtk {
    class Label;
+   class Image;
    class Table;
    class TreeRow;
    class TreeView;
@@ -56,7 +57,7 @@ class ImportFromIMDb : public XGP::XDialog {
 
    /// Signal emitted, when the loaed film-information is confirmed
    sigc::signal<bool, const Glib::ustring&, const Glib::ustring&,
-      const Glib::ustring&, const Glib::ustring&> sigLoaded;
+      const Glib::ustring&, const Glib::ustring&, std::string&> sigLoaded;
 
  protected:
    Gtk::Table* client;            ///< Pointer to the client information area
@@ -65,8 +66,7 @@ class ImportFromIMDb : public XGP::XDialog {
    Gtk::Label* lblFilm;            ///< Label displaying the film (with year)
    Gtk::Label* lblGenre;          ///< Label displaying the genre of the film
    Gtk::Label* lblSummary;      ///< Label displaying the summary of the plot
-
-   Glib::ustring contentIMDb;                ///< Page received from IMDb.com
+   Gtk::Image* image;               ///< Image showing the poster of the film
 
    void okEvent ();
 
@@ -92,7 +92,7 @@ class ImportFromIMDb : public XGP::XDialog {
    void showSearchResults (const std::map<IMDbProgress::match, IMDbProgress::IMDbSearchEntries>& results,
 			   IMDbProgress* progress);
    void showData (const IMDbProgress::IMDbEntry& entry, IMDbProgress* progress);
-   void addIcon (const std::string& image, IMDbProgress* progress);
+   void addIcon (const std::string& bufImage, IMDbProgress* progress);
    bool loadIcon (const std::string& image, IMDbProgress* progress);
 
    sigc::connection connOK;

@@ -1,5 +1,6 @@
 Overview of changes in version 1.1.00:
 
+  - Statistics include information about actors
   - Films: Sort IMDb suggestion as IMDb does (Popular, Exact/Partial match)
   - Films: Added image and description (loaded from IMDb)
   - Films: Renamed all occurences of "Movie" to "Film"

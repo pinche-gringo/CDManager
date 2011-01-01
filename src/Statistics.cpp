@@ -44,7 +44,7 @@ Statistics* Statistics::instance (NULL);
 /// (Default-)Constructor
 //-----------------------------------------------------------------------------
 Statistics::Statistics ()
-   : XGP::XDialog (CANCEL), pClient (new Gtk::Table (6, 4)) {
+   : XGP::XDialog (CANCEL), pClient (new Gtk::Table (4 + WITH_RECORDS + WITH_FILMS + WITH_ACTORS, 4)) {
    set_title (_("Statistical information"));
 
    Gtk::Label* lbl = manage (new Gtk::Label (_("The database contains:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
@@ -60,45 +60,57 @@ Statistics::Statistics ()
       msg.replace (msg.find ("%1"), 2, err.what ());
       Gtk::MessageDialog (msg, Gtk::MESSAGE_ERROR).run ();
    }
+
+   unsigned int line (1);
    // Add record information
 #ifdef WITH_RECORDS
    lbl = manage (new Gtk::Label (_("Interprets:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
-   pClient->attach (*lbl, 0, 1, 1, 2, Gtk::FILL, Gtk::FILL, 5);
+   pClient->attach (*lbl, 0, 1, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
    lbl = manage (new Gtk::Label (YGP::ANumeric (stats[2]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));
-   pClient->attach (*lbl, 1, 2, 1, 2, Gtk::FILL, Gtk::FILL, 15);
+   pClient->attach (*lbl, 1, 2, line, line + 1, Gtk::FILL, Gtk::FILL, 15);
    lbl = manage (new Gtk::Label (_("Records:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
-   pClient->attach (*lbl, 2, 3, 1, 2, Gtk::FILL, Gtk::FILL, 5);
+   pClient->attach (*lbl, 2, 3, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
    lbl = manage (new Gtk::Label (YGP::ANumeric (stats[3]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));
-   pClient->attach (*lbl, 3, 4, 1, 2, Gtk::FILL, Gtk::FILL, 5);
+   pClient->attach (*lbl, 3, 4, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
+   ++line;
 #endif
 
 #ifdef WITH_FILMS
    // Add film information
    lbl = manage (new Gtk::Label (_("Directors:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
-   pClient->attach (*lbl, 0, 1, 2, 3, Gtk::FILL, Gtk::FILL, 5);
+   pClient->attach (*lbl, 0, 1, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
    lbl = manage (new Gtk::Label (YGP::ANumeric (stats[4]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));
-   pClient->attach (*lbl, 1, 2, 2, 3, Gtk::FILL, Gtk::FILL, 15);
+   pClient->attach (*lbl, 1, 2, line, line + 1, Gtk::FILL, Gtk::FILL, 15);
    lbl = manage (new Gtk::Label (_("Films:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
-   pClient->attach (*lbl, 2, 3, 2, 3, Gtk::FILL, Gtk::FILL, 5);
+   pClient->attach (*lbl, 2, 3, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
    lbl = manage (new Gtk::Label (YGP::ANumeric (stats[5]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));
-   pClient->attach (*lbl, 3, 4, 2, 3, Gtk::FILL, Gtk::FILL, 5);
+   pClient->attach (*lbl, 3, 4, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
+   ++line;
+#endif
+
+#ifdef WITH_ACTORS
+   // Add film information
+   lbl = manage (new Gtk::Label (_("Actors:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
+   pClient->attach (*lbl, 0, 1, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
+   lbl = manage (new Gtk::Label (YGP::ANumeric (stats[6]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));
+   pClient->attach (*lbl, 1, 2, line, line + 1, Gtk::FILL, Gtk::FILL, 15);
+   ++line;
 #endif
 
    // Add names and articles
-#ifdef WITH_ACTORS
-#  if defined WITH_RECORDS or defined WITH_FILMS
-   pClient->attach (*manage (new Gtk::HSeparator ()), 0, 7, 3, 4, Gtk::FILL, Gtk::FILL, 5, 10);
+#if defined WITH_RECORDS or defined WITH_FILMS or defined WITH_ACTORS
+   pClient->attach (*manage (new Gtk::HSeparator ()), 0, 7, line, line + 1, Gtk::FILL, Gtk::FILL, 5, 10);
+   ++line;
 #  endif
 
    lbl = manage (new Gtk::Label (_("First names:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
-   pClient->attach (*lbl, 0, 1, 4, 5, Gtk::FILL, Gtk::FILL, 5);
+   pClient->attach (*lbl, 0, 1, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
    lbl = manage (new Gtk::Label (YGP::ANumeric (stats[0]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));
-   pClient->attach (*lbl, 1, 2, 4, 5, Gtk::FILL, Gtk::FILL, 15);
+   pClient->attach (*lbl, 1, 2, line, line + 1, Gtk::FILL, Gtk::FILL, 15);
    lbl = manage (new Gtk::Label (_("Articles:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
-   pClient->attach (*lbl, 2, 3, 4, 5, Gtk::FILL, Gtk::FILL, 5);
+   pClient->attach (*lbl, 2, 3, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
    lbl = manage (new Gtk::Label (YGP::ANumeric (stats[1]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));
-   pClient->attach (*lbl, 3, 4, 4, 5, Gtk::FILL, Gtk::FILL, 5);
-#endif
+   pClient->attach (*lbl, 3, 4, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
 
    pClient->show ();
 

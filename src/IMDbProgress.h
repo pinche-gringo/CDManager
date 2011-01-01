@@ -67,8 +67,7 @@ class IMDbProgress : public Gtk::ProgressBar {
    IMDbProgress (const Glib::ustring& film);
    virtual ~IMDbProgress ();
 
-   void start (const Glib::ustring& idFilm);
-   void loadIcon (const std::string& icon);
+   void start (const Glib::ustring& identifier, bool isImage = false);
    void stop ();
    void disconnect ();
 

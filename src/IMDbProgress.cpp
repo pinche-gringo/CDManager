@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 04.04.2010
-//COPYRIGHT   : Copyright (C) 2010
+//COPYRIGHT   : Copyright (C) 2010, 2011
 
 // This file is part of CDManager
 //
@@ -56,7 +56,7 @@ struct ConnectInfo {
 
    std::string host;
    std::string path;
-   Glib::ustring response;
+   std::string response;
 
    /// Constructor
    ConnectInfo (const Glib::ustring& url);
@@ -68,18 +68,6 @@ struct ConnectInfo {
  private:
    static bool isNumber (const Glib::ustring& nr);
 };
-
-//-----------------------------------------------------------------------------
-/// Checks if the passed text is a number
-/// \param nr Number to inspect
-/// \returns bool True, if the passed text is a number
-//-----------------------------------------------------------------------------
-bool ConnectInfo::isNumber (const Glib::ustring& nr) {
-   for (unsigned int i (0); i < nr.length (); ++i)
-      if (!isdigit (nr[i]))
-	 return false;
-   return true;
-}
 
 
 //-----------------------------------------------------------------------------
@@ -108,7 +96,20 @@ ConnectInfo::ConnectInfo (const Glib::ustring& id)
 	 path = "find?s=tt&q=" + path;
       }
    }
-   TRACE1 ("ConnectInfo::ConnectInfo (const Glib::ustring&) - " << host << " - " << path)
+   TRACE1 ("ConnectInfo::ConnectInfo (const Glib::ustring&) - " << host << " - " << path);
+}
+
+
+//-----------------------------------------------------------------------------
+/// Checks if the passed text is a number
+/// \param nr Number to inspect
+/// \returns bool True, if the passed text is a number
+//-----------------------------------------------------------------------------
+bool ConnectInfo::isNumber (const Glib::ustring& nr) {
+   for (unsigned int i (0); i < nr.length (); ++i)
+      if (!isdigit (nr[i]))
+	 return false;
+   return true;
 }
 
 
@@ -139,38 +140,26 @@ IMDbProgress::~IMDbProgress () {
 
 //-----------------------------------------------------------------------------
 /// Starts the communication
-/// \param film Film to load; this can be either its name, its
-///              number on IMDb.com or its whole URL
+/// \param identifier Film to load; this can be either its name, its
+///                   number on IMDb.com or its whole URL
+/// \param isImage Flag if identifier specifies an image
 //-----------------------------------------------------------------------------
-void IMDbProgress::start (const Glib::ustring& film) {
-   TRACE1 ("IMDbProgress::start (const Glib::ustring&) - " << film);
+void IMDbProgress::start (const Glib::ustring& identifier, bool isImage) {
+   TRACE1 ("IMDbProgress::start (const Glib::ustring&) - " << identifier);
 
    Check1 (!data); Check1 (status == NONE);
-   status = TITLE;
-   data = new ConnectInfo (film);
-   set_text (_("Connecting to IMDb.com ..."));
+   if (isImage) {
+      status = IMAGE;
+      set_text (_("Loading icon ..."));
+   }
+   else {
+      status = TITLE;
+      set_text (_("Connecting to IMDb.com ..."));
+   }
+   data = new ConnectInfo (identifier);
    pulse ();
 
    connect ();
-   conPoll = Glib::signal_timeout ().connect (mem_fun (*this, &IMDbProgress::poll), 50);
-
-   conProgress = Glib::signal_timeout ().connect (mem_fun (*this, &IMDbProgress::indicateWait), 150);
-}
-
-//-----------------------------------------------------------------------------
-/// Loads the specified icon
-/// \param url Icon to load in format http://host/path/name
-/// \note It is not save to call this method while handling the callback of a signal
-//-----------------------------------------------------------------------------
-void IMDbProgress::loadIcon (const std::string& url) {
-   TRACE1 ("IMDbProgress::loadIcon (const std::string&) - " << url);
-   Check1 (!data); Check1 (status == NONE);
-   status = IMAGE;
-   data = new ConnectInfo (url);
-   set_text (_("Loading icon ..."));
-   pulse ();
-
-   connect();
    conPoll = Glib::signal_timeout ().connect (mem_fun (*this, &IMDbProgress::poll), 50);
 
    conProgress = Glib::signal_timeout ().connect (mem_fun (*this, &IMDbProgress::indicateWait), 150);
@@ -199,6 +188,7 @@ void IMDbProgress::disconnect () {
       conPoll.disconnect ();
    if (conProgress.connected ())
       conProgress.disconnect ();
+   Check1 (!conPoll.connected ()); Check1 (!conProgress.connected ());
 }
 
 //-----------------------------------------------------------------------------
@@ -423,7 +413,6 @@ void IMDbProgress::readHeaders (const boost::system::error_code& err) {
 	 ;
 
       // Read the remaining content
-      data->response.clear ();
       char buffer[256];
       do  {
 	 response.read (buffer, sizeof(buffer));
@@ -578,7 +567,8 @@ Glib::ustring IMDbProgress::extract (const char* section, const char* subpart,
 	    // Skip white-space at beginning
 	    i = data->response.find_first_not_of (" \t\n\r", i);
 	    std::string::size_type end (data->response.find (after, i));
-	    return (end == std::string::npos) ? Glib::ustring () : data->response.substr (i, end - i);
+	    if (end != std::string::npos)
+	       return Glib::ustring (data->response.substr (i, end - i));
 	 }
    return Glib::ustring ();
 }

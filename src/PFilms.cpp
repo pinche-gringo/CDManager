@@ -179,7 +179,7 @@ void PFilms::filmSelected () {
 /// \param oldValue: Old value of the changed entry
 //-----------------------------------------------------------------------------
 void PFilms::directorChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue) {
-   TRACE9 ("PDirectors::directorChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&)\n\t- " << column << '/' << oldValue);
+   TRACE9 ("PFilms::directorChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&)\n\t- " << column << '/' << oldValue);
 
    Gtk::TreePath path (films.getModel ()->get_path (row));
    aUndo.push (Undo (Undo::CHANGED, DIRECTOR, column, films.getCelebrityAt (row), path, oldValue));
@@ -863,10 +863,12 @@ void PFilms::closeDialog (int, const Gtk::Dialog* dlg) {
 /// \param film Name of the film with year in parenthesis at the end
 /// \param genre Genre of the film
 /// \param summary Synopsis of the film
+/// \param image Poster of the film
 //-----------------------------------------------------------------------------
 bool PFilms::importFilm (const Glib::ustring& director, const Glib::ustring& film,
-			   const Glib::ustring& genre, const Glib::ustring& summary) {
-   TRACE5 ("PFilms::importFilm (4x const Glib::ustring&) - " << director << ": " << film);
+			 const Glib::ustring& genre, const Glib::ustring& summary,
+			 const std::string& image) {
+   TRACE5 ("PFilms::importFilm (4x const Glib::ustring&, const std::string&) - " << director << ": " << film);
 
    Glib::ustring nameFilm (film);
    YGP::AYear year;
@@ -935,6 +937,7 @@ bool PFilms::importFilm (const Glib::ustring& director, const Glib::ustring& fil
    hFilm->setName (nameFilm);
    hFilm->setYear (year);
    hFilm->setDescription (summary);
+   hFilm->setImage (image);
    addFilm (hFilm, iNewDirector);
    return true;
 }

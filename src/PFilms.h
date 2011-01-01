@@ -101,7 +101,7 @@ class PFilms : public NBPage {
    }
 
    bool importFilm (const Glib::ustring& director, const Glib::ustring& film,
-		     const Glib::ustring& genre, const Glib::ustring& summary);
+		    const Glib::ustring& genre, const Glib::ustring& summary, const std::string& image);
 
    LanguageImg* imgLang;
 

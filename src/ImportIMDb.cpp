@@ -197,10 +197,10 @@ void ImportFromIMDb::addIcon (const std::string& image, IMDbProgress* progress) 
    try {
       picLoader->write ((const guint8*)image.data (), (gsize)image.size ());
       picLoader->close ();
-      Gtk::Image* img (new Gtk::Image (picLoader->get_pixbuf ()));
+      Gtk::Image* img (new Gtk::Image (picLoader->get_pixbuf ()->scale_simple (87, 128, Gdk::INTERP_BILINEAR)));
       TRACE9 ("ImportFromIMDb::addIcon (const std::string&, IMDbProgress*) - Dimensions: " << img->get_width () << '/' << img->get_height ());
       img->show ();
-      client->attach (*manage (img), 1, 2, 2, 5, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+      client->attach (*manage (img), 2, 3, 0, 6, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
    }
    catch (Gdk::PixbufError& e) { }
    catch (Glib::FileError& e) { }
@@ -272,7 +272,7 @@ void ImportFromIMDb::showData (const IMDbProgress::IMDbEntry& entry, IMDbProgres
    lblSummary = new Gtk::Label (entry.summary, Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
    lblSummary->set_line_wrap ();
    lblSummary->show ();
-   client->attach (*manage (lblSummary), 1, 3, 5, 6, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+   client->attach (*manage (lblSummary), 0, 3, 6, 7, Gtk::FILL | Gtk::EXPAND, Gtk::FILL | Gtk::EXPAND, 5, 5);
 
    ok->set_label (Gtk::Stock::OK.id);
    ok->set_sensitive ();

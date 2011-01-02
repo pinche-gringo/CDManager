@@ -68,7 +68,7 @@ void StorageFilm::loadNames (const std::vector<HDirector>& directors,
 /// \returns unsigned int: Number of loaded films
 //-----------------------------------------------------------------------------
 unsigned int StorageFilm::loadFilms (std::map<unsigned int, std::vector<HFilm> >& aFilms,
-			       YGP::StatusObject& stat) throw (std::exception) {
+				     YGP::StatusObject& stat) throw (std::exception) {
    Database::execute ("SELECT id, name, director, year, genre, type, languages"
 		      ", subtitles, summary, image FROM Films ORDER BY director, year, name");
    if (Database::resultSize ()) {
@@ -127,6 +127,7 @@ void StorageFilm::saveFilm (const HFilm film, unsigned int idDirector) throw (st
 	 << (film->getYear ().isDefined () ? (int)film->getYear () : 0);
    if (film->getId ())
       query << " WHERE id=" << film->getId ();
+   TRACE1 ("saveFilm " << query.str ());
 
    Database::execute (query.str ().c_str ());
    if (!film->getId ())

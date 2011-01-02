@@ -877,15 +877,15 @@ bool PFilms::importNextFilm (ImportFromIMDb* dlg, std::vector<HFilm>* films) {
 bool PFilms::continousImportFilm (const Glib::ustring& director, const Glib::ustring& film,
 				  const Glib::ustring& genre, const Glib::ustring& summary,
 				  const std::string& image, ImportFromIMDb* dlg, std::vector<HFilm>* filmlist) {
-   TRACE3 ("PFilms::continousImportFilm (4x const Glib::ustring&, const std::string&, std::vector<HFilm>*) - " << filmlist->back ()->getName ());
+   TRACE3 ("PFilms::continousImportFilm (4x const Glib::ustring&, const std::string&, std::vector<HFilm>*) - " << filmlist->back ()->getName () << '/' << image.size ());
    Check1 (film->size ());
 
    std::vector<HFilm>::iterator last (filmlist->end () - 1);
    TRACE5 ("PFilms::continousImportFilm (4x const Glib::ustring&, const std::string&, std::vector<HFilm>*) - "
 	   << (*last)->getName () << "->" << relFilms.getParent (*last)->getName ());
    if (director == relFilms.getParent (*last)->getName ()) {
-      if (((*last)->getDescription ().empty () && summary.size () && ((*last)->setDescription (summary), true))
-	  || ((*last)->getImage ().empty () && image.size () && ((*last)->setImage (image), true))) {
+      bool changed (((*last)->getDescription ().empty () && summary.size () && ((*last)->setDescription (summary), true)));
+      if (((*last)->getImage ().empty () && image.size () && ((*last)->setImage (image), true)) || changed) {
 	 const Gtk::TreeIter row (films.getObject (*last));
 	 Glib::ustring empty;
 	 filmChanged (row, 99, empty);

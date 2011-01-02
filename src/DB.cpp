@@ -31,23 +31,6 @@
 #include "DB.h"
 
 
-//-----------------------------------------------------------------------------
-/// Escapes the quotes in values for the database
-/// \param value: Value to escape
-/// \returns Glib::ustring: Escaped text
-//-----------------------------------------------------------------------------
-std::string Database::escapeDBValue (const std::string& value) {
-   size_t pos (0);
-   std::string rc (value);
-   while ((pos = rc.find ('"', pos)) != Glib::ustring::npos) {
-      rc.replace (pos, 1, "\\\"");
-      pos += 2;
-   }
-   TRACE9 ("CDManager::escapeDBValue (const Glib::ustring&) - Escaped: " << rc);
-   return rc;
-}
-
-
 #if defined HAVE_LIBMYSQLPP
 #  include <cstring>   // Only needed by mysql++.h (when compiled with GCC 4.3)
 #  include <mysql++.h>
@@ -134,6 +117,21 @@ long Database::getIDOfInsert () {
    return lastIDInsert;
 #endif
 }
+
+//-----------------------------------------------------------------------------
+/// Escapes the quotes in values for the database
+/// \param value: Value to escape
+/// \returns Glib::ustring: Escaped text
+//-----------------------------------------------------------------------------
+std::string Database::escapeDBValue (const std::string& value) {
+   mysqlpp::Query q (con.query ());
+   std::string conv;
+   char* buffer = new char [(value.length () << 1) + 1];
+   conv = std::string (buffer, q.escape_string (buffer, value.c_str (), value.length ()));
+   delete [] buffer;
+   return conv;
+}
+
 
 #elif defined HAVE_LIBMYSQL
 #  include <cstdlib>
@@ -230,6 +228,19 @@ int Database::getResultColumnAsInt (unsigned int column) {
 
 long Database::getIDOfInsert () {
    return mysql_insert_id (mysql);
+}
+
+//-----------------------------------------------------------------------------
+/// Escapes the quotes in values for the database
+/// \param value: Value to escape
+/// \returns Glib::ustring: Escaped text
+//-----------------------------------------------------------------------------
+std::string Database::escapeDBValue (const std::string& value) {
+   std::string conv;
+   char* buffer = new char [(value.length () << 1) + 1];
+   conv = std::string (buffer, mysql_real_escape_string (mysql, buffer, value.c_str (), value.length ()));
+   delete [] buffer;
+   return conv;
 }
 
 #else

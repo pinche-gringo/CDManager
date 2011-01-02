@@ -357,7 +357,8 @@ void ImportFromIMDb::showSearchResults (const std::map<IMDbProgress::match, IMDb
    list.signal_row_activated ().connect (bind (mem_fun (*this, &ImportFromIMDb::rowActivated),
 					       &scrl, &list, progress));
 
-   client->attach (*manage (&scrl), 0, 2, 2, 5, Gtk::FILL | Gtk::EXPAND, Gtk::FILL | Gtk::EXPAND, 5, 5);
+   client->attach (*manage (&scrl), 0, 3, 2, 7, Gtk::FILL | Gtk::EXPAND, Gtk::FILL | Gtk::EXPAND, 5, 5);
+   image->hide ();
 
    list.grab_focus ();
    list.get_selection ()->signal_changed ().connect

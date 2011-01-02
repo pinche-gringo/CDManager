@@ -527,9 +527,9 @@ void IMDbProgress::readFilm (Glib::ustring& msg) {
       Glib::ustring genre (extract ("Genres:</h4>", "<a href=\"/genre/", "\">", "</a>"));
       std::string summary (extract ("<h2>Storyline</h2>", NULL, "<p>", "\n"));
       std::string image (extract ("img_primary", "<img", "src=\"", "\""));
-      YGP::convertHTMLUnicode2UTF8 (director);
-      YGP::convertHTMLUnicode2UTF8 (name);
-      YGP::convertHTMLUnicode2UTF8 (summary);
+      YGP::convertHTML2UTF8 (director);
+      YGP::convertHTML2UTF8 (name);
+      YGP::convertHTML2UTF8 (summary);
 
       TRACE1 ("IMDbProgress::readFilm (boost::system::error_code&) - Director: " << director);
       TRACE1 ("IMDbProgress::readFilm (boost::system::error_code&) - Name: " << name);

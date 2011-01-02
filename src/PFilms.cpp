@@ -430,8 +430,7 @@ void PFilms::loadData () {
    catch (std::exception& err) {
       Glib::ustring msg (_("Can't query available films!\n\nReason: %1"));
       msg.replace (msg.find ("%1"), 2, err.what ());
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.run ();
+      Gtk::MessageDialog (msg, false, Gtk::MESSAGE_ERROR).run ();
    }
 }
 
@@ -451,8 +450,7 @@ void PFilms::loadData (const std::string& lang) {
    catch (std::exception& err) {
       Glib::ustring msg (_("Can't query available films!\n\nReason: %1"));
       msg.replace (msg.find ("%1"), 2, err.what ());
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.run ();
+      Gtk::MessageDialog (msg, false, Gtk::MESSAGE_ERROR).run ();
    }
 }
 
@@ -620,7 +618,7 @@ void PFilms::export2HTML (unsigned int fd, const std::string& lang) {
 	 if (::write (fd, output.str ().data (), output.str ().size ()) != (ssize_t)output.str ().size ()) {
 	    Glib::ustring msg (_("Couldn't write data!\n\nReason: %1"));
 	    msg.replace (msg.find ("%1"), 2, strerror (errno));
-	    Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
+	    Gtk::MessageDialog dlg (msg, false, Gtk::MESSAGE_ERROR);
 	    dlg.set_title (_("Error exporting films to HTML!"));
 	    dlg.run ();
 	    break;
@@ -699,6 +697,11 @@ void PFilms::undoFilm (const Undo& last) {
 
       case 5:
 	 film->setTitles (last.getValue ());
+	 break;
+
+      case 99:
+	 film->setDescription ("");
+	 film->setImage ("");
 	 break;
 
       default:
@@ -850,8 +853,8 @@ void PFilms::importInfoFromIMDb () {
 //-----------------------------------------------------------------------------
 bool PFilms::importNextFilm (ImportFromIMDb* dlg, std::vector<HFilm>* films) {
    if (films->size ()) {
+      TRACE5 ("PFilms::importNextFilm (ImportFromIMDb*, std::vector<HFilm>*) - " << films->back ()->getName ());
       dlg->searchFor (films->back ()->getName ());
-      return true;
    }
    else
       delete films;
@@ -868,15 +871,39 @@ bool PFilms::importNextFilm (ImportFromIMDb* dlg, std::vector<HFilm>* films) {
 /// \param genre Genre of the film
 /// \param summary Synopsis of the film
 /// \param image Poster of the film
+/// \param dlg Dialog to load elements
+/// \param filmlist List of films to load
 //-----------------------------------------------------------------------------
 bool PFilms::continousImportFilm (const Glib::ustring& director, const Glib::ustring& film,
 				  const Glib::ustring& genre, const Glib::ustring& summary,
-				  const std::string& image, ImportFromIMDb* dlg, std::vector<HFilm>* films) {
-   TRACE5 ("PFilms::importFilm (4x const Glib::ustring&, const std::string&, std::vector<HFilm>*)");
+				  const std::string& image, ImportFromIMDb* dlg, std::vector<HFilm>* filmlist) {
+   TRACE3 ("PFilms::continousImportFilm (4x const Glib::ustring&, const std::string&, std::vector<HFilm>*) - " << filmlist->back ()->getName ());
+   Check1 (film->size ());
 
-   importFilm (director, film, genre, summary, image);
-   films->erase (films->end () - 1);
-   return importNextFilm (dlg, films);
+   std::vector<HFilm>::iterator last (filmlist->end () - 1);
+   TRACE5 ("PFilms::continousImportFilm (4x const Glib::ustring&, const std::string&, std::vector<HFilm>*) - "
+	   << (*last)->getName () << "->" << relFilms.getParent (*last)->getName ());
+   if (director == relFilms.getParent (*last)->getName ()) {
+      if (((*last)->getDescription ().empty () && summary.size () && ((*last)->setDescription (summary), true))
+	  || ((*last)->getImage ().empty () && image.size () && ((*last)->setImage (image), true))) {
+	 const Gtk::TreeIter row (films.getObject (*last));
+	 Glib::ustring empty;
+	 filmChanged (row, 99, empty);
+      }
+   }
+   else {
+      Glib::ustring msg (_("Not setting data from IMDb for '%1' as the director differs (found %2, should be %3)!"));
+      msg.replace (msg.find ("%1"), 2, (*last)->getName ());
+      msg.replace (msg.find ("%2"), 2, director);
+      msg.replace (msg.find ("%3"), 2, relFilms.getParent (*last)->getName ());
+      if (Gtk::MessageDialog (msg, false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK_CANCEL).run ()
+	  == Gtk::RESPONSE_CANCEL)
+	 return false;
+   }
+
+   filmlist->erase (last);
+   Glib::signal_idle ().connect (bind (mem_fun (*this, &PFilms::importNextFilm), dlg, filmlist));
+   return false;
 }
 
 //-----------------------------------------------------------------------------

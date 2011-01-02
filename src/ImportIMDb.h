@@ -95,6 +95,7 @@ class ImportFromIMDb : public XGP::XDialog {
    void showData (const IMDbProgress::IMDbEntry& entry, IMDbProgress* progress);
    void addIcon (const std::string& bufImage, IMDbProgress* progress);
    bool loadIcon (const std::string& image, IMDbProgress* progress);
+   bool saveIMDbInfo ();
 
    sigc::connection connOK;
 };

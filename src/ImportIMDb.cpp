@@ -146,24 +146,31 @@ void ImportFromIMDb::okEvent () {
       // Do nothing; any action is performed by other handlers
       break;
 
-   case CONFIRM: {
-      Check3 (lblDirector); Check3 (lblFilm); Check3 (lblGenre);
-      gchar buffer[8192];
-      gchar* gbuf (buffer);
-      gsize bufSize (sizeof(buffer));
-      image->get_pixbuf ()->save_to_buffer(gbuf, bufSize, "jpeg");
-
-      std::string strBuffer (buffer, bufSize);
-      if (sigLoaded.emit (lblDirector->get_text (), lblFilm->get_text (), lblGenre->get_text (),
-			  lblSummary->get_text (), strBuffer))
+   case CONFIRM:
+      if (saveIMDbInfo ())
 	 response (Gtk::RESPONSE_OK);
       break;
-   }
 
    default:
       TRACE1 ("Status: " << status);
       Check (0);
    }
+}
+
+//-----------------------------------------------------------------------------
+/// Informs listeners about the information in the dialog
+/// \returns bool True, if all listeners successfully handled the update
+//-----------------------------------------------------------------------------
+bool ImportFromIMDb::saveIMDbInfo () {
+   Check3 (lblDirector); Check3 (lblFilm); Check3 (lblGenre); Check3 (image);
+   gchar buffer[8192];
+   gchar* gbuf (buffer);
+   gsize bufSize (sizeof(buffer));
+   image->get_pixbuf ()->save_to_buffer(gbuf, bufSize, "jpeg");
+
+   std::string strBuffer (buffer, bufSize);
+   return sigLoaded.emit (lblDirector->get_text (), lblFilm->get_text (), lblGenre->get_text (),
+			  lblSummary->get_text (), strBuffer);
 }
 
 //-----------------------------------------------------------------------------
@@ -419,5 +426,6 @@ void ImportFromIMDb::rowActivated (const Gtk::TreePath& path, Gtk::TreeViewColum
 //-----------------------------------------------------------------------------
 void ImportFromIMDb::searchFor (const Glib::ustring& film) {
    txtID->set_text (film);
+   status = QUERY;
    okEvent ();
 }

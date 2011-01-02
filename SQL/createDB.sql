@@ -21,7 +21,7 @@ CREATE TABLE Films
      languages  VARCHAR(14)     NOT NULL,
      subtitles  VARCHAR(29)     NOT NULL,
      summary    VARCHAR(512)    NOT NULL,
-     image      VARCHAR(8192)   NOT NULL,
+     image      BLOB            NOT NULL,
      PRIMARY KEY (id), KEY filmNames (name)) DEFAULT CHARSET=utf8;
 
 CREATE TABLE FilmNames

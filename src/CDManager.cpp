@@ -370,10 +370,19 @@ void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
    if (!pages[iPage]->isLoaded () && Storage::connected ())
       pages[iPage]->loadData ();
 
-   Glib::RefPtr<Gtk::ActionGroup> grpAction (Gtk::ActionGroup::create ());
+   Glib::RefPtr<Gtk::ActionGroup> grpAction (Gtk::ActionGroup::create ("agPage"));
    pages[iPage]->addMenu (ui, grpAction);
 
    ui += "</menubar>";
+
+   Glib::ListHandle<Glib::RefPtr<Gtk::ActionGroup> > lstAGroups (mgrUI->get_action_groups ());
+   for (Glib::ListHandle<Glib::RefPtr<Gtk::ActionGroup> >::iterator i (lstAGroups.begin ());
+	i != lstAGroups.end (); ++i)
+	if ((*i)->get_name () == "agPage") {
+	   mgrUI->remove_action_group (*i);
+	   break;
+	}
+
    mgrUI->insert_action_group (grpAction);
    idPageMrg = mgrUI->add_ui_from_string (ui);
 

@@ -412,3 +412,12 @@ void ImportFromIMDb::rowActivated (const Gtk::TreePath& path, Gtk::TreeViewColum
    Gtk::TreeRow row (*(list->get_model ()->get_iter (path)));
    loadRow (row, scrl, list, progress);
 }
+
+//-----------------------------------------------------------------------------
+/// Searches for the passed film
+/// \param film Information of the film to search for
+//-----------------------------------------------------------------------------
+void ImportFromIMDb::searchFor (const Glib::ustring& film) {
+   txtID->set_text (film);
+   okEvent ();
+}

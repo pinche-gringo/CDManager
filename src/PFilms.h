@@ -34,6 +34,7 @@
 class Genres;
 class FilmList;
 class LanguageImg;
+class ImportFromIMDb;
 
 namespace Gtk {
    class Dialog;
@@ -92,16 +93,19 @@ class PFilms : public NBPage {
    void undoDirector (const Undo& last);
 
    void importFromIMDb ();
-   void importDescriptionFromIMDb ();
-   static void closeDialog (int, const Gtk::Dialog* dlg);
+   void importInfoFromIMDb ();
 
    void filmSelected ();
    HFilm findFilm (unsigned int id) const {
       return findFilm (directors, relFilms, id);
    }
 
+   bool continousImportFilm (const Glib::ustring& director, const Glib::ustring& film,
+			     const Glib::ustring& genre, const Glib::ustring& summary,
+			     const std::string& image, ImportFromIMDb* dlg, std::vector<HFilm>* films);
    bool importFilm (const Glib::ustring& director, const Glib::ustring& film,
 		    const Glib::ustring& genre, const Glib::ustring& summary, const std::string& image);
+   bool importNextFilm (ImportFromIMDb* dlg, std::vector<HFilm>* films);
 
    LanguageImg* imgLang;
 

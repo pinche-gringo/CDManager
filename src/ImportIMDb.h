@@ -55,6 +55,8 @@ class ImportFromIMDb : public XGP::XDialog {
       return dlg;
    }
 
+   void searchFor (const Glib::ustring& info);
+
    /// Signal emitted, when the loaed film-information is confirmed
    sigc::signal<bool, const Glib::ustring&, const Glib::ustring&,
       const Glib::ustring&, const Glib::ustring&, std::string&> sigLoaded;
@@ -85,7 +87,6 @@ class ImportFromIMDb : public XGP::XDialog {
 		      Gtk::TreeView* list, IMDbProgress* progress);
    void rowSelected (Gtk::TreeView* list);
    void loadRow (Gtk::TreeRow& row, Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress);
-
 
    void inputChanged ();
    void showError (const Glib::ustring& msg, IMDbProgress* progress);

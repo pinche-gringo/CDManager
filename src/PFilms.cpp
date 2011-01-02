@@ -283,8 +283,8 @@ void PFilms::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActio
 		   mem_fun (*this, &PFilms::deleteSelection));
    grpAction->add (Gtk::Action::create ("MImport", _("_Import from IMDb.com ...")),
 		   Gtk::AccelKey (_("<ctl>I")), mem_fun (*this, &PFilms::importFromIMDb));
-   grpAction->add (Gtk::Action::create ("MImportDescr", _("_Import descriptions from IMDb.com ...")),
-		   Gtk::AccelKey (_("<shft><ctl>I")), mem_fun (*this, &PFilms::importDescriptionFromIMDb));
+   grpAction->add (Gtk::Action::create ("MImportDescr", _("_Import information from IMDb.com ...")),
+		   Gtk::AccelKey (_("<shft><ctl>I")), mem_fun (*this, &PFilms::importInfoFromIMDb));
 
    grpAction->add (Gtk::Action::create ("Lang", _("_Language")));
    addLanguageMenus (ui, grpAction);
@@ -820,38 +820,63 @@ void PFilms::importFromIMDb () {
    TRACE9 ("PFilms::importFromIMDb ()");
    ImportFromIMDb* dlg (ImportFromIMDb::create ());
    dlg->sigLoaded.connect (mem_fun (*this, &PFilms::importFilm));
-   dlg->signal_response ().connect (bind (ptr_fun (&PFilms::closeDialog), dlg));
 }
 
 //-----------------------------------------------------------------------------
-/// Opens a dialog allowing to import information for a film from IMDb.com
+/// Opens a dialog allowing to import information for films from IMDb.com
 //-----------------------------------------------------------------------------
-void PFilms::importDescriptionFromIMDb () {
+void PFilms::importInfoFromIMDb () {
    TRACE9 ("PFilms::importDescriptionFromIMDb ()");
-   std::vector<HFilm> iFilms;
+   std::vector<HFilm>* iFilms (new std::vector<HFilm>);
    for (std::vector<HDirector>::const_iterator d (directors.begin ());
 	d != directors.end(); ++d) {
       const std::vector<HFilm>& dFilms (relFilms.getObjects(*d));
       for (std::vector<HFilm>::const_iterator m (dFilms.begin ());
 	   m != dFilms.end (); ++m)
 	 if ((*m)->getDescription ().empty ())
-	    iFilms.push_back (*m);
+	    iFilms->push_back (*m);
    }
-   TRACE5 ("PFilms::importDescriptionFromIMDb () - To process: " << iFilms.size ());
+   TRACE5 ("PFilms::importDescriptionFromIMDb () - To process: " << iFilms->size ());
 
    ImportFromIMDb* dlg (ImportFromIMDb::create ());
-   dlg->sigLoaded.connect (mem_fun (*this, &PFilms::importFilm));
-   dlg->signal_response ().connect (bind (ptr_fun (&PFilms::closeDialog), dlg));
+   dlg->sigLoaded.connect (bind (mem_fun (*this, &PFilms::continousImportFilm), dlg, iFilms));
+   importNextFilm (dlg, iFilms);
 }
 
 //-----------------------------------------------------------------------------
-/// Frees the passed dialog
-/// \param int Response of dialog (ignored)
-/// \param dlg Dialog to close additionally
+/// Imports the last entry of the passed list of films
+/// \param dlg Dialog displaying the import-information
+/// \param films Pointer to list of all films to import
 //-----------------------------------------------------------------------------
-void PFilms::closeDialog (int, const Gtk::Dialog* dlg) {
-   Check1 (dlg);
-   delete dlg;
+bool PFilms::importNextFilm (ImportFromIMDb* dlg, std::vector<HFilm>* films) {
+   if (films->size ()) {
+      dlg->searchFor (films->back ()->getName ());
+      return true;
+   }
+   else
+      delete films;
+   return false;
+}
+
+//-----------------------------------------------------------------------------
+/// Imports the passed film-information and adds them appropiately to the
+/// list of films.
+/// Algorithm: If the name of the director does exist, ask if they are equal.
+///    The film is added to the respective director
+/// \param director Name of the director
+/// \param film Name of the film with year in parenthesis at the end
+/// \param genre Genre of the film
+/// \param summary Synopsis of the film
+/// \param image Poster of the film
+//-----------------------------------------------------------------------------
+bool PFilms::continousImportFilm (const Glib::ustring& director, const Glib::ustring& film,
+				  const Glib::ustring& genre, const Glib::ustring& summary,
+				  const std::string& image, ImportFromIMDb* dlg, std::vector<HFilm>* films) {
+   TRACE5 ("PFilms::importFilm (4x const Glib::ustring&, const std::string&, std::vector<HFilm>*)");
+
+   importFilm (director, film, genre, summary, image);
+   films->erase (films->end () - 1);
+   return importNextFilm (dlg, films);
 }
 
 //-----------------------------------------------------------------------------

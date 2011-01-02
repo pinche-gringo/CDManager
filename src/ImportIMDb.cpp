@@ -60,8 +60,11 @@ class FilmColumns : public Gtk::TreeModel::ColumnRecord {
 //-----------------------------------------------------------------------------
 ImportFromIMDb::ImportFromIMDb ()
    : XGP::XDialog (XGP::XDialog::NONE), sigLoaded (), client (new Gtk::Table (7, 2)),
-     txtID (new Gtk::Entry), lblDirector (NULL), lblFilm (NULL), lblGenre (NULL),
-     lblSummary (NULL), image (NULL), status (QUERY), connOK () {
+     txtID (new Gtk::Entry), lblDirector (new Gtk::Label (Glib::ustring (), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP)),
+     lblFilm (new Gtk::Label (Glib::ustring (), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP)),
+     lblGenre (new Gtk::Label (Glib::ustring (), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP)),
+     lblSummary (new Gtk::Label (Glib::ustring (), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP)),
+     image (new Gtk::Image ()), status (QUERY), connOK () {
    set_title (_("Import from IMDb.com"));
 
    client->show ();
@@ -85,7 +88,28 @@ ImportFromIMDb::ImportFromIMDb ()
    cancel = add_button (Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
 
    inputChanged ();
+
    show_all_children ();
+
+   lbl = new Gtk::Label (_("Director:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
+   client->attach (*manage (lbl), 0, 1, 2, 3, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+   client->attach (*manage (lblDirector), 1, 2, 2, 3, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+
+   lbl = new Gtk::Label (_("Film:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
+   client->attach (*manage (lbl), 0, 1, 3, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+   client->attach (*manage (lblFilm), 1, 2, 3, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+
+   lbl = new Gtk::Label (_("Genre:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
+   client->attach (*manage (lbl), 0, 1, 4, 5, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+   client->attach (*manage (lblGenre), 1, 2, 4, 5, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+
+   lbl = new Gtk::Label (_("Plot summary:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
+   client->attach (*manage (lbl), 0, 1, 5, 6, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+   lblSummary->set_line_wrap ();
+   client->attach (*manage (lblSummary), 0, 3, 6, 7, Gtk::FILL | Gtk::EXPAND, Gtk::FILL | Gtk::EXPAND, 5, 5);
+
+   client->attach (*manage (image), 2, 3, 0, 6, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+
    show ();
 }
 
@@ -212,11 +236,9 @@ void ImportFromIMDb::addIcon (const std::string& bufImage, IMDbProgress* progres
    try {
       picLoader->write ((const guint8*)bufImage.data (), (gsize)bufImage.size ());
       picLoader->close ();
-      Check1 (!image);
-      image = new Gtk::Image (picLoader->get_pixbuf ()->scale_simple (87, 128, Gdk::INTERP_BILINEAR));
+      image->set (picLoader->get_pixbuf ()->scale_simple (87, 128, Gdk::INTERP_BILINEAR));
       TRACE9 ("ImportFromIMDb::addIcon (const std::string&, IMDbProgress*) - Dimensions: " << image->get_width () << '/' << image->get_height ());
       image->show ();
-      client->attach (*manage (image), 2, 3, 0, 6, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
    }
    catch (Gdk::PixbufError& e) { }
    catch (Glib::FileError& e) { }
@@ -263,34 +285,11 @@ void ImportFromIMDb::showData (const IMDbProgress::IMDbEntry& entry, IMDbProgres
       Glib::signal_idle ().connect (bind (ptr_fun (&ImportFromIMDb::removeProgressBar), client, progress));
    }
 
-   Gtk::Label* lbl (new Gtk::Label (_("Director:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
-   lbl->show ();
-   client->attach (*manage (lbl), 0, 1, 2, 3, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-   lblDirector = new Gtk::Label (entry.director, Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
-   lblDirector->show ();
-   client->attach (*manage (lblDirector), 1, 2, 2, 3, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-
-   lbl = new Gtk::Label (_("Film:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
-   lbl->show ();
-   client->attach (*manage (lbl), 0, 1, 3, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-   lblFilm = new Gtk::Label (entry.title, Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
-   lblFilm->show ();
-   client->attach (*manage (lblFilm), 1, 2, 3, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-
-   lbl = new Gtk::Label (_("Genre:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
-   lbl->show ();
-   client->attach (*manage (lbl), 0, 1, 4, 5, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-   lblGenre = new Gtk::Label (entry.genre, Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
-   lblGenre->show ();
-   client->attach (*manage (lblGenre), 1, 2, 4, 5, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-
-   lbl = new Gtk::Label (_("Plot summary:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
-   lbl->show ();
-   client->attach (*manage (lbl), 0, 1, 5, 6, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-   lblSummary = new Gtk::Label (entry.summary, Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
-   lblSummary->set_line_wrap ();
-   lblSummary->show ();
-   client->attach (*manage (lblSummary), 0, 3, 6, 7, Gtk::FILL | Gtk::EXPAND, Gtk::FILL | Gtk::EXPAND, 5, 5);
+   lblDirector->set_text (entry.director);
+   lblFilm->set_text (entry.title);
+   lblGenre->set_text (entry.genre);
+   lblSummary->set_text (entry.summary);
+   show_all_children ();
 
    ok->set_label (Gtk::Stock::OK.id);
    ok->set_sensitive ();

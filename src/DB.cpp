@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 16.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2007, 2010
+//COPYRIGHT   : Copyright (C) 2004 - 2007, 2010, 2011
 
 // This file is part of CDManager
 //
@@ -21,7 +21,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
-
 
 #include <cdmgr-cfg.h>
 
@@ -90,6 +89,14 @@ bool Database::hasData () {
 void Database::getNextResultRow () {
    TRACE9 ("Database::getNextResultRow ()");
    ++i;
+}
+
+std::string Database::getResultColumnAsBlob (unsigned int column) {
+   TRACE9 ("Database::getResultColumnAsBlob (unsigned int) - " << column);
+   mysqlpp::String ret ((*i)[column]);
+   std::string result;
+   ret.to_string (result);
+   return result;
 }
 
 std::string Database::getResultColumnAsString (unsigned int column) {
@@ -202,6 +209,14 @@ void Database::getNextResultRow () {
       mysql_free_result (result);
       result = NULL;
    }
+}
+
+std::string Database::getResultColumnAsBlob (unsigned int column) {
+   TRACE9 ("Database::getResultColumnAsBlob (unsigned int) - " << column);
+   Check2 (result); Check2 (row);
+   Check1 (column < mysql_num_fields (result));
+   unsigned long* lengths (mysql_fetch_lengths(result));
+   return std::string(row[column], lengths[column]);
 }
 
 std::string Database::getResultColumnAsString (unsigned int column) {

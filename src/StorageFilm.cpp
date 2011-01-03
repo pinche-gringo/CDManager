@@ -93,7 +93,7 @@ unsigned int StorageFilm::loadFilms (std::map<unsigned int, std::vector<HFilm> >
 	    film->setLanguage (Database::getResultColumnAsString (6));
 	    film->setTitles (Database::getResultColumnAsString (7));
 	    film->setDescription (Database::getResultColumnAsString (8));
-	    film->setImage (Database::getResultColumnAsString (9));
+	    film->setImage (Database::getResultColumnAsBlob (9));
 	    aFilms[Database::getResultColumnAsUInt (2)].push_back (film);
 	 }
 	 catch (std::exception& e) {

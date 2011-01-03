@@ -38,6 +38,7 @@ class Database {
    static unsigned int resultSize ();
    static bool hasData ();
    static void getNextResultRow ();
+   static std::string getResultColumnAsBlob (unsigned int column);
    static std::string getResultColumnAsString (unsigned int column);
    static unsigned int getResultColumnAsUInt (unsigned int column);
    static int getResultColumnAsInt (unsigned int column);

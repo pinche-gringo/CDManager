@@ -836,7 +836,7 @@ void PFilms::importInfoFromIMDb () {
       const std::vector<HFilm>& dFilms (relFilms.getObjects(*d));
       for (std::vector<HFilm>::const_iterator m (dFilms.begin ());
 	   m != dFilms.end (); ++m)
-	 if ((*m)->getDescription ().empty ())
+	 if ((*m)->getDescription ().empty () || (*m)->getImage ().empty ())
 	    iFilms->push_back (*m);
    }
    TRACE5 ("PFilms::importDescriptionFromIMDb () - To process: " << iFilms->size ());
@@ -883,7 +883,7 @@ bool PFilms::continousImportFilm (const Glib::ustring& director, const Glib::ust
    std::vector<HFilm>::iterator last (filmlist->end () - 1);
    TRACE5 ("PFilms::continousImportFilm (4x const Glib::ustring&, const std::string&, std::vector<HFilm>*) - "
 	   << (*last)->getName () << "->" << relFilms.getParent (*last)->getName ());
-   if (director == relFilms.getParent (*last)->getName ()) {
+   if (director.empty () || (director == relFilms.getParent (*last)->getName ())) {
       bool changed (((*last)->getDescription ().empty () && summary.size () && ((*last)->setDescription (summary), true)));
       if (((*last)->getImage ().empty () && image.size () && ((*last)->setImage (image), true)) || changed) {
 	 const Gtk::TreeIter row (films.getObject (*last));

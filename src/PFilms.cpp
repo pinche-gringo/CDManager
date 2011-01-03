@@ -29,6 +29,8 @@
 
 #include <unistd.h>
 
+#include <gdkmm/pixbufloader.h>
+
 #include <gtkmm/main.h>
 #include <gtkmm/menu.h>
 #include <gtkmm/stock.h>
@@ -900,7 +902,7 @@ bool PFilms::continousImportFilm (const Glib::ustring& director, const Glib::ust
       msg.replace (msg.find ("%2"), 2, director);
       msg.replace (msg.find ("%3"), 2, relFilms.getParent (*last)->getName ());
       if (Gtk::MessageDialog (msg, false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK_CANCEL).run ()
-	  == Gtk::RESPONSE_CANCEL)
+	  == Gtk::RESPONSE_OK)
 	 return false;
    }
 
@@ -1008,10 +1010,22 @@ bool PFilms::onQueryTooltip (int x, int y, bool keyboard, const Glib::RefPtr<Gtk
       if (row->parent ()) {
 	 HFilm film (films.getFilmAt (iter));
 	 Glib::ustring summary (film->getDescription ());
-	 if (summary.size ()) {
+	 if (summary.size ())
 	    tooltip->set_text (summary);
-	    return true;
+
+	 std::string image (film->getImage ());
+	 if (image.size ()) {
+	    Glib::RefPtr<Gdk::PixbufLoader> picLoader (Gdk::PixbufLoader::create ());
+	    try {
+	       picLoader->write ((const guint8*)image.data (), (gsize)image.size ());
+	       picLoader->close ();
+	       tooltip->set_icon (picLoader->get_pixbuf ());
+	    }
+	    catch (Glib::Error& e) {
+	       image.clear ();
+	    }
 	 }
+	 return summary.size () || image.size ();
       }
    }
    return false;

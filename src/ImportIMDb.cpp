@@ -187,10 +187,9 @@ void ImportFromIMDb::okEvent () {
 //-----------------------------------------------------------------------------
 bool ImportFromIMDb::saveIMDbInfo () {
    Check3 (lblDirector); Check3 (lblFilm); Check3 (lblGenre); Check3 (image);
-   gchar buffer[8192];
-   gchar* gbuf (buffer);
-   gsize bufSize (sizeof(buffer));
-   image->get_pixbuf ()->save_to_buffer(gbuf, bufSize, "jpeg");
+   gchar* buffer (NULL);
+   gsize bufSize (0);
+   image->get_pixbuf ()->save_to_buffer(buffer, bufSize, "jpeg");
 
    std::string strBuffer (buffer, bufSize);
    return sigLoaded.emit (lblDirector->get_text (), lblFilm->get_text (), lblGenre->get_text (),
@@ -232,7 +231,7 @@ bool ImportFromIMDb::stopLoading (IMDbProgress* progress) {
 void ImportFromIMDb::addIcon (const std::string& bufImage, IMDbProgress* progress) {
    TRACE1 ("ImportFromIMDb::addIcon (const std::string&, IMDbProgress*) - " << bufImage.length ());
 
-   Glib::RefPtr<Gdk::PixbufLoader>  picLoader (Gdk::PixbufLoader::create ());
+   Glib::RefPtr<Gdk::PixbufLoader> picLoader (Gdk::PixbufLoader::create ());
    try {
       picLoader->write ((const guint8*)bufImage.data (), (gsize)bufImage.size ());
       picLoader->close ();

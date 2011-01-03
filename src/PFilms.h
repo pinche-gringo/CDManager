@@ -107,6 +107,8 @@ class PFilms : public NBPage {
 		    const Glib::ustring& genre, const Glib::ustring& summary, const std::string& image);
    bool importNextFilm (ImportFromIMDb* dlg, std::vector<HFilm>* films);
 
+   bool onQueryTooltip (int x, int y, bool keyboard, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
+
    LanguageImg* imgLang;
 
    FilmList films;                              // GUI-element holding films

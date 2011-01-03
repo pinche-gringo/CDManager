@@ -75,6 +75,9 @@ PFilms::PFilms (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave, cons
    Check3 (films.get_selection ());
    films.get_selection ()->signal_changed ().connect (mem_fun (*this, &PFilms::filmSelected));
 
+   films.set_has_tooltip ();
+   films.signal_query_tooltip ().connect (mem_fun (*this, &PFilms::onQueryTooltip));
+
    widget = scrlFilms;
 }
 
@@ -992,4 +995,24 @@ bool PFilms::importFilm (const Glib::ustring& director, const Glib::ustring& fil
    hFilm->setImage (image);
    addFilm (hFilm, iNewDirector);
    return true;
+}
+
+//-----------------------------------------------------------------------------
+/// Callback when trying to display a tooltip
+/// \param x
+//-----------------------------------------------------------------------------
+bool PFilms::onQueryTooltip (int x, int y, bool keyboard, const Glib::RefPtr<Gtk::Tooltip>& tooltip) {
+   Gtk::TreeModel::iterator iter;
+   if (films.get_tooltip_context_iter (x, y, keyboard, iter)) {
+      Gtk::TreeModel::Row row (*iter);
+      if (row->parent ()) {
+	 HFilm film (films.getFilmAt (iter));
+	 Glib::ustring summary (film->getDescription ());
+	 if (summary.size ()) {
+	    tooltip->set_text (summary);
+	    return true;
+	 }
+      }
+   }
+   return false;
 }

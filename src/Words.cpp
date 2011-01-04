@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009, 2010
+//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009 - 2011
 
 // This file is part of CDManager
 //
@@ -291,7 +291,7 @@ void Words::addArticle (const Glib::ustring& word, unsigned int pos) {
 //-----------------------------------------------------------------------------
 /// Removes a leading article from the passed name.
 /// \param name: Name to manipulate
-/// \returns Glib::ustring: Name without article or name
+/// \returns Glib::ustring: Name without article
 //-----------------------------------------------------------------------------
 Glib::ustring Words::removeArticle (const Glib::ustring& name) {
    TRACE9 ("Words::removeArticles (const Glib::ustring&) - " << name);
@@ -314,9 +314,9 @@ Glib::ustring Words::removeArticle (const Glib::ustring& name) {
 }
 
 //-----------------------------------------------------------------------------
-/// Removes a leading article from the passed name.
+/// Removes a leading name from the passed name.
 /// \param name: Name to manipulate
-/// \returns Glib::ustring: Name without article or name
+/// \returns Glib::ustring: Name without name
 //-----------------------------------------------------------------------------
 Glib::ustring Words::removeNames (const Glib::ustring& name) {
    TRACE9 ("Words::removeNames (const Glib::ustring&) - " << name);
@@ -326,7 +326,8 @@ Glib::ustring Words::removeNames (const Glib::ustring& name) {
    Glib::ustring work (name);
    Glib::ustring word (getWord (work));
    while ((word.size () != name.size ())
-	  && containsWord (0, shMem->info->cNames, word)) {
+	  && (((word.size () == 2) && (word[1] == '.'))
+	      || containsWord (0, shMem->info->cNames, word))) {
       unsigned int pos (word.size ());
       while (!isalnum (name[pos]))
 	 ++pos;

@@ -859,10 +859,12 @@ void PFilms::importInfoFromIMDb () {
 bool PFilms::importNextFilm (ImportFromIMDb* dlg, std::vector<HFilm>* films) {
    if (films->size ()) {
       TRACE5 ("PFilms::importNextFilm (ImportFromIMDb*, std::vector<HFilm>*) - " << films->back ()->getName ());
-      dlg->searchFor (films->back ()->getName ());
+      dlg->searchFor (films->back ()->getName (""));
    }
-   else
+   else {
       delete films;
+      delete dlg;
+   }
    return false;
 }
 

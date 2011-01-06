@@ -425,6 +425,13 @@ void ImportFromIMDb::rowActivated (const Gtk::TreePath& path, Gtk::TreeViewColum
 //-----------------------------------------------------------------------------
 void ImportFromIMDb::searchFor (const Glib::ustring& film) {
    txtID->set_text (film);
+
+   Glib::ustring empty;
+   lblDirector->set_text (empty);
+   lblFilm->set_text (empty);
+   lblGenre->set_text (empty);
+   lblSummary->set_text (empty);
+
    status = QUERY;
    ok->set_label (Gtk::Stock::GO_FORWARD.id);
    okEvent ();

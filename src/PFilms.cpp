@@ -897,7 +897,7 @@ bool PFilms::continousImportFilm (const Glib::ustring& director, const Glib::ust
       }
    }
    else {
-      Glib::ustring msg (_("Not setting data from IMDb for '%1' as the director differs (found %2, should be %3)!"));
+      Glib::ustring msg (_("Not setting data from IMDb for '%1' as the directors differ (found %2, should be %3)!"));
       msg.replace (msg.find ("%1"), 2, (*last)->getName ());
       msg.replace (msg.find ("%2"), 2, director);
       msg.replace (msg.find ("%3"), 2, relFilms.getParent (*last)->getName ());

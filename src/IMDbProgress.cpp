@@ -93,6 +93,13 @@ ConnectInfo::ConnectInfo (const std::string& id)
 	 path = id;
 	 while ((pos = path.find (' ', pos + 1)) != std::string::npos)
 	    path.replace (pos, 1, 1, '+');
+
+	 // Replace ampersands with %26
+	 for (unsigned int i (0); i < path.size (); ++i)
+	       if (path[i] == '&') {
+		  path.replace (i, 1, "%26", 3);
+		  i += 3;
+	       }
 	 path = "find?s=tt&q=" + path;
       }
    }

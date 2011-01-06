@@ -99,14 +99,14 @@ std::string FilmWriter::getSubstitute (const char ctrl, bool extend) const {
 /// \param director: Director of film
 /// \param out: Stream to write to
 //-----------------------------------------------------------------------------
-void FilmWriter::writeFilm (const HFilm& film, const HDirector& director,
-			      std::ostream& out) {
+void FilmWriter::writeFilm (const HFilm& film, const HDirector& director, std::ostream& out) {
    Check2 (!hFilm); Check2 (!hDirector);
    hFilm = film;
    hDirector = director;
 
    std::string value;
-   out << "<tr class=\"" << (oddLine ? "odd" : "even") << "\">";
+   out << "<tr class=\"" << (oddLine ? "odd" : "even") << "\" title=\""
+       << YGP::TableWriter::changeHTMLSpecialChars (hFilm->getDescription ()) << "\">";
    oddLine = !oddLine;
    while ((value = getNextNode ()).size ())
       out << "<td>" << value << "</td>";

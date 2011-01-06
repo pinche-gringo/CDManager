@@ -431,6 +431,7 @@ void ImportFromIMDb::searchFor (const Glib::ustring& film) {
    lblFilm->set_text (empty);
    lblGenre->set_text (empty);
    lblSummary->set_text (empty);
+   image->clear ();
 
    status = QUERY;
    ok->set_label (Gtk::Stock::GO_FORWARD.id);

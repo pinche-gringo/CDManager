@@ -89,7 +89,7 @@ class Film : public YGP::Entity {
    std::string       lang;     // %attrib%; Lang
    std::string       titles;   // %attrib%; Subtitles
    Glib::ustring     summary;  // %attrib%; Description
-   std::string       icon;     // %attrib%; Icon
+   std::string       icon;
 };
 
 #endif

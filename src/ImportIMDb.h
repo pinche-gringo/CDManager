@@ -31,6 +31,7 @@ namespace Gtk {
    class TreeRow;
    class TreeView;
    class TreePath;
+   class TextView;
    class TreeViewColumn;
    class ScrolledWindow;
 }
@@ -67,7 +68,7 @@ class ImportFromIMDb : public XGP::XDialog {
    Gtk::Label* lblDirector;                ///< Label displaying the director
    Gtk::Label* lblFilm;            ///< Label displaying the film (with year)
    Gtk::Label* lblGenre;          ///< Label displaying the genre of the film
-   Gtk::Label* lblSummary;      ///< Label displaying the summary of the plot
+   Gtk::TextView* txtSummary;   ///< Field displaying the summary of the plot
    Gtk::Image* image;               ///< Image showing the poster of the film
 
    void okEvent ();

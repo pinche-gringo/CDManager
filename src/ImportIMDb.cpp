@@ -31,6 +31,7 @@
 #include <gtkmm/stock.h>
 #include <gtkmm/entry.h>
 #include <gtkmm/image.h>
+#include <gtkmm/textview.h>
 #include <gtkmm/treeview.h>
 #include <gtkmm/treestore.h>
 #include <gtkmm/messagedialog.h>
@@ -63,7 +64,7 @@ ImportFromIMDb::ImportFromIMDb ()
      txtID (new Gtk::Entry), lblDirector (new Gtk::Label (Glib::ustring (), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP)),
      lblFilm (new Gtk::Label (Glib::ustring (), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP)),
      lblGenre (new Gtk::Label (Glib::ustring (), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP)),
-     lblSummary (new Gtk::Label (Glib::ustring (), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP)),
+     txtSummary (new Gtk::TextView),
      image (new Gtk::Image ()), status (QUERY), connOK () {
    set_title (_("Import from IMDb.com"));
 
@@ -78,6 +79,8 @@ ImportFromIMDb::ImportFromIMDb ()
 
    txtID->set_activates_default ();
    txtID->signal_changed ().connect (mem_fun (*this, &ImportFromIMDb::inputChanged));
+
+   txtSummary->set_wrap_mode (Gtk::WRAP_WORD);
 
    ok = new Gtk::Button (Gtk::Stock::GO_FORWARD);
    get_action_area ()->pack_start (*ok, false, false, 5);
@@ -105,8 +108,7 @@ ImportFromIMDb::ImportFromIMDb ()
 
    lbl = new Gtk::Label (_("Plot summary:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
    client->attach (*manage (lbl), 0, 1, 5, 6, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-   lblSummary->set_line_wrap ();
-   client->attach (*manage (lblSummary), 0, 3, 6, 7, Gtk::FILL | Gtk::EXPAND, Gtk::FILL | Gtk::EXPAND, 5, 5);
+   client->attach (*manage (txtSummary), 0, 3, 6, 7, Gtk::FILL | Gtk::EXPAND, Gtk::FILL | Gtk::EXPAND, 5, 5);
 
    client->attach (*manage (image), 2, 3, 0, 6, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
 
@@ -193,7 +195,7 @@ bool ImportFromIMDb::saveIMDbInfo () {
 
    std::string strBuffer (buffer, bufSize);
    return sigLoaded.emit (lblDirector->get_text (), lblFilm->get_text (), lblGenre->get_text (),
-			  lblSummary->get_text (), strBuffer);
+			  txtSummary->get_buffer ()->get_text (), strBuffer);
 }
 
 //-----------------------------------------------------------------------------
@@ -287,7 +289,7 @@ void ImportFromIMDb::showData (const IMDbProgress::IMDbEntry& entry, IMDbProgres
    lblDirector->set_text (entry.director);
    lblFilm->set_text (entry.title);
    lblGenre->set_text (entry.genre);
-   lblSummary->set_text (entry.summary);
+   txtSummary->get_buffer ()->set_text (entry.summary);
    show_all_children ();
 
    ok->set_label (Gtk::Stock::OK.id);
@@ -430,7 +432,7 @@ void ImportFromIMDb::searchFor (const Glib::ustring& film) {
    lblDirector->set_text (empty);
    lblFilm->set_text (empty);
    lblGenre->set_text (empty);
-   lblSummary->set_text (empty);
+   txtSummary->get_buffer ()->set_text (empty);
    image->clear ();
 
    status = QUERY;

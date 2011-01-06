@@ -59,14 +59,15 @@ struct ConnectInfo {
    std::string response;
 
    /// Constructor
-   ConnectInfo (const std::string& url);
+   ConnectInfo (const Glib::ustring& url);
    ~ConnectInfo () {
       sockIO.close ();
       svcIO.stop ();
    }
 
  private:
-   static bool isNumber (const std::string& nr);
+   static bool isNumber (const Glib::ustring& nr);
+   static std::string percentEncode (const Glib::ustring& data);
 };
 
 
@@ -74,11 +75,11 @@ struct ConnectInfo {
 /// Constructor
 /// \param id String identifying the film to load; can be an URL, an IMDb ID or a film name
 //-----------------------------------------------------------------------------
-ConnectInfo::ConnectInfo (const std::string& id)
+ConnectInfo::ConnectInfo (const Glib::ustring& id)
    : svcIO (), resolver (svcIO), sockIO (svcIO), buffer (), host (HOST), path (), response () {
-   std::string::size_type pos (std::string::npos);
+   Glib::ustring::size_type pos (Glib::ustring::npos);
    if (!id.compare (0, sizeof (HTTP) - 1, HTTP)
-       && ((pos = id.find ('/', sizeof (HTTP))) != std::string::npos)) {
+       && ((pos = id.find ('/', sizeof (HTTP))) != Glib::ustring::npos)) {
       // Starts with http:// and has a slash (/) separating host and path
       host = id.substr (sizeof (HTTP) - 1, pos - sizeof (HTTP) + 1);
       path = id.substr (pos + 1);
@@ -90,20 +91,14 @@ ConnectInfo::ConnectInfo (const std::string& id)
       else if (isNumber (id) > 0)
 	 path = "title/tt" + std::string (7 - id.length (), '0') + id + '/';
       else {
-	 path = id;
+	 path = percentEncode (id);
 	 while ((pos = path.find (' ', pos + 1)) != std::string::npos)
 	    path.replace (pos, 1, 1, '+');
 
-	 // Replace ampersands with %26
-	 for (unsigned int i (0); i < path.size (); ++i)
-	       if (path[i] == '&') {
-		  path.replace (i, 1, "%26", 3);
-		  i += 3;
-	       }
 	 path = "find?s=tt&q=" + path;
       }
    }
-   TRACE1 ("ConnectInfo::ConnectInfo (const std::string&) - " << host << " - " << path);
+   TRACE1 ("ConnectInfo::ConnectInfo (const Glib::ustring&) - " << host << " - " << path);
 }
 
 
@@ -112,13 +107,41 @@ ConnectInfo::ConnectInfo (const std::string& id)
 /// \param nr Number to inspect
 /// \returns bool True, if the passed text is a number
 //-----------------------------------------------------------------------------
-bool ConnectInfo::isNumber (const std::string& nr) {
+bool ConnectInfo::isNumber (const Glib::ustring& nr) {
    for (unsigned int i (0); i < nr.length (); ++i)
       if (!isdigit (nr[i]))
 	 return false;
    return true;
 }
 
+//-----------------------------------------------------------------------------
+/// Converts invalid characters for an URI to its percent-encoded counterparts
+/// according to RFC 3986 (http://tools.ietf.org/html/rfc3986)
+/// \param data Text to convert
+/// \returns std::string Percent-encoded text
+//-----------------------------------------------------------------------------
+std::string ConnectInfo::percentEncode (const Glib::ustring& data) {
+   const char* convTable ("0123456789ABCDEF");
+
+   std::string result;
+   for (Glib::ustring::const_iterator i (data.begin ()); i != data.end (); ++i)
+      if ((*i <= 0xff) && (isalnum (*i) || strchr (".-_~", *i)))
+	 result += *i;
+      else {
+	 for (unsigned int c (sizeof (*i)); c > 1;) {
+	    char ch (((*i) >> (--c << 3)));
+	    if (ch) {
+	       result += '%';
+	       result += convTable[(ch & 0xF0) >> 4];
+	       result += convTable[ch & 0x0F];
+	    }
+	 }
+	 result += '%';
+	 result += convTable[((*i) & 0xF0) >> 4];
+	 result += convTable[(*i) & 0x0F];
+      }
+   return result;
+}
 
 //-----------------------------------------------------------------------------
 /// Default constructor
@@ -151,8 +174,8 @@ IMDbProgress::~IMDbProgress () {
 ///                   number on IMDb.com or its whole URL
 /// \param isImage Flag if identifier specifies an image
 //-----------------------------------------------------------------------------
-void IMDbProgress::start (const std::string& identifier, bool isImage) {
-   TRACE1 ("IMDbProgress::start (const std::string&) - " << identifier);
+void IMDbProgress::start (const Glib::ustring& identifier, bool isImage) {
+   TRACE1 ("IMDbProgress::start (const Glib::ustring&) - " << identifier);
 
    Check1 (!data); Check1 (status == NONE);
    if (isImage) {

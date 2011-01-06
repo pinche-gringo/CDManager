@@ -51,7 +51,7 @@ class FilmColumns : public Gtk::TreeModel::ColumnRecord {
  public:
    FilmColumns () : Gtk::TreeModel::ColumnRecord () { add (id); add (name); }
 
-   Gtk::TreeModelColumn<std::string> id;
+   Gtk::TreeModelColumn<Glib::ustring> id;
    Gtk::TreeModelColumn<Glib::ustring> name;
 };
 

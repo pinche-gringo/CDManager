@@ -46,7 +46,7 @@ class IMDbProgress : public Gtk::ProgressBar {
       std::string url;
       Glib::ustring title;
 
-      _IMDbSearchEntry (const std::string& url, const Glib::ustring& title)
+      _IMDbSearchEntry (const Glib::ustring& url, const Glib::ustring& title)
          : url (url), title (title) { }
    } IMDbSearchEntry;
    typedef std::list<IMDbSearchEntry> IMDbSearchEntries;
@@ -67,7 +67,7 @@ class IMDbProgress : public Gtk::ProgressBar {
    IMDbProgress (const Glib::ustring& film);
    virtual ~IMDbProgress ();
 
-   void start (const std::string& identifier, bool isImage = false);
+   void start (const Glib::ustring& identifier, bool isImage = false);
    void stop ();
    void disconnect ();
 

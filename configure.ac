@@ -3,7 +3,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.52)
 AC_REVISION($Revision: 1.32 $)
-AC_INIT(CDManager, 1.1.10, [g17m0@users.sourceforge.net], CDManager)
+AC_INIT(CDManager, 1.1.00, [g17m0@users.sourceforge.net], CDManager)
 
 RELEASE=${PACKAGE_VERSION%.*}
 AC_DEFINE_UNQUOTED(PRG_RELEASE, "$RELEASE", [Define to the release of the program])
@@ -47,7 +47,7 @@ http://www.boost.org]))
 
 
 PKG_CHECK_MODULES(DEPS, glibmm-2.4 >= 2.4.0 YGP >= 0.9.41)
-PKG_CHECK_MODULES(XGP, gtkmm-2.4 >= 2.6.0 gthread-2.0 > 2.2.0 XGP >= 0.9.30)
+PKG_CHECK_MODULES(XGP, gtkmm-2.4 >= 2.12.0 gthread-2.0 > 2.2.0 XGP >= 0.9.30)
 
 #
 # Location of MySQL installation

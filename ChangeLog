@@ -1,3 +1,177 @@
+2011-01-07 17:47:57 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+	* ChangeLog, NEWS: Changes of V1.1.00 documented
+
+        * configure.ac: Version to 1.1.00; needing gtkmm >= 2.12.0
+
+2011-01-07 17:47:23 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * po: Updated
+
+2011-01-07 17:37:08 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Actors: Showing tooltips describing film
+
+2011-01-06 19:03:45 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Films: Closing dialog importing all films after importing everything
+
+2011-01-06 18:26:14 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Films: Correctly encode URIs (percent-encoding characters)
+
+2011-01-06 15:36:36 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Films: Escaping special search-characters for IMDb-search
+
+2011-01-06 14:57:49 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Films: Summary became an edit-field
+
+2011-01-06 13:53:42 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Films: Showing description as tooltip in generated HTML pages
+
+2011-01-06 12:53:38 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Films: Clear info about previous film when importing from IMDb
+
+2011-01-04 19:32:48 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Ignoring initials for sortng (as e.g. John F. Kennedy)
+
+2011-01-03 22:17:27 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Films: Showing poster of film in tooltip
+
+2011-01-03 21:32:04 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Films: Displaying summary as tooltip
+
+2011-01-03 20:40:34 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Films: Fixed reading image-information
+
+2011-01-02 21:17:20 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Films: Changed type of image in the DB to BLOB
+
+2011-01-02 21:16:54 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Films: Fixed saving images
+
+2011-01-02 18:30:14 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Films: Improved import from IMDb for a list of films
+
+2011-01-02 18:10:29 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Films: Fixed continous loading
+
+2011-01-02 12:37:10 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Films: First draft of importing missing descriptions/images
+
+2011-01-02 11:38:27 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Removing actions of old page before adding those for the new page
+
+2011-01-02 00:27:16 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Films: Saving the passed icon
+
+2011-01-02 00:26:32 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Films: Fixed searching for unique films on IMDb
+
+2011-01-01 22:10:17 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Films: Beautified displaying of icon
+
+2011-01-01 21:34:23 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Films: Loading icon of movie (if available)
+
+2011-01-01 14:17:54 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        *  ./src/CDManager
+
+2011-01-01 13:57:13 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Renamed all occurences of movie to film (including files and SQL-statements
+
+2011-01-01 13:56:53 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Renamed all occurences of movie to film (including files and SQL-statements
+
+2010-12-18 17:55:47 +0100  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * CDWriter: Don't append utf8 to generated files anymore
+
+2010-10-24 16:09:01 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Movies: Adapted to new IMDb-style
+
+2010-10-12 20:17:41 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * IMDbProgress: Handling icons (not fully working yet)
+
+2010-09-18 00:13:58 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * OOList.cpp: Removed unneeded include
+
+2010-06-28 22:15:37 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * IMDb import: Reading icon in a second request
+
+2010-06-23 21:18:01 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * IMDbProgress.cpp: Getting image works also for films without icon
+
+2010-06-15 20:39:13 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * ImportIMDb: Entry in list can be activated with double-click
+
+2010-06-06 22:24:53 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Movies: Import from IMDb extracts URL of icon
+
+2010-06-06 21:57:31 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Movies: Reading and displaying plot summary
+
+2010-06-06 21:52:18 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * src/Makefile.am: Building IMDb-classes before movie-classes
+
+2010-06-06 21:24:53 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Movies: Improved import from IMDb.com; Removed checks and traces
+
+2010-06-06 21:15:15 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Movies: Show imported movies in a tree; sorted by type of match
+
+2010-06-04 22:07:27 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Movies: Sorting IMDb-search as IMDb does
+
+2010-06-04 22:06:53 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * PMovies.cpp: Improved comments
+
+2010-06-04 21:23:49 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * configure.ac: Version to 1.1.00
+
+2010-06-04 21:23:29 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * Movies: Handling summary and image
+
+2010-06-04 20:44:24 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
+
+        * SQL: Movies-table contains summary and image columns
+
 2010-05-13 22:11:32 +0200  Markus Schwab  <g17m0@users.sourceforge.net>
 
         * ChangeLog, configure.ac: Version 1.0.02

@@ -3,8 +3,10 @@ Overview of changes in version 1.1.00:
   - Statistics include information about actors
   - Films: Sort IMDb suggestion as IMDb does (Popular, Exact/Partial match)
   - Films: Added image and description (loaded from IMDb)
+  - Films: Can import all missing images/descriptions from IMDb
   - Films: Renamed all occurences of "Movie" to "Film"
            Execute "make upgrade10_11" in the SQL directory to update the DB
+  - Needs gtkmm >= 2.12
 
 
 Overview of changes in version 1.0.02:

@@ -1003,7 +1003,10 @@ bool PFilms::importFilm (const Glib::ustring& director, const Glib::ustring& fil
 
 //-----------------------------------------------------------------------------
 /// Callback when trying to display a tooltip
-/// \param x
+/// \param x Position of tooltip (X-axis)
+/// \param y Position of tooltip (Y-axis)
+/// \param keyboard Flag if caused by a keyboard-action
+/// \param tooltip Tooltip widget; will be updated
 //-----------------------------------------------------------------------------
 bool PFilms::onQueryTooltip (int x, int y, bool keyboard, const Glib::RefPtr<Gtk::Tooltip>& tooltip) {
    Gtk::TreeModel::iterator iter;

@@ -27,6 +27,8 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include <gdkmm/pixbufloader.h>
+
 #include <gtkmm/stock.h>
 #include <gtkmm/scrolledwindow.h>
 
@@ -67,6 +69,8 @@ PActors::PActors (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave,
    Glib::RefPtr<Gtk::TreeSelection> sel (actors.get_selection ());
    sel->signal_changed ().connect (mem_fun (*this, &PActors::actorSelected));
    actors.signalActorChanged.connect (mem_fun (*this, &PActors::actorChanged));
+   actors.set_has_tooltip ();
+   actors.signal_query_tooltip ().connect (mem_fun (*this, &PActors::onQueryTooltip));
 
    widget = scrl;
 }
@@ -707,4 +711,39 @@ void PActors::changeAllEntries (const HEntity& entry, Gtk::TreeIter begin, Gtk::
 	 changeAllEntries (entry, begin->children ().begin (), begin->children ().end ());
       ++begin;
    } // end-while
+}
+
+//-----------------------------------------------------------------------------
+/// Callback when trying to display a tooltip
+/// \param x Position of tooltip (X-axis)
+/// \param y Position of tooltip (Y-axis)
+/// \param keyboard Flag if caused by a keyboard-action
+/// \param tooltip Tooltip widget; will be updated
+//-----------------------------------------------------------------------------
+bool PActors::onQueryTooltip (int x, int y, bool keyboard, const Glib::RefPtr<Gtk::Tooltip>& tooltip) {
+   Gtk::TreeModel::iterator iter;
+   if (actors.get_tooltip_context_iter (x, y, keyboard, iter)) {
+      Gtk::TreeModel::Row row (*iter);
+      HFilm film (boost::dynamic_pointer_cast<Film> (actors.getEntityAt (iter)));
+      if (film) {
+	 Glib::ustring summary (film->getDescription ());
+	 if (summary.size ())
+	    tooltip->set_text (summary);
+
+	 std::string image (film->getImage ());
+	 if (image.size ()) {
+	    Glib::RefPtr<Gdk::PixbufLoader> picLoader (Gdk::PixbufLoader::create ());
+	    try {
+	       picLoader->write ((const guint8*)image.data (), (gsize)image.size ());
+	       picLoader->close ();
+	       tooltip->set_icon (picLoader->get_pixbuf ());
+	    }
+	    catch (Glib::Error& e) {
+	       image.clear ();
+	    }
+	 }
+	 return summary.size () || image.size ();
+      }
+   }
+   return false;
 }

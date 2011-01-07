@@ -63,6 +63,7 @@ class PActors : public NBPage {
 
    void actorSelected ();
    void actorChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
+   bool onQueryTooltip (int x, int y, bool keyboard, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
 
    void newActor ();
    void undoActor (const Undo& last);

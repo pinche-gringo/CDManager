@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 1.0\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2011-01-01 13:40+0100\n"
-"PO-Revision-Date: 2011-01-01 13:56+0100\n"
+"POT-Creation-Date: 2011-01-07 17:38+0100\n"
+"PO-Revision-Date: 2011-01-07 17:47+0100\n"
 "Last-Translator: Markus Schwab <g17m0@users.sourceforge.net>\n"
 "Language-Team: Spanish <g17m0@users.sourceforge.net>\n"
 "Language: es\n"
@@ -125,11 +125,11 @@ msgstr "Conectar a base de datos "
 msgid "Reading database ..."
 msgstr "Leyendo de base de datos ..."
 
-#: src/CDManager.cpp:401
+#: src/CDManager.cpp:410
 msgid "The data has been modified! Save those changes?"
 msgstr "¡Los datos han estado modificado! ¿Quiere guardar esos cambios?"
 
-#: src/CDManager.cpp:424
+#: src/CDManager.cpp:433
 msgid ""
 "Can't connect to database!\n"
 "\n"
@@ -139,11 +139,11 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/CDManager.cpp:427
+#: src/CDManager.cpp:436
 msgid "Login error"
 msgstr "Falla de conección"
 
-#: src/CDManager.cpp:437
+#: src/CDManager.cpp:446
 msgid ""
 "Can't query needed information!\n"
 "\n"
@@ -153,11 +153,11 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/CDManager.cpp:462
+#: src/CDManager.cpp:471
 msgid "Disconnected!"
 msgstr "¡Desconectado!"
 
-#: src/CDManager.cpp:485 src/CDWriter.cpp:723
+#: src/CDManager.cpp:494 src/CDWriter.cpp:723
 msgid ""
 "Can't create file `%1'!\n"
 "\n"
@@ -167,7 +167,7 @@ msgstr ""
 "\n"
 "Causa: %2"
 
-#: src/CDManager.cpp:507
+#: src/CDManager.cpp:516
 msgid ""
 "Can't store special names!\n"
 "\n"
@@ -177,11 +177,11 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/CDManager.cpp:554
+#: src/CDManager.cpp:563
 msgid "Exporting (language %1) ..."
 msgstr "Exportando (idioma %1) ..."
 
-#: src/CDManager.cpp:591
+#: src/CDManager.cpp:600
 msgid "Export Warning!"
 msgstr "¡Aviso exportando!"
 
@@ -419,7 +419,8 @@ msgid ""
 "net\n"
 "Distributed under the terms of the GNU General Public License"
 msgstr ""
-"Copyright © 2004 - 2011 Markus Schwab; correo-e: g17m0@users.sourceforge.net\n"
+"Copyright © 2004 - 2011 Markus Schwab; correo-e: g17m0@users.sourceforge."
+"net\n"
 "Distribuido bajo las condiciones de la GNU Licensia General Público"
 
 #: src/Settings.cpp:60
@@ -566,7 +567,7 @@ msgstr ""
 "\n"
 "Causa: %2"
 
-#: src/CDWriter.cpp:430 src/RelateFilm.cpp:228 src/ImportIMDb.cpp:334
+#: src/CDWriter.cpp:430 src/RelateFilm.cpp:228 src/ImportIMDb.cpp:354
 msgid "Film"
 msgstr "Película"
 
@@ -641,7 +642,7 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/PRecords.cpp:366 src/PActors.cpp:379 src/PFilms.cpp:272
+#: src/PRecords.cpp:366 src/PActors.cpp:383 src/PFilms.cpp:277
 msgid "<ctl>Z"
 msgstr ""
 
@@ -649,7 +650,7 @@ msgstr ""
 msgid "New _interpret"
 msgstr "Nuevo _artista"
 
-#: src/PRecords.cpp:370 src/PActors.cpp:383 src/PFilms.cpp:276
+#: src/PRecords.cpp:370 src/PActors.cpp:387 src/PFilms.cpp:281
 msgid "<ctl>N"
 msgstr ""
 
@@ -657,7 +658,7 @@ msgstr ""
 msgid "_New record"
 msgstr "_Nuevo disco"
 
-#: src/PRecords.cpp:373 src/PActors.cpp:386 src/PFilms.cpp:279
+#: src/PRecords.cpp:373 src/PActors.cpp:390 src/PFilms.cpp:284
 msgid "<ctl><alt>N"
 msgstr ""
 
@@ -669,11 +670,11 @@ msgstr "Nueva canción"
 msgid "<ctl><shft>N"
 msgstr ""
 
-#: src/PRecords.cpp:378 src/PActors.cpp:388 src/PFilms.cpp:281
+#: src/PRecords.cpp:378 src/PActors.cpp:392 src/PFilms.cpp:286
 msgid "_Delete"
 msgstr "_Borrar"
 
-#: src/PRecords.cpp:379 src/PActors.cpp:389 src/PFilms.cpp:282
+#: src/PRecords.cpp:379 src/PActors.cpp:393 src/PFilms.cpp:287
 msgid "<ctl>Delete"
 msgstr ""
 
@@ -681,7 +682,7 @@ msgstr ""
 msgid "_Import from file-info ..."
 msgstr "_Importar informaciones de archivos audio  ..."
 
-#: src/PRecords.cpp:382 src/PFilms.cpp:285
+#: src/PRecords.cpp:382 src/PFilms.cpp:290
 msgid "<ctl>I"
 msgstr ""
 
@@ -699,7 +700,7 @@ msgstr ""
 "\n"
 "Causa: %2"
 
-#: src/PRecords.cpp:861 src/PFilms.cpp:621
+#: src/PRecords.cpp:861 src/PFilms.cpp:624
 msgid ""
 "Couldn't write data!\n"
 "\n"
@@ -713,21 +714,21 @@ msgstr ""
 msgid "Error exporting records to HTML!"
 msgstr "¡Error exportando discos a HTML!"
 
-#: src/PActors.cpp:305
+#: src/PActors.cpp:309
 msgid "The database contains an invalid reference (%1) to a film!"
 msgstr "¡La base de datos contiene un vínculo inválido (%1) a una película!"
 
-#: src/PActors.cpp:324
+#: src/PActors.cpp:328
 msgid "Loaded %1 actor"
 msgid_plural "Loaded %1 actors"
 msgstr[0] "Leí %1 actor"
 msgstr[1] "Leí %1 actores"
 
-#: src/PActors.cpp:331
+#: src/PActors.cpp:335
 msgid "Warnings loading actors!"
 msgstr "¡Aviso leyendo los actores!"
 
-#: src/PActors.cpp:336
+#: src/PActors.cpp:340
 msgid ""
 "Can't query the actors1!\n"
 "\n"
@@ -737,73 +738,73 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/PActors.cpp:382
+#: src/PActors.cpp:386
 msgid "New _actor"
 msgstr "Nuevo _actor"
 
-#: src/PActors.cpp:385
+#: src/PActors.cpp:389
 msgid "_Plays in film..."
 msgstr "_Participa en película..."
 
-#: src/PActors.cpp:395
+#: src/PActors.cpp:399
 msgid "_View"
 msgstr "_Ver"
 
-#: src/PActors.cpp:397
+#: src/PActors.cpp:401
 msgid "By _actor"
 msgstr "Por _actor"
 
-#: src/PActors.cpp:399
+#: src/PActors.cpp:403
 msgid "By _film"
 msgstr "Por _película"
 
-#: src/PActors.cpp:636 src/ActorList.cpp:56
+#: src/PActors.cpp:640 src/ActorList.cpp:56
 msgid "Actors/Films"
 msgstr "Actores/Películas"
 
-#: src/PActors.cpp:662
+#: src/PActors.cpp:666
 msgid "Films/Actors"
 msgstr "Pelícualas/Actores"
 
-#: src/PFilms.cpp:218
+#: src/PFilms.cpp:223
 msgid "_Original name"
 msgstr "Nombre _original"
 
-#: src/PFilms.cpp:275
+#: src/PFilms.cpp:280
 msgid "New _director"
 msgstr "Nuevo _director"
 
-#: src/PFilms.cpp:278
+#: src/PFilms.cpp:283
 msgid "_New film"
 msgstr "_Nueva película"
 
-#: src/PFilms.cpp:284
+#: src/PFilms.cpp:289
 msgid "_Import from IMDb.com ..."
 msgstr "_Importar de IMDb.com  ..."
 
-#: src/PFilms.cpp:286
-msgid "_Import descriptions from IMDb.com ..."
-msgstr "_Importar de IMDb.com  ..."
+#: src/PFilms.cpp:291
+msgid "_Import information from IMDb.com ..."
+msgstr "_Importar datos de IMDb.com  ..."
 
-#: src/PFilms.cpp:287
+#: src/PFilms.cpp:292
 msgid "<shft><ctl>I"
 msgstr ""
 
-#: src/PFilms.cpp:289
+#: src/PFilms.cpp:294
 msgid "_Language"
 msgstr "_Idioma"
 
-#: src/PFilms.cpp:419
+#: src/PFilms.cpp:424
 msgid "Loaded %1 film"
 msgid_plural "Loaded %1 films"
 msgstr[0] "Leí %1 película"
 msgstr[1] "Leí %1 películas"
 
-#: src/PFilms.cpp:426
+#: src/PFilms.cpp:431
 msgid "Warnings loading films"
 msgstr "Aviso leyendo película '%1': %2"
 
-#: src/PFilms.cpp:431 src/PFilms.cpp:452
+#: src/PFilms.cpp:436 src/PFilms.cpp:456
 msgid ""
 "Can't query available films!\n"
 "\n"
@@ -813,9 +814,17 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/PFilms.cpp:624
+#: src/PFilms.cpp:627
 msgid "Error exporting films to HTML!"
 msgstr "¡Error exportando las películas a páginas HTML!"
+
+#: src/PFilms.cpp:902
+msgid ""
+"Not setting data from IMDb for '%1' as the directors differ (found %2, "
+"should be %3)!"
+msgstr ""
+"¡Los datos leidos de IMDb para '%1' contienen un director diferente (se\n"
+"encontró %2; debería ser %3)!"
 
 #: src/Storage.cpp:167
 msgid "Warning loading celebrity `%1': %2"
@@ -865,75 +874,75 @@ msgstr "artista"
 msgid "director"
 msgstr "director"
 
-#: src/ImportIMDb.cpp:65
+#: src/ImportIMDb.cpp:69
 msgid "Import from IMDb.com"
 msgstr "Importar de IMDb.com"
 
-#: src/ImportIMDb.cpp:69
+#: src/ImportIMDb.cpp:73
 msgid "Film (_Name, number or URL):"
 msgstr "_Nombre, número o URL de la película:"
 
-#: src/ImportIMDb.cpp:247
+#: src/ImportIMDb.cpp:97
 msgid "Director:"
 msgstr ""
 
-#: src/ImportIMDb.cpp:254
+#: src/ImportIMDb.cpp:101
 msgid "Film:"
 msgstr "Película:"
 
-#: src/ImportIMDb.cpp:261
+#: src/ImportIMDb.cpp:105
 msgid "Genre:"
 msgstr "Tipo:"
 
-#: src/ImportIMDb.cpp:268
+#: src/ImportIMDb.cpp:109
 msgid "Plot summary:"
 msgstr "Descripción:"
 
-#: src/ImportIMDb.cpp:316
+#: src/ImportIMDb.cpp:333
 msgid "Popular Titles"
 msgstr "Títulos populares"
 
-#: src/ImportIMDb.cpp:316
+#: src/ImportIMDb.cpp:333
 msgid "Exact match"
 msgstr "Concordancia exacta"
 
-#: src/ImportIMDb.cpp:316
+#: src/ImportIMDb.cpp:333
 msgid "Partial match"
 msgstr "Concordancia parcial"
 
-#: src/ImportIMDb.cpp:316
+#: src/ImportIMDb.cpp:333
 msgid "Approximate match"
 msgstr "Concordancia aproximativa"
 
-#: src/IMDbProgress.cpp:151
-msgid "Connecting to IMDb.com ..."
-msgstr "Conectar a IMDb.com"
-
-#: src/IMDbProgress.cpp:170
+#: src/IMDbProgress.cpp:183
 msgid "Loading icon ..."
 msgstr "Leyendo ícono ..."
 
-#: src/IMDbProgress.cpp:222
+#: src/IMDbProgress.cpp:187
+msgid "Connecting to IMDb.com ..."
+msgstr "Conectar a IMDb.com"
+
+#: src/IMDbProgress.cpp:242
 msgid "Receiving from IMDb.com: %1 KB"
 msgstr "Recibiendo de IMDb.com: %1 bytes"
 
-#: src/IMDbProgress.cpp:358
+#: src/IMDbProgress.cpp:378
 msgid "Invalid response: `%1'"
 msgstr "Respuesta inválida: '%1'"
 
-#: src/IMDbProgress.cpp:388
+#: src/IMDbProgress.cpp:411
 msgid "HTTP status code 302 does not contain a location"
 msgstr "Código de estado HTTP 302 no contiene ninguna locación"
 
-#: src/IMDbProgress.cpp:393
+#: src/IMDbProgress.cpp:416
 msgid "IMDb.com returned status code %1 %2"
 msgstr "IMDb.com retornó error %1 %2"
 
-#: src/IMDbProgress.cpp:520
+#: src/IMDbProgress.cpp:542
 msgid "IMDb didn't find any matching films!"
 msgstr "IMDb no encontró ninguna película adecuada!"
 
-#: src/IMDbProgress.cpp:557
+#: src/IMDbProgress.cpp:579
 msgid ""
 "Couldn't extract film-information from IMDb! Maybe the site was "
 "redesigned ..."
@@ -959,26 +968,30 @@ msgstr ""
 "\n"
 "Causa: %1"
 
-#: src/Statistics.cpp:65
+#: src/Statistics.cpp:67
 msgid "Interprets:"
 msgstr "Artistas:"
 
-#: src/Statistics.cpp:69
+#: src/Statistics.cpp:71
 msgid "Records:"
 msgstr "Discos:"
 
-#: src/Statistics.cpp:77
+#: src/Statistics.cpp:80
 msgid "Directors:"
 msgstr "Directores:"
 
-#: src/Statistics.cpp:81
+#: src/Statistics.cpp:84
 msgid "Films:"
 msgstr "Películas:"
 
 #: src/Statistics.cpp:93
+msgid "Actors:"
+msgstr "Actores:"
+
+#: src/Statistics.cpp:106
 msgid "First names:"
 msgstr "Nombres:"
 
-#: src/Statistics.cpp:97
+#: src/Statistics.cpp:110
 msgid "Articles:"
 msgstr "Artículos:"

@@ -27,6 +27,12 @@
 
 #include <unistd.h>
 
+#include <cstring>
+
+#ifdef HAVE_ICONV
+#  include <iconv.h>
+#endif
+
 #include <fstream>
 #include <sstream>
 
@@ -48,6 +54,14 @@
 #include "StorageRecord.h"
 
 #include "PRecords.h"
+
+
+//-----------------------------------------------------------------------------
+/// Reads an IDv3 size object (4 bytes; only 7 bits used)
+//-----------------------------------------------------------------------------
+static unsigned int getID3Size (const char* buffer) {
+   return (*buffer << 21) + (buffer[1] << 14) + (buffer[2] << 7) + buffer[3];
+}
 
 
 //-----------------------------------------------------------------------------
@@ -419,12 +433,11 @@ void PRecords::parseFileInfo (const std::string& file) {
    std::string extension (file.substr (file.size () - 4));
    TRACE1 ("PRecords::parseFileInfo (const std::string&) - Type: " << extension);
    if (((extension == ".mp3")
-	&& parseMP3Info (stream, artist, record, song, track))
+	&& parseID3Info (stream, artist, record, song, track))
        || ((extension == ".ogg")
 	   && parseOGGCommentHeader (stream, artist, record, song, track))) {
       TRACE8 ("PRecords::parseFileInfo (const std::string&) - " << artist
 	      << '/' << record << '/' << song << '/' << track);
-      Check1 (typeid (**pages) == typeid (PRecords));
       addEntry (artist, record, song, track);
    }
 }
@@ -438,23 +451,140 @@ void PRecords::parseFileInfo (const std::string& file) {
 /// \param track: Tracknumber
 /// \returns bool: True, if ID3 info has been found
 //-----------------------------------------------------------------------------
-bool PRecords::parseMP3Info (std::istream& stream, Glib::ustring& artist,
-			      Glib::ustring& record, Glib::ustring& song,
-			      unsigned int& track) {
-   stream.seekg (-0x80, std::ios::end);
-   std::string value;
+bool PRecords::parseID3Info (std::istream& stream, Glib::ustring& artist,
+			     Glib::ustring& record, Glib::ustring& song,
+			     unsigned int& track) {
+   char buffer[512];
+   stream.read (buffer, 4);
 
-   std::getline (stream, value, '\xff');
-   TRACE8 ("PRecords::parseMP3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Found: "
-	   << value << "; Length: " << value.size ());
-   if ((value.size () > 3) && (value[0] == 'T') && (value[1] == 'A') && (value[2] == 'G')) {
-      song = Glib::locale_to_utf8 (stripString (value, 3, 29));
-      artist = Glib::locale_to_utf8 (stripString (value, 33, 29));
-      record = Glib::locale_to_utf8 (stripString (value, 63, 29));
-      track = (value[0x7d] != 0x20) ? value[0x7e] : 0;
-      return true;
+   // Check if an ID3v2 tag is present
+   if (memcmp (buffer, "ID3", 3)) {
+      stream.seekg (-0x80, std::ios::end);
+      std::string value;
+
+      // If not: Check for ID3v1
+      std::getline (stream, value, '\xff');
+      TRACE8 ("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Found: "
+	      << value << "; Length: " << value.size ());
+      if ((value.size () > 3) && (value[0] == 'T') && (value[1] == 'A') && (value[2] == 'G')) {
+	 song = Glib::locale_to_utf8 (stripString (value, 3, 29));
+	 artist = Glib::locale_to_utf8 (stripString (value, 33, 29));
+	 record = Glib::locale_to_utf8 (stripString (value, 63, 29));
+	 track = (value[0x7d] != 0x20) ? value[0x7e] : 0;
+	 return true;
+      }
    }
-   return false;
+   else {
+      stream.read(buffer, 6);
+      unsigned int size (getID3Size (buffer + 2));
+      TRACE7 ("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - ID3-tag " << size);
+
+      // Skip extended header, if present
+      if (buffer[1] & 0x20) {
+	 stream.read(buffer, 4);
+	 unsigned int extSize (getID3Size (buffer));
+	 if (size < extSize)
+	    return false;
+
+	 stream.seekg (extSize, std::ios::cur);
+      }
+
+      do {
+	 Glib::ustring *value (NULL);
+	 // Read all frames
+	 stream.read (buffer, 10);
+	 unsigned int frameSize (getID3Size (buffer + 4));
+	 if ((size - frameSize) < 4)
+	    return false;
+	 size -= 10 + frameSize;
+
+	 if (memcmp (buffer, "\0\0\0\0", 4)) {
+	    TRACE8 ("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - ID3-frame "
+		    << std::string(buffer, 4) << '/' << frameSize);
+
+	     if (memcmp (buffer, "TIT2", 4))
+		if (memcmp (buffer, "TALB", 4))
+		   if (memcmp (buffer, "TPE1", 4))
+		      if (memcmp (buffer, "TRCK", 4)) {
+			 value = NULL;
+			 stream.seekg (frameSize, std::ios::cur);
+		      }
+		      else {
+			 Check2 (size < sizeof (buffer));
+			 stream.read (buffer, size);
+			 track = strtoul (buffer + 1, NULL, 10);
+			 value = NULL;
+		      }
+		   else
+		      value = &artist;
+		else
+		   value = &record;
+	     else
+		value = &song;
+	 }
+	 else
+	    break;
+
+	 if (value) {
+	    unsigned int read (0);
+	    char type (stream.get());
+	    --frameSize;
+
+#ifdef HAVE_ICONV
+	    // Encode to UTF-8
+	    const char* encoding ("UTF16");
+	    iconv_t cd ((iconv_t)(-1));
+
+	    switch (type) {
+	    case 0: // ISO-8859-1
+	       encoding = "ISO-8859-1";
+
+	    case 1: // UTF-16
+	    case 2:
+	       cd = iconv_open ("UTF8", encoding);
+	       break;
+
+	    default: // type == 3 is already UTF-8; ignore all other values
+	       break;
+	    }
+#endif
+
+	    do {
+	       read = stream.readsome (buffer, (frameSize > sizeof (buffer)) ? sizeof (buffer) - 1 : frameSize);
+	       TRACE8 ("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Read " << read);
+	       TRACE8 ("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Read " << std::string (buffer, read));
+	       frameSize -= read;
+	       TRACE8 ("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Left " << frameSize);
+
+#ifdef HAVE_ICONV
+	       if (cd != (iconv_t)(-1)) {
+		  char* converted (new char[read]);
+		  size_t inLeft (size);
+		  while (inLeft) {
+		     size_t outLeft (read);
+		     char* curPos (converted);
+		     size_t conv (iconv (cd, (char**)&buffer, &inLeft, &curPos, &outLeft));
+		     TRACE8 ("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Converted " << conv);
+		     if (conv)
+			value->append (converted, conv);
+		  }
+		  delete [] converted;
+	       }
+	       else
+		  value->append (buffer, read);
+#else
+	       value->append (buffer, read);
+#endif
+	    } while (frameSize);
+
+#ifdef HAVE_ICONV
+	       iconv_close (cd);
+#endif
+	    }
+	 TRACE8 ("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - ID3 left " << size);
+      } while (size);
+   }
+   return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -471,7 +601,7 @@ bool PRecords::parseOGGCommentHeader (std::istream& stream, Glib::ustring& artis
 				       unsigned int& track) {
    char buffer[512];
    stream.read (buffer, 4);
-   if ((*buffer != 'O') && (buffer[1] != 'g') && (buffer[2] != 'g') && (buffer[3] != 'S'))
+   if (memcmp (buffer, "OggS", 4))
       return false;
 
    stream.seekg (0x69, std::ios::cur);

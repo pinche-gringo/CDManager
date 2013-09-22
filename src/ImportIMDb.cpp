@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 19.03.2010
-//COPYRIGHT   : Copyright (C) 2010, 2011
+//COPYRIGHT   : Copyright (C) 2010 - 2013
 
 // This file is part of CDManager
 //
@@ -24,6 +24,9 @@
 
 
 #include <cdmgr-cfg.h>
+
+#include <glibmm/main.h>
+#include <glibmm/fileutils.h>
 
 #include <gdkmm/pixbufloader.h>
 
@@ -61,9 +64,9 @@ class FilmColumns : public Gtk::TreeModel::ColumnRecord {
 //-----------------------------------------------------------------------------
 ImportFromIMDb::ImportFromIMDb ()
    : XGP::XDialog (XGP::XDialog::NONE), sigLoaded (), client (new Gtk::Table (7, 2)),
-     txtID (new Gtk::Entry), lblDirector (new Gtk::Label (Glib::ustring (), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP)),
-     lblFilm (new Gtk::Label (Glib::ustring (), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP)),
-     lblGenre (new Gtk::Label (Glib::ustring (), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP)),
+     txtID (new Gtk::Entry), lblDirector (new Gtk::Label (Glib::ustring ())),
+     lblFilm (new Gtk::Label (Glib::ustring ())),
+     lblGenre (new Gtk::Label (Glib::ustring ())),
      txtSummary (new Gtk::TextView),
      image (new Gtk::Image ()), status (QUERY), connOK () {
    set_title (_("Import from IMDb.com"));
@@ -84,7 +87,7 @@ ImportFromIMDb::ImportFromIMDb ()
 
    ok = new Gtk::Button (Gtk::Stock::GO_FORWARD);
    get_action_area ()->pack_start (*ok, false, false, 5);
-   ok->set_flags (Gtk::CAN_DEFAULT);
+   ok->set_can_default ();
    ok->grab_default ();
    ok->signal_clicked ().connect (mem_fun (*this, &ImportFromIMDb::okEvent));
 
@@ -94,19 +97,19 @@ ImportFromIMDb::ImportFromIMDb ()
 
    show_all_children ();
 
-   lbl = new Gtk::Label (_("Director:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
+   lbl = new Gtk::Label (_("Director:"));
    client->attach (*manage (lbl), 0, 1, 2, 3, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
    client->attach (*manage (lblDirector), 1, 2, 2, 3, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
 
-   lbl = new Gtk::Label (_("Film:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
+   lbl = new Gtk::Label (_("Film:"));
    client->attach (*manage (lbl), 0, 1, 3, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
    client->attach (*manage (lblFilm), 1, 2, 3, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
 
-   lbl = new Gtk::Label (_("Genre:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
+   lbl = new Gtk::Label (_("Genre:"));
    client->attach (*manage (lbl), 0, 1, 4, 5, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
    client->attach (*manage (lblGenre), 1, 2, 4, 5, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
 
-   lbl = new Gtk::Label (_("Plot summary:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP);
+   lbl = new Gtk::Label (_("Plot summary:"));
    client->attach (*manage (lbl), 0, 1, 5, 6, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
    client->attach (*manage (txtSummary), 0, 3, 6, 7, Gtk::FILL | Gtk::EXPAND, Gtk::FILL | Gtk::EXPAND, 5, 5);
 
@@ -330,8 +333,9 @@ void ImportFromIMDb::showSearchResults (const std::map<IMDbProgress::match, IMDb
    Gtk::TreeView& list (*new Gtk::TreeView (model));
 
    // Fill the lines into the list
-   Glib::ustring matches[] = { _("Popular Titles"), _("Exact match"), _("Partial match"), _("Approximate match") };
+   Glib::ustring matches[] = { _("Titles") };
    for (unsigned int i (0); i < (sizeof (matches) / sizeof (matches[0])); ++i) {
+      TRACE1 ("showSearchResults " << matches[i])
       const IMDbProgress::IMDbSearchEntries& films (results.at ((IMDbProgress::match)i));
       if (films.begin () != films.end ()) {
 	 Gtk::TreeModel::Row match (*model->append ());
@@ -339,8 +343,9 @@ void ImportFromIMDb::showSearchResults (const std::map<IMDbProgress::match, IMDb
 
 	 for (IMDbProgress::IMDbSearchEntries::const_iterator m (films.begin ()); m != films.end (); ++m) {
 	    Gtk::TreeModel::Row row (*model->append (match.children ()));
+	    TRACE5 ("showSearchResults - " << m->url << '/' << m->title);
 	    row[colFilms.id] = m->url;
-	    row[colFilms.name] = m->title;
+	    row[colFilms.name] = Glib::ustring(m->title);
 	 }
 
 	 if (i != ((sizeof (matches) / sizeof (matches[0]))) - 1)

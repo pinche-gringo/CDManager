@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 04.04.2010
-//COPYRIGHT   : Copyright (C) 2010, 2011
+//COPYRIGHT   : Copyright (C) 2010 - 2013
 
 // This file is part of CDManager
 //
@@ -34,6 +34,8 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/read_until.hpp>
 
+#include <glibmm/main.h>
+
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 #include <YGP/Utility.h>
@@ -47,6 +49,8 @@ static const char NOPOSTER[] = "title_addposter.jpg";
 
 static const char HTTP[] = "http://";
 static const char LINK[] = "a href=\"/title/tt";
+static const char LINE[] = "<tr class=\"findResult";
+static const char NAME[] = "<td class=\"result_text\">";
 
 struct ConnectInfo {
    boost::asio::io_service svcIO;
@@ -402,7 +406,7 @@ void IMDbProgress::readStatus (const boost::system::error_code& err) {
 	    while (isspace (url[--end]))
 	       TRACE1 ("Removing " << url[end]);
 	    url.replace (end + 1, url.length () - 1, 0, '\0');
-	    Check1 (url[url.length () - 1])
+	    Check1 (url[url.length () - 1]);
 	    TRACE1 ("Size " <<  end << '/' << url.length ());
 	    Glib::signal_idle ().connect
 	       (bind (mem_fun (*this, &IMDbProgress::reStart), url));
@@ -471,7 +475,7 @@ void IMDbProgress::readHeaders (const boost::system::error_code& err) {
 /// \param err Error-information (in case of error)
 //-----------------------------------------------------------------------------
 void IMDbProgress::readContent (const boost::system::error_code& err) {
-   TRACE7 ("IMDbProgress::readContent (boost::system::error_code&)");
+   TRACE9 ("IMDbProgress::readContent (boost::system::error_code&)");
    Check2 (data);
 
    Glib::ustring msg;
@@ -516,6 +520,8 @@ void IMDbProgress::readImage () {
    sigIcon.emit (data->response);
 }
 
+#include <fstream>
+
 //-----------------------------------------------------------------------------
 /// Extracts information about a film from the read input and emits a signal
 /// informing about the read data
@@ -525,13 +531,15 @@ void IMDbProgress::readFilm (Glib::ustring& msg) {
    msg.clear ();
    std::string name (extract ("<head>", NULL, "<title>", "</title>"));
    TRACE4 ("IMDbProgress::readFilm (boost::system::error_code&) - Final: " << name << ": " << data->response.size ());
+   std::ofstream dbg ("/tmp/imdb.html", std::ios::out);
+   dbg << data->response;
+   dbg.close();
 
-   if (name == "IMDb Title Search") {           // IMDb's search page found
+   if (name == "Find - IMDb") {           // IMDb's search page found
       std::map<match, IMDbSearchEntries> films;
       unsigned int cFilms (0);
 
-      const char* sections[] = { "<p><b>Popular Titles</b>", "<p><b>Titles (Exact Matches)</b>",
-				 "<p><b>Titles (Partial Matches)</b>", "<p><b>Titles (Approx Matches)</b>" };
+      const char* sections[] = { "<a name=\"tt\"></a>Titles<" };
       for (unsigned int i(0); i < (sizeof (sections) / sizeof (sections[0])); ++i) {
 	 extractSearch (films[(match)i], data->response, sections, i);
 	 cFilms += films[(match)i].size ();
@@ -553,11 +561,12 @@ void IMDbProgress::readFilm (Glib::ustring& msg) {
    }
    else {
       name.erase (name.length () - 7);
-      std::string director (extract ("Director:", " href=\"/name/nm", ">", "</a>"));
-      Glib::ustring genre (extract ("Genres:</h4>", "<a href=\"/genre/", "\">", "</a>"));
-      std::string summary (extract ("<h2>Storyline</h2>", NULL, "<p>", "\n"));
+      std::string director (extract ("Director:", " href=\"/name/nm", "name\">", "</span>"));
+      std::string genre (extract ("<a href=\"/genre/", NULL, "<span class=\"itemprop\" itemprop=\"genre\">", "</span>"));
+      std::string summary (extract ("<h2>Storyline</h2>", NULL, "<p>", "<em class="));
       std::string image (extract ("img_primary", "<img", "src=\"", "\""));
       YGP::convertHTML2UTF8 (director);
+      YGP::convertHTML2UTF8 (genre);
       YGP::convertHTML2UTF8 (name);
       YGP::convertHTML2UTF8 (summary);
 
@@ -591,7 +600,7 @@ Glib::ustring IMDbProgress::extract (const char* section, const char* subpart,
 				     const char* before, const char* after) const {
    Check1 (section); Check1 (before); Check1 (after); Check2 (data);
 
-   Glib::ustring::size_type i (data->response.find (section));
+   std::string::size_type i (data->response.find (section));
    if (i != std::string::npos)
       if (!subpart || ((i = data->response.find (subpart, i)) != std::string::npos))
 	 if ((i = data->response.find (before, i)) != std::string::npos) {
@@ -600,10 +609,12 @@ Glib::ustring IMDbProgress::extract (const char* section, const char* subpart,
 	    // Skip white-space at beginning
 	    i = data->response.find_first_not_of (" \t\n\r", i);
 	    std::string::size_type end (data->response.find (after, i));
-	    if (end != std::string::npos)
-	       return Glib::ustring (data->response.substr (i, end - i));
+	    if (end != std::string::npos) {
+	       end = data->response.find_last_not_of (" \t\n\r", end - 1);
+	       return std::string (data->response.substr (i, end - i + 1));
+	    }
 	 }
-   return Glib::ustring ();
+   return std::string ();
 }
 
 //-----------------------------------------------------------------------------
@@ -618,43 +629,40 @@ Glib::ustring IMDbProgress::extract (const char* section, const char* subpart,
 void IMDbProgress::extractSearch (IMDbSearchEntries& target, const std::string& src,
 				  const char** texts, unsigned int offset) {
    std::string::size_type start (src.find (texts[offset]));
-   std::string::size_type end (src.find ("<p><b>", start + 10));
+   std::string::size_type end (src.find ("</table>", start + 10));
    TRACE1 ("IMDbProgress::extractSearch (std::map&, const std::string&) - Search from " << start << '-' << end);
 
    while (start < end) {
       // Align with lines of result
-      start = src.find ("<tr>", start);
+      start = src.find (LINE, start);
       if ((start != std::string::npos) && (start < end)) {
-	 // The name of the film is in the 3rd column
-	 for (unsigned int i (0); i < 2; ++i) {
-	    start = src.find ("<td", start + 3);
-	    if (start == std::string::npos)
-	       return;
-	 }
+	 // Skip to the name column
+	start = src.find (NAME, start + sizeof (LINE) - 1);
+	if (start == std::string::npos)
+	  return;
 
 	 // Extract the 7 digit long ID from the contained link
-	 start = src.find (LINK, start);
+         start = src.find (LINK, start + sizeof (NAME));
 	 if (start != std::string::npos) {
 	    start += sizeof (LINK) - 1;
 	    std::string id (src.substr (start, 7));
+	    TRACE8 ("IMDbProgress::extractSearch (std::map&, const std::string&) - ID " << id);
 
 	    // Continue to end of href and extract the name from there
-	    start = src.find ("\">", start + 7);
+	    start = src.find (">", start + 7);
 	    if (start != std::string::npos) {
-	       start += 2;
-
-	       std::string::size_type endLink (src.find ("</a>", start));
-	       std::string::size_type posReplace (endLink - start);
+	       std::string::size_type endLink (src.find ("</a>", ++start));
 	       if (endLink != std::string::npos) {
-		  endLink = src.find (")", endLink + 4);
-		  if (endLink != std::string::npos) {
-		     std::string name (src, start, ++endLink - start);
-		     name.replace (posReplace, 4, 0, '\0');
-		     YGP::convertHTMLUnicode2UTF8 (name);
-		     target.push_back(IMDbSearchEntry (id, name));
-		     start = endLink + 1;
-		     continue;
-		  }
+		  std::string name (src, start, endLink - start);
+		  start = endLink + 4;
+		  endLink = src.find (" <", start);
+		  if (endLink != std::string::npos)
+		     name += std::string (src, start, endLink - start);
+		  TRACE8 ("IMDbProgress::extractSearch (std::map&, const std::string&) - Name " << name);
+		  YGP::convertHTMLUnicode2UTF8 (name);
+		  target.push_back(IMDbSearchEntry (id, name));
+		  start = endLink + 1;
+		  continue;
 	       }
 	    }
 	 }

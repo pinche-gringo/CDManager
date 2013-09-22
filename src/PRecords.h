@@ -52,8 +52,8 @@ class PRecords : public NBPage {
    virtual void clear ();
 
    virtual void export2HTML (unsigned int fd, const std::string& lang);
-   void addEntry (const Glib::ustring&artist, const Glib::ustring& record,
-		  const Glib::ustring& song, unsigned int track);
+   void addEntry (const Glib::ustring&artist, const Glib::ustring& record, const Glib::ustring& song,
+		  unsigned int track, Glib::ustring& genre, unsigned int year);
 
  private:
    PRecords ();
@@ -91,11 +91,10 @@ class PRecords : public NBPage {
    void importFromFileInfo ();
    std::string stripString (const std::string& value, unsigned int pos, unsigned int len);
    void parseFileInfo (const std::string& file);
-   bool parseID3Info (std::istream& stream, Glib::ustring& artist,
-		      Glib::ustring& record, Glib::ustring& song, unsigned int& track);
-   bool parseOGGCommentHeader (std::istream& stream, Glib::ustring& artist,
-			       Glib::ustring& record, Glib::ustring& song,
-			       unsigned int& track);
+   bool parseID3Info (std::istream& stream, Glib::ustring& artist, Glib::ustring& record,
+		      Glib::ustring& song, unsigned int& track, Glib::ustring& genre, unsigned int& year);
+   bool parseOGGCommentHeader (std::istream& stream, Glib::ustring& artist, Glib::ustring& record,
+			       Glib::ustring& song, unsigned int& track, Glib::ustring& genre, unsigned int& year);
    //@}
 
    enum { INTERPRET, RECORD, SONG };

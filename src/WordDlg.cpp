@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.4.2005
-//COPYRIGHT   : Copyright (C) 2005, 2006, 2010
+//COPYRIGHT   : Copyright (C) 2005, 2006, 2010, 2011
 
 // This file is part of CDManager
 //
@@ -70,14 +70,14 @@ WordDialog::WordDialog ()
 
    Gtk::TreeView* views[] = { &lstNames, &lstArticles };
    for (unsigned int i (0); i < (sizeof (views) / sizeof (*views)); ++i) {
-      views[i]->set_flags (Gtk::CAN_FOCUS);
+      views[i]->set_can_focus ();
       views[i]->set_border_width (1);
       views[i]->set_headers_visible (true);
       views[i]->set_enable_search (true);
       views[i]->set_search_column (colWords.word);
 
       Glib::RefPtr<Gtk::TreeSelection> listSelection (views[i]->get_selection ());
-      listSelection->set_mode (Gtk::SELECTION_EXTENDED);
+      listSelection->set_mode (Gtk::SELECTION_MULTIPLE);
       listSelection->signal_changed ().connect
 	 (bind (mem_fun (*this, &WordDialog::entrySelected), i));
    }
@@ -94,17 +94,17 @@ WordDialog::WordDialog ()
    txtArticle.set_max_length (9);
    txtArticle.set_activates_default (true);
 
-   addName.set_flags (Gtk::CAN_FOCUS);
-   deleteName.set_flags (Gtk::CAN_FOCUS);
+   addName.set_can_focus ();
+   deleteName.set_can_focus ();
    addName.set_sensitive (false);
    deleteName.set_sensitive (false);
    bboxNames.pack_start (addName);
    bboxNames.pack_start (deleteName);
 
-   addArticle.set_flags (Gtk::CAN_FOCUS);
+   addArticle.set_can_focus ();
    addArticle.set_sensitive (false);
    deleteArticle.set_sensitive (false);
-   deleteArticle.set_flags (Gtk::CAN_FOCUS);
+   deleteArticle.set_can_focus ();
    bboxArticle.pack_start (addArticle);
    bboxArticle.pack_start (deleteArticle);
 
@@ -264,9 +264,9 @@ void WordDialog::onDelete (unsigned int which) {
 
    Glib::RefPtr<Gtk::TreeSelection> selection (lists[which]->get_selection ());
    while (selection->get_selected_rows ().size ()) {
-      Gtk::TreeSelection::ListHandle_Path list (selection->get_selected_rows ());
+      std::vector<Gtk::TreeModel::Path> list (selection->get_selected_rows ());
       Check3 (list.size ());
-      Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
+      std::vector<Gtk::TreeModel::Path>::iterator i (list.begin ());
 
       Gtk::TreeIter iter (models[which]->get_iter (*i)); Check3 (iter);
       models[which]->erase (iter);

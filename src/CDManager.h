@@ -74,7 +74,7 @@ class CDManager : public XGP::XApplication {
 
    virtual void showAboutbox ();
    virtual const char* getHelpfile ();
-   void pageSwitched (GtkNotebookPage* page, guint iPage);
+   void pageSwitched (Gtk::Widget* page, guint iPage);
 
    bool login (const Glib::ustring& user, const Glib::ustring& pwd);
    void loadDatabase ();

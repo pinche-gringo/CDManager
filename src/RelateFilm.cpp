@@ -167,8 +167,8 @@ void RelateFilm::addSelected () {
    TRACE9 ("RelateFilm::addSelected ()");
 
    Glib::RefPtr<Gtk::TreeSelection> filmSel (lstAllFilms.get_selection ());
-   Gtk::TreeSelection::ListHandle_Path list (filmSel->get_selected_rows ());
-   for (Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
+   std::vector<Gtk::TreePath> list (filmSel->get_selected_rows ());
+   for (std::vector<Gtk::TreePath>::iterator i (list.begin ());
 	i != list.end (); ++i)
       addFilm (*i, NULL);
 }
@@ -180,8 +180,8 @@ void RelateFilm::removeSelected () {
    TRACE9 ("RelateFilm::removeSelected ()");
 
    Glib::RefPtr<Gtk::TreeSelection> filmSel (lstFilms.get_selection ());
-   Gtk::TreeSelection::ListHandle_Path list (filmSel->get_selected_rows ());
-   for (Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
+   std::vector<Gtk::TreePath> list (filmSel->get_selected_rows ());
+   for (std::vector<Gtk::TreePath>::iterator i (list.begin ());
 	i != list.end (); ++i)
       removeFilm (*i, NULL);
 }
@@ -229,12 +229,12 @@ void RelateFilm::init () {
    lstAllFilms.append_column (_("Available directors/films"), colAllFilms.name);
 
    Glib::RefPtr<Gtk::TreeSelection> sel (lstFilms.get_selection ());
-   sel->set_mode (Gtk::SELECTION_EXTENDED);
+   sel->set_mode (Gtk::SELECTION_MULTIPLE);
    sel->signal_changed ().connect (mem_fun (*this, &RelateFilm::filmsSelected));
    filmsSelected ();
 
    sel = lstAllFilms.get_selection ();
-   sel->set_mode (Gtk::SELECTION_EXTENDED);
+   sel->set_mode (Gtk::SELECTION_MULTIPLE);
    sel->signal_changed ().connect (mem_fun (*this, &RelateFilm::allFilmsSelected));
    allFilmsSelected ();
 

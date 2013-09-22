@@ -92,8 +92,7 @@ FilmList::FilmList (const Genres& genres)
 
    append_column (*Gtk::manage (column));
    column->set_resizable ();
-   column->add_attribute (column->get_first_cell_renderer ()
-			  ->property_visible(), colFilms.chgAll);
+   column->add_attribute (column->get_first_cell ()->property_visible(), colFilms.chgAll);
 
    // Add column "Subtitles"
    column = new Gtk::TreeViewColumn (_("Subtitles(s)"));
@@ -110,8 +109,7 @@ FilmList::FilmList (const Genres& genres)
 
    append_column (*Gtk::manage (column));
    column->set_resizable ();
-   column->add_attribute (column->get_first_cell_renderer ()
-			  ->property_visible(), colFilms.chgAll);
+   column->add_attribute (column->get_first_cell ()->property_visible(), colFilms.chgAll);
 
    set_rules_hint ();
 }

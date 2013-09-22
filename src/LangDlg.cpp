@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 11.12.2004
-//COPYRIGHT   : Copyright (C) 2004, 2005, 2009, 2010
+//COPYRIGHT   : Copyright (C) 2004, 2005, 2009 - 2011
 
 // This file is part of CDManager
 //
@@ -159,7 +159,7 @@ LanguageDialog::LanguageDialog (std::string& languages, unsigned int maxLangs,
 
    // Listbox to select further languages
    if (maxLangs > 1)
-      listLang->get_selection ()->set_mode (Gtk::SELECTION_EXTENDED);
+      listLang->get_selection ()->set_mode (Gtk::SELECTION_MULTIPLE);
    Gtk::TreeViewColumn* column (new Gtk::TreeViewColumn (_("Translations")));
    column->pack_start (colLang.flag, false);
    column->pack_start (colLang.name);
@@ -211,10 +211,9 @@ void LanguageDialog::okEvent () {
    TRACE9 ("LanguageDialog::okEvent ()");
 
    std::string translations;
-   Gtk::TreeSelection::ListHandle_Path list (listLang->get_selection ()
-					     ->get_selected_rows ());
+   std::vector<Gtk::TreePath> list (listLang->get_selection ()->get_selected_rows ());
    if (list.size ()) {
-      Gtk::TreeSelection::ListHandle_Path::const_iterator i (list.begin ());
+      std::vector<Gtk::TreePath>::const_iterator i (list.begin ());
       translations = (*modelList->get_iter (*i++))[colLang.id];
       for (unsigned int c (0); (i != list.end ()) && (++c < maxLangs); ++i) {
 	 translations.append (1, ',');

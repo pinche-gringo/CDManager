@@ -73,7 +73,7 @@ void OwnerObjectList::init (const OwnerObjectColumns& cols) {
    append_column (getColumnName (), cols.name);
    append_column (_("Year"), cols.year);
 
-   unsigned int index[] = { cols.name.index (), cols.year.index () };
+   int index[] = { cols.name.index (), cols.year.index () };
    for (unsigned int i (0); i < (sizeof (index) / sizeof (*index)); ++i) {
       Gtk::TreeViewColumn* column (get_column (i));
       column->set_sort_column (index[i]);

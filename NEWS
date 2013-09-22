@@ -1,5 +1,6 @@
 Overview of changes in version 1.2.00:
 
+  - Compiles with GTK+-3
   - Records: Handling IDv3 V2
 
 

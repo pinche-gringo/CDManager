@@ -47,7 +47,7 @@ Statistics::Statistics ()
    : XGP::XDialog (CANCEL), pClient (new Gtk::Table (4 + WITH_RECORDS + WITH_FILMS + WITH_ACTORS, 4)) {
    set_title (_("Statistical information"));
 
-   Gtk::Label* lbl = manage (new Gtk::Label (_("The database contains:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
+   Gtk::Label* lbl = manage (new Gtk::Label (_("The database contains:")));
    pClient->attach (*lbl, 0, 7, 0, 1, Gtk::SHRINK, Gtk::FILL, 2, 10);
 
    int stats[7];
@@ -64,35 +64,35 @@ Statistics::Statistics ()
    unsigned int line (1);
    // Add record information
 #ifdef WITH_RECORDS
-   lbl = manage (new Gtk::Label (_("Interprets:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
+   lbl = manage (new Gtk::Label (_("Interprets:")));
    pClient->attach (*lbl, 0, 1, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
-   lbl = manage (new Gtk::Label (YGP::ANumeric (stats[2]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));
+   lbl = manage (new Gtk::Label (YGP::ANumeric (stats[2]).toString ()));
    pClient->attach (*lbl, 1, 2, line, line + 1, Gtk::FILL, Gtk::FILL, 15);
-   lbl = manage (new Gtk::Label (_("Records:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
+   lbl = manage (new Gtk::Label (_("Records:")));
    pClient->attach (*lbl, 2, 3, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
-   lbl = manage (new Gtk::Label (YGP::ANumeric (stats[3]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));
+   lbl = manage (new Gtk::Label (YGP::ANumeric (stats[3]).toString ()));
    pClient->attach (*lbl, 3, 4, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
    ++line;
 #endif
 
 #ifdef WITH_FILMS
    // Add film information
-   lbl = manage (new Gtk::Label (_("Directors:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
+   lbl = manage (new Gtk::Label (_("Directors:")));
    pClient->attach (*lbl, 0, 1, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
-   lbl = manage (new Gtk::Label (YGP::ANumeric (stats[4]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));
+   lbl = manage (new Gtk::Label (YGP::ANumeric (stats[4]).toString ()));
    pClient->attach (*lbl, 1, 2, line, line + 1, Gtk::FILL, Gtk::FILL, 15);
-   lbl = manage (new Gtk::Label (_("Films:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
+   lbl = manage (new Gtk::Label (_("Films:")));
    pClient->attach (*lbl, 2, 3, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
-   lbl = manage (new Gtk::Label (YGP::ANumeric (stats[5]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));
+   lbl = manage (new Gtk::Label (YGP::ANumeric (stats[5]).toString ()));
    pClient->attach (*lbl, 3, 4, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
    ++line;
 #endif
 
 #ifdef WITH_ACTORS
    // Add film information
-   lbl = manage (new Gtk::Label (_("Actors:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
+   lbl = manage (new Gtk::Label (_("Actors:")));
    pClient->attach (*lbl, 0, 1, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
-   lbl = manage (new Gtk::Label (YGP::ANumeric (stats[6]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));
+   lbl = manage (new Gtk::Label (YGP::ANumeric (stats[6]).toString ()));
    pClient->attach (*lbl, 1, 2, line, line + 1, Gtk::FILL, Gtk::FILL, 15);
    ++line;
 #endif
@@ -103,13 +103,13 @@ Statistics::Statistics ()
    ++line;
 #  endif
 
-   lbl = manage (new Gtk::Label (_("First names:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
+   lbl = manage (new Gtk::Label (_("First names:")));
    pClient->attach (*lbl, 0, 1, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
-   lbl = manage (new Gtk::Label (YGP::ANumeric (stats[0]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));
+   lbl = manage (new Gtk::Label (YGP::ANumeric (stats[0]).toString ()));
    pClient->attach (*lbl, 1, 2, line, line + 1, Gtk::FILL, Gtk::FILL, 15);
-   lbl = manage (new Gtk::Label (_("Articles:"), Gtk::ALIGN_LEFT, Gtk::ALIGN_TOP));
+   lbl = manage (new Gtk::Label (_("Articles:")));
    pClient->attach (*lbl, 2, 3, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
-   lbl = manage (new Gtk::Label (YGP::ANumeric (stats[1]).toString (), Gtk::ALIGN_RIGHT, Gtk::ALIGN_TOP));
+   lbl = manage (new Gtk::Label (YGP::ANumeric (stats[1]).toString ()));
    pClient->attach (*lbl, 3, 4, line, line + 1, Gtk::FILL, Gtk::FILL, 5);
 
    pClient->show ();

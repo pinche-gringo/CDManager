@@ -350,8 +350,8 @@ void CDManager::loadDatabase () {
 /// Callback when switching the notebook pages
 /// \param iPage: Index of the newly selected page
 //-----------------------------------------------------------------------------
-void CDManager::pageSwitched (GtkNotebookPage*, guint iPage) {
-   TRACE6 ("CDManager::pageSwitched (GtkNotebookPage*, guint) - " << iPage);
+void CDManager::pageSwitched (Gtk::Widget*, guint iPage) {
+   TRACE6 ("CDManager::pageSwitched (Gtk::Widget*, guint) - " << iPage);
    Check1 (iPage < 3);
 
    static Gtk::UIManager::ui_merge_id idPageMrg (-1U);

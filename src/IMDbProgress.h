@@ -43,7 +43,7 @@ class IMDbProgress : public Gtk::ProgressBar {
  public:
    typedef enum { POPULAR, EXACT, PARTIAL } match;
    typedef struct _IMDbSearchEntry {
-      std::string url;
+      Glib::ustring url;
       Glib::ustring title;
 
       _IMDbSearchEntry (const Glib::ustring& url, const Glib::ustring& title)

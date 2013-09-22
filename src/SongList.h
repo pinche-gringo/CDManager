@@ -20,10 +20,9 @@
 #include <gtkmm/treeview.h>
 #include <gtkmm/liststore.h>
 
+#include "Genres.h"
+
 #include "Song.h"
-
-
-class Genres;
 
 
 /**Class describing the columns in the songgenre-model
@@ -69,7 +68,12 @@ class SongList : public Gtk::TreeView {
       Glib::ustring oldValue (row[colSongs.colTrack]);
       row[colSongs.colTrack] = track.toString ();
       signalChanged.emit (row, 0, oldValue); }
+   void updateGenre (Gtk::TreeRow& row, const Glib::ustring& genre) {
+      Glib::ustring oldValue (row[colSongs.colGenre]);
+      row[colSongs.colGenre] = genre;
+      signalChanged.emit (row, 3, oldValue); }
    void setGenre (Gtk::TreeIter& iter, unsigned int genre);
+   int getGenre (const Glib::ustring& genre) const { return genres.getId (genre); }
 
    virtual void update (Gtk::TreeModel::Row& row);
 

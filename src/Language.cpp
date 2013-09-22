@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 6.12.2004
-//COPYRIGHT   : Copyright (C) 2004, 2005, 2010
+//COPYRIGHT   : Copyright (C) 2004, 2005, 2010, 2012
 
 // This file is part of CDManager
 //
@@ -26,6 +26,7 @@
 #include <cdmgr-cfg.h>
 
 #include <glibmm/convert.h>
+#include <glibmm/fileutils.h>
 
 #include <YGP/Check.h>
 #include <YGP/Trace.h>

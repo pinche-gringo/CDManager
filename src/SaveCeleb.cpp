@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 11.03.2006
-//COPYRIGHT   : Copyright (C) 2006, 2009, 2010
+//COPYRIGHT   : Copyright (C) 2006, 2009 - 2011
 
 // This file is part of CDManager
 //
@@ -56,7 +56,7 @@ SaveCelebrity::SaveCelebrity (Gtk::Window& parent, const HCelebrity celeb, const
    if (celeb->getBorn ().isDefined () || celeb->getDied ().isDefined ())
       newCeleb += " (" + celeb->getLifespan () + ") ";
 
-   Gtk::Label* lblNewCeleb (new Gtk::Label (newCeleb, Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER));
+   Gtk::Label* lblNewCeleb (new Gtk::Label (newCeleb));
 
    Glib::RefPtr <Gtk::ListStore> model (Gtk::ListStore::create (colCeleb));
    lstCelebs = new Gtk::TreeView (model);

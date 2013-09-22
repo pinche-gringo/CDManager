@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 18.02.2005
-//COPYRIGHT   : Copyright (C) 2005, 2010
+//COPYRIGHT   : Copyright (C) 2005, 2010, 2012
 
 // This file is part of CDManager
 //
@@ -22,6 +22,8 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
+
+#include <glibmm/fileutils.h>
 
 #include <gtkmm/misc.h>
 

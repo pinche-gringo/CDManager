@@ -58,7 +58,7 @@ ActorList::ActorList (const Genres& genres) : genres (genres) {
    append_column (_("Genre"), colActors.genre);
 
    Check3 (get_columns ().size () == 3);
-   unsigned int index[] = { colActors.name.index (), colActors.year.index () };
+   int index[] = { colActors.name.index (), colActors.year.index () };
    for (unsigned int i (0); i < (sizeof (index) / sizeof (*index)); ++i) {
       Gtk::TreeViewColumn* column (get_column (i));
       column->set_sort_column (index[i]);

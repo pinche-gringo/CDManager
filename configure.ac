@@ -47,7 +47,7 @@ http://www.boost.org]))
 
 
 PKG_CHECK_MODULES(DEPS, glibmm-2.4 >= 2.4.0 YGP >= 0.9.42)
-PKG_CHECK_MODULES(XGP, gtkmm-2.4 >= 2.12.0 gthread-2.0 > 2.2.0 XGP >= 0.9.30)
+PKG_CHECK_MODULES(XGP, gtkmm-3.0 >= 3.0.0 gthread-2.0 > 2.2.0 XGP >= 0.9.50)
 
 #
 # Location of MySQL installation

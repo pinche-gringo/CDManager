@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
-//COPYRIGHT   : Copyright (C) 2006, 2009 - 2011
+//COPYRIGHT   : Copyright (C) 2006, 2009 - 2012
 
 // This file is part of CDManager
 //
@@ -28,6 +28,8 @@
 #include <sstream>
 
 #include <unistd.h>
+
+#include <glibmm/main.h>
 
 #include <gdkmm/pixbufloader.h>
 
@@ -542,9 +544,9 @@ void PFilms::deleteSelection () {
 
    Glib::RefPtr<Gtk::TreeSelection> selection (films.get_selection ());
    while (selection->get_selected_rows ().size ()) {
-      Gtk::TreeSelection::ListHandle_Path list (selection->get_selected_rows ());
+      std::vector<Gtk::TreePath> list (selection->get_selected_rows ());
       Check3 (list.size ());
-      Gtk::TreeSelection::ListHandle_Path::iterator i (list.begin ());
+      std::vector<Gtk::TreePath>::iterator i (list.begin ());
 
       Gtk::TreeIter iter (films.get_model ()->get_iter (*i)); Check3 (iter);
       if ((*iter)->parent ())                 // A film is going to be deleted
@@ -596,6 +598,7 @@ void PFilms::deleteFilm (const Gtk::TreeIter& film) {
 /// \param lang: Language, in which to export
 //-----------------------------------------------------------------------------
 void PFilms::export2HTML (unsigned int fd, const std::string& lang) {
+   TRACE1 ("PFilms::export2HTML (unsinged int) - Writing: " << lang);
    std::string oldLang (Film::currLang);
    Film::currLang = lang;
 
@@ -885,7 +888,7 @@ bool PFilms::continousImportFilm (const Glib::ustring& director, const Glib::ust
 				  const Glib::ustring& genre, const Glib::ustring& summary,
 				  const std::string& image, ImportFromIMDb* dlg, std::vector<HFilm>* filmlist) {
    TRACE3 ("PFilms::continousImportFilm (4x const Glib::ustring&, const std::string&, std::vector<HFilm>*) - " << filmlist->back ()->getName () << '/' << image.size ());
-   Check1 (film->size ());
+   Check1 (film.size ());
 
    std::vector<HFilm>::iterator last (filmlist->end () - 1);
    TRACE5 ("PFilms::continousImportFilm (4x const Glib::ustring&, const std::string&, std::vector<HFilm>*) - "

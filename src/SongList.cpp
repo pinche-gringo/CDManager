@@ -34,7 +34,6 @@
 #include <XGP/XValue.h>
 #include <XGP/MessageDlg.h>
 
-#include "Genres.h"
 #include "Words.h"
 
 #include "SongList.h"

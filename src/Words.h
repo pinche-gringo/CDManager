@@ -21,6 +21,9 @@
 
 #include <glibmm/ustring.h>
 
+#define TRACELEVEL1
+#include "YGP/Trace.h"
+
 
 /**Class to store some words. These words are stored in a shared memory
  * segment.
@@ -65,16 +68,20 @@ class Words {
    static void forEachArticle (unsigned int start, unsigned int end,
 			       void (*cb) (const char*)) {
       values* shMem (getInfo ());
-      for (unsigned int i (start); i < end; ++i)
+      for (unsigned int i (start); i < end; ++i) {
+         TRACE1 ("Words::forEachArticle " <<  shMem->maxEntries << '/' << shMem->cArticles << '/' << shMem->maxEntries - shMem->cArticles + i);
 	 cb (getValues () + shMem->aOffsets[shMem->maxEntries - shMem->cArticles + i]);
+      }
    }
    /// Call a callback for each specified article
    template <class T>
    static void forEachArticle (unsigned int start, unsigned int end, T& obj,
 			       void (T::* cb) (const char*)) {
       values* shMem (getInfo ());
-      for (unsigned int i (start); i < end; ++i)
+      for (unsigned int i (start); i < end; ++i) {
+         TRACE1 ("Words::forEachArticle " <<  shMem->maxEntries << '/' << shMem->cArticles << '/' << shMem->maxEntries - shMem->cArticles + i);
 	 (obj.*cb) (getValues () + shMem->aOffsets[shMem->maxEntries - shMem->cArticles + i]);
+      }
    }
 
    static int getMemoryKey () { return _key; }

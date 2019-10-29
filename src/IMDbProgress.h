@@ -50,6 +50,7 @@ class IMDbProgress : public Gtk::ProgressBar {
          : url (url), title (title) { }
    } IMDbSearchEntry;
    typedef std::list<IMDbSearchEntry> IMDbSearchEntries;
+   typedef std::map<match, IMDbSearchEntries> IMDbMatchData;
 
    typedef struct _IMDbEntry {
       Glib::ustring director;
@@ -74,7 +75,7 @@ class IMDbProgress : public Gtk::ProgressBar {
    typedef struct ConnectInfo ConnectInfo;
 
    sigc::signal<void, const Glib::ustring&> sigError;
-   sigc::signal<void, const std::map<match, IMDbSearchEntries>&> sigAmbiguous;
+   sigc::signal<void, const IMDbMatchData&> sigAmbiguous;
    sigc::signal<void, const IMDbEntry&> sigSuccess;
    sigc::signal<void, const std::string&> sigIcon;
 
@@ -86,7 +87,7 @@ class IMDbProgress : public Gtk::ProgressBar {
    IMDbProgress (const IMDbProgress& other);
    const IMDbProgress& operator= (const IMDbProgress& other);
 
-   bool reStart (const std::string& idFilm);
+   void reStart (const std::string& idFilm);
 
    bool poll ();
    bool indicateWait ();

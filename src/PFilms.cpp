@@ -850,7 +850,7 @@ void PFilms::importInfoFromIMDb () {
    TRACE5 ("PFilms::importDescriptionFromIMDb () - To process: " << iFilms->size ());
 
    ImportFromIMDb* dlg (ImportFromIMDb::create ());
-   dlg->sigLoaded.connect (bind (mem_fun (*this, &PFilms::continousImportFilm), dlg, iFilms));
+   // dlg->sigLoaded.connect (bind (mem_fun (*this, &PFilms::continousImportFilm), dlg, iFilms));
    importNextFilm (dlg, iFilms);
 }
 
@@ -859,7 +859,7 @@ void PFilms::importInfoFromIMDb () {
 /// \param dlg Dialog displaying the import-information
 /// \param films Pointer to list of all films to import
 //-----------------------------------------------------------------------------
-bool PFilms::importNextFilm (ImportFromIMDb* dlg, std::vector<HFilm>* films) {
+void PFilms::importNextFilm (ImportFromIMDb* dlg, std::vector<HFilm>* films) {
    if (films->size ()) {
       TRACE5 ("PFilms::importNextFilm (ImportFromIMDb*, std::vector<HFilm>*) - " << films->back ()->getName ());
       dlg->searchFor (films->back ()->getName (""));
@@ -868,7 +868,6 @@ bool PFilms::importNextFilm (ImportFromIMDb* dlg, std::vector<HFilm>* films) {
       delete films;
       delete dlg;
    }
-   return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -912,7 +911,7 @@ bool PFilms::continousImportFilm (const Glib::ustring& director, const Glib::ust
    }
 
    filmlist->erase (last);
-   Glib::signal_idle ().connect (bind (mem_fun (*this, &PFilms::importNextFilm), dlg, filmlist));
+   Glib::signal_idle ().connect_once (bind (mem_fun (*this, &PFilms::importNextFilm), dlg, filmlist));
    return false;
 }
 

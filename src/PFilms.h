@@ -105,7 +105,7 @@ class PFilms : public NBPage {
 			     const std::string& image, ImportFromIMDb* dlg, std::vector<HFilm>* films);
    bool importFilm (const Glib::ustring& director, const Glib::ustring& film,
 		    const Glib::ustring& genre, const Glib::ustring& summary, const std::string& image);
-   bool importNextFilm (ImportFromIMDb* dlg, std::vector<HFilm>* films);
+   void importNextFilm (ImportFromIMDb* dlg, std::vector<HFilm>* films);
 
    bool onQueryTooltip (int x, int y, bool keyboard, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
 

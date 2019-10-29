@@ -58,7 +58,7 @@ class ImportFromIMDb : public XGP::XDialog {
 
    void searchFor (const Glib::ustring& info);
 
-   /// Signal emitted, when the loaed film-information is confirmed
+   /// Signal emitted, when the loaded film-information is confirmed
    sigc::signal<bool, const Glib::ustring&, const Glib::ustring&,
       const Glib::ustring&, const Glib::ustring&, std::string&> sigLoaded;
 
@@ -80,8 +80,8 @@ class ImportFromIMDb : public XGP::XDialog {
    ImportFromIMDb (const ImportFromIMDb& other);
    const ImportFromIMDb& operator= (const ImportFromIMDb& other);
 
-   static bool removeProgressBar (Gtk::Table* client, IMDbProgress* progress);
-   static bool stopLoading (IMDbProgress* progress);
+   static void removeProgressBar (Gtk::Table* client, IMDbProgress* progress);
+   static void stopLoading (IMDbProgress* progress);
    void continueLoading (Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress);
    void loadSelection (Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress);
    void rowActivated (const Gtk::TreePath& path, Gtk::TreeViewColumn* column, Gtk::ScrolledWindow* scrl,
@@ -91,11 +91,10 @@ class ImportFromIMDb : public XGP::XDialog {
 
    void inputChanged ();
    void showError (const Glib::ustring& msg, IMDbProgress* progress);
-   void showSearchResults (const std::map<IMDbProgress::match, IMDbProgress::IMDbSearchEntries>& results,
-			   IMDbProgress* progress);
+   void showSearchResults (const IMDbProgress::IMDbMatchData& results, IMDbProgress* progress);
    void showData (const IMDbProgress::IMDbEntry& entry, IMDbProgress* progress);
    void addIcon (const std::string& bufImage, IMDbProgress* progress);
-   bool loadIcon (const std::string& image, IMDbProgress* progress);
+   void loadIcon (const std::string& image, IMDbProgress* progress);
    bool saveIMDbInfo ();
 
    sigc::connection connOK;

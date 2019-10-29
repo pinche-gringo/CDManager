@@ -74,6 +74,7 @@ void Storage::loadSpecialWords () throw (std::exception) {
       Words::addName2Ignore (Database::getResultColumnAsString (0), Words::POS_END);
       Database::getNextResultRow ();
    }
+   TRACE1 ("Storage::loadSpecialWords () - " << Words::cNames() << '/' << Words::cArticles());
 
    Database::execute ("SELECT article FROM Articles");
    while (Database::hasData ()) {
@@ -81,6 +82,7 @@ void Storage::loadSpecialWords () throw (std::exception) {
       Words::addArticle (Database::getResultColumnAsString (0), Words::POS_END);
       Database::getNextResultRow ();
    }
+   TRACE1 ("Storage::loadSpecialWords () - " << Words::cNames() << '/' << Words::cArticles());
 }
 
 //-----------------------------------------------------------------------------

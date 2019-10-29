@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009 - 2011
+//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009 - 2011, 2015
 
 // This file is part of CDManager
 //
@@ -62,7 +62,7 @@ static std::map<pid_t, WordPtrs*> ptrs;
 ///    processes
 //-----------------------------------------------------------------------------
 void Words::create (unsigned int words) throw (std::invalid_argument) {
-   TRACE8 ("Words::create (unsigned int) - " << words);
+   TRACE1 ("Words::create (unsigned int) - " << words);
    if ((_key != -1) || areAvailable ())
       return;
 
@@ -84,7 +84,7 @@ void Words::create (unsigned int words) throw (std::invalid_argument) {
    shMem->info->cNames = shMem->info->cArticles = 0;
    shMem->info->used = 0;
    shMem->info->maxEntries = (size - sizeof (values)) / sizeof (char*);
-   TRACE1 ("Words::create (unsigned int) - Key: " << _key);
+   TRACE1 ("Words::create (unsigned int) - Key: " << _key << '/' << shMem->info->maxEntries);
 }
 
 //-----------------------------------------------------------------------------
@@ -106,7 +106,7 @@ void Words::access (unsigned int key) throw (std::invalid_argument) {
       destroy ();
       throw (std::invalid_argument (strerror (errno)));
    }
-   TRACE9 ("Words::access (unsigned int) - Articles: " << shMem->info->cArticles << "; Names: "
+   TRACE1 ("Words::access (unsigned int) - Articles: " << shMem->info->cArticles << "; Names: "
 	   << shMem->info->cNames << ": " << *shMem->values);
 }
 
@@ -146,7 +146,7 @@ void Words::destroy () {
 /// \pre start <= end
 //-----------------------------------------------------------------------------
 void Words::moveValues (unsigned int start, unsigned int end, unsigned int target) {
-   TRACE9 ("Words::moveValues (3x unsigned int start) - [" << start << '-' << end
+   TRACE1 ("Words::moveValues (3x unsigned int start) - [" << start << '-' << end
 	   << "] -> " << target << "; Bytes: " << (end - start + 1) * sizeof (char*));
    Check2 (areAvailable ());
 
@@ -229,7 +229,7 @@ void Words::addName2Ignore (const Glib::ustring& word, unsigned int pos) {
    if (pos < shMem->info->cNames)
       moveValues (pos, shMem->info->cNames, pos + 1);
 
-   TRACE3 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Insert into " << pos);
+   TRACE1 ("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Insert into " << pos);
    shMem->info->aOffsets[pos] = shMem->info->used;
    memcpy (shMem->values + shMem->info->used, word.c_str (), word.bytes ());
    shMem->info->used += word.bytes () + 1;
@@ -245,16 +245,16 @@ void Words::addArticle (const Glib::ustring& word, unsigned int pos) {
    Check2 (areAvailable ());
 
    WordPtrs* shMem (ptrs[YGP::Process::getPID ()]);
-   TRACE2 ("Words::addArticle (const Glib::ustring&, unsigned int) - " << word << " to " << shMem->info->cArticles);
+   TRACE1 ("Words::addArticle (const Glib::ustring&, unsigned int) - " << word << " to " << shMem->info->cArticles);
 
    // Try to respect the hint
    if (pos != POS_UNKNOWN) {
       pos = ((pos > shMem->info->cArticles) ? shMem->info->maxEntries - 1
 	     : shMem->info->maxEntries - shMem->info->cArticles + pos);
 
-      TRACE9 ("Words::addArticle (const Glib::ustring&, unsigned int) - Checking pos " << pos);
+      TRACE1 ("Words::addArticle (const Glib::ustring&, unsigned int) - Checking pos " << pos);
       if (shMem->info->cArticles) {
-	 TRACE9 ("Words::addArticle (const Glib::ustring&, unsigned int) - Comp: " << strcmp (shMem->values + shMem->info->aOffsets[pos], word.c_str ()));
+	 TRACE1 ("Words::addArticle (const Glib::ustring&, unsigned int) - Comp: " << strcmp (shMem->values + shMem->info->aOffsets[pos], word.c_str ()));
 	 if (strcmp (shMem->values + shMem->info->aOffsets[pos], word.c_str ()) < 0) {
 	    if (pos < (shMem->info->maxEntries - 1)) {
 	       if (strcmp (shMem->values + shMem->info->aOffsets[pos + 1], word.c_str ()) <= 0)
@@ -269,7 +269,7 @@ void Words::addArticle (const Glib::ustring& word, unsigned int pos) {
    // Hint didn't work or wasn't passed: Search for position to insert
    if (pos == POS_UNKNOWN) {
       if (shMem->info->cArticles) {
-	 TRACE9 ("Words::addArticles (const Glib::ustring&, unsigned int) - Search: " << word);
+	 TRACE1 ("Words::addArticles (const Glib::ustring&, unsigned int) - Search: " << word);
 	 pos = binarySearch (shMem->info, shMem->values, shMem->info->maxEntries - shMem->info->cArticles,
 			     shMem->info->maxEntries, word.c_str ());
       }
@@ -281,11 +281,12 @@ void Words::addArticle (const Glib::ustring& word, unsigned int pos) {
       moveValues (shMem->info->maxEntries - shMem->info->cArticles, pos,
 		  shMem->info->maxEntries - shMem->info->cArticles - 1);
 
-   TRACE3 ("Words::addArticle (const Glib::ustring&, unsigned int) - Insert into " << pos);
+   TRACE1 ("Words::addArticle (const Glib::ustring&, unsigned int) - Insert into " << pos);
    shMem->info->aOffsets[pos] = shMem->info->used;
    memcpy (shMem->values + shMem->info->used, word.c_str (), word.bytes ());
    shMem->info->used += word.bytes () + 1;
    shMem->info->cArticles++;
+   TRACE1 ("Words::addArticle (const Glib::ustring&, unsigned int) - Counts " << shMem->info->cArticles << '/' << shMem->info->cNames);
 }
 
 //-----------------------------------------------------------------------------
@@ -325,7 +326,7 @@ Glib::ustring Words::removeNames (const Glib::ustring& name) {
    WordPtrs* shMem (ptrs[YGP::Process::getPID ()]);
    Glib::ustring work (name);
    Glib::ustring word (getWord (work));
-   while ((word.size () != name.size ())
+   while ((word.size () != work.size ())
 	  && (((word.size () == 2) && (word[1] == '.'))
 	      || containsWord (0, shMem->info->cNames, word))) {
       unsigned int pos (word.size ());

@@ -129,7 +129,7 @@ WordDialog::WordDialog ()
       txtArticle.signal_changed ().connect (bind (mem_fun (*this, &WordDialog::entryChanged), 1));
 
       // Fill listboxes
-      TRACE3 ("WordDialog::WordDialog () - Words: " << Words::cNames ()
+      TRACE1 ("WordDialog::WordDialog () - Words: " << Words::cNames ()
 	      << "; Articles: " << Words::cArticles ());
       Words::forEachName (0U, Words::cNames (), *this, &WordDialog::appendWord);
       Words::forEachArticle (0, Words::cArticles (), *this, &WordDialog::appendArticle);
@@ -220,7 +220,7 @@ void WordDialog::appendWord (const char* value) {
 /// \param value: Value to append
 //-----------------------------------------------------------------------------
 void WordDialog::appendArticle (const char* value) {
-   TRACE8 ("WordDialog::appendArticle (const char*) - " << value);
+   TRACE1 ("WordDialog::appendArticle (const char*) - " << value);
    append (articles, value);
 }
 

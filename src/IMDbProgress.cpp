@@ -408,7 +408,7 @@ void IMDbProgress::readStatus (const boost::system::error_code& err) {
 	    url.replace (end + 1, url.length () - 1, 0, '\0');
 	    Check1 (url[url.length () - 1]);
 	    TRACE1 ("Size " <<  end << '/' << url.length ());
-	    Glib::signal_idle ().connect
+	    Glib::signal_idle ().connect_once
 	       (bind (mem_fun (*this, &IMDbProgress::reStart), url));
 	 }
 	 else
@@ -551,7 +551,7 @@ void IMDbProgress::readFilm (Glib::ustring& msg) {
       else if (cFilms == 1) {
 	 for (unsigned int i(0); i < (sizeof (sections) / sizeof (sections[0])); ++i)
 	    if (films[(match)i].size ())
-	       Glib::signal_idle ().connect
+	       Glib::signal_idle ().connect_once
 		  (bind (mem_fun (*this, &IMDbProgress::reStart), films[(match)i].begin ()->url));
       }
       else {
@@ -674,10 +674,8 @@ void IMDbProgress::extractSearch (IMDbSearchEntries& target, const std::string& 
 //-----------------------------------------------------------------------------
 /// Restarts loading a film
 /// \param idFilm (New) identification of a film
-/// \returns bool Always false
 //-----------------------------------------------------------------------------
-bool IMDbProgress::reStart (const std::string& idFilm) {
+void IMDbProgress::reStart (const std::string& idFilm) {
    stop ();
    start (idFilm);
-   return false;
 }

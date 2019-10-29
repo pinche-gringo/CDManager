@@ -163,7 +163,7 @@ void ImportFromIMDb::okEvent () {
 
       IMDbProgress* progress (new IMDbProgress (Glib::locale_from_utf8 (txtID->get_text ())));
       progress->sigError.connect (bind (mem_fun (*this, &ImportFromIMDb::showError), progress));
-      progress->sigAmbiguous.connect (bind (mem_fun (*this, &ImportFromIMDb::showSearchResults), progress));
+      // progress->sigAmbiguous.connect (bind (mem_fun (*this, &ImportFromIMDb::showSearchResults), progress));
       progress->sigSuccess.connect (bind (mem_fun (*this, &ImportFromIMDb::showData), progress));
       progress->show ();
       client->attach (*manage (progress), 0, 2, 1, 2, Gtk::FILL | Gtk::EXPAND,
@@ -205,27 +205,23 @@ bool ImportFromIMDb::saveIMDbInfo () {
 /// Removes the progressbar
 /// \param client Client area from which remove the progressbar from
 /// \param progress Progressbar to remove
-/// \returns bool Always false
 //-----------------------------------------------------------------------------
-bool ImportFromIMDb::removeProgressBar (Gtk::Table* client, IMDbProgress* progress) {
+void ImportFromIMDb::removeProgressBar (Gtk::Table* client, IMDbProgress* progress) {
    TRACE9 ("ImportFromIMDb::removeProgressBar (Gtk::Table*, IMDbProgress*)");
    Check1 (progress); Check1 (client);
    stopLoading (progress);
    client->remove (*progress);
    delete progress;
-   return false;
 }
 
 //-----------------------------------------------------------------------------
 /// Stops the loading of data of the progressbar
 /// \param progress Progressbar to stop
-/// \returns bool Always false
 //-----------------------------------------------------------------------------
-bool ImportFromIMDb::stopLoading (IMDbProgress* progress) {
+void ImportFromIMDb::stopLoading (IMDbProgress* progress) {
    TRACE9 ("ImportFromIMDb::stopLoading (IMDbProgress*)");
    Check1 (progress);
    progress->stop ();
-   return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -252,22 +248,20 @@ void ImportFromIMDb::addIcon (const std::string& bufImage, IMDbProgress* progres
 
    status = CONFIRM;
    progress->hide ();
-   Glib::signal_idle ().connect (bind (ptr_fun (&ImportFromIMDb::removeProgressBar), client, progress));
+   Glib::signal_idle ().connect_once (bind (ptr_fun (&ImportFromIMDb::removeProgressBar), client, progress));
 }
 
 //-----------------------------------------------------------------------------
 /// Adds an icon to the film information
 /// \param image Image description
 /// \param progress Progress bar used for displaying the status; will be removed
-/// \returns bool Always false
 //-----------------------------------------------------------------------------
-bool ImportFromIMDb::loadIcon (const std::string& image, IMDbProgress* progress) {
+void ImportFromIMDb::loadIcon (const std::string& image, IMDbProgress* progress) {
    TRACE1 ("ImportFromIMDb::loadIcon (const std::string&, IMDbProgress*) - " << image);
    Check1 (progress); Check1 (image.size ());
    status = IMGLOAD;
    progress->start (image, true);
-   progress->sigIcon.connect (bind (mem_fun (*this, &ImportFromIMDb::addIcon), progress));
-   return false;
+   // progress->sigIcon.connect (bind (mem_fun (*this, &ImportFromIMDb::addIcon), progress));
 }
 
 //-----------------------------------------------------------------------------
@@ -280,13 +274,13 @@ void ImportFromIMDb::showData (const IMDbProgress::IMDbEntry& entry, IMDbProgres
    Check1 (progress); Check1 (client);
 
    if (entry.image.size ()) {
-      Glib::signal_idle ().connect (bind (ptr_fun (&ImportFromIMDb::stopLoading), progress));
-      Glib::signal_idle ().connect (bind (mem_fun (*this, &ImportFromIMDb::loadIcon), entry.image, progress));
+      Glib::signal_idle ().connect_once (bind (ptr_fun (&ImportFromIMDb::stopLoading), progress));
+      Glib::signal_idle ().connect_once (bind (mem_fun (*this, &ImportFromIMDb::loadIcon), entry.image, progress));
    }
    else {
       status = CONFIRM;
       progress->hide ();
-      Glib::signal_idle ().connect (bind (ptr_fun (&ImportFromIMDb::removeProgressBar), client, progress));
+      Glib::signal_idle ().connect_once (bind (ptr_fun (&ImportFromIMDb::removeProgressBar), client, progress));
    }
 
    lblDirector->set_text (entry.director);
@@ -308,7 +302,7 @@ void ImportFromIMDb::showError (const Glib::ustring& msg, IMDbProgress* progress
    if (status != IMGLOAD) {
       TRACE9 ("ImportFromIMDb::showError (const Glib::ustring&, IMDbProgress*) - " << msg);
       Gtk::MessageDialog (msg, Gtk::MESSAGE_ERROR).run ();
-      Glib::signal_idle ().connect (bind (ptr_fun (&ImportFromIMDb::removeProgressBar), client, progress));
+      Glib::signal_idle ().connect_once (bind (ptr_fun (&ImportFromIMDb::removeProgressBar), client, progress));
 
       status = QUERY;
       inputChanged ();
@@ -321,11 +315,10 @@ void ImportFromIMDb::showError (const Glib::ustring& msg, IMDbProgress* progress
 /// \param results Map containing found entries (ID/name)
 /// \param progress Progress bar used for displaying the status; will be hidden
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::showSearchResults (const std::map<IMDbProgress::match, IMDbProgress::IMDbSearchEntries>& results,
-					IMDbProgress* progress) {
+void ImportFromIMDb::showSearchResults (const IMDbProgress::IMDbMatchData& results, IMDbProgress* progress) {
    Check1 (progress); Check1 (client);
    progress->hide ();
-   Glib::signal_idle ().connect (bind (ptr_fun (&ImportFromIMDb::stopLoading), progress));
+   Glib::signal_idle ().connect_once (bind (ptr_fun (&ImportFromIMDb::stopLoading), progress));
 
    FilmColumns colFilms;
    Glib::RefPtr<Gtk::TreeStore> model (Gtk::TreeStore::create (colFilms));

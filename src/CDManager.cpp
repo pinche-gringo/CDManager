@@ -585,7 +585,7 @@ void CDManager::export2HTML () {
 
 	 for (unsigned int i (0); i < (WITH_RECORDS + WITH_FILMS); ++i)
 	    pages[i]->export2HTML (pipes[1], *l);
-	 close (pipes[1]);
+	 ::close (pipes[1]);
 
 	 char output[128] = "";
 	 std::string allOut;
@@ -607,7 +607,7 @@ void CDManager::export2HTML () {
 	 Gtk::MessageDialog dlg (e.what (), Gtk::MESSAGE_ERROR);
 	 dlg.run ();
       }
-      close (pipes[0]);
+      ::close (pipes[0]);
       status.pop ();
    } // end-while
    setenv ("LANGUAGE", oldLang.c_str (), true);

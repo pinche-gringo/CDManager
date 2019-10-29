@@ -35,7 +35,7 @@ How to build the CDManager
 Setting up the database
 -----------------------
 
-  MySQL should already be running. How to achive this is beyond the scope of
+  MySQL should already be running. How to achieve this is beyond the scope of
   this document. Consult your local documentation how to setup, configure,
   secure and run it.
 

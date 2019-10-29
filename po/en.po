@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 1.1\n"
 "Report-Msgid-Bugs-To: g17m0@lycos.com\n"
-"POT-Creation-Date: 2011-01-07 17:38+0100\n"
+"POT-Creation-Date: 2019-02-13 21:18+0100\n"
 "PO-Revision-Date: 2011-01-01 13:47+0100\n"
 "Last-Translator: Markus Schwab <g17m0@users.sourceforge.net>\n"
 "Language-Team: English <g17m0@users.sourceforge.net>\n"
@@ -175,24 +175,24 @@ msgstr ""
 msgid "Language(s)"
 msgstr ""
 
-#: src/FilmList.cpp:99
+#: src/FilmList.cpp:98
 msgid "Subtitles(s)"
 msgstr ""
 
-#: src/FilmList.cpp:191
+#: src/FilmList.cpp:189
 msgid "Director/Film"
 msgstr ""
 
-#: src/FilmList.cpp:230
+#: src/FilmList.cpp:228
 msgid "Unknown type of media!"
 msgstr ""
 
-#: src/FilmList.cpp:260 src/SongList.cpp:195 src/OOList.cpp:241
+#: src/FilmList.cpp:258 src/SongList.cpp:194 src/OOList.cpp:241
 #: src/ActorList.cpp:189
 msgid "Invalid value!"
 msgstr ""
 
-#: src/FilmList.cpp:313
+#: src/FilmList.cpp:311
 msgid "Select subtitles"
 msgstr ""
 
@@ -200,28 +200,28 @@ msgstr ""
 msgid "Interpret/Record"
 msgstr ""
 
-#: src/SongList.cpp:55
+#: src/SongList.cpp:54
 msgid "Track"
 msgstr ""
 
-#: src/SongList.cpp:56
+#: src/SongList.cpp:55
 msgid "Song"
 msgstr ""
 
-#: src/SongList.cpp:57
+#: src/SongList.cpp:56
 msgid "Duration"
 msgstr ""
 
-#: src/SongList.cpp:75 src/OOList.cpp:95 src/CDWriter.cpp:199
+#: src/SongList.cpp:74 src/OOList.cpp:95 src/CDWriter.cpp:199
 #: src/CDWriter.cpp:524 src/CDWriter.cpp:538 src/ActorList.cpp:58
 msgid "Genre"
 msgstr ""
 
-#: src/SongList.cpp:149 src/SongList.cpp:162
+#: src/SongList.cpp:148 src/SongList.cpp:161
 msgid "Song `%1' already exists!"
 msgstr ""
 
-#: src/SongList.cpp:186 src/OOList.cpp:202
+#: src/SongList.cpp:185 src/OOList.cpp:202
 msgid "Unknown genre!"
 msgstr ""
 
@@ -274,47 +274,47 @@ msgstr ""
 msgid "Translations"
 msgstr ""
 
-#: src/Language.cpp:106
+#: src/Language.cpp:107
 msgid "German"
 msgstr ""
 
-#: src/Language.cpp:107
+#: src/Language.cpp:108
 msgid "English"
 msgstr ""
 
-#: src/Language.cpp:108
+#: src/Language.cpp:109
 msgid "Spanish"
 msgstr ""
 
-#: src/Language.cpp:109
+#: src/Language.cpp:110
 msgid "Finnish"
 msgstr ""
 
-#: src/Language.cpp:110
+#: src/Language.cpp:111
 msgid "French"
 msgstr ""
 
-#: src/Language.cpp:111
+#: src/Language.cpp:112
 msgid "Italian"
 msgstr ""
 
-#: src/Language.cpp:112
+#: src/Language.cpp:113
 msgid "Norwegian"
 msgstr ""
 
-#: src/Language.cpp:113
+#: src/Language.cpp:114
 msgid "Polish"
 msgstr ""
 
-#: src/Language.cpp:114
+#: src/Language.cpp:115
 msgid "Portugese"
 msgstr ""
 
-#: src/Language.cpp:115
+#: src/Language.cpp:116
 msgid "Serbian"
 msgstr ""
 
-#: src/Language.cpp:116
+#: src/Language.cpp:117
 msgid "Swedish"
 msgstr ""
 
@@ -424,11 +424,11 @@ msgstr ""
 msgid "_Export"
 msgstr ""
 
-#: src/WordDlg.cpp:68
+#: src/WordDlg.cpp:70
 msgid "First names"
 msgstr ""
 
-#: src/WordDlg.cpp:69
+#: src/WordDlg.cpp:71
 msgid "Articles"
 msgstr ""
 
@@ -522,7 +522,7 @@ msgid ""
 "Reason: %2"
 msgstr ""
 
-#: src/CDWriter.cpp:430 src/RelateFilm.cpp:228 src/ImportIMDb.cpp:354
+#: src/CDWriter.cpp:430 src/RelateFilm.cpp:228 src/ImportIMDb.cpp:352
 msgid "Film"
 msgstr ""
 
@@ -560,99 +560,99 @@ msgstr ""
 msgid "-error: "
 msgstr ""
 
-#: src/PRecords.cpp:138
+#: src/PRecords.cpp:152
 msgid "Loaded %1 record"
 msgid_plural "Loaded %1 records"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/PRecords.cpp:141
+#: src/PRecords.cpp:155
 msgid " from %1 artist"
 msgid_plural " from %1 artists"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/PRecords.cpp:147
+#: src/PRecords.cpp:161
 msgid "Warnings loading records"
 msgstr ""
 
-#: src/PRecords.cpp:152
+#: src/PRecords.cpp:166
 msgid ""
 "Can't query available records!\n"
 "\n"
 "Reason: %1"
 msgstr ""
 
-#: src/PRecords.cpp:177
+#: src/PRecords.cpp:191
 msgid ""
 "Can't query the songs for record %1!\n"
 "\n"
 "Reason: %2"
 msgstr ""
 
-#: src/PRecords.cpp:366 src/PActors.cpp:383 src/PFilms.cpp:277
+#: src/PRecords.cpp:379 src/PActors.cpp:383 src/PFilms.cpp:279
 msgid "<ctl>Z"
 msgstr ""
 
-#: src/PRecords.cpp:369
+#: src/PRecords.cpp:382
 msgid "New _interpret"
 msgstr ""
 
-#: src/PRecords.cpp:370 src/PActors.cpp:387 src/PFilms.cpp:281
+#: src/PRecords.cpp:383 src/PActors.cpp:387 src/PFilms.cpp:283
 msgid "<ctl>N"
 msgstr ""
 
-#: src/PRecords.cpp:372
+#: src/PRecords.cpp:385
 msgid "_New record"
 msgstr ""
 
-#: src/PRecords.cpp:373 src/PActors.cpp:390 src/PFilms.cpp:284
+#: src/PRecords.cpp:386 src/PActors.cpp:390 src/PFilms.cpp:286
 msgid "<ctl><alt>N"
 msgstr ""
 
-#: src/PRecords.cpp:375
+#: src/PRecords.cpp:388
 msgid "New _song"
 msgstr ""
 
-#: src/PRecords.cpp:376
+#: src/PRecords.cpp:389
 msgid "<ctl><shft>N"
 msgstr ""
 
-#: src/PRecords.cpp:378 src/PActors.cpp:392 src/PFilms.cpp:286
+#: src/PRecords.cpp:391 src/PActors.cpp:392 src/PFilms.cpp:288
 msgid "_Delete"
 msgstr ""
 
-#: src/PRecords.cpp:379 src/PActors.cpp:393 src/PFilms.cpp:287
+#: src/PRecords.cpp:392 src/PActors.cpp:393 src/PFilms.cpp:289
 msgid "<ctl>Delete"
 msgstr ""
 
-#: src/PRecords.cpp:381
+#: src/PRecords.cpp:394
 msgid "_Import from file-info ..."
 msgstr ""
 
-#: src/PRecords.cpp:382 src/PFilms.cpp:290
+#: src/PRecords.cpp:395 src/PFilms.cpp:292
 msgid "<ctl>I"
 msgstr ""
 
-#: src/PRecords.cpp:393
+#: src/PRecords.cpp:406
 msgid "Select file(s) to import"
 msgstr ""
 
-#: src/PRecords.cpp:412
+#: src/PRecords.cpp:426
 msgid ""
 "Can't open file `%1'!\n"
 "\n"
 "Reason: %2"
 msgstr ""
 
-#: src/PRecords.cpp:861 src/PFilms.cpp:624
+#: src/PRecords.cpp:1002 src/PFilms.cpp:627
 msgid ""
 "Couldn't write data!\n"
 "\n"
 "Reason: %1"
 msgstr ""
 
-#: src/PRecords.cpp:864
+#: src/PRecords.cpp:1005
 msgid "Error exporting records to HTML!"
 msgstr ""
 
@@ -705,62 +705,62 @@ msgstr ""
 msgid "Films/Actors"
 msgstr ""
 
-#: src/PFilms.cpp:223
+#: src/PFilms.cpp:225
 msgid "_Original name"
 msgstr ""
 
-#: src/PFilms.cpp:280
+#: src/PFilms.cpp:282
 msgid "New _director"
 msgstr ""
 
-#: src/PFilms.cpp:283
+#: src/PFilms.cpp:285
 msgid "_New film"
 msgstr ""
 
-#: src/PFilms.cpp:289
+#: src/PFilms.cpp:291
 msgid "_Import from IMDb.com ..."
 msgstr ""
 
-#: src/PFilms.cpp:291
+#: src/PFilms.cpp:293
 msgid "_Import information from IMDb.com ..."
 msgstr ""
 
-#: src/PFilms.cpp:292
+#: src/PFilms.cpp:294
 msgid "<shft><ctl>I"
 msgstr ""
 
-#: src/PFilms.cpp:294
+#: src/PFilms.cpp:296
 msgid "_Language"
 msgstr ""
 
-#: src/PFilms.cpp:424
+#: src/PFilms.cpp:426
 msgid "Loaded %1 film"
 msgid_plural "Loaded %1 films"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/PFilms.cpp:431
+#: src/PFilms.cpp:433
 msgid "Warnings loading films"
 msgstr ""
 
-#: src/PFilms.cpp:436 src/PFilms.cpp:456
+#: src/PFilms.cpp:438 src/PFilms.cpp:458
 msgid ""
 "Can't query available films!\n"
 "\n"
 "Reason: %1"
 msgstr ""
 
-#: src/PFilms.cpp:627
+#: src/PFilms.cpp:630
 msgid "Error exporting films to HTML!"
 msgstr ""
 
-#: src/PFilms.cpp:902
+#: src/PFilms.cpp:904
 msgid ""
 "Not setting data from IMDb for '%1' as the directors differ (found %2, "
 "should be %3)!"
 msgstr ""
 
-#: src/Storage.cpp:167
+#: src/Storage.cpp:171
 msgid "Warning loading celebrity `%1': %2"
 msgstr ""
 
@@ -808,75 +808,63 @@ msgstr ""
 msgid "director"
 msgstr ""
 
-#: src/ImportIMDb.cpp:69
+#: src/ImportIMDb.cpp:72
 msgid "Import from IMDb.com"
 msgstr ""
 
-#: src/ImportIMDb.cpp:73
+#: src/ImportIMDb.cpp:76
 msgid "Film (_Name, number or URL):"
 msgstr ""
 
-#: src/ImportIMDb.cpp:97
+#: src/ImportIMDb.cpp:100
 msgid "Director:"
 msgstr ""
 
-#: src/ImportIMDb.cpp:101
+#: src/ImportIMDb.cpp:104
 msgid "Film:"
 msgstr ""
 
-#: src/ImportIMDb.cpp:105
+#: src/ImportIMDb.cpp:108
 msgid "Genre:"
 msgstr ""
 
-#: src/ImportIMDb.cpp:109
+#: src/ImportIMDb.cpp:112
 msgid "Plot summary:"
 msgstr ""
 
-#: src/ImportIMDb.cpp:333
-msgid "Popular Titles"
-msgstr ""
-
-#: src/ImportIMDb.cpp:333
-msgid "Exact match"
-msgstr ""
-
-#: src/ImportIMDb.cpp:333
-msgid "Partial match"
-msgstr ""
-
-#: src/ImportIMDb.cpp:333
-msgid "Approximate match"
-msgstr ""
-
-#: src/IMDbProgress.cpp:183
-msgid "Loading icon ..."
+#: src/ImportIMDb.cpp:329
+msgid "Titles"
 msgstr ""
 
 #: src/IMDbProgress.cpp:187
+msgid "Loading icon ..."
+msgstr ""
+
+#: src/IMDbProgress.cpp:191
 msgid "Connecting to IMDb.com ..."
 msgstr ""
 
-#: src/IMDbProgress.cpp:242
+#: src/IMDbProgress.cpp:246
 msgid "Receiving from IMDb.com: %1 KB"
 msgstr ""
 
-#: src/IMDbProgress.cpp:378
+#: src/IMDbProgress.cpp:382
 msgid "Invalid response: `%1'"
 msgstr ""
 
-#: src/IMDbProgress.cpp:411
+#: src/IMDbProgress.cpp:415
 msgid "HTTP status code 302 does not contain a location"
 msgstr ""
 
-#: src/IMDbProgress.cpp:416
+#: src/IMDbProgress.cpp:420
 msgid "IMDb.com returned status code %1 %2"
 msgstr ""
 
-#: src/IMDbProgress.cpp:542
+#: src/IMDbProgress.cpp:550
 msgid "IMDb didn't find any matching films!"
 msgstr ""
 
-#: src/IMDbProgress.cpp:579
+#: src/IMDbProgress.cpp:588
 msgid ""
 "Couldn't extract film-information from IMDb! Maybe the site was "
 "redesigned ..."

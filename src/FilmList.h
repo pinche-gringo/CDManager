@@ -108,7 +108,7 @@ class FilmList : public OwnerObjectList {
    FilmList (const FilmList& other);
    const FilmList& operator= (const FilmList& other);
 
-   TypeColumns  colTypes;
+   TypeColumns colTypes;
    FilmColumns colFilms;
 
    Glib::RefPtr<Gtk::ListStore> mTypes;

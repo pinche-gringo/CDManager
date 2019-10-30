@@ -26,15 +26,10 @@
 #include <cdmgr-cfg.h>
 
 #include <glibmm/main.h>
-#include <glibmm/fileutils.h>
-
-#include <gdkmm/pixbufloader.h>
 
 #include <gtkmm/label.h>
 #include <gtkmm/stock.h>
 #include <gtkmm/entry.h>
-#include <gtkmm/image.h>
-#include <gtkmm/textview.h>
 #include <gtkmm/treeview.h>
 #include <gtkmm/treestore.h>
 #include <gtkmm/messagedialog.h>
@@ -62,66 +57,46 @@ class FilmColumns : public Gtk::TreeModel::ColumnRecord {
 //-----------------------------------------------------------------------------
 /// Constructor
 //-----------------------------------------------------------------------------
-ImportFromIMDb::ImportFromIMDb ()
-   : XGP::XDialog (XGP::XDialog::NONE), sigLoaded (), client (new Gtk::Table (7, 2)),
-     txtID (new Gtk::Entry), lblDirector (new Gtk::Label (Glib::ustring ())),
-     lblFilm (new Gtk::Label (Glib::ustring ())),
-     lblGenre (new Gtk::Label (Glib::ustring ())),
-     txtSummary (new Gtk::TextView),
-     image (new Gtk::Image ()), status (QUERY), connOK () {
-   set_title (_("Import from IMDb.com"));
+ImportFromIMDb::ImportFromIMDb()
+   : FilmDataEditor(), sigLoaded(), client(new Gtk::Table(7, 2)),
+     txtID(new Gtk::Entry), lblDirector(new Gtk::Label(Glib::ustring())),
+     lblFilm(new Gtk::Label(Glib::ustring())),
+     lblGenre(new Gtk::Label(Glib::ustring())), status(QUERY), connOK() {
+   set_title(_("Import from IMDb.com"));
 
-   client->show ();
+   client->show();
 
-   Gtk::Label* lbl (new Gtk::Label (_("Film (_Name, number or URL):"), true));
-   lbl->set_mnemonic_widget (*txtID);
-   client->attach (*manage (lbl), 0, 1, 0, 1, Gtk::SHRINK, Gtk::SHRINK, 5, 5);
-   client->attach (*txtID, 1, 2, 0, 1, Gtk::FILL | Gtk::EXPAND, Gtk::FILL | Gtk::SHRINK, 5, 5);
+   Gtk::Label* lbl(new Gtk::Label(_("Film (_Name, number or URL):"), true));
+   lbl->set_mnemonic_widget(*txtID);
+   client->attach(*manage(lbl), 0, 1, 0, 1, Gtk::SHRINK, Gtk::SHRINK, 5, 5);
+   client->attach(*txtID, 1, 2, 0, 1, Gtk::FILL | Gtk::EXPAND, Gtk::FILL | Gtk::SHRINK, 5, 5);
 
-   get_vbox ()->pack_start (*client, true, true, 5);
+   get_vbox()->pack_start(*client, true, true, 5);
 
-   txtID->set_activates_default ();
-   txtID->signal_changed ().connect (mem_fun (*this, &ImportFromIMDb::inputChanged));
+   txtID->set_activates_default();
+   txtID->signal_changed().connect(mem_fun(*this, &ImportFromIMDb::inputChanged));
+   ok->set_label(Gtk::Stock::GO_FORWARD.id);
+   inputChanged();
 
-   txtSummary->set_wrap_mode (Gtk::WRAP_WORD);
+   lbl = new Gtk::Label(_("Director:"));
+   client->attach(*manage(lbl), 0, 1, 2, 3, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+   client->attach(*manage(lblDirector), 1, 2, 2, 3, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
 
-   ok = new Gtk::Button (Gtk::Stock::GO_FORWARD);
-   get_action_area ()->pack_start (*ok, false, false, 5);
-   ok->set_can_default ();
-   ok->grab_default ();
-   ok->signal_clicked ().connect (mem_fun (*this, &ImportFromIMDb::okEvent));
+   lbl = new Gtk::Label(_("Film:"));
+   client->attach(*manage(lbl), 0, 1, 3, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+   client->attach(*manage(lblFilm), 1, 2, 3, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
 
-   cancel = add_button (Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+   lbl = new Gtk::Label(_("Genre:"));
+   client->attach(*manage(lbl), 0, 1, 4, 5, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
+   client->attach(*manage(lblGenre), 1, 2, 4, 5, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
 
-   inputChanged ();
-
-   show_all_children ();
-
-   lbl = new Gtk::Label (_("Director:"));
-   client->attach (*manage (lbl), 0, 1, 2, 3, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-   client->attach (*manage (lblDirector), 1, 2, 2, 3, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-
-   lbl = new Gtk::Label (_("Film:"));
-   client->attach (*manage (lbl), 0, 1, 3, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-   client->attach (*manage (lblFilm), 1, 2, 3, 4, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-
-   lbl = new Gtk::Label (_("Genre:"));
-   client->attach (*manage (lbl), 0, 1, 4, 5, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-   client->attach (*manage (lblGenre), 1, 2, 4, 5, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-
-   lbl = new Gtk::Label (_("Plot summary:"));
-   client->attach (*manage (lbl), 0, 1, 5, 6, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-   client->attach (*manage (txtSummary), 0, 3, 6, 7, Gtk::FILL | Gtk::EXPAND, Gtk::FILL | Gtk::EXPAND, 5, 5);
-
-   client->attach (*manage (image), 2, 3, 0, 6, Gtk::FILL | Gtk::SHRINK, Gtk::FILL | Gtk::SHRINK, 5, 5);
-
-   show ();
+   show();
 }
 
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------
-ImportFromIMDb::~ImportFromIMDb () {
+ImportFromIMDb::~ImportFromIMDb() {
 }
 
 
@@ -190,15 +165,11 @@ void ImportFromIMDb::okEvent () {
 /// Informs listeners about the information in the dialog
 /// \returns bool True, if all listeners successfully handled the update
 //-----------------------------------------------------------------------------
-bool ImportFromIMDb::saveIMDbInfo () {
-   Check3 (lblDirector); Check3 (lblFilm); Check3 (lblGenre); Check3 (image);
-   gchar* buffer (NULL);
-   gsize bufSize (0);
-   image->get_pixbuf ()->save_to_buffer(buffer, bufSize, "jpeg");
-
-   std::string strBuffer (buffer, bufSize);
-   return sigLoaded.emit (lblDirector->get_text (), lblFilm->get_text (), lblGenre->get_text (),
-			  txtSummary->get_buffer ()->get_text (), strBuffer);
+bool ImportFromIMDb::saveIMDbInfo() {
+   Check3(lblDirector); Check3(lblFilm); Check3(lblGenre); Check3(image);
+   std::string icon(getIcon());
+   return sigLoaded.emit(lblDirector->get_text(), lblFilm->get_text(), lblGenre->get_text(),
+			 getSummary(), icon);
 }
 
 //-----------------------------------------------------------------------------
@@ -232,19 +203,7 @@ void ImportFromIMDb::stopLoading (IMDbProgress* progress) {
 void ImportFromIMDb::addIcon (const std::string& bufImage, IMDbProgress* progress) {
    TRACE1 ("ImportFromIMDb::addIcon (const std::string&, IMDbProgress*) - " << bufImage.length ());
 
-   Glib::RefPtr<Gdk::PixbufLoader> picLoader (Gdk::PixbufLoader::create ());
-   try {
-      picLoader->write ((const guint8*)bufImage.data (), (gsize)bufImage.size ());
-      picLoader->close ();
-      image->set (picLoader->get_pixbuf ()->scale_simple (87, 128, Gdk::INTERP_BILINEAR));
-      TRACE9 ("ImportFromIMDb::addIcon (const std::string&, IMDbProgress*) - Dimensions: " << image->get_width () << '/' << image->get_height ());
-      image->show ();
-   }
-   catch (Gdk::PixbufError& e) { }
-   catch (Glib::FileError& e) { }
-   catch (Glib::Error& e) {
-      TRACE1 ("Error: " << e.what ());
-   }
+   FilmDataEditor::setIcon(bufImage);
 
    status = CONFIRM;
    progress->hide ();
@@ -286,7 +245,7 @@ void ImportFromIMDb::showData (const IMDbProgress::IMDbEntry& entry, IMDbProgres
    lblDirector->set_text (entry.director);
    lblFilm->set_text (entry.title);
    lblGenre->set_text (entry.genre);
-   txtSummary->get_buffer ()->set_text (entry.summary);
+   setSummary(entry.summary);
    show_all_children ();
 
    ok->set_label (Gtk::Stock::OK.id);
@@ -423,17 +382,17 @@ void ImportFromIMDb::rowActivated (const Gtk::TreePath& path, Gtk::TreeViewColum
 /// Searches for the passed film
 /// \param film Information of the film to search for
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::searchFor (const Glib::ustring& film) {
-   txtID->set_text (film);
+void ImportFromIMDb::searchFor(const Glib::ustring& film) {
+   txtID->set_text(film);
 
    Glib::ustring empty;
-   lblDirector->set_text (empty);
-   lblFilm->set_text (empty);
-   lblGenre->set_text (empty);
-   txtSummary->get_buffer ()->set_text (empty);
-   image->clear ();
+   lblDirector->set_text(empty);
+   lblFilm->set_text(empty);
+   lblGenre->set_text(empty);
+   setSummary(empty);
+   image->clear();
 
    status = QUERY;
-   ok->set_label (Gtk::Stock::GO_FORWARD.id);
-   okEvent ();
+   ok->set_label(Gtk::Stock::GO_FORWARD.id);
+   okEvent();
 }

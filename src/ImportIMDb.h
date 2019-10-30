@@ -19,10 +19,8 @@
 
 #include <gtkmm/table.h>
 
-#include <YGP/Check.h>
-#include <XGP/XDialog.h>
-
 #include "IMDbProgress.h"
+#include "FilmData.h"
 
 namespace Gtk {
    class Label;
@@ -43,20 +41,20 @@ namespace Gtk {
  * IMDb.com) the matching page on IMDb.com is read and the relevant
  * information is filtered out and displayed for confirmation.
  */
-class ImportFromIMDb : public XGP::XDialog {
+class ImportFromIMDb : public FilmDataEditor {
  public:
-   ImportFromIMDb ();
-   virtual ~ImportFromIMDb ();
+   ImportFromIMDb();
+   virtual ~ImportFromIMDb();
 
    /// Creates the dialog (and set it as child of the parent)
    /// \remarks Cares also about freeing the dialog
-   static ImportFromIMDb* create () {
-      ImportFromIMDb* dlg (new ImportFromIMDb);
-      dlg->signal_response ().connect (mem_fun (*dlg, &ImportFromIMDb::free));
+   static ImportFromIMDb* create() {
+      ImportFromIMDb* dlg(new ImportFromIMDb);
+      dlg->signal_response().connect(mem_fun(*dlg, &ImportFromIMDb::free));
       return dlg;
    }
 
-   void searchFor (const Glib::ustring& info);
+   void searchFor(const Glib::ustring& info);
 
    /// Signal emitted, when the loaded film-information is confirmed
    sigc::signal<bool, const Glib::ustring&, const Glib::ustring&,
@@ -68,34 +66,32 @@ class ImportFromIMDb : public XGP::XDialog {
    Gtk::Label* lblDirector;                ///< Label displaying the director
    Gtk::Label* lblFilm;            ///< Label displaying the film (with year)
    Gtk::Label* lblGenre;          ///< Label displaying the genre of the film
-   Gtk::TextView* txtSummary;   ///< Field displaying the summary of the plot
-   Gtk::Image* image;               ///< Image showing the poster of the film
 
-   void okEvent ();
+   void okEvent();
 
  private:
    volatile enum { QUERY, LOADING, CHOOSING, CONFIRM, IMGLOAD } status;
 
    // Prohibited manager functions
-   ImportFromIMDb (const ImportFromIMDb& other);
-   const ImportFromIMDb& operator= (const ImportFromIMDb& other);
+   ImportFromIMDb(const ImportFromIMDb&);
+   const ImportFromIMDb& operator=(const ImportFromIMDb&);
 
-   static void removeProgressBar (Gtk::Table* client, IMDbProgress* progress);
-   static void stopLoading (IMDbProgress* progress);
-   void continueLoading (Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress);
-   void loadSelection (Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress);
-   void rowActivated (const Gtk::TreePath& path, Gtk::TreeViewColumn* column, Gtk::ScrolledWindow* scrl,
-		      Gtk::TreeView* list, IMDbProgress* progress);
-   void rowSelected (Gtk::TreeView* list);
-   void loadRow (Gtk::TreeRow& row, Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress);
+   static void removeProgressBar(Gtk::Table* client, IMDbProgress* progress);
+   static void stopLoading(IMDbProgress* progress);
+   void continueLoading(Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress);
+   void loadSelection(Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress);
+   void rowActivated(const Gtk::TreePath& path, Gtk::TreeViewColumn* column, Gtk::ScrolledWindow* scrl,
+		     Gtk::TreeView* list, IMDbProgress* progress);
+   void rowSelected(Gtk::TreeView* list);
+   void loadRow(Gtk::TreeRow& row, Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress);
 
-   void inputChanged ();
-   void showError (const Glib::ustring& msg, IMDbProgress* progress);
-   void showSearchResults (const IMDbProgress::IMDbMatchData& results, IMDbProgress* progress);
-   void showData (const IMDbProgress::IMDbEntry& entry, IMDbProgress* progress);
-   void addIcon (const std::string& bufImage, IMDbProgress* progress);
-   void loadIcon (const std::string& image, IMDbProgress* progress);
-   bool saveIMDbInfo ();
+   void inputChanged();
+   void showError(const Glib::ustring& msg, IMDbProgress* progress);
+   void showSearchResults(const IMDbProgress::IMDbMatchData& results, IMDbProgress* progress);
+   void showData(const IMDbProgress::IMDbEntry& entry, IMDbProgress* progress);
+   void addIcon(const std::string& bufImage, IMDbProgress* progress);
+   void loadIcon(const std::string& image, IMDbProgress* progress);
+   bool saveIMDbInfo();
 
    sigc::connection connOK;
 };

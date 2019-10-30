@@ -1,11 +1,8 @@
 //PROJECT     : CDManager
 //SUBSYSTEM   : Films
-//REFERENCES  :
-//TODO        :
-//BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 22.01.2006
-//COPYRIGHT   : Copyright (C) 2006, 2009 - 2012
+//COPYRIGHT   : Copyright (C) 2006 - 2019
 
 // This file is part of CDManager
 //
@@ -51,6 +48,7 @@
 
 #include "LangImg.h"
 #include "SaveCeleb.h"
+#include "FilmData.h"
 #include "ImportIMDb.h"
 #include "StorageFilm.h"
 
@@ -63,24 +61,24 @@
 /// \param menuSave: Menu-entry to save the database
 /// \param genres: Genres to use in actor-list
 //-----------------------------------------------------------------------------
-PFilms::PFilms (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave, const Genres& genres)
-   : NBPage (status, menuSave), imgLang (NULL), films (genres), relFilms ("films")
+PFilms::PFilms(Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave, const Genres& genres)
+   : NBPage(status, menuSave), imgLang(NULL), films(genres), relFilms("films"), menuEdit()
 {
-   TRACE9 ("PFilms::PFilms (Gtk::Statusbar&, Glib::RefPtr<Gtk::Action>, const Genres&)");
+   TRACE9("PFilms::PFilms(Gtk::Statusbar&, Glib::RefPtr<Gtk::Action>, const Genres&)");
 
-   Gtk::ScrolledWindow* scrlFilms (new Gtk::ScrolledWindow);
-   scrlFilms->set_shadow_type (Gtk::SHADOW_ETCHED_IN);
-   scrlFilms->add (films);
-   scrlFilms->set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+   Gtk::ScrolledWindow* scrlFilms(new Gtk::ScrolledWindow);
+   scrlFilms->set_shadow_type(Gtk::SHADOW_ETCHED_IN);
+   scrlFilms->add(films);
+   scrlFilms->set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
 
-   films.signalOwnerChanged.connect (mem_fun (*this, &PFilms::directorChanged));
-   films.signalObjectChanged.connect (mem_fun (*this, &PFilms::filmChanged));
+   films.signalOwnerChanged.connect(mem_fun (*this, &PFilms::directorChanged));
+   films.signalObjectChanged.connect(mem_fun (*this, &PFilms::filmChanged));
 
-   Check3 (films.get_selection ());
-   films.get_selection ()->signal_changed ().connect (mem_fun (*this, &PFilms::filmSelected));
+   Check3(films.get_selection());
+   films.get_selection()->signal_changed().connect(mem_fun(*this, &PFilms::filmSelected));
 
-   films.set_has_tooltip ();
-   films.signal_query_tooltip ().connect (mem_fun (*this, &PFilms::onQueryTooltip));
+   films.set_has_tooltip();
+   films.signal_query_tooltip().connect(mem_fun(*this, &PFilms::onQueryTooltip));
 
    widget = scrlFilms;
 }
@@ -88,20 +86,20 @@ PFilms::PFilms (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave, cons
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------
-PFilms::~PFilms () {
+PFilms::~PFilms() {
 }
 
 
 //-----------------------------------------------------------------------------
 /// Adds a new direcotor to the list
 //-----------------------------------------------------------------------------
-void PFilms::newDirector () {
-   TRACE5 ("void PFilms::newDirector ()");
-   HDirector director (new Director);
-   Gtk::TreeModel::iterator i (addDirector (director));
+void PFilms::newDirector() {
+   TRACE5("void PFilms::newDirector()");
+   HDirector director(new Director);
+   Gtk::TreeModel::iterator i(addDirector(director));
 
-   Gtk::TreePath path (films.getModel ()->get_path (i));
-   films.set_cursor (path, *films.get_column (0), true);
+   Gtk::TreePath path(films.getModel()->get_path(i));
+   films.set_cursor(path, *films.get_column(0), true);
 }
 
 //-----------------------------------------------------------------------------
@@ -109,18 +107,18 @@ void PFilms::newDirector () {
 /// \param hDirector Director to add
 /// \returns Gtk::TreeModel::iterator Appended line in the list
 //-----------------------------------------------------------------------------
-Gtk::TreeModel::iterator PFilms::addDirector (HDirector& hDirector) {
-   Check1 (hDirector);
-   TRACE5 ("void PFilms::addDirector () - " << hDirector->getName ());
+Gtk::TreeModel::iterator PFilms::addDirector(HDirector& hDirector) {
+   Check1(hDirector);
+   TRACE5("void PFilms::addDirector() - " << hDirector->getName());
 
-   directors.push_back (hDirector);
-   Gtk::TreeModel::iterator i (films.append (hDirector));
-   Gtk::TreePath path (films.getModel ()->get_path (i));
-   films.selectRow (i);
+   directors.push_back(hDirector);
+   Gtk::TreeModel::iterator i(films.append(hDirector));
+   Gtk::TreePath path(films.getModel()->get_path(i));
+   films.selectRow(i);
 
-   aUndo.push (Undo (Undo::INSERT, DIRECTOR, 0, hDirector, path, ""));
-   apMenus[UNDO]->set_sensitive ();
-   enableSave ();
+   aUndo.push(Undo(Undo::INSERT, DIRECTOR, 0, hDirector, path, ""));
+   apMenus[UNDO]->set_sensitive();
+   enableSave();
    return i;
 }
 
@@ -130,8 +128,8 @@ Gtk::TreeModel::iterator PFilms::addDirector (HDirector& hDirector) {
 void PFilms::newFilm () {
    TRACE5 ("void PFilms::newFilm ()");
 
-   Glib::RefPtr<Gtk::TreeSelection> filmSel (films.get_selection ()); Check3 (filmSel);
-   Gtk::TreeIter p (filmSel->get_selected ()); Check3 (p);
+   Glib::RefPtr<Gtk::TreeSelection> filmSel(films.get_selection()); Check3(filmSel);
+   Gtk::TreeIter p(filmSel->get_selected ());Check3(p);
    if ((*p)->parent ())
       p = ((*p)->parent ());
    TRACE9 ("void PFilms::newFilm () - Found director " << films.getDirectorAt (p)->getName ());
@@ -171,12 +169,19 @@ Gtk::TreeModel::iterator PFilms::addFilm (HFilm& hFilm, Gtk::TreeIter pos) {
 /// Callback after selecting a film
 /// \param row: Selected row
 //-----------------------------------------------------------------------------
-void PFilms::filmSelected () {
-   TRACE9 ("PFilms::filmSelected ()");
-   Check3 (films.get_selection ());
+void PFilms::filmSelected() {
+   TRACE9("PFilms::filmSelected ()");
+   Check3(films.get_selection ());
 
-   Gtk::TreeIter s (films.get_selection ()->get_selected ());
-   enableEdit (s ? OWNER_SELECTED : NONE_SELECTED);
+   Gtk::TreeIter s(films.get_selection()->get_selected());
+   if (s) {
+      enableEdit(OWNER_SELECTED);
+      menuEdit->set_sensitive((*s)->parent ());
+   }
+   else {
+      enableEdit(NONE_SELECTED);
+      menuEdit->set_sensitive(false);
+   }
 }
 
 //----------------------------------------------------------------------------
@@ -201,14 +206,14 @@ void PFilms::directorChanged (const Gtk::TreeIter& row, unsigned int column, Gli
 /// \param column: Changed column
 /// \param oldValue: Old value of the changed entry
 //-----------------------------------------------------------------------------
-void PFilms::filmChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue) {
-   TRACE9 ("PFilms::filmChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&)\n\t- " << column << '/' << oldValue);
+void PFilms::filmChanged(const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue) {
+   TRACE9("PFilms::filmChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&)\n\t- " << column << '/' << oldValue);
 
-   Gtk::TreePath path (films.getModel ()->get_path (row));
-   aUndo.push (Undo (Undo::CHANGED, FILM, column, films.getObjectAt (row), path, oldValue));
+   Gtk::TreePath path(films.getModel()->get_path(row));
+   aUndo.push(Undo(Undo::CHANGED, FILM, column, films.getObjectAt(row), path, oldValue));
 
-   apMenus[UNDO]->set_sensitive ();
-   enableSave ();
+   apMenus[UNDO]->set_sensitive();
+   enableSave();
 }
 
 //-----------------------------------------------------------------------------
@@ -263,19 +268,20 @@ void PFilms::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActio
 
    statusbar.pack_end (*imgLang, Gtk::PACK_SHRINK, 5);
 
-   ui += ("<menuitem action='MUndo'/>"
+   ui += ("<menuitem action='FUndo'/>"
 	  "<separator/>"
 	  "<menuitem action='NDirector'/>"
 	  "<menuitem action='NFilm'/>"
 	  "<separator/>"
-	  "<menuitem action='MDelete'/>"
+	  "<menuitem action='FDelete'/>"
+	  "<menuitem action='FEdit'/>"
 	  "<separator/>"
-	  "<menuitem action='MImport'/>"
-	  "<menuitem action='MImportDescr'/>"
+	  "<menuitem action='FImport'/>"
+	  "<menuitem action='FImportDescr'/>"
 	  "</placeholder></menu>"
 	  "<placeholder name='Other'><menu action='Lang'>");
 
-   grpAction->add (apMenus[UNDO] = Gtk::Action::create ("MUndo", Gtk::Stock::UNDO),
+   grpAction->add (apMenus[UNDO] = Gtk::Action::create ("FUndo", Gtk::Stock::UNDO),
 		   Gtk::AccelKey (_("<ctl>Z")),
 		   mem_fun (*this, &PFilms::undo));
    grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NDirector", Gtk::Stock::NEW,
@@ -285,12 +291,15 @@ void PFilms::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpActio
    grpAction->add (apMenus[NEW2] = Gtk::Action::create ("NFilm", _("_New film")),
 		   Gtk::AccelKey (_("<ctl><alt>N")),
 		   mem_fun (*this, &PFilms::newFilm));
-   grpAction->add (apMenus[DELETE] = Gtk::Action::create ("MDelete", Gtk::Stock::DELETE, _("_Delete")),
+   grpAction->add (apMenus[DELETE] = Gtk::Action::create ("FDelete", Gtk::Stock::DELETE, _("_Delete")),
 		   Gtk::AccelKey (_("<ctl>Delete")),
 		   mem_fun (*this, &PFilms::deleteSelection));
-   grpAction->add (Gtk::Action::create ("MImport", _("_Import from IMDb.com ...")),
+   grpAction->add (menuEdit = Gtk::Action::create ("FEdit", Gtk::Stock::EDIT, _("_Edit")),
+		   Gtk::AccelKey (_("<ctl>Return")),
+		   mem_fun (*this, &PFilms::editSelection));
+   grpAction->add (Gtk::Action::create ("FImport", _("_Import from IMDb.com ...")),
 		   Gtk::AccelKey (_("<ctl>I")), mem_fun (*this, &PFilms::importFromIMDb));
-   grpAction->add (Gtk::Action::create ("MImportDescr", _("_Import information from IMDb.com ...")),
+   grpAction->add (Gtk::Action::create ("FImportDescr", _("_Import information from IMDb.com ...")),
 		   Gtk::AccelKey (_("<shft><ctl>I")), mem_fun (*this, &PFilms::importInfoFromIMDb));
 
    grpAction->add (Gtk::Action::create ("Lang", _("_Language")));
@@ -539,33 +548,33 @@ void PFilms::saveData () throw (std::exception) {
 /// Removes the selected films or directors from the listbox. Depending films
 /// are deleted too.
 //-----------------------------------------------------------------------------
-void PFilms::deleteSelection () {
-   TRACE9 ("PFilms::deleteSelection ()");
+void PFilms::deleteSelection() {
+   TRACE9("PFilms::deleteSelection()");
 
-   Glib::RefPtr<Gtk::TreeSelection> selection (films.get_selection ());
-   while (selection->get_selected_rows ().size ()) {
-      std::vector<Gtk::TreePath> list (selection->get_selected_rows ());
-      Check3 (list.size ());
-      std::vector<Gtk::TreePath>::iterator i (list.begin ());
+   Glib::RefPtr<Gtk::TreeSelection> selection(films.get_selection());
+   while (selection->get_selected_rows().size()) {
+      std::vector<Gtk::TreePath> list(selection->get_selected_rows());
+      Check3(list.size());
+      std::vector<Gtk::TreePath>::iterator i(list.begin());
 
-      Gtk::TreeIter iter (films.get_model ()->get_iter (*i)); Check3 (iter);
-      if ((*iter)->parent ())                 // A film is going to be deleted
-	 deleteFilm (iter);
+      Gtk::TreeIter iter(films.get_model()->get_iter(*i)); Check3(iter);
+      if ((*iter)->parent())                 // A film is going to be deleted
+	 deleteFilm(iter);
       else {                               // A director is going to be deleted
-	 TRACE9 ("PFilms::deleteSelection () - Deleting " << iter->children ().size () << " children");
-	 HDirector director (films.getDirectorAt (iter)); Check3 (director);
-	 while (iter->children ().size ()) {
-	    Gtk::TreeIter child (iter->children ().begin ());
-	    deleteFilm (child);
+	 TRACE9("PFilms::deleteSelection() - Deleting " << iter->children().size() << " children");
+	 HDirector director(films.getDirectorAt(iter)); Check3(director);
+	 while (iter->children().size()) {
+	    Gtk::TreeIter child(iter->children().begin());
+	    deleteFilm(child);
 	 }
 
-	 Gtk::TreePath path (films.getModel ()->get_path (iter));
-	 aUndo.push (Undo (Undo::DELETE, DIRECTOR, director->getId (), director, path, ""));
-	 films.getModel ()->erase (iter);
+	 Gtk::TreePath path(films.getModel()->get_path(iter));
+	 aUndo.push(Undo(Undo::DELETE, DIRECTOR, director->getId(), director, path, ""));
+	 films.getModel()->erase(iter);
       }
    }
-   apMenus[UNDO]->set_sensitive ();
-   enableSave ();
+   apMenus[UNDO]->set_sensitive();
+   enableSave();
 }
 
 //-----------------------------------------------------------------------------
@@ -620,7 +629,7 @@ void PFilms::export2HTML (unsigned int fd, const std::string& lang) {
 	 Check3 (dirFilms.size ());
 	 for (std::vector<HFilm>::const_iterator m (dirFilms.begin ());
 	      m != dirFilms.end (); ++m)
-	    output << "M" << **m;
+	    output << 'M' << **m;
 
 	 TRACE9 ("PFilms::export2HTML (unsinged int) - Writing: " << output.str ());
 	 if (::write (fd, output.str ().data (), output.str ().size ()) != (ssize_t)output.str ().size ()) {
@@ -668,87 +677,87 @@ void PFilms::undo () {
 /// Undoes the last changes to a film
 /// \param last: Undo-information
 //-----------------------------------------------------------------------------
-void PFilms::undoFilm (const Undo& last) {
-   TRACE5 ("PFilms::undoFilm (const Undo&)");
+void PFilms::undoFilm(const Undo& last) {
+   TRACE5("PFilms::undoFilm(const Undo&)");
 
-   Gtk::TreePath path (last.getPath ());
-   Gtk::TreeIter iter (films.getModel ()->get_iter (path));
+   Gtk::TreePath path(last.getPath());
+   Gtk::TreeIter iter(films.getModel()->get_iter(path));
 
-   Check3 (typeid (*last.getEntity ()) == typeid (Film));
-   HFilm film (boost::dynamic_pointer_cast<Film> (last.getEntity ()));
-   TRACE9 ("PFilms::undoFilm (const Undo&) - " << last.how () << ": " << film->getName ());
+   Check3(typeid(*last.getEntity()) == typeid(Film));
+   HFilm film(boost::dynamic_pointer_cast<Film>(last.getEntity()));
+   TRACE9("PFilms::undoFilm(const Undo&) - " << last.how() << ": " << film->getName());
 
-   switch (last.how ()) {
+   switch (last.how()) {
    case Undo::CHANGED:
-      Check3 (iter->parent ());
+      Check3(iter->parent());
 
-      switch (last.column ()) {
+      switch (last.column()) {
       case 0:
-	 film->setName (last.getValue ());
+	 film->setName(last.getValue());
 	 break;
 
       case 1:
-	 film->setYear (last.getValue ());
+	 film->setYear(last.getValue());
 	 break;
 
       case 2:
-	 film->setGenre ((unsigned int)last.getValue ()[0]);
+	 film->setGenre((unsigned int)last.getValue()[0]);
 	 break;
 
       case 3:
-	 film->setType (last.getValue ());
+	 film->setType(last.getValue());
 	 break;
 
       case 4:
-	 film->setLanguage (last.getValue ());
+	 film->setLanguage(last.getValue());
 	 break;
 
       case 5:
-	 film->setTitles (last.getValue ());
+	 film->setTitles(last.getValue());
 	 break;
 
       case 99:
-	 film->setDescription ("");
-	 film->setImage ("");
+	 film->setDescription(last.getValue());
+	 film->setImage("");
 	 break;
 
       default:
-	 Check1 (0);
+	 Check1(0);
       } // end-switch
       break;
 
    case Undo::INSERT:
-      Check3 (iter->parent ());
-      Check3 (relFilms.isRelated (film));
-      relFilms.unrelate (films.getDirectorAt (iter->parent ()), film);
-      films.getModel ()->erase (iter);
-      iter = films.getModel ()->children ().end ();
+      Check3(iter->parent());
+      Check3(relFilms.isRelated(film));
+      relFilms.unrelate(films.getDirectorAt(iter->parent()), film);
+      films.getModel()->erase(iter);
+      iter = films.getModel()->children().end();
       break;
 
    case Undo::DELETE: {
-      std::map<HEntity, HEntity>::iterator delRel (delRelation.find (last.getEntity ()));
-      Check3 (typeid (*delRel->second) == typeid (Director));
-      HDirector director (boost::dynamic_pointer_cast<Director> (delRel->second));
-      Gtk::TreeRow rowDirector (*films.getOwner (director));
+      std::map<HEntity, HEntity>::iterator delRel(delRelation.find(last.getEntity()));
+      Check3(typeid(*delRel->second) == typeid(Director));
+      HDirector director(boost::dynamic_pointer_cast<Director>(delRel->second));
+      Gtk::TreeRow rowDirector(*films.getOwner(director));
 
-      iter = films.append (film, rowDirector);
-      path = films.getModel ()->get_path (iter);
+      iter = films.append(film, rowDirector);
+      path = films.getModel()->get_path(iter);
 
-      relFilms.relate (director, film);
+      relFilms.relate(director, film);
 
-      delRelation.erase (delRel);
+      delRelation.erase(delRel);
       break; }
 
    default:
-      Check1 (0);
+      Check1(0);
    } // end-switch
 
    if (iter) {
-      Gtk::TreeRow row (*iter);
-      films.update (row);
+      Gtk::TreeRow row(*iter);
+      films.update(row);
    }
-   films.set_cursor (path);
-   films.scroll_to_row (path, 0.8);
+   films.set_cursor(path);
+   films.scroll_to_row(path, 0.8);
 }
 
 //-----------------------------------------------------------------------------
@@ -1036,4 +1045,27 @@ bool PFilms::onQueryTooltip (int x, int y, bool keyboard, const Glib::RefPtr<Gtk
       }
    }
    return false;
+}
+
+//-----------------------------------------------------------------------------
+/// Edits the selected films or directors from the listbox.
+//-----------------------------------------------------------------------------
+void PFilms::editSelection() {
+   TRACE9("PFilms::editSelection()");
+
+   Glib::RefPtr<Gtk::TreeSelection> filmSel(films.get_selection()); Check3(filmSel);
+   Gtk::TreeIter iter(filmSel->get_selected()); Check3(iter);
+   HFilm film(films.getFilmAt(iter));
+   
+   FilmDataEditor dlg;
+   dlg.setSummary(film->getDescription());
+   dlg.setIcon(film->getImage());
+   if (dlg.run() == Gtk::RESPONSE_OK) {
+      Glib::ustring summary(film->getDescription());
+      filmChanged(iter, 99, summary);
+      film->setDescription(dlg.getSummary());
+      std::string icon(dlg.getIcon());
+      if (icon.size())
+	 film->setImage(icon);
+   }
 }

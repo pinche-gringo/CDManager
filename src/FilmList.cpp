@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009 - 2011
+//COPYRIGHT   : Copyright (C) 2004 - 2019
 
 // This file is part of CDManager
 //

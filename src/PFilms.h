@@ -48,66 +48,66 @@ class PFilms : public NBPage {
    PFilms (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave, const Genres& genres);
    virtual ~PFilms ();
 
-   virtual void loadData ();
-   virtual void saveData () throw (std::exception);
-   virtual void getFocus ();
-   virtual void addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAction);
-   virtual void removeMenu ();
-   virtual void deleteSelection ();
-   virtual void undo ();
-   virtual void clear ();
-   virtual void export2HTML (unsigned int fd, const std::string& lang);
+   virtual void loadData();
+   virtual void saveData() throw (std::exception);
+   virtual void getFocus();
+   virtual void addMenu(Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAction);
+   virtual void removeMenu();
+   virtual void deleteSelection();
+   virtual void undo();
+   virtual void clear();
+   virtual void export2HTML(unsigned int fd, const std::string& lang);
 
-   void addLanguageMenus (Glib::ustring& menu, Glib::RefPtr<Gtk::ActionGroup> grpAction);
+   void addLanguageMenus(Glib::ustring& menu, Glib::RefPtr<Gtk::ActionGroup> grpAction);
+   void editSelection();
 
-   static HFilm findFilm (const std::vector<HDirector>& directors,
-			    const YGP::Relation1_N<HDirector, HFilm>& relFilms,
-			    unsigned int id);
+   static HFilm findFilm(const std::vector<HDirector>& directors,
+			 const YGP::Relation1_N<HDirector, HFilm>& relFilms, unsigned int id);
 
-   const FilmList& getFilmList () const { return films; }
-   const std::vector<HDirector>& getDirectors () const { return directors; }
-   const YGP::Relation1_N<HDirector, HFilm>& getRelFilms () const { return relFilms; }
+   const FilmList& getFilmList() const { return films; }
+   const std::vector<HDirector>& getDirectors() const { return directors; }
+   const YGP::Relation1_N<HDirector, HFilm>& getRelFilms() const { return relFilms; }
 
  private:
-   PFilms ();
+   PFilms();
 
-   PFilms (const PFilms& other);
-   const PFilms& operator= (const PFilms& other);
+   PFilms(const PFilms& other);
+   const PFilms& operator=(const PFilms& other);
 
-   void loadData (const std::string& lang);
+   void loadData(const std::string& lang);
 
-   void selectLanguage ();
-   void setLanguage (const std::string& lang);
-   void changeLanguage (const std::string& lang);
+   void selectLanguage();
+   void setLanguage(const std::string& lang);
+   void changeLanguage(const std::string& lang);
 
-   void directorChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
-   void filmChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
+   void directorChanged(const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
+   void filmChanged(const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
 
-   void newDirector ();
-   Gtk::TreeModel::iterator addDirector (HDirector& hDirector);
-   void newFilm ();
-   Gtk::TreeModel::iterator addFilm (HFilm& hFilm, Gtk::TreeIter pos);
-   void deleteFilm (const Gtk::TreeIter& film);
+   void newDirector();
+   Gtk::TreeModel::iterator addDirector(HDirector& hDirector);
+   void newFilm();
+   Gtk::TreeModel::iterator addFilm(HFilm& hFilm, Gtk::TreeIter pos);
+   void deleteFilm(const Gtk::TreeIter& film);
 
-   void undoFilm (const Undo& last);
-   void undoDirector (const Undo& last);
+   void undoFilm(const Undo& last);
+   void undoDirector(const Undo& last);
 
-   void importFromIMDb ();
-   void importInfoFromIMDb ();
+   void importFromIMDb();
+   void importInfoFromIMDb();
 
-   void filmSelected ();
-   HFilm findFilm (unsigned int id) const {
-      return findFilm (directors, relFilms, id);
+   void filmSelected();
+   HFilm findFilm(unsigned int id) const {
+      return findFilm(directors, relFilms, id);
    }
 
-   bool continousImportFilm (const Glib::ustring& director, const Glib::ustring& film,
-			     const Glib::ustring& genre, const Glib::ustring& summary,
-			     const std::string& image, ImportFromIMDb* dlg, std::vector<HFilm>* films);
-   bool importFilm (const Glib::ustring& director, const Glib::ustring& film,
-		    const Glib::ustring& genre, const Glib::ustring& summary, const std::string& image);
-   void importNextFilm (ImportFromIMDb* dlg, std::vector<HFilm>* films);
+   bool continousImportFilm(const Glib::ustring& director, const Glib::ustring& film,
+			    const Glib::ustring& genre, const Glib::ustring& summary,
+			    const std::string& image, ImportFromIMDb* dlg, std::vector<HFilm>* films);
+   bool importFilm(const Glib::ustring& director, const Glib::ustring& film,
+		   const Glib::ustring& genre, const Glib::ustring& summary, const std::string& image);
+   void importNextFilm(ImportFromIMDb* dlg, std::vector<HFilm>* films);
 
-   bool onQueryTooltip (int x, int y, bool keyboard, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
+   bool onQueryTooltip(int x, int y, bool keyboard, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
 
    LanguageImg* imgLang;
 
@@ -119,6 +119,8 @@ class PFilms : public NBPage {
    YGP::Relation1_N<HDirector, HFilm> relFilms;
 
    std::map<std::string, bool> loadedLangs;
+
+   Glib::RefPtr<Gtk::Action> menuEdit;
 };
 
 #endif

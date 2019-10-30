@@ -2,7 +2,7 @@
 
 SRC_FILM=FilmList.cpp FilmList.h StorageFilm.cpp StorageFilm.h	\
 IMDbProgress.cpp IMDbProgress.h ImportIMDb.cpp ImportIMDb.h		\
-PFilms.cpp PFilms.h
+PFilms.cpp PFilms.h FilmData.cpp FilmData.h
 SRC_GENFILM=Director.h Film.cpp Film.h
 if WITH_FILMS
    USE_FILM=$(SRC_FILM)

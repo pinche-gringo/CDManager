@@ -1,7 +1,7 @@
 USE CDMedia;
 
 CREATE TABLE Celebrities
-    (name       VARCHAR (64)      NOT NULL,
+    (name       VARCHAR(64)       NOT NULL,
      id	        BIGINT UNSIGNED   NOT NULL AUTO_INCREMENT,
      born       SMALLINT UNSIGNED NOT NULL DEFAULT 0,
      died       SMALLINT UNSIGNED NOT NULL DEFAULT 0,
@@ -12,7 +12,7 @@ CREATE TABLE Directors
      PRIMARY KEY (id));
 
 CREATE TABLE Films
-    (name       VARCHAR (64)    NOT NULL,
+    (name       VARCHAR(64)     NOT NULL,
      id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
      year       YEAR            NOT NULL DEFAULT 0,
      director   BIGINT UNSIGNED NOT NULL DEFAULT 0 REFERENCES Directors(id),
@@ -20,7 +20,7 @@ CREATE TABLE Films
      type       INT UNSIGNED    NOT NULL DEFAULT 0,
      languages  VARCHAR(14)     NOT NULL,
      subtitles  VARCHAR(29)     NOT NULL,
-     summary    VARCHAR(512)    NOT NULL,
+     summary    VARCHAR(1024)   NOT NULL,
      image      BLOB            NOT NULL,
      PRIMARY KEY (id), KEY filmNames (name)) DEFAULT CHARSET=utf8;
 

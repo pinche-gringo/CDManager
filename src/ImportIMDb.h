@@ -46,7 +46,7 @@ class ImportFromIMDb : public FilmDataEditor {
    ImportFromIMDb();
    virtual ~ImportFromIMDb();
 
-   /// Creates the dialog (and set it as child of the parent)
+   /// Creates the dialog
    /// \remarks Cares also about freeing the dialog
    static ImportFromIMDb* create() {
       ImportFromIMDb* dlg(new ImportFromIMDb);

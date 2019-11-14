@@ -995,7 +995,7 @@ void PRecords::export2HTML (unsigned int fd, const std::string&) {
 	 Check3 (records.size ());
 	 for (std::vector<HRecord>::const_iterator r (records.begin ());
 	      r != records.end (); ++r)
-	    output << "R" << **r;
+	    output << 'R' << **r;
 
 	 TRACE9 ("PRecorsd::export2HTML (unsigned int) - Writing: " << output.str ());
 	 if (::write (fd, output.str ().data (), output.str ().size ()) != (ssize_t)output.str ().size ()) {

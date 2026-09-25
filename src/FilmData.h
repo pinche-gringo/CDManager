@@ -16,54 +16,52 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <gdkmm/pixbuf.h>
 
 #include <XGP/XDialog.h>
 
 namespace Gtk {
-   class Label;
-   class Image;
-   class TextView;
-}
-
+class Label;
+class Image;
+class TextView;
+} // namespace Gtk
 
 /**Dialog allowing to edit icon and description of a film.
  */
 class FilmDataEditor : public XGP::XDialog {
- public:
-   FilmDataEditor();
-   virtual ~FilmDataEditor();
+  public:
+    FilmDataEditor();
+    virtual ~FilmDataEditor();
 
-   void setIcon(const std::string& bufImage);
-   const std::string getIcon() const;
+    void setIcon(const std::string& bufImage);
+    const std::string getIcon() const;
 
-   void setSummary(const Glib::ustring& summary);
-   const Glib::ustring getSummary() const;
+    void setSummary(const Glib::ustring& summary);
+    const Glib::ustring getSummary() const;
 
-   /// Creates the dialog
-   /// \remarks Cares also about freeing the dialog
-   static FilmDataEditor* create() {
-      FilmDataEditor* dlg(new FilmDataEditor);
-      dlg->signal_response().connect(sigc::mem_fun(*dlg, &FilmDataEditor::free));
-      return dlg;
-   }
+    /// Creates the dialog
+    /// \remarks Cares also about freeing the dialog
+    static FilmDataEditor* create() {
+        FilmDataEditor* dlg(new FilmDataEditor);
+        dlg->signal_response().connect(sigc::mem_fun(*dlg, &FilmDataEditor::free));
+        return dlg;
+    }
 
-   // Prohibited manager functions
-   FilmDataEditor(const FilmDataEditor&) = delete;
-   const FilmDataEditor& operator=(const FilmDataEditor&) = delete;
+    // Prohibited manager functions
+    FilmDataEditor(const FilmDataEditor&) = delete;
+    const FilmDataEditor& operator=(const FilmDataEditor&) = delete;
 
- protected:
-   Gtk::TextView* txtSummary;   ///< Field displaying the summary of the plot
-   Gtk::Image* image;               ///< Image showing the poster of the film
+  protected:
+    Gtk::TextView* txtSummary; ///< Field displaying the summary of the plot
+    Gtk::Image* image;         ///< Image showing the poster of the film
 
-  void loadIcon();
-  void addIcon(const std::string& file);
+    void loadIcon();
+    void addIcon(const std::string& file);
 
- private:
-   void showPoster(const Glib::RefPtr<Gdk::Pixbuf>& pic);
+  private:
+    void showPoster(const Glib::RefPtr<Gdk::Pixbuf>& pic);
 
-   Glib::RefPtr<Gdk::Pixbuf> poster;  ///< Poster of the film (scaled to the displayed size)
+    Glib::RefPtr<Gdk::Pixbuf> poster; ///< Poster of the film (scaled to the displayed size)
 };
 
 #endif

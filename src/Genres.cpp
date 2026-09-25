@@ -1,11 +1,11 @@
-//PROJECT     : CDManager
-//SUBSYSTEM   : libCDMgr
-//REFERENCES  :
-//TODO        :
-//BUGS        :
-//AUTHOR      : Markus Schwab
-//CREATED     : 13.01.2005
-//COPYRIGHT   : Copyright (C) 2005 - 2007, 2009 - 2011
+// PROJECT     : CDManager
+// SUBSYSTEM   : libCDMgr
+// REFERENCES  :
+// TODO        :
+// BUGS        :
+// AUTHOR      : Markus Schwab
+// CREATED     : 13.01.2005
+// COPYRIGHT   : Copyright (C) 2005 - 2007, 2009 - 2011, 2026
 
 // This file is part of CDManager
 //
@@ -22,7 +22,6 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <sys/stat.h>
 
 #include <string>
@@ -32,13 +31,12 @@
 #include <glibmm/convert.h>
 
 #include <YGP/Check.h>
-#include <YGP/Trace.h>
 #include <YGP/INIFile.h>
+#include <YGP/Trace.h>
 
 #include <XGP/XAttribute.h>
 
 #include "Genres.h"
-
 
 //-----------------------------------------------------------------------------
 /// Loads the genres from a data-file. The parameter \languages specifies the
@@ -48,46 +46,47 @@
 /// \param film: Object, to load the film genres into
 /// \param languages: Colon-separated list of languages
 //-----------------------------------------------------------------------------
-void Genres::loadFromFile (const char* file, Genres& records, Genres& films, const char* languages) {
-   Check1 (file); Check1 (languages);
-   std::string name (file);
+void Genres::loadFromFile(const char* file, Genres& records, Genres& films, const char* languages) {
+    Check1(file);
+    Check1(languages);
+    std::string name(file);
 
-   // Check every language-entry (while removing trailing specifiers)
-   std::string langs (languages);
-   boost::tokenizer<boost::char_separator<char> > ext (langs, boost::char_separator<char> (":"));
-   std::string extension;
-   struct stat sfile;
-   for (boost::tokenizer<boost::char_separator<char> >::iterator i (ext.begin ());
-	i != ext.end (); ++i) {
-      extension = *i;
-      std::string search;
-      do {
-	 search = name + std::string (1, '.') + extension;
+    // Check every language-entry (while removing trailing specifiers)
+    std::string langs(languages);
+    boost::tokenizer<boost::char_separator<char>> ext(langs, boost::char_separator<char>(":"));
+    std::string extension;
+    struct stat sfile;
+    for (boost::tokenizer<boost::char_separator<char>>::iterator i(ext.begin()); i != ext.end(); ++i) {
+        extension = *i;
+        std::string search;
+        do {
+            search = name + std::string(1, '.') + extension;
 
-	 TRACE9 ("Genres::loadFromFile (...) - Trying " << search);
-	 if (!::stat (search.c_str (), &sfile) && (sfile.st_mode & S_IFREG))
-	    break;
+            TRACE9("Genres::loadFromFile (...) - Trying " << search);
+            if (!::stat(search.c_str(), &sfile) && (sfile.st_mode & S_IFREG))
+                break;
 
-	 size_t pos (extension.rfind ('_'));
-	 if (pos == std::string::npos)
-	    pos = 0;
-	 extension.replace (pos, extension.length (), 0, '\0');
-      } while (extension.size ());
+            size_t pos(extension.rfind('_'));
+            if (pos == std::string::npos)
+                pos = 0;
+            extension.replace(pos, extension.length(), 0, '\0');
+        }
+        while (extension.size());
 
-      if (extension.size ()) {
-	 TRACE1 ("Genres::loadFromFile (...) - Using " << search);
-	 name = search;
-	 break;
-      }
-   } // end-while
+        if (extension.size()) {
+            TRACE1("Genres::loadFromFile (...) - Using " << search);
+            name = search;
+            break;
+        }
+    } // end-while
 
-   YGP::INIFile _inifile_ (name.c_str ());
-   YGP::INIList<Glib::ustring, std::vector<Glib::ustring> > lstFilms ("Films", films.genres);
-   _inifile_.addSection (lstFilms);
-   YGP::INIList<Glib::ustring, std::vector<Glib::ustring> > lstRecords ("Records", records.genres);
-   _inifile_.addSection (lstRecords);
+    YGP::INIFile _inifile_(name.c_str());
+    YGP::INIList<Glib::ustring, std::vector<Glib::ustring>> lstFilms("Films", films.genres);
+    _inifile_.addSection(lstFilms);
+    YGP::INIList<Glib::ustring, std::vector<Glib::ustring>> lstRecords("Records", records.genres);
+    _inifile_.addSection(lstRecords);
 
-   _inifile_.read ();
+    _inifile_.read();
 }
 
 //-----------------------------------------------------------------------------
@@ -95,7 +94,7 @@ void Genres::loadFromFile (const char* file, Genres& records, Genres& films, con
 /// \param Name of genre to convert to its associated number
 /// \returns int ID of genre or -1
 //-----------------------------------------------------------------------------
-int Genres::getId (const Glib::ustring& genre) const {
-   std::vector<Glib::ustring>::const_iterator g (std::find (genres.begin (), genres.end (), genre));
-   return (g != genres.end ()) ? (g - genres.begin ()) : -1;
+int Genres::getId(const Glib::ustring& genre) const {
+    std::vector<Glib::ustring>::const_iterator g(std::find(genres.begin(), genres.end(), genre));
+    return (g != genres.end()) ? (g - genres.begin()) : -1;
 }

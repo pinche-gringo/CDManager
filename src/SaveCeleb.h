@@ -16,63 +16,66 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
-#include <vector>
 #include <stdexcept>
+#include <vector>
 
 #include "Celebrity.h"
 
-#include <gtkmm/treeview.h>
 #include <gtkmm/liststore.h>
 #include <gtkmm/messagedialog.h>
-
+#include <gtkmm/treeview.h>
 
 /**Class to save a celebrity. Before storing the passed celebrity it
  * checks, if its name is unique and offers a dialog to connect the
  * celebrity with others (having the same name)
  */
 class SaveCelebrity : public Gtk::MessageDialog {
- public:
-   /**Dialog-canceled exception
-    */
-   class DlgCanceled : public std::runtime_error {
-    public:
-      DlgCanceled () : std::runtime_error ("By user") { }
-      virtual ~DlgCanceled () noexcept { }
-   };
+  public:
+    /**Dialog-canceled exception
+     */
+    class DlgCanceled : public std::runtime_error {
+      public:
+        DlgCanceled() : std::runtime_error("By user") {}
+        virtual ~DlgCanceled() noexcept {}
+    };
 
-   virtual ~SaveCelebrity ();
+    virtual ~SaveCelebrity();
 
-   static void store (const HCelebrity celeb, const char* role, Gtk::Widget& parent);
-   static SaveCelebrity* create (Gtk::Window& parent, const HCelebrity celeb, const std::vector<HCelebrity>& celebs);
+    static void store(const HCelebrity celeb, const char* role, Gtk::Widget& parent);
+    static SaveCelebrity* create(Gtk::Window& parent, const HCelebrity celeb, const std::vector<HCelebrity>& celebs);
 
-   int run ();
-   unsigned long getIdOfSelection ();
+    int run();
+    unsigned long getIdOfSelection();
 
-   //Prohibited manager functions
-   SaveCelebrity (const SaveCelebrity& other) = delete;
-   const SaveCelebrity& operator= (const SaveCelebrity& other) = delete;
+    // Prohibited manager functions
+    SaveCelebrity(const SaveCelebrity& other) = delete;
+    const SaveCelebrity& operator=(const SaveCelebrity& other) = delete;
 
- protected:
-   SaveCelebrity (Gtk::Window& parent, const HCelebrity celeb, const std::vector<HCelebrity>& celebs);
+  protected:
+    SaveCelebrity(Gtk::Window& parent, const HCelebrity celeb, const std::vector<HCelebrity>& celebs);
 
- private:
-   void rowSelected ();
+  private:
+    void rowSelected();
 
-   Gtk::TreeView* lstCelebs;
+    Gtk::TreeView* lstCelebs;
 
-   /**Columns of the celebrity-list
-    */
-   class CelebColumns : public Gtk::TreeModel::ColumnRecord {
-   public:
-      CelebColumns () { add (name); add (born); add (died); add (id); }
+    /**Columns of the celebrity-list
+     */
+    class CelebColumns : public Gtk::TreeModel::ColumnRecord {
+      public:
+        CelebColumns() {
+            add(name);
+            add(born);
+            add(died);
+            add(id);
+        }
 
-      Gtk::TreeModelColumn<Glib::ustring> name;
-      Gtk::TreeModelColumn<Glib::ustring> born;
-      Gtk::TreeModelColumn<Glib::ustring> died;
-      Gtk::TreeModelColumn<unsigned long> id;
-   };
-   CelebColumns colCeleb;
+        Gtk::TreeModelColumn<Glib::ustring> name;
+        Gtk::TreeModelColumn<Glib::ustring> born;
+        Gtk::TreeModelColumn<Glib::ustring> died;
+        Gtk::TreeModelColumn<unsigned long> id;
+    };
+    CelebColumns colCeleb;
 };
 
 #endif

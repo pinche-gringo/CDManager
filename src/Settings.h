@@ -16,7 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <string>
 
 #include <gtkmm/entry.h>
@@ -25,37 +24,35 @@
 
 #include <XGP/XDialog.h>
 
-
 // Forward declarations
 class Options;
 
-
 class Settings : public XGP::XDialog {
- public:
-   virtual ~Settings ();
+  public:
+    virtual ~Settings();
 
-   static Settings* create (Gtk::Window& parent, Options& options);
+    static Settings* create(Gtk::Window& parent, Options& options);
 
-   //Prohibited manager functions
-   Settings (const Settings& other) = delete;
-   const Settings& operator= (const Settings& other) = delete;
+    // Prohibited manager functions
+    Settings(const Settings& other) = delete;
+    const Settings& operator=(const Settings& other) = delete;
 
- protected:
-   Settings (Options& options);
+  protected:
+    Settings(Options& options);
 
- private:
-   void okEvent () override;
+  private:
+    void okEvent() override;
 
-   XGP::XAttributeEntry<std::string> txtOutput;
-   XGP::XAttributeEntry<std::string> hdrFilm;
-   XGP::XAttributeEntry<std::string> ftrFilm;
-   XGP::XAttributeEntry<std::string> hdrRecord;
-   XGP::XAttributeEntry<std::string> ftrRecord;
+    XGP::XAttributeEntry<std::string> txtOutput;
+    XGP::XAttributeEntry<std::string> hdrFilm;
+    XGP::XAttributeEntry<std::string> ftrFilm;
+    XGP::XAttributeEntry<std::string> hdrRecord;
+    XGP::XAttributeEntry<std::string> ftrRecord;
 
-   Gtk::Widget* wordDialog;
+    Gtk::Widget* wordDialog;
 
-   static XGP::XAttributeEntry<std::string> Settings::* fields[];
-   static Settings* instance;
+    static XGP::XAttributeEntry<std::string> Settings::* fields[];
+    static Settings* instance;
 };
 
 #endif

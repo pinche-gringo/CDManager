@@ -16,7 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <vector>
 
 #include <boost/shared_ptr.hpp>
@@ -27,100 +26,101 @@
 #include <gtkmm/treestore.h>
 
 #include "Actor.h"
-#include "Film.h"
 #include "Director.h"
+#include "Film.h"
 
 #include <XGP/XDialog.h>
 
 namespace Gtk {
-   class Button;
-   class TreeView;
-   class TreeViewColumn;
-}
-
+class Button;
+class TreeView;
+class TreeViewColumn;
+} // namespace Gtk
 
 typedef boost::shared_ptr<YGP::Entity> HEntity;
-
 
 /**Dialog to permit connecting films to an actor
  */
 class RelateFilm : public XGP::XDialog {
- private:
-   /**Class describing the columns in the film-view
-    */
-   struct FilmColumns : public Gtk::TreeModel::ColumnRecord {
-    public:
-      FilmColumns () { add (hFilm); add (film); }
+  private:
+    /**Class describing the columns in the film-view
+     */
+    struct FilmColumns : public Gtk::TreeModel::ColumnRecord {
+      public:
+        FilmColumns() {
+            add(hFilm);
+            add(film);
+        }
 
-      Gtk::TreeModelColumn<HFilm>  hFilm;
-      Gtk::TreeModelColumn<Glib::ustring> film;
-   };
+        Gtk::TreeModelColumn<HFilm> hFilm;
+        Gtk::TreeModelColumn<Glib::ustring> film;
+    };
 
+    /**Class describing the columns in the all films-view
+     */
+    class AllFilmColumns : public Gtk::TreeModel::ColumnRecord {
+      public:
+        AllFilmColumns() {
+            add(entry);
+            add(name);
+        }
 
-   /**Class describing the columns in the all films-view
-    */
-   class AllFilmColumns : public Gtk::TreeModel::ColumnRecord {
-    public:
-      AllFilmColumns () { add (entry); add (name); }
+        Gtk::TreeModelColumn<HEntity> entry;
+        Gtk::TreeModelColumn<Glib::ustring> name;
+    };
 
-      Gtk::TreeModelColumn<HEntity> entry;
-      Gtk::TreeModelColumn<Glib::ustring> name;
-   };
+  public:
+    virtual ~RelateFilm();
 
- public:
-   virtual ~RelateFilm ();
+    static RelateFilm* create(const HActor& actor, const std::vector<HFilm>& films, const Glib::RefPtr<Gtk::TreeStore> allFilms) {
+        RelateFilm* dlg(new RelateFilm(actor, films, allFilms));
+        dlg->signal_response().connect(sigc::mem_fun(*dlg, &RelateFilm::free));
+        return dlg;
+    }
+    static RelateFilm* create(const HActor& actor, const Glib::RefPtr<Gtk::TreeStore> allFilms) {
+        RelateFilm* dlg(new RelateFilm(actor, allFilms));
+        dlg->signal_response().connect(sigc::mem_fun(*dlg, &RelateFilm::free));
+        return dlg;
+    }
 
-   static RelateFilm* create (const HActor& actor, const std::vector<HFilm>& films,
-			       const Glib::RefPtr<Gtk::TreeStore> allFilms) {
-      RelateFilm* dlg (new RelateFilm (actor, films, allFilms));
-      dlg->signal_response ().connect (sigc::mem_fun (*dlg, &RelateFilm::free));
-      return dlg;
-   }
-   static RelateFilm* create (const HActor& actor, const Glib::RefPtr<Gtk::TreeStore> allFilms) {
-      RelateFilm* dlg (new RelateFilm (actor, allFilms));
-      dlg->signal_response ().connect (sigc::mem_fun (*dlg, &RelateFilm::free));
-      return dlg;
-   }
+    sigc::signal<void(const HActor&, const std::vector<HFilm>&)> signalRelateFilms;
 
-   sigc::signal<void (const HActor&, const std::vector<HFilm>&)> signalRelateFilms;
+    // Prohibited manager functions
+    RelateFilm() = delete;
+    RelateFilm(const RelateFilm& other) = delete;
+    const RelateFilm& operator=(const RelateFilm& other) = delete;
 
-   //Prohibited manager functions
-   RelateFilm () = delete;
-   RelateFilm (const RelateFilm& other) = delete;
-   const RelateFilm& operator= (const RelateFilm& other) = delete;
+  private:
+    RelateFilm(const HActor& actor, const Glib::RefPtr<Gtk::TreeStore> allFilms);
+    RelateFilm(const HActor& actor, const std::vector<HFilm>& films, const Glib::RefPtr<Gtk::TreeStore> allFilms);
 
- private:
-   RelateFilm (const HActor& actor, const Glib::RefPtr<Gtk::TreeStore> allFilms);
-   RelateFilm (const HActor& actor, const std::vector<HFilm>& films,
-		const Glib::RefPtr<Gtk::TreeStore> allFilms);
+    void init();
 
-   void init ();
+    void okEvent() override;
 
-   void okEvent () override;
+    void insertFilm(const HFilm& film);
+    void addFilm(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*);
+    void removeFilm(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*);
 
-   void insertFilm (const HFilm& film);
-   void addFilm (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*);
-   void removeFilm (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*);
+    void addSelected();
+    void removeSelected();
 
-   void addSelected ();
-   void removeSelected ();
+    void filmsSelected();
+    void allFilmsSelected();
 
-   void filmsSelected ();
-   void allFilmsSelected ();
+    FilmColumns colFilms;
+    AllFilmColumns colAllFilms;
 
-   FilmColumns    colFilms;
-   AllFilmColumns colAllFilms;
+    Glib::RefPtr<Gtk::ListStore> mFilms;
+    Glib::RefPtr<Gtk::TreeStore> availFilms;
 
-   Glib::RefPtr<Gtk::ListStore> mFilms;
-   Glib::RefPtr<Gtk::TreeStore> availFilms;
+    Gtk::Button& addFilms;
+    Gtk::Button& removeFilms;
 
-   Gtk::Button& addFilms;
-   Gtk::Button& removeFilms;
+    Gtk::TreeView& lstFilms;
+    Gtk::TreeView& lstAllFilms;
 
-   Gtk::TreeView& lstFilms;
-   Gtk::TreeView& lstAllFilms;
-
-   HActor actor;
+    HActor actor;
 };
 
 #endif

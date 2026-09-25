@@ -1,7 +1,6 @@
 #ifndef STORAGEACTOR_H
 #define STORAGEACTOR_H
 
-
 // This file is part of CDManager
 //
 // CDManager is free software: you can redistribute it and/or modify
@@ -17,39 +16,35 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <map>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "Actor.h"
 
 #include "Storage.h"
 
-
 // Forward declarations
 namespace YGP {
-   class StatusObject;
+class StatusObject;
 };
-
 
 /**Class to access the stored ators
  */
 class StorageActor : public Storage {
- public:
-   static void loadActors (std::vector<HActor>& target, YGP::StatusObject& stat) {
-      loadCelebrities (target, "Actors", stat); }
-   static void loadActorsInFilms (std::map<unsigned int, std::vector<unsigned int> >& aActors);
-   static void deleteActor (unsigned int idActor);
-   static void deleteActorFilms (unsigned int idActor);
-   static void saveActorFilm (unsigned int idActor, unsigned int idFilm);
+  public:
+    static void loadActors(std::vector<HActor>& target, YGP::StatusObject& stat) { loadCelebrities(target, "Actors", stat); }
+    static void loadActorsInFilms(std::map<unsigned int, std::vector<unsigned int>>& aActors);
+    static void deleteActor(unsigned int idActor);
+    static void deleteActorFilms(unsigned int idActor);
+    static void saveActorFilm(unsigned int idActor, unsigned int idFilm);
 
- private:
-   StorageActor ();
-   StorageActor (const StorageActor& other);
-   virtual ~StorageActor ();
+  private:
+    StorageActor();
+    StorageActor(const StorageActor& other);
+    virtual ~StorageActor();
 
-   const StorageActor& operator= (const StorageActor& other);
+    const StorageActor& operator=(const StorageActor& other);
 };
 
 #endif

@@ -16,11 +16,10 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <cdmgr-cfg.h>
 
-#if !defined (WITH_ACTORS) || !defined (WITH_RECORDS) || !defined (WITH_FILMS)
-#  error Need WITH_ACTORS, WITH_RECORDS and WITH_FILMS defined
+#if !defined(WITH_ACTORS) || !defined(WITH_RECORDS) || !defined(WITH_FILMS)
+#    error Need WITH_ACTORS, WITH_RECORDS and WITH_FILMS defined
 #endif
 
 #include <map>
@@ -32,8 +31,8 @@
 
 #include <gtkmm/notebook.h>
 #include <gtkmm/shortcutcontroller.h>
-#include <gtkmm/treeview.h>
 #include <gtkmm/statusbar.h>
+#include <gtkmm/treeview.h>
 
 #include "Genres.h"
 
@@ -41,87 +40,91 @@
 
 #include <XGP/XApplication.h>
 
-
 // Forward declarations
 class NBPage;
 class Options;
 namespace YGP {
-   class Entity;
-   class StatusObject;
-}
-
+class Entity;
+class StatusObject;
+} // namespace YGP
 
 /**Class for application to manage CDs (audio and video)
-*/
+ */
 class CDManager : public XGP::XApplication {
- public:
-   // Manager functions
-   CDManager (Options& options);
-   ~CDManager ();
+  public:
+    // Manager functions
+    CDManager(Options& options);
+    ~CDManager();
 
-   CDManager (const CDManager&) = delete;
-   const CDManager& operator= (const CDManager&) = delete;
+    CDManager(const CDManager&) = delete;
+    const CDManager& operator=(const CDManager&) = delete;
 
- private:
-   // Event-handling
-   void save ();
-   void showLogin ();
-   void logout ();
+  private:
+    // Event-handling
+    void save();
+    void showLogin();
+    void logout();
 #if (WITH_RECORDS == 1) || (WITH_FILMS == 1)
-   void export2HTML ();
+    void export2HTML();
 #endif
 
-   void showStatistics ();
-   void editPreferences ();
-   void savePreferences ();
+    void showStatistics();
+    void editPreferences();
+    void savePreferences();
 
-   void showAboutbox () override;
-   const char* getHelpfile () override;
-   void pageSwitched (Gtk::Widget* page, guint iPage);
-   void enablePageMenus (bool enable);
+    void showAboutbox() override;
+    const char* getHelpfile() override;
+    void pageSwitched(Gtk::Widget* page, guint iPage);
+    void enablePageMenus(bool enable);
 
-   bool login (const Glib::ustring& user, const Glib::ustring& pwd);
-   void loadDatabase ();
+    bool login(const Glib::ustring& user, const Glib::ustring& pwd);
+    void loadDatabase();
 
-   void enableMenus (bool enable);
-   void exit ();
-   void querySave ();
-   bool on_close_request () override;
-   void showError (const Glib::ustring& msg, const Glib::ustring& title = Glib::ustring ());
-   Glib::RefPtr<Gio::SimpleAction> addMenuEntry (const Glib::RefPtr<Gio::Menu>& menu, const Glib::ustring& label,
-		      const char* action, const sigc::slot<void ()>& callback,
-		      const Glib::ustring& accel = Glib::ustring ());
+    void enableMenus(bool enable);
+    void exit();
+    void querySave();
+    bool on_close_request() override;
+    void showError(const Glib::ustring& msg, const Glib::ustring& title = Glib::ustring());
+    Glib::RefPtr<Gio::SimpleAction> addMenuEntry(const Glib::RefPtr<Gio::Menu>& menu, const Glib::ustring& label,
+                                                 const char* action, const sigc::slot<void()>& callback,
+                                                 const Glib::ustring& accel = Glib::ustring());
 
-   static const char* xpmProgram[];
-   static const char* xpmAuthor[];
+    static const char* xpmProgram[];
+    static const char* xpmAuthor[];
 
-   static const unsigned int WIDTH;
-   static const unsigned int HEIGHT;
+    static const unsigned int WIDTH;
+    static const unsigned int HEIGHT;
 
-   static const char* const DBNAME;
+    static const char* const DBNAME;
 
-   Genres recGenres;
-   Genres filmGenres;
+    Genres recGenres;
+    Genres filmGenres;
 
-   Gtk::Notebook  nb;
-   Gtk::Statusbar status;
+    Gtk::Notebook nb;
+    Gtk::Statusbar status;
 
-   enum { LOGIN = 0, SAVE, LOGOUT, STATISTICS, SAVE_PREFS,
+    enum {
+        LOGIN = 0,
+        SAVE,
+        LOGOUT,
+        STATISTICS,
+        SAVE_PREFS,
 #if (WITH_RECORDS == 1) || (WITH_FILMS == 1)
-	  EXPORT,
+        EXPORT,
 #endif
-   	  LAST };
-   Glib::RefPtr<Gio::SimpleAction> apMenus[LAST];
+        LAST
+    };
+    Glib::RefPtr<Gio::SimpleAction> apMenus[LAST];
 
-   Glib::RefPtr<Gio::Menu>               menuEdit;     ///< Edit-menu; filled by the pages
-   Glib::RefPtr<Gio::Menu>               menuOther;    ///< Additional top-level menus of the pages
-   Glib::RefPtr<Gio::SimpleActionGroup>  grpPage;      ///< Actions ("page.*") of the current page
-   Glib::RefPtr<Gtk::ShortcutController> ctrlPage;     ///< Shortcuts of the current page
-   Glib::RefPtr<Gtk::ShortcutController> ctrlMain;     ///< Shortcuts of the main menu
-   bool                                  pageMenusOn;  ///< Flag, if the page-menus are enabled
-   Options& opt;
+    Glib::RefPtr<Gio::Menu> menuEdit;               ///< Edit-menu; filled by the pages
+    Glib::RefPtr<Gio::Menu> menuOther;              ///< Additional top-level menus of the pages
+    Glib::RefPtr<Gio::SimpleActionGroup> grpPage;   ///< Actions ("page.*") of the current page
+    Glib::RefPtr<Gtk::ShortcutController> ctrlPage; ///< Shortcuts of the current page
+    Glib::RefPtr<Gtk::ShortcutController> ctrlMain; ///< Shortcuts of the main menu
+    bool pageMenusOn;                               ///< Flag, if the page-menus are enabled
+    Options& opt;
 
-   NBPage* pages[WITH_ACTORS + WITH_FILMS + WITH_RECORDS];
+    NBPage* pages[WITH_ACTORS + WITH_FILMS + WITH_RECORDS];
 };
 
 #endif

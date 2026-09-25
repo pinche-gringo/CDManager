@@ -16,61 +16,58 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <gtkmm/grid.h>
-#include <gtkmm/treeview.h>
 #include <gtkmm/liststore.h>
-
+#include <gtkmm/treeview.h>
 
 namespace Gtk {
-   class Entry;
-   class Button;
-};
-
+class Entry;
+class Button;
+}; // namespace Gtk
 
 /**Table permitting to manipulate the words.
  */
 class WordDialog : public Gtk::Grid {
- public:
-   static Gtk::Widget* makeDialog () { return new WordDialog (); }
-   static void commitDialogData (Gtk::Widget* dialog);
+  public:
+    static Gtk::Widget* makeDialog() { return new WordDialog(); }
+    static void commitDialogData(Gtk::Widget* dialog);
 
- protected:
-   WordDialog ();
-   virtual ~WordDialog ();
+  protected:
+    WordDialog();
+    virtual ~WordDialog();
 
-   void commit ();
+    void commit();
 
-   class WordColumns : public Gtk::TreeModel::ColumnRecord {
-    public:
-      WordColumns () { add (word); }
+    class WordColumns : public Gtk::TreeModel::ColumnRecord {
+      public:
+        WordColumns() { add(word); }
 
-      Gtk::TreeModelColumn<Glib::ustring> word;
-   };
+        Gtk::TreeModelColumn<Glib::ustring> word;
+    };
 
-   void appendWord (const char* value);
-   void appendArticle (const char* value);
-   Gtk::TreeModel::Row append (Glib::RefPtr<Gtk::ListStore>& list, const Glib::ustring& value);
-   void entryChanged (unsigned int which);
-   void entrySelected (unsigned int which);
-   void onAdd (unsigned int which);
-   void onDelete (unsigned int which);
+    void appendWord(const char* value);
+    void appendArticle(const char* value);
+    Gtk::TreeModel::Row append(Glib::RefPtr<Gtk::ListStore>& list, const Glib::ustring& value);
+    void entryChanged(unsigned int which);
+    void entrySelected(unsigned int which);
+    void onAdd(unsigned int which);
+    void onDelete(unsigned int which);
 
- private:
-   WordColumns colWords;
-   Glib::RefPtr<Gtk::ListStore> names;
-   Glib::RefPtr<Gtk::ListStore> articles;
+  private:
+    WordColumns colWords;
+    Glib::RefPtr<Gtk::ListStore> names;
+    Glib::RefPtr<Gtk::ListStore> articles;
 
-   Gtk::Entry& txtName;
-   Gtk::Entry& txtArticle;
+    Gtk::Entry& txtName;
+    Gtk::Entry& txtArticle;
 
-   Gtk::Button& addName;
-   Gtk::Button& deleteName;
-   Gtk::Button& addArticle;
-   Gtk::Button& deleteArticle;
+    Gtk::Button& addName;
+    Gtk::Button& deleteName;
+    Gtk::Button& addArticle;
+    Gtk::Button& deleteArticle;
 
-   Gtk::TreeView& lstNames;
-   Gtk::TreeView& lstArticles;
+    Gtk::TreeView& lstNames;
+    Gtk::TreeView& lstArticles;
 };
 
 #endif

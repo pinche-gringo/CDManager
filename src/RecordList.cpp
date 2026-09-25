@@ -1,11 +1,11 @@
-//PROJECT     : CDManager
-//SUBSYSTEM   : src
-//REFERENCES  :
-//TODO        :
-//BUGS        :
-//AUTHOR      : Markus Schwab
-//CREATED     : 31.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009, 2010, 2026
+// PROJECT     : CDManager
+// SUBSYSTEM   : src
+// REFERENCES  :
+// TODO        :
+// BUGS        :
+// AUTHOR      : Markus Schwab
+// CREATED     : 31.10.2004
+// COPYRIGHT   : Copyright (C) 2004 - 2006, 2009, 2010, 2026
 
 // This file is part of CDManager
 //
@@ -22,7 +22,6 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <cdmgr-cfg.h>
 
 #include <cerrno>
@@ -37,25 +36,20 @@
 
 #include "RecordList.h"
 
-
 //-----------------------------------------------------------------------------
 /// Default constructor
 /// \param genres: Genres which should be displayed in the 3rd column
 //-----------------------------------------------------------------------------
-RecordList::RecordList (const Genres& genres)
-   : OwnerObjectList (genres) {
-   TRACE9 ("RecordList::RecordList (const Genres&)");
-   mOwnerObjects = Gtk::TreeStore::create (colOwnerObjects);
-   init (colOwnerObjects);
+RecordList::RecordList(const Genres& genres) : OwnerObjectList(genres) {
+    TRACE9("RecordList::RecordList (const Genres&)");
+    mOwnerObjects = Gtk::TreeStore::create(colOwnerObjects);
+    init(colOwnerObjects);
 }
 
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------
-RecordList::~RecordList () {
-   TRACE9 ("RecordList::~RecordList ()");
-}
-
+RecordList::~RecordList() { TRACE9("RecordList::~RecordList ()"); }
 
 //-----------------------------------------------------------------------------
 /// Appends a record to the list
@@ -63,15 +57,14 @@ RecordList::~RecordList () {
 /// \param artist: Interpret of the record
 /// \returns Gtk::TreeModel::Row: Inserted row
 //-----------------------------------------------------------------------------
-Gtk::TreeModel::Row RecordList::append (HRecord& record, Gtk::TreeModel::Row& artist) {
-   TRACE3 ("RecordList::append (HRecord&, Gtk::TreeModel::Row&) - "
-	   << (record ? record->getName ().c_str () : "None"));
-   Check1 (record);
+Gtk::TreeModel::Row RecordList::append(HRecord& record, Gtk::TreeModel::Row& artist) {
+    TRACE3("RecordList::append (HRecord&, Gtk::TreeModel::Row&) - " << (record ? record->getName().c_str() : "None"));
+    Check1(record);
 
-   HEntity obj (record);
-   Gtk::TreeModel::Row newRecord (OwnerObjectList::append (obj, artist));
-   update (newRecord);
-   return newRecord;
+    HEntity obj(record);
+    Gtk::TreeModel::Row newRecord(OwnerObjectList::append(obj, artist));
+    update(newRecord);
+    return newRecord;
 }
 
 //-----------------------------------------------------------------------------
@@ -79,12 +72,13 @@ Gtk::TreeModel::Row RecordList::append (HRecord& record, Gtk::TreeModel::Row& ar
 /// \param row: Row in the list
 /// \returns HRecord: Handle of the selected line
 //-----------------------------------------------------------------------------
-HRecord RecordList::getRecordAt (const Gtk::TreeModel::ConstRow& row) const {
-   Check2 (row.parent ());
-   HRecord record (boost::dynamic_pointer_cast<Record> (getObjectAt (row))); Check3 (record);
-   TRACE7 ("RecordList::getRecordAt (const Gtk::TreeModel::ConstRow&) - Selected record: " <<
-	   record->getId () << '/' << record->getName ());
-   return record;
+HRecord RecordList::getRecordAt(const Gtk::TreeModel::ConstRow& row) const {
+    Check2(row.parent());
+    HRecord record(boost::dynamic_pointer_cast<Record>(getObjectAt(row)));
+    Check3(record);
+    TRACE7("RecordList::getRecordAt (const Gtk::TreeModel::ConstRow&) - Selected record: " << record->getId() << '/'
+                                                                                           << record->getName());
+    return record;
 }
 
 //-----------------------------------------------------------------------------
@@ -93,8 +87,8 @@ HRecord RecordList::getRecordAt (const Gtk::TreeModel::ConstRow& row) const {
 /// \param value: Value to set
 /// \remarks To be implemented
 //-----------------------------------------------------------------------------
-void RecordList::setName (HEntity& object, const Glib::ustring& value) {
-   (boost::dynamic_pointer_cast<Record> (object))->setName (value);
+void RecordList::setName(HEntity& object, const Glib::ustring& value) {
+    (boost::dynamic_pointer_cast<Record>(object))->setName(value);
 }
 
 //-----------------------------------------------------------------------------
@@ -104,8 +98,8 @@ void RecordList::setName (HEntity& object, const Glib::ustring& value) {
 /// \throw std::exception: In case of an error
 /// \remarks To be implemented
 //-----------------------------------------------------------------------------
-void RecordList::setYear (HEntity& object, const Glib::ustring& value) {
-   (boost::dynamic_pointer_cast<Record> (object))->setYear (value);
+void RecordList::setYear(HEntity& object, const Glib::ustring& value) {
+    (boost::dynamic_pointer_cast<Record>(object))->setYear(value);
 }
 
 //-----------------------------------------------------------------------------
@@ -114,17 +108,13 @@ void RecordList::setYear (HEntity& object, const Glib::ustring& value) {
 /// \param value: Value to set
 /// \remarks To be implemented
 //-----------------------------------------------------------------------------
-void RecordList::setGenre (HEntity& object, unsigned int value) {
-   (boost::dynamic_pointer_cast<Record> (object))->setGenre (value);
-}
+void RecordList::setGenre(HEntity& object, unsigned int value) { (boost::dynamic_pointer_cast<Record>(object))->setGenre(value); }
 
 //-----------------------------------------------------------------------------
 /// Returns the name of the first column
 /// \returns Glib::ustring: The name of the first colum
 //-----------------------------------------------------------------------------
-Glib::ustring RecordList::getColumnName () const {
-   return _("Interpret/Record");
-}
+Glib::ustring RecordList::getColumnName() const { return _("Interpret/Record"); }
 
 //-----------------------------------------------------------------------------
 /// Sorts the entries in the listbox according to the name (ignoring articles)
@@ -132,15 +122,13 @@ Glib::ustring RecordList::getColumnName () const {
 /// \param a: Second entry to compare
 /// \returns int: Value as strcmp
 //-----------------------------------------------------------------------------
-int RecordList::sortEntity (const Gtk::TreeModel::const_iterator& a,
-			    const Gtk::TreeModel::const_iterator& b) const {
-   HRecord ha (getRecordAt (a));
-   HRecord hb (getRecordAt (b));
-   Glib::ustring aname (Record::removeIgnored (ha->getName ()));
-   Glib::ustring bname (Record::removeIgnored (hb->getName ()));
+int RecordList::sortEntity(const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const {
+    HRecord ha(getRecordAt(a));
+    HRecord hb(getRecordAt(b));
+    Glib::ustring aname(Record::removeIgnored(ha->getName()));
+    Glib::ustring bname(Record::removeIgnored(hb->getName()));
 
-   return ((aname < bname) ? -1 : (bname < aname) ? 1
-	   : ha->getName ().compare (hb->getName ()));
+    return ((aname < bname) ? -1 : (bname < aname) ? 1 : ha->getName().compare(hb->getName()));
 }
 
 //-----------------------------------------------------------------------------
@@ -148,12 +136,12 @@ int RecordList::sortEntity (const Gtk::TreeModel::const_iterator& a,
 /// values stored in the object in the entity-column
 /// \param row: Row to update
 //-----------------------------------------------------------------------------
-void RecordList::update (Gtk::TreeModel::Row& row) {
-   if (row.parent ()) {
-      HRecord record (getRecordAt (row));
-      row[colOwnerObjects.name] = record->getName ();
-      row[colOwnerObjects.year] = record->getYear ().toString ();
-      changeGenre (row, record->getGenre ());
-   }
-   OwnerObjectList::update (row);
+void RecordList::update(Gtk::TreeModel::Row& row) {
+    if (row.parent()) {
+        HRecord record(getRecordAt(row));
+        row[colOwnerObjects.name] = record->getName();
+        row[colOwnerObjects.year] = record->getYear().toString();
+        changeGenre(row, record->getGenre());
+    }
+    OwnerObjectList::update(row);
 }

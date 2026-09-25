@@ -16,27 +16,26 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <YGP/MetaEnum.h>
-
 
 /**Class to hold the types of the CDs
  */
 class CDType : public YGP::MetaEnum {
- public:
-   static CDType& getInstance () {
-      if (!instance)
-	 instance = new CDType;
-      return *instance; }
-   ~CDType ();
+  public:
+    static CDType& getInstance() {
+        if (!instance)
+            instance = new CDType;
+        return *instance;
+    }
+    ~CDType();
 
- private:
-   //Prohibited manager functions
-   CDType ();
-   CDType (const CDType&);
-   const CDType& operator= (const CDType& other);
+  private:
+    // Prohibited manager functions
+    CDType();
+    CDType(const CDType&);
+    const CDType& operator=(const CDType& other);
 
-   static CDType* instance;
+    static CDType* instance;
 };
 
 #endif

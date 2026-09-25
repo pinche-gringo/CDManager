@@ -16,65 +16,62 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <map>
-#include <string>
 #include <stdexcept>
+#include <string>
 
 #include <glibmm/ustring.h>
 
 #ifdef USE_LANGUAGEPIXMAPS
-#  include <gdkmm/pixbuf.h>
+#    include <gdkmm/pixbuf.h>
 #endif
-
 
 /**Class to manage languages
  */
 struct Language {
- public:
-   static void init ();
+  public:
+    static void init();
 
-   static Glib::ustring findInternational (const std::string& lang);
-   static const Language& findLanguage (const std::string& lang);
-   static bool exists (const std::string& lang);
+    static Glib::ustring findInternational(const std::string& lang);
+    static const Language& findLanguage(const std::string& lang);
+    static bool exists(const std::string& lang);
 #ifdef USE_LANGUAGEPIXMAPS
-   static Glib::RefPtr<Gdk::Pixbuf> findFlag (const std::string& lang);
+    static Glib::RefPtr<Gdk::Pixbuf> findFlag(const std::string& lang);
 #endif
 
-   Glib::ustring getInternational () const { return nameInternational; }
+    Glib::ustring getInternational() const { return nameInternational; }
 #ifdef USE_LANGUAGEPIXMAPS
-   const Glib::RefPtr<Gdk::Pixbuf> getFlag () const {return flag; }
+    const Glib::RefPtr<Gdk::Pixbuf> getFlag() const { return flag; }
 #endif
 
-   Language ();
-   Language (const Language& other);
-   Language (const Glib::ustring& internat
+    Language();
+    Language(const Language& other);
+    Language(const Glib::ustring& internat
 #ifdef USE_LANGUAGEPIXMAPS
-	     , const Glib::RefPtr<Gdk::Pixbuf>& image
+             ,
+             const Glib::RefPtr<Gdk::Pixbuf>& image
 #endif
-);
+    );
 
-   Language& operator= (const Language& other);
-   ~Language ();
+    Language& operator=(const Language& other);
+    ~Language();
 
-   static std::map<std::string, Language>::const_iterator begin () {
-      return languages.begin (); }
-   static std::map<std::string, Language>::const_iterator end () {
-      return languages.end (); }
+    static std::map<std::string, Language>::const_iterator begin() { return languages.begin(); }
+    static std::map<std::string, Language>::const_iterator end() { return languages.end(); }
 
- protected:
+  protected:
 #ifdef USE_LANGUAGEPIXMAPS
-   static Glib::RefPtr<Gdk::Pixbuf> loadFlag (const char* file);
-#endif
-
- private:
-   Glib::ustring nameInternational;
-#ifdef USE_LANGUAGEPIXMAPS
-   Glib::RefPtr<Gdk::Pixbuf> flag;
+    static Glib::RefPtr<Gdk::Pixbuf> loadFlag(const char* file);
 #endif
 
-   typedef std::pair<std::string, Language> langValue;
-   static std::map<std::string, Language> languages;
+  private:
+    Glib::ustring nameInternational;
+#ifdef USE_LANGUAGEPIXMAPS
+    Glib::RefPtr<Gdk::Pixbuf> flag;
+#endif
+
+    typedef std::pair<std::string, Language> langValue;
+    static std::map<std::string, Language> languages;
 };
 
 #endif

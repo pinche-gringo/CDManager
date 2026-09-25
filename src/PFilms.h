@@ -16,20 +16,18 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <map>
 #include <memory>
-#include <vector>
 #include <stdexcept>
+#include <vector>
 
 #include <YGP/Relation.h>
 
-#include "Film.h"
 #include "Director.h"
+#include "Film.h"
 #include "FilmList.h"
 
 #include "NBPage.h"
-
 
 // Forward declarations
 class Genres;
@@ -38,94 +36,89 @@ class LanguageImg;
 class ImportFromIMDb;
 
 namespace Gtk {
-   class PopoverMenu;
+class PopoverMenu;
 }
-
 
 /**Class handling the films notebook-page
  */
 class PFilms : public NBPage {
- public:
-   PFilms (Gtk::Statusbar& status, Glib::RefPtr<Gio::SimpleAction> menuSave, const Genres& genres);
-   virtual ~PFilms ();
+  public:
+    PFilms(Gtk::Statusbar& status, Glib::RefPtr<Gio::SimpleAction> menuSave, const Genres& genres);
+    virtual ~PFilms();
 
-   void loadData() override;
-   void saveData() override;
-   void getFocus() override;
-   void addMenu(Glib::RefPtr<Gio::Menu> menuEntries, Glib::RefPtr<Gio::Menu> menuOther,
-		Glib::RefPtr<Gio::SimpleActionGroup> grpAction,
-		Glib::RefPtr<Gtk::ShortcutController> shortcuts) override;
-   void removeMenu() override;
-   void deleteSelection() override;
-   void undo() override;
-   void clear() override;
-   void export2HTML(unsigned int fd, const std::string& lang) override;
+    void loadData() override;
+    void saveData() override;
+    void getFocus() override;
+    void addMenu(Glib::RefPtr<Gio::Menu> menuEntries, Glib::RefPtr<Gio::Menu> menuOther,
+                 Glib::RefPtr<Gio::SimpleActionGroup> grpAction, Glib::RefPtr<Gtk::ShortcutController> shortcuts) override;
+    void removeMenu() override;
+    void deleteSelection() override;
+    void undo() override;
+    void clear() override;
+    void export2HTML(unsigned int fd, const std::string& lang) override;
 
-   void addLanguageMenus(Glib::RefPtr<Gio::Menu> menu,
-			 Glib::RefPtr<Gtk::ShortcutController> shortcuts = {});
-   void editSelection();
+    void addLanguageMenus(Glib::RefPtr<Gio::Menu> menu, Glib::RefPtr<Gtk::ShortcutController> shortcuts = {});
+    void editSelection();
 
-   static HFilm findFilm(const std::vector<HDirector>& directors,
-			 const YGP::Relation1_N<HDirector, HFilm>& relFilms, unsigned int id);
+    static HFilm findFilm(const std::vector<HDirector>& directors, const YGP::Relation1_N<HDirector, HFilm>& relFilms,
+                          unsigned int id);
 
-   const FilmList& getFilmList() const { return films; }
-   const std::vector<HDirector>& getDirectors() const { return directors; }
-   const YGP::Relation1_N<HDirector, HFilm>& getRelFilms() const { return relFilms; }
+    const FilmList& getFilmList() const { return films; }
+    const std::vector<HDirector>& getDirectors() const { return directors; }
+    const YGP::Relation1_N<HDirector, HFilm>& getRelFilms() const { return relFilms; }
 
-   PFilms() = delete;
-   PFilms(const PFilms& other) = delete;
-   const PFilms& operator=(const PFilms& other) = delete;
+    PFilms() = delete;
+    PFilms(const PFilms& other) = delete;
+    const PFilms& operator=(const PFilms& other) = delete;
 
- private:
-   void loadData(const std::string& lang);
+  private:
+    void loadData(const std::string& lang);
 
-   void selectLanguage();
-   void setLanguage(const std::string& lang);
-   void changeLanguage(const std::string& lang);
+    void selectLanguage();
+    void setLanguage(const std::string& lang);
+    void changeLanguage(const std::string& lang);
 
-   void directorChanged(const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
-   void filmChanged(const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
+    void directorChanged(const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
+    void filmChanged(const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
 
-   void newDirector();
-   Gtk::TreeModel::iterator addDirector(HDirector& hDirector);
-   void newFilm();
-   Gtk::TreeModel::iterator addFilm(HFilm& hFilm, const Gtk::TreeModel::iterator& pos);
-   void deleteFilm(const Gtk::TreeModel::iterator& film);
+    void newDirector();
+    Gtk::TreeModel::iterator addDirector(HDirector& hDirector);
+    void newFilm();
+    Gtk::TreeModel::iterator addFilm(HFilm& hFilm, const Gtk::TreeModel::iterator& pos);
+    void deleteFilm(const Gtk::TreeModel::iterator& film);
 
-   void undoFilm(const Undo& last);
-   void undoDirector(const Undo& last);
+    void undoFilm(const Undo& last);
+    void undoDirector(const Undo& last);
 
-   void importFromIMDb();
-   void importInfoFromIMDb();
+    void importFromIMDb();
+    void importInfoFromIMDb();
 
-   void filmSelected();
-   HFilm findFilm(unsigned int id) const {
-      return findFilm(directors, relFilms, id);
-   }
+    void filmSelected();
+    HFilm findFilm(unsigned int id) const { return findFilm(directors, relFilms, id); }
 
-   bool continousImportFilm(const Glib::ustring& director, const Glib::ustring& film,
-			    const Glib::ustring& genre, const Glib::ustring& summary,
-			    const std::string& image, ImportFromIMDb* dlg, std::vector<HFilm>* films);
-   bool importFilm(const Glib::ustring& director, const Glib::ustring& film,
-		   const Glib::ustring& genre, const Glib::ustring& summary, const std::string& image);
-   void importNextFilm(ImportFromIMDb* dlg, std::vector<HFilm>* films);
+    bool continousImportFilm(const Glib::ustring& director, const Glib::ustring& film, const Glib::ustring& genre,
+                             const Glib::ustring& summary, const std::string& image, ImportFromIMDb* dlg,
+                             std::vector<HFilm>* films);
+    bool importFilm(const Glib::ustring& director, const Glib::ustring& film, const Glib::ustring& genre,
+                    const Glib::ustring& summary, const std::string& image);
+    void importNextFilm(ImportFromIMDb* dlg, std::vector<HFilm>* films);
 
-   bool onQueryTooltip(int x, int y, bool keyboard, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
+    bool onQueryTooltip(int x, int y, bool keyboard, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
 
-   LanguageImg* imgLang;
-   std::unique_ptr<Gtk::PopoverMenu> popLang;   ///< Popup-menu of imgLang
+    LanguageImg* imgLang;
+    std::unique_ptr<Gtk::PopoverMenu> popLang; ///< Popup-menu of imgLang
 
-   FilmList films;                              // GUI-element holding films
+    FilmList films; // GUI-element holding films
 
-   // Model
-   enum { DIRECTOR, FILM };
-   std::vector<HDirector> directors;
-   YGP::Relation1_N<HDirector, HFilm> relFilms;
+    // Model
+    enum { DIRECTOR, FILM };
+    std::vector<HDirector> directors;
+    YGP::Relation1_N<HDirector, HFilm> relFilms;
 
-   std::map<std::string, bool> loadedLangs;
+    std::map<std::string, bool> loadedLangs;
 
-   Glib::RefPtr<Gio::SimpleAction> menuEdit;
-   Glib::RefPtr<Gio::SimpleAction> menuLang;   ///< Radio-action to select the language
+    Glib::RefPtr<Gio::SimpleAction> menuEdit;
+    Glib::RefPtr<Gio::SimpleAction> menuLang; ///< Radio-action to select the language
 };
 
 #endif

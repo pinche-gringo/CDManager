@@ -1,11 +1,11 @@
-//PROJECT     : CDManager
-//SUBSYSTEM   : NBPage
-//REFERENCES  :
-//TODO        :
-//BUGS        :
-//AUTHOR      : Markus Schwab
-//CREATED     : 20.01.2006
-//COPYRIGHT   : Copyright (C) 2006, 2009, 2010, 2026
+// PROJECT     : CDManager
+// SUBSYSTEM   : NBPage
+// REFERENCES  :
+// TODO        :
+// BUGS        :
+// AUTHOR      : Markus Schwab
+// CREATED     : 20.01.2006
+// COPYRIGHT   : Copyright (C) 2006, 2009, 2010, 2026
 
 // This file is part of CDManager
 //
@@ -22,18 +22,17 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <memory>
 
 #include <giomm/action.h>
 #include <giomm/menuitem.h>
 
 #include <gtkmm/box.h>
-#include <gtkmm/shortcut.h>
-#include <gtkmm/statusbar.h>
 #include <gtkmm/messagedialog.h>
+#include <gtkmm/shortcut.h>
 #include <gtkmm/shortcutaction.h>
 #include <gtkmm/shortcuttrigger.h>
+#include <gtkmm/statusbar.h>
 
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
@@ -42,38 +41,36 @@
 
 #include "NBPage.h"
 
-
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------
-NBPage::~NBPage () {
-}
-
+NBPage::~NBPage() {}
 
 //-----------------------------------------------------------------------------
 /// Enables or disables the edit-menus entries according to the selection
 /// \param selected: Kind of the currently selected entry
 //-----------------------------------------------------------------------------
-void NBPage::enableEdit (SELECTED selected) {
-   TRACE9 ("NBPage::enableEdit (SELECTED) - " << selected);
-   Check2 (apMenus[NEW1]); Check2 (apMenus[NEW2]);
+void NBPage::enableEdit(SELECTED selected) {
+    TRACE9("NBPage::enableEdit (SELECTED) - " << selected);
+    Check2(apMenus[NEW1]);
+    Check2(apMenus[NEW2]);
 
-   Check2 (apMenus[DELETE]);
+    Check2(apMenus[DELETE]);
 
-   apMenus[DELETE]->set_enabled (selected != NONE_SELECTED);
-   apMenus[NEW1]->set_enabled (true);
-   apMenus[NEW2]->set_enabled (selected > NONE_SELECTED);
-   if (apMenus[NEW3])
-      apMenus[NEW3]->set_enabled (selected == OBJECT_SELECTED);
+    apMenus[DELETE]->set_enabled(selected != NONE_SELECTED);
+    apMenus[NEW1]->set_enabled(true);
+    apMenus[NEW2]->set_enabled(selected > NONE_SELECTED);
+    if (apMenus[NEW3])
+        apMenus[NEW3]->set_enabled(selected == OBJECT_SELECTED);
 }
 
 //-----------------------------------------------------------------------------
 /// Changes the text of the status-line
 /// \param msgStatus: Text to display in the status-line
 //-----------------------------------------------------------------------------
-void NBPage::showStatus (const Glib::ustring& msgStatus) {
-   statusbar.pop ();
-   statusbar.push (msgStatus);
+void NBPage::showStatus(const Glib::ustring& msgStatus) {
+    statusbar.pop();
+    statusbar.push(msgStatus);
 }
 
 //-----------------------------------------------------------------------------
@@ -81,14 +78,13 @@ void NBPage::showStatus (const Glib::ustring& msgStatus) {
 /// \param msg: Message to display
 /// \param title: Title of the dialog; may be empty
 //-----------------------------------------------------------------------------
-void NBPage::showError (const Glib::ustring& msg, const Glib::ustring& title) {
-   Gtk::Window* win (widget ? dynamic_cast<Gtk::Window*> (widget->get_root ()) : nullptr);
-   std::unique_ptr<Gtk::MessageDialog> dlg
-      (win ? new Gtk::MessageDialog (*win, msg, false, Gtk::MessageType::ERROR)
-       : new Gtk::MessageDialog (msg, false, Gtk::MessageType::ERROR));
-   if (title.size ())
-      dlg->set_title (title);
-   XGP::runModal (*dlg);
+void NBPage::showError(const Glib::ustring& msg, const Glib::ustring& title) {
+    Gtk::Window* win(widget ? dynamic_cast<Gtk::Window*>(widget->get_root()) : nullptr);
+    std::unique_ptr<Gtk::MessageDialog> dlg(win ? new Gtk::MessageDialog(*win, msg, false, Gtk::MessageType::ERROR)
+                                                : new Gtk::MessageDialog(msg, false, Gtk::MessageType::ERROR));
+    if (title.size())
+        dlg->set_title(title);
+    XGP::runModal(*dlg);
 }
 
 //-----------------------------------------------------------------------------
@@ -96,18 +92,20 @@ void NBPage::showError (const Glib::ustring& msg, const Glib::ustring& title) {
 /// \param widget: Widget to add
 /// \remarks The statusbar must be inside a (horizontal) box
 //-----------------------------------------------------------------------------
-void NBPage::addStatusWidget (Gtk::Widget& widget) {
-   Gtk::Box* box (dynamic_cast<Gtk::Box*> (statusbar.get_parent ())); Check3 (box);
-   box->append (widget);
+void NBPage::addStatusWidget(Gtk::Widget& widget) {
+    Gtk::Box* box(dynamic_cast<Gtk::Box*>(statusbar.get_parent()));
+    Check3(box);
+    box->append(widget);
 }
 
 //-----------------------------------------------------------------------------
 /// Removes a widget previously added with addStatusWidget
 /// \param widget: Widget to remove
 //-----------------------------------------------------------------------------
-void NBPage::removeStatusWidget (Gtk::Widget& widget) {
-   Gtk::Box* box (dynamic_cast<Gtk::Box*> (statusbar.get_parent ())); Check3 (box);
-   box->remove (widget);
+void NBPage::removeStatusWidget(Gtk::Widget& widget) {
+    Gtk::Box* box(dynamic_cast<Gtk::Box*>(statusbar.get_parent()));
+    Check3(box);
+    box->remove(widget);
 }
 
 //-----------------------------------------------------------------------------
@@ -120,47 +118,43 @@ void NBPage::removeStatusWidget (Gtk::Widget& widget) {
 /// \param accel: Accelerator (like "<ctl>Z"); may be empty
 /// \param shortcuts: Controller to add the shortcut to
 //-----------------------------------------------------------------------------
-void NBPage::addMenuEntry (const Glib::RefPtr<Gio::Menu>& menu, const Glib::ustring& label,
-			   const Glib::ustring& action, const Glib::ustring& accel,
-			   const Glib::RefPtr<Gtk::ShortcutController>& shortcuts) {
-   TRACE9 ("NBPage::addMenuEntry (...) - " << action << " - " << accel);
-   Check1 (menu);
+void NBPage::addMenuEntry(const Glib::RefPtr<Gio::Menu>& menu, const Glib::ustring& label, const Glib::ustring& action,
+                          const Glib::ustring& accel, const Glib::RefPtr<Gtk::ShortcutController>& shortcuts) {
+    TRACE9("NBPage::addMenuEntry (...) - " << action << " - " << accel);
+    Check1(menu);
 
-   Glib::RefPtr<Gio::MenuItem> item (Gio::MenuItem::create (label, action));
-   if (accel.size () && shortcuts) {
-      Glib::RefPtr<Gtk::ShortcutTrigger> trigger (Gtk::ShortcutTrigger::parse_string (accel));
-      if (trigger) {
-	 item->set_attribute_value ("accel", Glib::Variant<Glib::ustring>::create (accel));
+    Glib::RefPtr<Gio::MenuItem> item(Gio::MenuItem::create(label, action));
+    if (accel.size() && shortcuts) {
+        Glib::RefPtr<Gtk::ShortcutTrigger> trigger(Gtk::ShortcutTrigger::parse_string(accel));
+        if (trigger) {
+            item->set_attribute_value("accel", Glib::Variant<Glib::ustring>::create(accel));
 
-	 Glib::ustring name;
-	 Glib::VariantBase target;
-	 Gio::Action::parse_detailed_name_variant (action, name, target);
-	 Glib::RefPtr<Gtk::Shortcut> shortcut (Gtk::Shortcut::create (trigger, Gtk::NamedAction::create (name)));
-	 if (target)
-	    shortcut->set_arguments (target);
-	 shortcuts->add_shortcut (shortcut);
-      }
-      else {
-	 TRACE1 ("NBPage::addMenuEntry (...) - Invalid accelerator " << accel);
-      }
-   }
-   menu->append_item (item);
+            Glib::ustring name;
+            Glib::VariantBase target;
+            Gio::Action::parse_detailed_name_variant(action, name, target);
+            Glib::RefPtr<Gtk::Shortcut> shortcut(Gtk::Shortcut::create(trigger, Gtk::NamedAction::create(name)));
+            if (target)
+                shortcut->set_arguments(target);
+            shortcuts->add_shortcut(shortcut);
+        }
+        else {
+            TRACE1("NBPage::addMenuEntry (...) - Invalid accelerator " << accel);
+        }
+    }
+    menu->append_item(item);
 }
 
 //-----------------------------------------------------------------------------
 /// Removes any created page-related menus
 //-----------------------------------------------------------------------------
-void NBPage::removeMenu () {
-}
+void NBPage::removeMenu() {}
 
 //-----------------------------------------------------------------------------
 /// Exports the contents of the page to HTML
 /// \param fd: File-descriptor for exporting
 /// \param lang: Language, in which to export
 //-----------------------------------------------------------------------------
-void NBPage::export2HTML (unsigned int, const std::string&) {
-}
-
+void NBPage::export2HTML(unsigned int, const std::string&) {}
 
 //-----------------------------------------------------------------------------
 /// Constructor of the undo-information
@@ -171,18 +165,16 @@ void NBPage::export2HTML (unsigned int, const std::string&) {
 /// \param row: Listbox-line related to the changed entity
 /// \param value: Old value of changed entry
 //-----------------------------------------------------------------------------
-NBPage::Undo::Undo (CHGSPEC chg, unsigned int what, unsigned int col, HEntity entity,
-		    const Gtk::TreePath& row, const Glib::ustring& value)
-   : entity (entity), row (row), value (value) {
-   TRACE9 ("NBPage::Undo::Undo (...)");
-   chgSpec.how = chg;
-   chgSpec.what = what;
-   chgSpec.column = col;
+NBPage::Undo::Undo(CHGSPEC chg, unsigned int what, unsigned int col, HEntity entity, const Gtk::TreePath& row,
+                   const Glib::ustring& value)
+    : entity(entity), row(row), value(value) {
+    TRACE9("NBPage::Undo::Undo (...)");
+    chgSpec.how = chg;
+    chgSpec.what = what;
+    chgSpec.column = col;
 }
 
 //-----------------------------------------------------------------------------
 /// Resets the loaded-flag
 //-----------------------------------------------------------------------------
-void NBPage::clear () {
-   loaded = false;
-}
+void NBPage::clear() { loaded = false; }

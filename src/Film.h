@@ -16,7 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <map>
 #include <string>
 
@@ -24,9 +23,9 @@
 
 #include <glibmm/ustring.h>
 
+#include <XGP/XAttribute.h>
 #include <YGP/AYear.h>
 #include <YGP/Entity.h>
-#include <XGP/XAttribute.h>
 
 #include "CDType.h"
 #include "Language.h"
@@ -37,59 +36,59 @@ typedef boost::shared_ptr<Film> HFilm;
 /**Class to hold a film
  */
 class Film : public YGP::Entity {
- public:
-   Film ();
-   Film (const Film& other);
-   virtual ~Film ();
+  public:
+    Film();
+    Film(const Film& other);
+    virtual ~Film();
 
-   Film& operator= (const Film& other);
+    Film& operator=(const Film& other);
 
-   unsigned long int    getId () const { return id; }
-   const Glib::ustring& getName () { return getName (currLang); }
-   const Glib::ustring& getName (const std::string& lang);
-   const YGP::AYear&    getYear () const { return year; }
-   unsigned int         getGenre () const { return genre; }
-   int                  getType () const { return type; }
-   const std::string&   getLanguage () const { return lang; }
-   const std::string&   getTitles () const { return titles; }
-   const Glib::ustring& getDescription () const { return summary; }
-   const std::string&   getImage () const { return icon; }
+    unsigned long int getId() const { return id; }
+    const Glib::ustring& getName() { return getName(currLang); }
+    const Glib::ustring& getName(const std::string& lang);
+    const YGP::AYear& getYear() const { return year; }
+    unsigned int getGenre() const { return genre; }
+    int getType() const { return type; }
+    const std::string& getLanguage() const { return lang; }
+    const std::string& getTitles() const { return titles; }
+    const Glib::ustring& getDescription() const { return summary; }
+    const std::string& getImage() const { return icon; }
 
-   void setId       (unsigned long int value) { id = value; }
-   void setName     (const Glib::ustring& value);
-   void setName     (const Glib::ustring& value, const std::string& lang);
-   const std::map<std::string, Glib::ustring>& getNames () { return name; }
-   void setYear     (const YGP::AYear& value) { year = value; }
-   void setYear     (const std::string& value) { year = value; }
-   void setGenre    (unsigned int value) { genre = value; }
-   void setType     (int value) {
-      CDType::getInstance ()[value];
-      type = value; }
-   void setType     (const std::string& value) {
-      type = CDType::getInstance ()[value]; }
-   void setLanguage (const std::string& value) { lang = value; }
-   void setTitles   (const std::string& value) { titles = value; }
-   void setDescription (const Glib::ustring& value) { summary = value; }
-   void setImage    (const std::string& value) { icon = value; }
+    void setId(unsigned long int value) { id = value; }
+    void setName(const Glib::ustring& value);
+    void setName(const Glib::ustring& value, const std::string& lang);
+    const std::map<std::string, Glib::ustring>& getNames() { return name; }
+    void setYear(const YGP::AYear& value) { year = value; }
+    void setYear(const std::string& value) { year = value; }
+    void setGenre(unsigned int value) { genre = value; }
+    void setType(int value) {
+        CDType::getInstance()[value];
+        type = value;
+    }
+    void setType(const std::string& value) { type = CDType::getInstance()[value]; }
+    void setLanguage(const std::string& value) { lang = value; }
+    void setTitles(const std::string& value) { titles = value; }
+    void setDescription(const Glib::ustring& value) { summary = value; }
+    void setImage(const std::string& value) { icon = value; }
 
-   static Glib::ustring removeIgnored (const Glib::ustring& name);
-   static bool compByName (const HFilm& a, const HFilm& b);
-   static bool compByYear (const HFilm& a, const HFilm& b);
-   static bool compByGenre (const HFilm& a, const HFilm& b);
-   static bool compByMedia (const HFilm& a, const HFilm& b);
+    static Glib::ustring removeIgnored(const Glib::ustring& name);
+    static bool compByName(const HFilm& a, const HFilm& b);
+    static bool compByYear(const HFilm& a, const HFilm& b);
+    static bool compByGenre(const HFilm& a, const HFilm& b);
+    static bool compByMedia(const HFilm& a, const HFilm& b);
 
-   static std::string currLang;
+    static std::string currLang;
 
- private:
-   unsigned long int id;       // %attrib%; ; 0
-   std::map<std::string, Glib::ustring> name;     // %attrib%; Name
-   YGP::AYear        year;     // %attrib%; Made
-   unsigned int      genre;    // %attrib%; Genre; 0
-   int               type;     // %attrib%; Media; 0
-   std::string       lang;     // %attrib%; Lang
-   std::string       titles;   // %attrib%; Subtitles
-   Glib::ustring     summary;  // %attrib%; Description
-   std::string       icon;
+  private:
+    unsigned long int id;                      // %attrib%; ; 0
+    std::map<std::string, Glib::ustring> name; // %attrib%; Name
+    YGP::AYear year;                           // %attrib%; Made
+    unsigned int genre;                        // %attrib%; Genre; 0
+    int type;                                  // %attrib%; Media; 0
+    std::string lang;                          // %attrib%; Lang
+    std::string titles;                        // %attrib%; Subtitles
+    Glib::ustring summary;                     // %attrib%; Description
+    std::string icon;
 };
 
 #endif

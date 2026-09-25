@@ -16,97 +16,93 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
-#include <vector>
 #include <stdexcept>
+#include <vector>
 
 #include <YGP/Relation.h>
 
-#include "Song.h"
-#include "Record.h"
-#include "SongList.h"
 #include "Interpret.h"
+#include "Record.h"
 #include "RecordList.h"
+#include "Song.h"
+#include "SongList.h"
 
 #include "NBPage.h"
-
 
 // Forward declarations
 class Genres;
 class LanguageImg;
 
-
 /**Class handling the records/songs notebook-page
  */
 class PRecords : public NBPage {
- public:
-   PRecords (Gtk::Statusbar& status, Glib::RefPtr<Gio::SimpleAction> menuSave, const Genres& genres);
-   virtual ~PRecords ();
+  public:
+    PRecords(Gtk::Statusbar& status, Glib::RefPtr<Gio::SimpleAction> menuSave, const Genres& genres);
+    virtual ~PRecords();
 
-   void loadData () override;
-   void saveData () override;
-   void getFocus () override;
-   void addMenu (Glib::RefPtr<Gio::Menu> menuEdit, Glib::RefPtr<Gio::Menu> menuOther,
-		 Glib::RefPtr<Gio::SimpleActionGroup> grpAction,
-		 Glib::RefPtr<Gtk::ShortcutController> shortcuts) override;
-   void deleteSelection () override;
-   void undo () override;
-   void clear () override;
+    void loadData() override;
+    void saveData() override;
+    void getFocus() override;
+    void addMenu(Glib::RefPtr<Gio::Menu> menuEdit, Glib::RefPtr<Gio::Menu> menuOther,
+                 Glib::RefPtr<Gio::SimpleActionGroup> grpAction, Glib::RefPtr<Gtk::ShortcutController> shortcuts) override;
+    void deleteSelection() override;
+    void undo() override;
+    void clear() override;
 
-   void export2HTML (unsigned int fd, const std::string& lang) override;
-   void addEntry (const Glib::ustring&artist, const Glib::ustring& record, const Glib::ustring& song,
-		  unsigned int track, Glib::ustring& genre, unsigned int year);
+    void export2HTML(unsigned int fd, const std::string& lang) override;
+    void addEntry(const Glib::ustring& artist, const Glib::ustring& record, const Glib::ustring& song, unsigned int track,
+                  Glib::ustring& genre, unsigned int year);
 
-   PRecords () = delete;
-   PRecords (const PRecords& other) = delete;
-   const PRecords& operator= (const PRecords& other) = delete;
+    PRecords() = delete;
+    PRecords(const PRecords& other) = delete;
+    const PRecords& operator=(const PRecords& other) = delete;
 
- private:
-   void interpretChanged (const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
-   void recordChanged (const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
-   void songChanged (const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
+  private:
+    void interpretChanged(const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
+    void recordChanged(const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
+    void songChanged(const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
 
-   Gtk::TreeModel::iterator addInterpret (const HInterpret& interpret);
-   Gtk::TreeModel::iterator addRecord (const Gtk::TreeModel::iterator& parent, HRecord& record);
-   Gtk::TreeModel::iterator addSong (HSong& song);
+    Gtk::TreeModel::iterator addInterpret(const HInterpret& interpret);
+    Gtk::TreeModel::iterator addRecord(const Gtk::TreeModel::iterator& parent, HRecord& record);
+    Gtk::TreeModel::iterator addSong(HSong& song);
 
-   void newInterpret ();
-   void newRecord ();
-   void newSong ();
+    void newInterpret();
+    void newRecord();
+    void newSong();
 
-   void songSelected ();
-   void recordSelected ();
-   void deleteRecord (const Gtk::TreeModel::iterator& record);
-   void deleteSelectedRecords ();
-   void deleteSelectedSongs ();
-   void deleteSong (const HSong& song, const HRecord& record);
+    void songSelected();
+    void recordSelected();
+    void deleteRecord(const Gtk::TreeModel::iterator& record);
+    void deleteSelectedRecords();
+    void deleteSelectedSongs();
+    void deleteSong(const HSong& song, const HRecord& record);
 
-   void undoSong (const Undo& last);
-   void undoRecord (const Undo& last);
-   void undoInterpret (const Undo& last);
+    void undoSong(const Undo& last);
+    void undoRecord(const Undo& last);
+    void undoInterpret(const Undo& last);
 
-   void loadSongs (const HRecord& record);
+    void loadSongs(const HRecord& record);
 
-   //@{
-   /// Importing from file-information
-   void importFromFileInfo ();
-   std::string stripString (const std::string& value, unsigned int pos, unsigned int len);
-   void parseFileInfo (const std::string& file);
-   bool parseID3Info (std::istream& stream, Glib::ustring& artist, Glib::ustring& record,
-		      Glib::ustring& song, unsigned int& track, Glib::ustring& genre, unsigned int& year);
-   bool parseOGGCommentHeader (std::istream& stream, Glib::ustring& artist, Glib::ustring& record,
-			       Glib::ustring& song, unsigned int& track, Glib::ustring& genre, unsigned int& year);
-   //@}
+    //@{
+    /// Importing from file-information
+    void importFromFileInfo();
+    std::string stripString(const std::string& value, unsigned int pos, unsigned int len);
+    void parseFileInfo(const std::string& file);
+    bool parseID3Info(std::istream& stream, Glib::ustring& artist, Glib::ustring& record, Glib::ustring& song,
+                      unsigned int& track, Glib::ustring& genre, unsigned int& year);
+    bool parseOGGCommentHeader(std::istream& stream, Glib::ustring& artist, Glib::ustring& record, Glib::ustring& song,
+                               unsigned int& track, Glib::ustring& genre, unsigned int& year);
+    //@}
 
-   enum { INTERPRET, RECORD, SONG };
+    enum { INTERPRET, RECORD, SONG };
 
-   RecordList records;                              // GUI-element holding records
-   SongList   songs;
+    RecordList records; // GUI-element holding records
+    SongList songs;
 
-   // Model
-   std::vector<HInterpret>               interprets;
-   YGP::Relation1_N<HInterpret, HRecord> relRecords;
-   YGP::Relation1_N<HRecord, HSong>      relSongs;
+    // Model
+    std::vector<HInterpret> interprets;
+    YGP::Relation1_N<HInterpret, HRecord> relRecords;
+    YGP::Relation1_N<HRecord, HSong> relSongs;
 };
 
 #endif

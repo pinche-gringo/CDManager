@@ -1,11 +1,11 @@
-//PROJECT     : CDManager
-//SUBSYSTEM   : Film
-//REFERENCES  :
-//TODO        :
-//BUGS        :
-//AUTHOR      : Markus Schwab
-//CREATED     : 29.11.2004
-//COPYRIGHT   : Copyright (C) 2004, 2005, 2010, 2011
+// PROJECT     : CDManager
+// SUBSYSTEM   : Film
+// REFERENCES  :
+// TODO        :
+// BUGS        :
+// AUTHOR      : Markus Schwab
+// CREATED     : 29.11.2004
+// COPYRIGHT   : Copyright (C) 2004, 2005, 2010, 2011, 2026
 
 // This file is part of CDManager
 //
@@ -22,31 +22,27 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <cdmgr-cfg.h>
 
 #include <glibmm/convert.h>
 
 #include "CDType.h"
 
-
-CDType* CDType::instance (NULL);
-
+CDType* CDType::instance(NULL);
 
 //-----------------------------------------------------------------------------
 /// Constructor
 //-----------------------------------------------------------------------------
-CDType::CDType () {
-   insert (std::make_pair (0, _("Unspecified")));
-   insert (std::make_pair (1, _("1 DVD")));
-   insert (std::make_pair (2, _("2 DVDs")));
-   insert (std::make_pair (3, _("1 CD")));
-   insert (std::make_pair (4, _("2 CDs")));
-   insert (std::make_pair (5, _("3 CDs")));
+CDType::CDType() {
+    insert(std::make_pair(0, _("Unspecified")));
+    insert(std::make_pair(1, _("1 DVD")));
+    insert(std::make_pair(2, _("2 DVDs")));
+    insert(std::make_pair(3, _("1 CD")));
+    insert(std::make_pair(4, _("2 CDs")));
+    insert(std::make_pair(5, _("3 CDs")));
 }
 
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------
-CDType::~CDType () {
-}
+CDType::~CDType() {}

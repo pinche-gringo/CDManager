@@ -1,11 +1,11 @@
-//PROJECT     : CDManager
-//SUBSYSTEM   : Database
-//REFERENCES  :
-//TODO        :
-//BUGS        :
-//AUTHOR      : Markus Schwab
-//CREATED     : 16.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2007, 2010, 2011, 2026
+// PROJECT     : CDManager
+// SUBSYSTEM   : Database
+// REFERENCES  :
+// TODO        :
+// BUGS        :
+// AUTHOR      : Markus Schwab
+// CREATED     : 16.10.2004
+// COPYRIGHT   : Copyright (C) 2004 - 2007, 2010, 2011, 2026
 
 // This file is part of CDManager
 //
@@ -32,51 +32,48 @@
 #include "DB.h"
 
 #if defined HAVE_LIBPQ
-#  include "DBPostgres.h"
+#    include "DBPostgres.h"
 #elif defined HAVE_LIBMYSQL
-#  include "DBMySQL.h"
+#    include "DBMySQL.h"
 #else
-#  error No supported database detected!
+#    error No supported database detected!
 #endif
-
 
 //-----------------------------------------------------------------------------
 /// Creates the database-object for the database configured at compile-time
 /// \returns Database* Newly created object; free it with delete
 //-----------------------------------------------------------------------------
-Database* Database::create () {
+Database* Database::create() {
 #if defined HAVE_LIBPQ
-   return new DBPostgres;
+    return new DBPostgres;
 #else
-   return new DBMySQL;
+    return new DBMySQL;
 #endif
 }
 
 //-----------------------------------------------------------------------------
 /// Defaultconstructor
 //-----------------------------------------------------------------------------
-Database::Database () : current (0) {
-}
+Database::Database() : current(0) {}
 
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------
-Database::~Database () {
-}
+Database::~Database() {}
 
 //-----------------------------------------------------------------------------
 /// Executes the passed query; its result can be accessed afterwards
 /// \param query Query to execute
 /// \throw std::exception In case of an error
 //-----------------------------------------------------------------------------
-void Database::execute (const char* query) {
-   TRACE1 ("Database::execute (const char*) - " << query);
-   Check1 (query);
-   Check2 (connected ());
+void Database::execute(const char* query) {
+    TRACE1("Database::execute (const char*) - " << query);
+    Check1(query);
+    Check2(connected());
 
-   rows.clear ();
-   current = 0;
-   this->query (query, rows);
+    rows.clear();
+    current = 0;
+    this->query(query, rows);
 }
 
 //-----------------------------------------------------------------------------
@@ -85,19 +82,20 @@ void Database::execute (const char* query) {
 /// \param values Columns and values of the new row
 /// \throw std::exception In case of an error
 //-----------------------------------------------------------------------------
-void Database::insert (const char* table, const Values& values) {
-   Check1 (table); Check1 (!values.empty ());
+void Database::insert(const char* table, const Values& values) {
+    Check1(table);
+    Check1(!values.empty());
 
-   std::string columns, data;
-   for (Values::const_iterator i (values.begin ()); i != values.end (); ++i) {
-      if (i != values.begin ()) {
-	 columns += ", ";
-	 data += ", ";
-      }
-      columns += i->first;
-      data += i->second;
-   }
-   execute (std::string ("INSERT INTO ") + table + " (" + columns + ") VALUES (" + data + ')');
+    std::string columns, data;
+    for (Values::const_iterator i(values.begin()); i != values.end(); ++i) {
+        if (i != values.begin()) {
+            columns += ", ";
+            data += ", ";
+        }
+        columns += i->first;
+        data += i->second;
+    }
+    execute(std::string("INSERT INTO ") + table + " (" + columns + ") VALUES (" + data + ')');
 }
 
 //-----------------------------------------------------------------------------
@@ -107,16 +105,18 @@ void Database::insert (const char* table, const Values& values) {
 /// \param where Condition selecting the rows to update
 /// \throw std::exception In case of an error
 //-----------------------------------------------------------------------------
-void Database::update (const char* table, const Values& values, const std::string& where) {
-   Check1 (table); Check1 (!values.empty ()); Check1 (where.size ());
+void Database::update(const char* table, const Values& values, const std::string& where) {
+    Check1(table);
+    Check1(!values.empty());
+    Check1(where.size());
 
-   std::string cmd (std::string ("UPDATE ") + table + " SET ");
-   for (Values::const_iterator i (values.begin ()); i != values.end (); ++i) {
-      if (i != values.begin ())
-	 cmd += ", ";
-      cmd += i->first + '=' + i->second;
-   }
-   execute (cmd + " WHERE " + where);
+    std::string cmd(std::string("UPDATE ") + table + " SET ");
+    for (Values::const_iterator i(values.begin()); i != values.end(); ++i) {
+        if (i != values.begin())
+            cmd += ", ";
+        cmd += i->first + '=' + i->second;
+    }
+    execute(cmd + " WHERE " + where);
 }
 
 //-----------------------------------------------------------------------------
@@ -124,37 +124,35 @@ void Database::update (const char* table, const Values& values, const std::strin
 /// \param value Text to quote
 /// \returns std::string Escaped text surrounded by single quotes
 //-----------------------------------------------------------------------------
-std::string Database::quote (const std::string& value) const {
-   return '\'' + escapeDBValue (value) + '\'';
-}
+std::string Database::quote(const std::string& value) const { return '\'' + escapeDBValue(value) + '\''; }
 
 //-----------------------------------------------------------------------------
 /// Returns the passed column of the actual row of the result
 /// \param column Index of column
 /// \returns const std::string& Value of column
 //-----------------------------------------------------------------------------
-const std::string& Database::column (unsigned int column) const {
-   Check2 (hasData ());
-   Check1 (column < rows[current].size ());
-   return rows[current][column];
+const std::string& Database::column(unsigned int column) const {
+    Check2(hasData());
+    Check1(column < rows[current].size());
+    return rows[current][column];
 }
 
-const std::string& Database::getResultColumnAsBlob (unsigned int column) const {
-   TRACE9 ("Database::getResultColumnAsBlob (unsigned int) - " << column);
-   return this->column (column);
+const std::string& Database::getResultColumnAsBlob(unsigned int column) const {
+    TRACE9("Database::getResultColumnAsBlob (unsigned int) - " << column);
+    return this->column(column);
 }
 
-const std::string& Database::getResultColumnAsString (unsigned int column) const {
-   TRACE9 ("Database::getResultColumnAsString (unsigned int) - " << column);
-   return this->column (column);
+const std::string& Database::getResultColumnAsString(unsigned int column) const {
+    TRACE9("Database::getResultColumnAsString (unsigned int) - " << column);
+    return this->column(column);
 }
 
-unsigned int Database::getResultColumnAsUInt (unsigned int column) const {
-   TRACE9 ("Database::getResultColumnAsUInt (unsigned int) - " << column);
-   return strtoul (this->column (column).c_str (), NULL, 10);
+unsigned int Database::getResultColumnAsUInt(unsigned int column) const {
+    TRACE9("Database::getResultColumnAsUInt (unsigned int) - " << column);
+    return strtoul(this->column(column).c_str(), NULL, 10);
 }
 
-int Database::getResultColumnAsInt (unsigned int column) const {
-   TRACE9 ("Database::getResultColumnAsInt (unsigned int) - " << column);
-   return strtol (this->column (column).c_str (), NULL, 10);
+int Database::getResultColumnAsInt(unsigned int column) const {
+    TRACE9("Database::getResultColumnAsInt (unsigned int) - " << column);
+    return strtol(this->column(column).c_str(), NULL, 10);
 }

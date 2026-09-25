@@ -1,11 +1,11 @@
-//PROJECT     : CDManager
-//SUBSYSTEM   : Settings
-//REFERENCES  :
-//TODO        :
-//BUGS        :
-//AUTHOR      : Markus Schwab
-//CREATED     : 23.12.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009 - 2011, 2026
+// PROJECT     : CDManager
+// SUBSYSTEM   : Settings
+// REFERENCES  :
+// TODO        :
+// BUGS        :
+// AUTHOR      : Markus Schwab
+// CREATED     : 23.12.2004
+// COPYRIGHT   : Copyright (C) 2004 - 2006, 2009 - 2011, 2026
 
 // This file is part of CDManager
 //
@@ -22,7 +22,6 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <cdmgr-cfg.h>
 
 #include <gtkmm/box.h>
@@ -30,83 +29,74 @@
 #include <gtkmm/label.h>
 #include <gtkmm/notebook.h>
 
-#include "Words.h"
-#include "WordDlg.h"
 #include "Options.h"
 #include "Options.meta"
+#include "WordDlg.h"
+#include "Words.h"
 
 #include "Settings.h"
 
+XGP::XAttributeEntry<std::string> Settings::* Settings::fields[] = {&Settings::txtOutput, &Settings::hdrFilm, &Settings::ftrFilm,
+                                                                    &Settings::hdrRecord, &Settings::ftrRecord};
 
-XGP::XAttributeEntry<std::string> Settings::* Settings::fields[] =
-   { &Settings::txtOutput, &Settings::hdrFilm, &Settings::ftrFilm,
-     &Settings::hdrRecord, &Settings::ftrRecord };
-
-Settings* Settings::instance (nullptr);
-
+Settings* Settings::instance(nullptr);
 
 //-----------------------------------------------------------------------------
 /// Constructor
 /// \param options: Options to change
 //-----------------------------------------------------------------------------
-Settings::Settings (Options& options)
-   : XGP::XDialog (OKCANCEL),
-     txtOutput (options.dirOutput), hdrFilm (options.mHeader),
-     ftrFilm (options.mFooter), hdrRecord (options.rHeader),
-     ftrRecord (options.rFooter),
-     wordDialog (WordDialog::makeDialog ()) {
-   Check3 (!instance);
-   instance =  this;
+Settings::Settings(Options& options)
+    : XGP::XDialog(OKCANCEL), txtOutput(options.dirOutput), hdrFilm(options.mHeader), ftrFilm(options.mFooter),
+      hdrRecord(options.rHeader), ftrRecord(options.rFooter), wordDialog(WordDialog::makeDialog()) {
+    Check3(!instance);
+    instance = this;
 
-   set_title (_("Preferences"));
-   set_size_request (450, 350);
+    set_title(_("Preferences"));
+    set_size_request(450, 350);
 
-   Gtk::Notebook& nb (*Gtk::make_managed<Gtk::Notebook> ());
-   nb.set_expand (true);
-   nb.set_margin (5);
+    Gtk::Notebook& nb(*Gtk::make_managed<Gtk::Notebook>());
+    nb.set_expand(true);
+    nb.set_margin(5);
 
-   Gtk::Grid& pagExport (*Gtk::make_managed<Gtk::Grid> ());
-   pagExport.set_row_spacing (5);
-   pagExport.set_column_spacing (5);
-   pagExport.set_margin (5);
+    Gtk::Grid& pagExport(*Gtk::make_managed<Gtk::Grid>());
+    pagExport.set_row_spacing(5);
+    pagExport.set_column_spacing(5);
+    pagExport.set_margin(5);
 
-   Glib::ustring lbls[sizeof (fields) / sizeof (*fields)] =
-      { _("Output _directory:"), _("_Header for films:"),
-	_("_Footer for films:"), _("Header for _records:"),
-	_("Foo_ter for records:") };
+    Glib::ustring lbls[sizeof(fields) / sizeof(*fields)] = {_("Output _directory:"), _("_Header for films:"),
+                                                            _("_Footer for films:"), _("Header for _records:"),
+                                                            _("Foo_ter for records:")};
 
-   Gtk::Label* lbl;
-   for (unsigned int i (0); i < (sizeof (fields) / sizeof (*fields)); ++i) {
-      lbl = Gtk::make_managed<Gtk::Label> (lbls[i], true);
-      lbl->set_mnemonic_widget (this->*fields[i]);
-      pagExport.attach (*lbl, 0, i);
-      (this->*fields[i]).set_hexpand (true);
-      pagExport.attach (this->*fields[i], 1, i);
-   }
+    Gtk::Label* lbl;
+    for (unsigned int i(0); i < (sizeof(fields) / sizeof(*fields)); ++i) {
+        lbl = Gtk::make_managed<Gtk::Label>(lbls[i], true);
+        lbl->set_mnemonic_widget(this->*fields[i]);
+        pagExport.attach(*lbl, 0, i);
+        (this->*fields[i]).set_hexpand(true);
+        pagExport.attach(this->*fields[i], 1, i);
+    }
 
-   nb.append_page (*Gtk::manage (wordDialog), _("Reserved _words"), true);
-   nb.append_page (pagExport, _("_Export"), true);
+    nb.append_page(*Gtk::manage(wordDialog), _("Reserved _words"), true);
+    nb.append_page(pagExport, _("_Export"), true);
 
-   get_content_area ()->append (nb);
-   show ();
+    get_content_area()->append(nb);
+    show();
 }
 
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------
-Settings::~Settings () {
-   instance = nullptr;
-}
+Settings::~Settings() { instance = nullptr; }
 
 //-----------------------------------------------------------------------------
 /// Handling of the OK button; closes the dialog with commiting data
 //-----------------------------------------------------------------------------
-void Settings::okEvent () {
-   ok->grab_focus ();
-   for (unsigned int i (0); i < (sizeof (fields) / sizeof (*fields)); ++i)
-      (this->*fields[i]).commit ();
+void Settings::okEvent() {
+    ok->grab_focus();
+    for (unsigned int i(0); i < (sizeof(fields) / sizeof(*fields)); ++i)
+        (this->*fields[i]).commit();
 
-   WordDialog::commitDialogData (wordDialog);
+    WordDialog::commitDialogData(wordDialog);
 }
 
 //-----------------------------------------------------------------------------
@@ -115,13 +105,14 @@ void Settings::okEvent () {
 /// \param parent: Parent window
 /// \returns Settings*: Pointer to the created window
 //-----------------------------------------------------------------------------
-Settings* Settings::create (Gtk::Window& parent, Options& options) {
-   if (instance == nullptr) {
-      new Settings (options); Check3 (instance);
-      instance->set_transient_for (parent);
-      instance->signal_response ().connect (sigc::mem_fun (*instance, &Settings::free));
-   }
-   else
-      instance->present ();
-   return instance;
+Settings* Settings::create(Gtk::Window& parent, Options& options) {
+    if (instance == nullptr) {
+        new Settings(options);
+        Check3(instance);
+        instance->set_transient_for(parent);
+        instance->signal_response().connect(sigc::mem_fun(*instance, &Settings::free));
+    }
+    else
+        instance->present();
+    return instance;
 }

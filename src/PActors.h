@@ -16,99 +16,94 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
-#include <vector>
 #include <stdexcept>
+#include <vector>
 
 #include <YGP/Relation.h>
 
-#include "Film.h"
-#include "Director.h"
 #include "ActorList.h"
+#include "Director.h"
+#include "Film.h"
 #include "RelateFilm.h"
 
 #include "NBPage.h"
-
 
 // Forward declarations
 class Genres;
 class PFilms;
 
-
 /**Class handling the actor notebook-page
  */
 class PActors : public NBPage {
- public:
-   PActors (Gtk::Statusbar& status, Glib::RefPtr<Gio::SimpleAction> menuSave,
-	    const Genres& genres, PFilms& films);
-   virtual ~PActors ();
+  public:
+    PActors(Gtk::Statusbar& status, Glib::RefPtr<Gio::SimpleAction> menuSave, const Genres& genres, PFilms& films);
+    virtual ~PActors();
 
-   void loadData () override;
-   void saveData () override;
-   void getFocus () override;
-   void addMenu (Glib::RefPtr<Gio::Menu> menuEdit, Glib::RefPtr<Gio::Menu> menuOther,
-		 Glib::RefPtr<Gio::SimpleActionGroup> grpAction,
-		 Glib::RefPtr<Gtk::ShortcutController> shortcuts) override;
-   void deleteSelection () override;
-   void undo () override;
-   void clear () override;
+    void loadData() override;
+    void saveData() override;
+    void getFocus() override;
+    void addMenu(Glib::RefPtr<Gio::Menu> menuEdit, Glib::RefPtr<Gio::Menu> menuOther,
+                 Glib::RefPtr<Gio::SimpleActionGroup> grpAction, Glib::RefPtr<Gtk::ShortcutController> shortcuts) override;
+    void deleteSelection() override;
+    void undo() override;
+    void clear() override;
 
-   HFilm findFilm (unsigned int id) const;
+    HFilm findFilm(unsigned int id) const;
 
-   PActors () = delete;
-   PActors (const PActors& other) = delete;
-   const PActors& operator= (const PActors& other) = delete;
+    PActors() = delete;
+    PActors(const PActors& other) = delete;
+    const PActors& operator=(const PActors& other) = delete;
 
- private:
-   void actorSelected ();
-   void actorChanged (const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
-   bool onQueryTooltip (int x, int y, bool keyboard, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
+  private:
+    void actorSelected();
+    void actorChanged(const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
+    bool onQueryTooltip(int x, int y, bool keyboard, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
 
-   void newActor ();
-   void undoActor (const Undo& last);
+    void newActor();
+    void undoActor(const Undo& last);
 
-   void actorPlaysInFilm ();
-   void relateFilms (const HActor& actor, const std::vector<HFilm>& films);
-   void showFilms (const HActor& actor, const std::vector<HFilm>& newFilms);
+    void actorPlaysInFilm();
+    void relateFilms(const HActor& actor, const std::vector<HFilm>& films);
+    void showFilms(const HActor& actor, const std::vector<HFilm>& newFilms);
 
-   void changeView (const Glib::ustring& view);
-   void viewByActor ();
-   void viewByFilm ();
+    void changeView(const Glib::ustring& view);
+    void viewByActor();
+    void viewByFilm();
 
-   void changeAllEntries (const HEntity& entry, Gtk::TreeModel::iterator begin, Gtk::TreeModel::iterator end);
-   void saveRelatedFilms (const HActor& actor);
+    void changeAllEntries(const HEntity& entry, Gtk::TreeModel::iterator begin, Gtk::TreeModel::iterator end);
+    void saveRelatedFilms(const HActor& actor);
 
-   ActorList actors;                              // GUI-element holding actors
+    ActorList actors; // GUI-element holding actors
 
-   // Model
-   enum { ACTOR, FILMS };
+    // Model
+    enum { ACTOR, FILMS };
 
-   std::vector<HActor> aActors;
-   YGP::RelationN_M<HActor, HFilm> relActors;
+    std::vector<HActor> aActors;
+    YGP::RelationN_M<HActor, HFilm> relActors;
 
-   // Reference to film-page
-   PFilms& films;
+    // Reference to film-page
+    PFilms& films;
 
-   // Menu (radio-action) for switching view
-   unsigned int actView;
-   Glib::RefPtr<Gio::SimpleAction> menuView;
+    // Menu (radio-action) for switching view
+    unsigned int actView;
+    Glib::RefPtr<Gio::SimpleAction> menuView;
 
-   // Info for undoing relating actors and films
-   class RelUndo : public YGP::Entity {
-    public:
-      RelUndo () { }
-      RelUndo (const std::vector<HFilm>& aFilms) : films (aFilms) { }
-      ~RelUndo () { }
+    // Info for undoing relating actors and films
+    class RelUndo : public YGP::Entity {
+      public:
+        RelUndo() {}
+        RelUndo(const std::vector<HFilm>& aFilms) : films(aFilms) {}
+        ~RelUndo() {}
 
-      void setRelatedFilms (const std::vector<HFilm>& aFilms) { films = aFilms; }
-      const std::vector<HFilm>& getRelatedFilms () const { return films; }
+        void setRelatedFilms(const std::vector<HFilm>& aFilms) { films = aFilms; }
+        const std::vector<HFilm>& getRelatedFilms() const { return films; }
 
-    private:
-      RelUndo (const RelUndo&);
-      RelUndo& operator= (const RelUndo&);
+      private:
+        RelUndo(const RelUndo&);
+        RelUndo& operator=(const RelUndo&);
 
-      std::vector<HFilm> films;
-   };
+        std::vector<HFilm> films;
+    };
 };
 
 #endif

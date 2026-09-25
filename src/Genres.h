@@ -16,39 +16,36 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <vector>
 
 #include <glibmm/ustring.h>
 
 #include <YGP/Exception.h>
 
-
 /**Class to handle the genres of both records and films.
  */
 class Genres {
- public:
-   Genres () { }
-   virtual ~Genres () { }
+  public:
+    Genres() {}
+    virtual ~Genres() {}
 
-   static void loadFromFile (const char* file, Genres& records, Genres& films,
-			     const char* languages);
+    static void loadFromFile(const char* file, Genres& records, Genres& films, const char* languages);
 
-   int getId (const Glib::ustring& genre) const;
+    int getId(const Glib::ustring& genre) const;
 
-   /// Returns the number of genres
-   /// \returns std::vector::size_type Number of genres
-   size_t size () const { return genres.size (); }
+    /// Returns the number of genres
+    /// \returns std::vector::size_type Number of genres
+    size_t size() const { return genres.size(); }
 
-   /// Returns the nth genre
-   /// \param genre Number of genre to return
-   Glib::ustring getGenre (unsigned int genre) const { return genres[genre]; }
+    /// Returns the nth genre
+    /// \param genre Number of genre to return
+    Glib::ustring getGenre(unsigned int genre) const { return genres[genre]; }
 
- private:
-   Genres (const Genres& other);
-   const Genres& operator= (const Genres& other);
+  private:
+    Genres(const Genres& other);
+    const Genres& operator=(const Genres& other);
 
-   std::vector<Glib::ustring> genres;
+    std::vector<Glib::ustring> genres;
 };
 
 #endif

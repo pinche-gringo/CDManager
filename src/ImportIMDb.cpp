@@ -1,11 +1,11 @@
-//PROJECT     : CDManager
-//SUBSYSTEM   : Films
-//REFERENCES  :
-//TODO        : - Used edit-fields instead of labels; to reuse dialog for edit of info
-//BUGS        :
-//AUTHOR      : Markus Schwab
-//CREATED     : 19.03.2010
-//COPYRIGHT   : Copyright (C) 2010 - 2013, 2026
+// PROJECT     : CDManager
+// SUBSYSTEM   : Films
+// REFERENCES  :
+// TODO        : - Used edit-fields instead of labels; to reuse dialog for edit of info
+// BUGS        :
+// AUTHOR      : Markus Schwab
+// CREATED     : 19.03.2010
+// COPYRIGHT   : Copyright (C) 2010 - 2013, 2026
 
 // This file is part of CDManager
 //
@@ -22,18 +22,17 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <cdmgr-cfg.h>
 
 #include <glibmm/main.h>
 
-#include <gtkmm/label.h>
-#include <gtkmm/entry.h>
 #include <gtkmm/button.h>
-#include <gtkmm/treeview.h>
-#include <gtkmm/treestore.h>
+#include <gtkmm/entry.h>
+#include <gtkmm/label.h>
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/scrolledwindow.h>
+#include <gtkmm/treestore.h>
+#include <gtkmm/treeview.h>
 
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
@@ -44,127 +43,126 @@
 
 #include "ImportIMDb.h"
 
-
 namespace {
 
 /**Class defining the columns for the list of results of the IMDb-search
  * \remarks In an anonymous namespace, as FilmList.h defines another FilmColumns
  */
 class FilmColumns : public Gtk::TreeModel::ColumnRecord {
- public:
-   FilmColumns () : Gtk::TreeModel::ColumnRecord () { add (id); add (name); }
+  public:
+    FilmColumns() : Gtk::TreeModel::ColumnRecord() {
+        add(id);
+        add(name);
+    }
 
-   Gtk::TreeModelColumn<Glib::ustring> id;
-   Gtk::TreeModelColumn<Glib::ustring> name;
+    Gtk::TreeModelColumn<Glib::ustring> id;
+    Gtk::TreeModelColumn<Glib::ustring> name;
 };
 
-}
-
+} // namespace
 
 //-----------------------------------------------------------------------------
 /// Constructor
 //-----------------------------------------------------------------------------
 ImportFromIMDb::ImportFromIMDb()
-   : FilmDataEditor(), sigLoaded(), client(Gtk::make_managed<Gtk::Grid>()),
-     txtID(Gtk::make_managed<Gtk::Entry>()), lblDirector(Gtk::make_managed<Gtk::Label>(Glib::ustring())),
-     lblFilm(Gtk::make_managed<Gtk::Label>(Glib::ustring())),
-     lblGenre(Gtk::make_managed<Gtk::Label>(Glib::ustring())), status(QUERY), connOK() {
-   set_title(_("Import from IMDb.com"));
+    : FilmDataEditor(), sigLoaded(), client(Gtk::make_managed<Gtk::Grid>()), txtID(Gtk::make_managed<Gtk::Entry>()),
+      lblDirector(Gtk::make_managed<Gtk::Label>(Glib::ustring())), lblFilm(Gtk::make_managed<Gtk::Label>(Glib::ustring())),
+      lblGenre(Gtk::make_managed<Gtk::Label>(Glib::ustring())), status(QUERY), connOK() {
+    set_title(_("Import from IMDb.com"));
 
-   client->set_row_spacing(5);
-   client->set_column_spacing(5);
-   client->set_margin(5);
+    client->set_row_spacing(5);
+    client->set_column_spacing(5);
+    client->set_margin(5);
 
-   Gtk::Label* lbl(Gtk::make_managed<Gtk::Label>(_("Film (_Name, number or URL):"), true));
-   lbl->set_mnemonic_widget(*txtID);
-   client->attach(*lbl, 0, 0);
-   txtID->set_hexpand(true);
-   client->attach(*txtID, 1, 0);
+    Gtk::Label* lbl(Gtk::make_managed<Gtk::Label>(_("Film (_Name, number or URL):"), true));
+    lbl->set_mnemonic_widget(*txtID);
+    client->attach(*lbl, 0, 0);
+    txtID->set_hexpand(true);
+    client->attach(*txtID, 1, 0);
 
-   get_content_area()->append(*client);
+    get_content_area()->append(*client);
 
-   txtID->set_activates_default();
-   txtID->signal_changed().connect(sigc::mem_fun(*this, &ImportFromIMDb::inputChanged));
-   ok->set_label(_("_Next"));
-   inputChanged();
+    txtID->set_activates_default();
+    txtID->signal_changed().connect(sigc::mem_fun(*this, &ImportFromIMDb::inputChanged));
+    ok->set_label(_("_Next"));
+    inputChanged();
 
-   Gtk::Label* values[] = { lblDirector, lblFilm, lblGenre };
-   const char* titles[] = { N_("Director:"), N_("Film:"), N_("Genre:") };
-   for (unsigned int i(0); i < (sizeof(values) / sizeof(*values)); ++i) {
-      lbl = Gtk::make_managed<Gtk::Label>(_(titles[i]));
-      lbl->set_halign(Gtk::Align::START);
-      client->attach(*lbl, 0, i + 2);
-      values[i]->set_halign(Gtk::Align::START);
-      client->attach(*values[i], 1, i + 2);
-   }
+    Gtk::Label* values[] = {lblDirector, lblFilm, lblGenre};
+    const char* titles[] = {N_("Director:"), N_("Film:"), N_("Genre:")};
+    for (unsigned int i(0); i < (sizeof(values) / sizeof(*values)); ++i) {
+        lbl = Gtk::make_managed<Gtk::Label>(_(titles[i]));
+        lbl->set_halign(Gtk::Align::START);
+        client->attach(*lbl, 0, i + 2);
+        values[i]->set_halign(Gtk::Align::START);
+        client->attach(*values[i], 1, i + 2);
+    }
 
-   show();
+    show();
 }
 
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------
-ImportFromIMDb::~ImportFromIMDb() {
-}
-
+ImportFromIMDb::~ImportFromIMDb() {}
 
 //-----------------------------------------------------------------------------
 /// Callback, if one of the edit-fields is changed
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::inputChanged () {
-   Check3 (ok);
-   ok->set_sensitive (txtID->get_text_length () != 0);
+void ImportFromIMDb::inputChanged() {
+    Check3(ok);
+    ok->set_sensitive(txtID->get_text_length() != 0);
 }
 
 //-----------------------------------------------------------------------------
 /// Callback, if one entry of the list box is (de)selected
 /// \param list: List to examine
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::rowSelected (Gtk::TreeView* list) {
-   Check2 (ok); Check2 (list);
-   Gtk::TreeModel::iterator sel (list->get_selection ()->get_selected ());
-   if (sel) {
-      TRACE7 ("ImportFromIMDb::rowSelected (Gtk::TreeView*) - " << bool (sel->parent ()))
-      ok->set_sensitive (bool (sel->parent ()));
-   }
-   else
-      ok->set_sensitive (false);
+void ImportFromIMDb::rowSelected(Gtk::TreeView* list) {
+    Check2(ok);
+    Check2(list);
+    Gtk::TreeModel::iterator sel(list->get_selection()->get_selected());
+    if (sel) {
+        TRACE7("ImportFromIMDb::rowSelected (Gtk::TreeView*) - " << bool(sel->parent()))
+        ok->set_sensitive(bool(sel->parent()));
+    }
+    else
+        ok->set_sensitive(false);
 }
 
 //-----------------------------------------------------------------------------
 /// Callback after clicking on a button in the dialog
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::okEvent () {
-   TRACE1 ("ImportFromIMDb::okEvent () - " << status);
+void ImportFromIMDb::okEvent() {
+    TRACE1("ImportFromIMDb::okEvent () - " << status);
 
-   switch (status) {
-   case QUERY: {
-      status = LOADING;
-      txtID->set_sensitive (false);
-      ok->set_sensitive (false);
+    switch (status) {
+    case QUERY: {
+        status = LOADING;
+        txtID->set_sensitive(false);
+        ok->set_sensitive(false);
 
-      IMDbProgress* progress (Gtk::manage (new IMDbProgress (Glib::locale_from_utf8 (txtID->get_text ()))));
-      progress->sigError.connect (sigc::bind (sigc::mem_fun (*this, &ImportFromIMDb::showError), progress));
-      // progress->sigAmbiguous.connect (sigc::bind (sigc::mem_fun (*this, &ImportFromIMDb::showSearchResults), progress));
-      progress->sigSuccess.connect (sigc::bind (sigc::mem_fun (*this, &ImportFromIMDb::showData), progress));
-      progress->set_hexpand (true);
-      client->attach (*progress, 0, 1, 2, 1);
-      break;
-   }
+        IMDbProgress* progress(Gtk::manage(new IMDbProgress(Glib::locale_from_utf8(txtID->get_text()))));
+        progress->sigError.connect(sigc::bind(sigc::mem_fun(*this, &ImportFromIMDb::showError), progress));
+        // progress->sigAmbiguous.connect (sigc::bind (sigc::mem_fun (*this, &ImportFromIMDb::showSearchResults), progress));
+        progress->sigSuccess.connect(sigc::bind(sigc::mem_fun(*this, &ImportFromIMDb::showData), progress));
+        progress->set_hexpand(true);
+        client->attach(*progress, 0, 1, 2, 1);
+        break;
+    }
 
-   case CHOOSING:
-      // Do nothing; any action is performed by other handlers
-      break;
+    case CHOOSING:
+        // Do nothing; any action is performed by other handlers
+        break;
 
-   case CONFIRM:
-      if (saveIMDbInfo ())
-	 response (Gtk::ResponseType::OK);
-      break;
+    case CONFIRM:
+        if (saveIMDbInfo())
+            response(Gtk::ResponseType::OK);
+        break;
 
-   default:
-      TRACE1 ("Status: " << status);
-      Check (0);
-   }
+    default:
+        TRACE1("Status: " << status);
+        Check(0);
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -172,10 +170,12 @@ void ImportFromIMDb::okEvent () {
 /// \returns bool True, if all listeners successfully handled the update
 //-----------------------------------------------------------------------------
 bool ImportFromIMDb::saveIMDbInfo() {
-   Check3(lblDirector); Check3(lblFilm); Check3(lblGenre); Check3(image);
-   std::string icon(getIcon());
-   return sigLoaded.emit(lblDirector->get_text(), lblFilm->get_text(), lblGenre->get_text(),
-			 getSummary(), icon);
+    Check3(lblDirector);
+    Check3(lblFilm);
+    Check3(lblGenre);
+    Check3(image);
+    std::string icon(getIcon());
+    return sigLoaded.emit(lblDirector->get_text(), lblFilm->get_text(), lblGenre->get_text(), getSummary(), icon);
 }
 
 //-----------------------------------------------------------------------------
@@ -183,22 +183,23 @@ bool ImportFromIMDb::saveIMDbInfo() {
 /// \param client Client area from which remove the progressbar from
 /// \param progress Progressbar to remove
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::removeProgressBar (Gtk::Grid* client, IMDbProgress* progress) {
-   TRACE9 ("ImportFromIMDb::removeProgressBar (Gtk::Grid*, IMDbProgress*)");
-   Check1 (progress); Check1 (client);
-   stopLoading (progress);
-   client->remove (*progress);
-   delete progress;
+void ImportFromIMDb::removeProgressBar(Gtk::Grid* client, IMDbProgress* progress) {
+    TRACE9("ImportFromIMDb::removeProgressBar (Gtk::Grid*, IMDbProgress*)");
+    Check1(progress);
+    Check1(client);
+    stopLoading(progress);
+    client->remove(*progress);
+    delete progress;
 }
 
 //-----------------------------------------------------------------------------
 /// Stops the loading of data of the progressbar
 /// \param progress Progressbar to stop
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::stopLoading (IMDbProgress* progress) {
-   TRACE9 ("ImportFromIMDb::stopLoading (IMDbProgress*)");
-   Check1 (progress);
-   progress->stop ();
+void ImportFromIMDb::stopLoading(IMDbProgress* progress) {
+    TRACE9("ImportFromIMDb::stopLoading (IMDbProgress*)");
+    Check1(progress);
+    progress->stop();
 }
 
 //-----------------------------------------------------------------------------
@@ -206,14 +207,14 @@ void ImportFromIMDb::stopLoading (IMDbProgress* progress) {
 /// \param bufImage Image description
 /// \param progress Progress bar used for displaying the status; will be removed
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::addIcon (const std::string& bufImage, IMDbProgress* progress) {
-   TRACE1 ("ImportFromIMDb::addIcon (const std::string&, IMDbProgress*) - " << bufImage.length ());
+void ImportFromIMDb::addIcon(const std::string& bufImage, IMDbProgress* progress) {
+    TRACE1("ImportFromIMDb::addIcon (const std::string&, IMDbProgress*) - " << bufImage.length());
 
-   FilmDataEditor::setIcon(bufImage);
+    FilmDataEditor::setIcon(bufImage);
 
-   status = CONFIRM;
-   progress->hide ();
-   Glib::signal_idle ().connect_once (sigc::bind (sigc::ptr_fun (&ImportFromIMDb::removeProgressBar), client, progress));
+    status = CONFIRM;
+    progress->hide();
+    Glib::signal_idle().connect_once(sigc::bind(sigc::ptr_fun(&ImportFromIMDb::removeProgressBar), client, progress));
 }
 
 //-----------------------------------------------------------------------------
@@ -221,12 +222,13 @@ void ImportFromIMDb::addIcon (const std::string& bufImage, IMDbProgress* progres
 /// \param image Image description
 /// \param progress Progress bar used for displaying the status; will be removed
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::loadIcon (const std::string& image, IMDbProgress* progress) {
-   TRACE1 ("ImportFromIMDb::loadIcon (const std::string&, IMDbProgress*) - " << image);
-   Check1 (progress); Check1 (image.size ());
-   status = IMGLOAD;
-   progress->start (image, true);
-   // progress->sigIcon.connect (bind (mem_fun (*this, &ImportFromIMDb::addIcon), progress));
+void ImportFromIMDb::loadIcon(const std::string& image, IMDbProgress* progress) {
+    TRACE1("ImportFromIMDb::loadIcon (const std::string&, IMDbProgress*) - " << image);
+    Check1(progress);
+    Check1(image.size());
+    status = IMGLOAD;
+    progress->start(image, true);
+    // progress->sigIcon.connect (bind (mem_fun (*this, &ImportFromIMDb::addIcon), progress));
 }
 
 //-----------------------------------------------------------------------------
@@ -234,27 +236,28 @@ void ImportFromIMDb::loadIcon (const std::string& image, IMDbProgress* progress)
 /// \param entry Found IMDbEntry
 /// \param progress Progress bar used for displaying the status; will be removed
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::showData (const IMDbProgress::IMDbEntry& entry, IMDbProgress* progress) {
-   TRACE9 ("ImportFromIMDb::showData (3x const Glib::ustring&, IMDbProgress*) - " << entry.title);
-   Check1 (progress); Check1 (client);
+void ImportFromIMDb::showData(const IMDbProgress::IMDbEntry& entry, IMDbProgress* progress) {
+    TRACE9("ImportFromIMDb::showData (3x const Glib::ustring&, IMDbProgress*) - " << entry.title);
+    Check1(progress);
+    Check1(client);
 
-   if (entry.image.size ()) {
-      Glib::signal_idle ().connect_once (sigc::bind (sigc::ptr_fun (&ImportFromIMDb::stopLoading), progress));
-      Glib::signal_idle ().connect_once (sigc::bind (sigc::mem_fun (*this, &ImportFromIMDb::loadIcon), entry.image, progress));
-   }
-   else {
-      status = CONFIRM;
-      progress->hide ();
-      Glib::signal_idle ().connect_once (sigc::bind (sigc::ptr_fun (&ImportFromIMDb::removeProgressBar), client, progress));
-   }
+    if (entry.image.size()) {
+        Glib::signal_idle().connect_once(sigc::bind(sigc::ptr_fun(&ImportFromIMDb::stopLoading), progress));
+        Glib::signal_idle().connect_once(sigc::bind(sigc::mem_fun(*this, &ImportFromIMDb::loadIcon), entry.image, progress));
+    }
+    else {
+        status = CONFIRM;
+        progress->hide();
+        Glib::signal_idle().connect_once(sigc::bind(sigc::ptr_fun(&ImportFromIMDb::removeProgressBar), client, progress));
+    }
 
-   lblDirector->set_text (entry.director);
-   lblFilm->set_text (entry.title);
-   lblGenre->set_text (entry.genre);
-   setSummary(entry.summary);
+    lblDirector->set_text(entry.director);
+    lblFilm->set_text(entry.title);
+    lblGenre->set_text(entry.genre);
+    setSummary(entry.summary);
 
-   ok->set_label (_("_OK"));
-   ok->set_sensitive ();
+    ok->set_label(_("_OK"));
+    ok->set_sensitive();
 }
 
 //-----------------------------------------------------------------------------
@@ -262,17 +265,17 @@ void ImportFromIMDb::showData (const IMDbProgress::IMDbEntry& entry, IMDbProgres
 /// \param msg Message to display
 /// \param progress Progress bar used for displaying the status; will be removed
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::showError (const Glib::ustring& msg, IMDbProgress* progress) {
-   if (status != IMGLOAD) {
-      TRACE9 ("ImportFromIMDb::showError (const Glib::ustring&, IMDbProgress*) - " << msg);
-      Gtk::MessageDialog dlg (*this, msg, false, Gtk::MessageType::ERROR);
-      XGP::runModal (dlg);
-      Glib::signal_idle ().connect_once (sigc::bind (sigc::ptr_fun (&ImportFromIMDb::removeProgressBar), client, progress));
+void ImportFromIMDb::showError(const Glib::ustring& msg, IMDbProgress* progress) {
+    if (status != IMGLOAD) {
+        TRACE9("ImportFromIMDb::showError (const Glib::ustring&, IMDbProgress*) - " << msg);
+        Gtk::MessageDialog dlg(*this, msg, false, Gtk::MessageType::ERROR);
+        XGP::runModal(dlg);
+        Glib::signal_idle().connect_once(sigc::bind(sigc::ptr_fun(&ImportFromIMDb::removeProgressBar), client, progress));
 
-      status = QUERY;
-      inputChanged ();
-      txtID->set_sensitive ();
-   }
+        status = QUERY;
+        inputChanged();
+        txtID->set_sensitive();
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -280,56 +283,55 @@ void ImportFromIMDb::showError (const Glib::ustring& msg, IMDbProgress* progress
 /// \param results Map containing found entries (ID/name)
 /// \param progress Progress bar used for displaying the status; will be hidden
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::showSearchResults (const IMDbProgress::IMDbMatchData& results, IMDbProgress* progress) {
-   Check1 (progress); Check1 (client);
-   progress->hide ();
-   Glib::signal_idle ().connect_once (sigc::bind (sigc::ptr_fun (&ImportFromIMDb::stopLoading), progress));
+void ImportFromIMDb::showSearchResults(const IMDbProgress::IMDbMatchData& results, IMDbProgress* progress) {
+    Check1(progress);
+    Check1(client);
+    progress->hide();
+    Glib::signal_idle().connect_once(sigc::bind(sigc::ptr_fun(&ImportFromIMDb::stopLoading), progress));
 
-   FilmColumns colFilms;
-   Glib::RefPtr<Gtk::TreeStore> model (Gtk::TreeStore::create (colFilms));
-   Gtk::ScrolledWindow& scrl (*Gtk::make_managed<Gtk::ScrolledWindow> ());
-   Gtk::TreeView& list (*Gtk::make_managed<Gtk::TreeView> (model));
+    FilmColumns colFilms;
+    Glib::RefPtr<Gtk::TreeStore> model(Gtk::TreeStore::create(colFilms));
+    Gtk::ScrolledWindow& scrl(*Gtk::make_managed<Gtk::ScrolledWindow>());
+    Gtk::TreeView& list(*Gtk::make_managed<Gtk::TreeView>(model));
 
-   // Fill the lines into the list
-   Glib::ustring matches[] = { _("Titles") };
-   for (unsigned int i (0); i < (sizeof (matches) / sizeof (matches[0])); ++i) {
-      TRACE1 ("showSearchResults " << matches[i])
-      const IMDbProgress::IMDbSearchEntries& films (results.at ((IMDbProgress::match)i));
-      if (films.begin () != films.end ()) {
-	 Gtk::TreeModel::Row match (*model->append ());
-	 match[colFilms.name] = matches[i];
+    // Fill the lines into the list
+    Glib::ustring matches[] = {_("Titles")};
+    for (unsigned int i(0); i < (sizeof(matches) / sizeof(matches[0])); ++i) {
+        TRACE1("showSearchResults " << matches[i])
+        const IMDbProgress::IMDbSearchEntries& films(results.at((IMDbProgress::match)i));
+        if (films.begin() != films.end()) {
+            Gtk::TreeModel::Row match(*model->append());
+            match[colFilms.name] = matches[i];
 
-	 for (IMDbProgress::IMDbSearchEntries::const_iterator m (films.begin ()); m != films.end (); ++m) {
-	    Gtk::TreeModel::Row row (*model->append (match.children ()));
-	    TRACE5 ("showSearchResults - " << m->url << '/' << m->title);
-	    row[colFilms.id] = m->url;
-	    row[colFilms.name] = Glib::ustring(m->title);
-	 }
+            for (IMDbProgress::IMDbSearchEntries::const_iterator m(films.begin()); m != films.end(); ++m) {
+                Gtk::TreeModel::Row row(*model->append(match.children()));
+                TRACE5("showSearchResults - " << m->url << '/' << m->title);
+                row[colFilms.id] = m->url;
+                row[colFilms.name] = Glib::ustring(m->title);
+            }
 
-	 if (i != ((sizeof (matches) / sizeof (matches[0]))) - 1)
-	    list.expand_row (model->get_path (match.get_iter ()), false);
-      }
-   }
+            if (i != ((sizeof(matches) / sizeof(matches[0]))) - 1)
+                list.expand_row(model->get_path(match.get_iter()), false);
+        }
+    }
 
-   scrl.set_has_frame (true);
-   scrl.set_policy (Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
-   scrl.set_child (list);
-   scrl.set_expand (true);
-   list.append_column (_("Film"), colFilms.name);
-   list.set_size_request (-1, 150);
-   list.signal_row_activated ().connect (sigc::bind (sigc::mem_fun (*this, &ImportFromIMDb::rowActivated),
-						     &scrl, &list, progress));
+    scrl.set_has_frame(true);
+    scrl.set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
+    scrl.set_child(list);
+    scrl.set_expand(true);
+    list.append_column(_("Film"), colFilms.name);
+    list.set_size_request(-1, 150);
+    list.signal_row_activated().connect(sigc::bind(sigc::mem_fun(*this, &ImportFromIMDb::rowActivated), &scrl, &list, progress));
 
-   client->attach (scrl, 0, 2, 2, 5);
-   image->hide ();
+    client->attach(scrl, 0, 2, 2, 5);
+    image->hide();
 
-   list.grab_focus ();
-   list.get_selection ()->signal_changed ().connect
-      (sigc::bind (sigc::mem_fun (*this, &ImportFromIMDb::rowSelected), &list));
+    list.grab_focus();
+    list.get_selection()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ImportFromIMDb::rowSelected), &list));
 
-   status = CHOOSING;
-   connOK = ok->signal_clicked ().connect (sigc::bind (sigc::mem_fun (*this, &ImportFromIMDb::continueLoading),
-						       &scrl, &list, progress));
+    status = CHOOSING;
+    connOK =
+        ok->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &ImportFromIMDb::continueLoading), &scrl, &list, progress));
 }
 
 //-----------------------------------------------------------------------------
@@ -338,14 +340,13 @@ void ImportFromIMDb::showSearchResults (const IMDbProgress::IMDbMatchData& resul
 /// \param list List to get entry to load from
 /// \param progress Progressbar to load
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::continueLoading (Gtk::ScrolledWindow* scrl, Gtk::TreeView* list,
-				      IMDbProgress* progress) {
-   Gtk::TreeModel::iterator sel (list->get_selection ()->get_selected ());
-   if (!sel)
-      return;
+void ImportFromIMDb::continueLoading(Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress) {
+    Gtk::TreeModel::iterator sel(list->get_selection()->get_selected());
+    if (!sel)
+        return;
 
-   Gtk::TreeRow row (*sel);
-   loadRow (row, scrl, list, progress);
+    Gtk::TreeRow row(*sel);
+    loadRow(row, scrl, list, progress);
 }
 
 //-----------------------------------------------------------------------------
@@ -355,17 +356,19 @@ void ImportFromIMDb::continueLoading (Gtk::ScrolledWindow* scrl, Gtk::TreeView* 
 /// \param list List to get entry to load from
 /// \param progress Progressbar to load
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::loadRow (Gtk::TreeRow& row, Gtk::ScrolledWindow* scrl,
-			      Gtk::TreeView* list, IMDbProgress* progress) {
-   Check1 (scrl); Check1 (list); Check1 (progress); Check2 (client);
+void ImportFromIMDb::loadRow(Gtk::TreeRow& row, Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress) {
+    Check1(scrl);
+    Check1(list);
+    Check1(progress);
+    Check2(client);
 
-   Check3 (connOK.connected ());
-   connOK.disconnect ();
-   scrl->hide ();
-   client->remove (*scrl);
+    Check3(connOK.connected());
+    connOK.disconnect();
+    scrl->hide();
+    client->remove(*scrl);
 
-   progress->show ();
-   progress->start (row.get_value (FilmColumns ().id));
+    progress->show();
+    progress->start(row.get_value(FilmColumns().id));
 }
 
 //-----------------------------------------------------------------------------
@@ -376,12 +379,11 @@ void ImportFromIMDb::loadRow (Gtk::TreeRow& row, Gtk::ScrolledWindow* scrl,
 /// \param list List to get entry to load from
 /// \param progress Progressbar to load
 //-----------------------------------------------------------------------------
-void ImportFromIMDb::rowActivated (const Gtk::TreePath& path, Gtk::TreeViewColumn* column,
-				   Gtk::ScrolledWindow* scrl, Gtk::TreeView* list,
-				   IMDbProgress* progress) {
-   Check1 (list);
-   Gtk::TreeRow row (*(list->get_model ()->get_iter (path)));
-   loadRow (row, scrl, list, progress);
+void ImportFromIMDb::rowActivated(const Gtk::TreePath& path, Gtk::TreeViewColumn* column, Gtk::ScrolledWindow* scrl,
+                                  Gtk::TreeView* list, IMDbProgress* progress) {
+    Check1(list);
+    Gtk::TreeRow row(*(list->get_model()->get_iter(path)));
+    loadRow(row, scrl, list, progress);
 }
 
 //-----------------------------------------------------------------------------
@@ -389,16 +391,16 @@ void ImportFromIMDb::rowActivated (const Gtk::TreePath& path, Gtk::TreeViewColum
 /// \param film Information of the film to search for
 //-----------------------------------------------------------------------------
 void ImportFromIMDb::searchFor(const Glib::ustring& film) {
-   txtID->set_text(film);
+    txtID->set_text(film);
 
-   Glib::ustring empty;
-   lblDirector->set_text(empty);
-   lblFilm->set_text(empty);
-   lblGenre->set_text(empty);
-   setSummary(empty);
-   image->clear();
+    Glib::ustring empty;
+    lblDirector->set_text(empty);
+    lblFilm->set_text(empty);
+    lblGenre->set_text(empty);
+    setSummary(empty);
+    image->clear();
 
-   status = QUERY;
-   ok->set_label(_("_Next"));
-   okEvent();
+    status = QUERY;
+    ok->set_label(_("_Next"));
+    okEvent();
 }

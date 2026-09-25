@@ -1,11 +1,11 @@
-//PROJECT     : CDManager
-//SUBSYSTEM   : Database/MySQL
-//REFERENCES  :
-//TODO        :
-//BUGS        :
-//AUTHOR      : Markus Schwab
-//CREATED     : 25.09.2026
-//COPYRIGHT   : Copyright (C) 2026
+// PROJECT     : CDManager
+// SUBSYSTEM   : Database/MySQL
+// REFERENCES  :
+// TODO        :
+// BUGS        :
+// AUTHOR      : Markus Schwab
+// CREATED     : 25.09.2026
+// COPYRIGHT   : Copyright (C) 2026
 
 // This file is part of CDManager
 //
@@ -22,7 +22,6 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <cdmgr-cfg.h>
 
 #include <cstring>
@@ -34,19 +33,15 @@
 
 #include "DBMySQL.h"
 
-
 //-----------------------------------------------------------------------------
 /// Defaultconstructor
 //-----------------------------------------------------------------------------
-DBMySQL::DBMySQL () : mysql (NULL) {
-}
+DBMySQL::DBMySQL() : mysql(NULL) {}
 
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------
-DBMySQL::~DBMySQL () {
-   close ();
-}
+DBMySQL::~DBMySQL() { close(); }
 
 //-----------------------------------------------------------------------------
 /// Connects to the database on the local host
@@ -55,38 +50,36 @@ DBMySQL::~DBMySQL () {
 /// \param pwd Password of user
 /// \throw std::exception In case of an error
 //-----------------------------------------------------------------------------
-void DBMySQL::connect (const char* db, const char* user, const char* pwd) {
-   TRACE9 ("DBMySQL::connect (const char* (3x) - " << db << " from " << user);
-   Check2 (!mysql);
+void DBMySQL::connect(const char* db, const char* user, const char* pwd) {
+    TRACE9("DBMySQL::connect (const char* (3x) - " << db << " from " << user);
+    Check2(!mysql);
 
-   mysql = mysql_init (NULL);
-   if (!mysql)
-      throw std::runtime_error ("Out of memory initialising MySQL");
-   if (!mysql_real_connect (mysql, NULL, user, pwd, db, 0, NULL, 0)) {
-      std::runtime_error error (mysql_error (mysql));
-      close ();
-      throw error;
-   }
+    mysql = mysql_init(NULL);
+    if (!mysql)
+        throw std::runtime_error("Out of memory initialising MySQL");
+    if (!mysql_real_connect(mysql, NULL, user, pwd, db, 0, NULL, 0)) {
+        std::runtime_error error(mysql_error(mysql));
+        close();
+        throw error;
+    }
 }
 
 //-----------------------------------------------------------------------------
 /// Closes the connection to the database
 //-----------------------------------------------------------------------------
-void DBMySQL::close () {
-   TRACE9 ("DBMySQL::close ()");
-   if (mysql) {
-      mysql_close (mysql);
-      mysql = NULL;
-   }
+void DBMySQL::close() {
+    TRACE9("DBMySQL::close ()");
+    if (mysql) {
+        mysql_close(mysql);
+        mysql = NULL;
+    }
 }
 
 //-----------------------------------------------------------------------------
 /// Checks if the connection to the database is established
 /// \returns bool True, if connected
 //-----------------------------------------------------------------------------
-bool DBMySQL::connected () const {
-   return mysql != NULL;
-}
+bool DBMySQL::connected() const { return mysql != NULL; }
 
 //-----------------------------------------------------------------------------
 /// Executes the passed query
@@ -94,39 +87,39 @@ bool DBMySQL::connected () const {
 /// \param result Vector receiving the returned rows
 /// \throw std::exception In case of an error
 //-----------------------------------------------------------------------------
-void DBMySQL::query (const char* query, std::vector<Row>& result) {
-   Check2 (mysql);
-   if (mysql_real_query (mysql, query, strlen (query)))
-      throw std::runtime_error (mysql_error (mysql));
+void DBMySQL::query(const char* query, std::vector<Row>& result) {
+    Check2(mysql);
+    if (mysql_real_query(mysql, query, strlen(query)))
+        throw std::runtime_error(mysql_error(mysql));
 
-   MYSQL_RES* res (mysql_store_result (mysql));
-   if (!res) {
-      if (mysql_field_count (mysql))            // Query should have returned data
-	 throw std::runtime_error (mysql_error (mysql));
-      return;
-   }
+    MYSQL_RES* res(mysql_store_result(mysql));
+    if (!res) {
+        if (mysql_field_count(mysql)) // Query should have returned data
+            throw std::runtime_error(mysql_error(mysql));
+        return;
+    }
 
-   unsigned int cColumns (mysql_num_fields (res));
-   result.reserve (mysql_num_rows (res));
-   MYSQL_ROW row;
-   while ((row = mysql_fetch_row (res)) != NULL) {
-      unsigned long* lengths (mysql_fetch_lengths (res));
-      result.push_back (Row ());
-      Row& target (result.back ());
-      target.reserve (cColumns);
-      for (unsigned int i (0); i < cColumns; ++i)
-	 target.push_back (row[i] ? std::string (row[i], lengths[i]) : std::string ());
-   }
-   mysql_free_result (res);
+    unsigned int cColumns(mysql_num_fields(res));
+    result.reserve(mysql_num_rows(res));
+    MYSQL_ROW row;
+    while ((row = mysql_fetch_row(res)) != NULL) {
+        unsigned long* lengths(mysql_fetch_lengths(res));
+        result.push_back(Row());
+        Row& target(result.back());
+        target.reserve(cColumns);
+        for (unsigned int i(0); i < cColumns; ++i)
+            target.push_back(row[i] ? std::string(row[i], lengths[i]) : std::string());
+    }
+    mysql_free_result(res);
 }
 
 //-----------------------------------------------------------------------------
 /// Returns the ID generated by the last INSERT
 /// \returns long Generated ID
 //-----------------------------------------------------------------------------
-long DBMySQL::getIDOfInsert () {
-   Check2 (mysql);
-   return mysql_insert_id (mysql);
+long DBMySQL::getIDOfInsert() {
+    Check2(mysql);
+    return mysql_insert_id(mysql);
 }
 
 //-----------------------------------------------------------------------------
@@ -134,11 +127,11 @@ long DBMySQL::getIDOfInsert () {
 /// \param value Text to escape
 /// \returns std::string Escaped text
 //-----------------------------------------------------------------------------
-std::string DBMySQL::escapeDBValue (const std::string& value) const {
-   Check2 (mysql);
-   std::string conv ((value.length () << 1) + 1, '\0');
-   conv.resize (mysql_real_escape_string (mysql, &conv[0], value.data (), value.length ()));
-   return conv;
+std::string DBMySQL::escapeDBValue(const std::string& value) const {
+    Check2(mysql);
+    std::string conv((value.length() << 1) + 1, '\0');
+    conv.resize(mysql_real_escape_string(mysql, &conv[0], value.data(), value.length()));
+    return conv;
 }
 
 //-----------------------------------------------------------------------------
@@ -147,6 +140,4 @@ std::string DBMySQL::escapeDBValue (const std::string& value) const {
 /// \returns std::string SQL literal
 /// \remarks MySQL stores binary data in BLOBs like text
 //-----------------------------------------------------------------------------
-std::string DBMySQL::quoteBlob (const std::string& value) const {
-   return quote (value);
-}
+std::string DBMySQL::quoteBlob(const std::string& value) const { return quote(value); }

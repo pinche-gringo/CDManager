@@ -16,51 +16,46 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include "Options.h"
 
 #include <YGP/IVIOAppl.h>
 
-
 /**Application to write records and films to HTML pages.
  *
  *The data to write to is read from stdin.
-*/
+ */
 class CDWriter : public YGP::IVIOApplication {
- public:
-   CDWriter (const int argc, const char* argv[])
-      : IVIOApplication (argc, argv, lo) { }
-   ~CDWriter ();
+  public:
+    CDWriter(const int argc, const char* argv[]) : IVIOApplication(argc, argv, lo) {}
+    ~CDWriter();
 
- protected:
-   virtual bool handleOption (const char option);
+  protected:
+    virtual bool handleOption(const char option);
 
-   // Program-handling
-   virtual bool        shallShowInfo () const { return false; }
-   virtual int         perform (int argc, const char* argv[]);
-   virtual const char* name () const { return "CDWriter"; }
-   virtual const char* description () const;
+    // Program-handling
+    virtual bool shallShowInfo() const { return false; }
+    virtual int perform(int argc, const char* argv[]);
+    virtual const char* name() const { return "CDWriter"; }
+    virtual const char* description() const;
 
-   // Help-handling
-   virtual void showHelp () const;
+    // Help-handling
+    virtual void showHelp() const;
 
- private:
-   // Prohobited manager functions
-   CDWriter ();
-   CDWriter (const CDWriter&);
-   const CDWriter& operator= (const CDWriter&);
+  private:
+    // Prohobited manager functions
+    CDWriter();
+    CDWriter(const CDWriter&);
+    const CDWriter& operator=(const CDWriter&);
 
-   int createFile (const std::string& name, const char* lang, std::ofstream& file);
-   static bool readHeaderFile (const char* file, const char* lang,
-			       std::string& target, const Glib::ustring& title);
+    int createFile(const std::string& name, const char* lang, std::ofstream& file);
+    static bool readHeaderFile(const char* file, const char* lang, std::string& target, const Glib::ustring& title);
 
-   static void writeHeader (const char* lang, const char* format,
-			    std::ostream& stream, bool upSorted = true,
-			    const char* lead = "Films");
+    static void writeHeader(const char* lang, const char* format, std::ostream& stream, bool upSorted = true,
+                            const char* lead = "Films");
 
-   static const longOptions lo[];
+    static const longOptions lo[];
 
-   Options opt;
+    Options opt;
 };
 
 #endif

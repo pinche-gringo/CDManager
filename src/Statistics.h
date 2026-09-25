@@ -16,36 +16,34 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <XGP/XDialog.h>
 
 namespace Gtk {
-   class Grid;
+class Grid;
 }
-
 
 /**Dialog to display statistical information about the CDMedia database
  */
 class Statistics : public XGP::XDialog {
- public:
-   static Statistics* create (Gtk::Window& parent);
+  public:
+    static Statistics* create(Gtk::Window& parent);
 
-   virtual ~Statistics ();
+    virtual ~Statistics();
 
-   //Prohibited manager functions
-   Statistics (const Statistics& other) = delete;
-   const Statistics& operator= (const Statistics& other) = delete;
+    // Prohibited manager functions
+    Statistics(const Statistics& other) = delete;
+    const Statistics& operator=(const Statistics& other) = delete;
 
- protected:
-   Statistics ();
+  protected:
+    Statistics();
 
- private:
-   void addLine (unsigned int line, const Glib::ustring& title1, int value1,
-		 const Glib::ustring& title2 = Glib::ustring (), int value2 = 0);
+  private:
+    void addLine(unsigned int line, const Glib::ustring& title1, int value1, const Glib::ustring& title2 = Glib::ustring(),
+                 int value2 = 0);
 
-   Gtk::Grid* pClient;
+    Gtk::Grid* pClient;
 
-   static Statistics* instance;
+    static Statistics* instance;
 };
 
 #endif

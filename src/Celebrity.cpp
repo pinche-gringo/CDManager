@@ -1,11 +1,11 @@
-//PROJECT     : CDManager
-//SUBSYSTEM   : Celebrity
-//REFERENCES  :
-//TODO        :
-//BUGS        :
-//AUTHOR      : Markus Schwab
-//CREATED     : 30.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009, 2010, 2026
+// PROJECT     : CDManager
+// SUBSYSTEM   : Celebrity
+// REFERENCES  :
+// TODO        :
+// BUGS        :
+// AUTHOR      : Markus Schwab
+// CREATED     : 30.10.2004
+// COPYRIGHT   : Copyright (C) 2004 - 2007, 2009, 2010, 2026
 
 // This file is part of CDManager
 //
@@ -22,47 +22,42 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <cdmgr-cfg.h>
 
 #include <cctype>
 
 #include <glibmm/ustring.h>
 
+#include <YGP/ADate.h>
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
-#include <YGP/ADate.h>
 
-#include <XGP/XAttribute.h>  // Needed for specialization of YGP::Attribute for Glib::ustring
+#include <XGP/XAttribute.h> // Needed for specialization of YGP::Attribute for Glib::ustring
 
-#include "Words.h"
 #include "Celebrity.h"
 #include "Celebrity.meta"
-
+#include "Words.h"
 
 //-----------------------------------------------------------------------------
 /// Copy constructor
 /// \param other: Object to clone
 //-----------------------------------------------------------------------------
-Celebrity::Celebrity (const Celebrity& other)
-   : id (other.id), name (other.name), born (other.born), died (other.died) {
-}
-
+Celebrity::Celebrity(const Celebrity& other) : id(other.id), name(other.name), born(other.born), died(other.died) {}
 
 //-----------------------------------------------------------------------------
 /// Assignment operator
 /// \param other: Object to assign
 /// \returns Celebrity&: Reference to self
 //-----------------------------------------------------------------------------
-Celebrity& Celebrity::operator= (const Celebrity& other) {
-   if (this != &other) {
-      if (!id)
-	 id = other.id;
-      name = other.name;
-      born = other.born;
-      died = other.died;
-   }
-   return *this;
+Celebrity& Celebrity::operator=(const Celebrity& other) {
+    if (this != &other) {
+        if (!id)
+            id = other.id;
+        name = other.name;
+        born = other.born;
+        died = other.died;
+    }
+    return *this;
 }
 
 //-----------------------------------------------------------------------------
@@ -70,13 +65,13 @@ Celebrity& Celebrity::operator= (const Celebrity& other) {
 /// \param name: Name to manipulate
 /// \returns Glib::ustring: Changed name
 //-----------------------------------------------------------------------------
-Glib::ustring Celebrity::removeIgnored (const Glib::ustring& name) {
-   TRACE9 ("Celebrity::removeIgnored (const Glib::ustring&) - " << name);
+Glib::ustring Celebrity::removeIgnored(const Glib::ustring& name) {
+    TRACE9("Celebrity::removeIgnored (const Glib::ustring&) - " << name);
 
-   Glib::ustring result (name);
-   result = Words::removeArticle (name);
-   result = Words::removeNames (result);
-   return result;
+    Glib::ustring result(name);
+    result = Words::removeArticle(name);
+    result = Words::removeNames(result);
+    return result;
 }
 
 //-----------------------------------------------------------------------------
@@ -86,10 +81,11 @@ Glib::ustring Celebrity::removeIgnored (const Glib::ustring& name) {
 /// \param b: Second celibrity
 /// \returns bool: True, if a->name < b->name
 //-----------------------------------------------------------------------------
-bool Celebrity::compByName (const HCelebrity& a, const HCelebrity& b) {
-   Check1 (a); Check1 (b);
-   int rc (removeIgnored (a->name).compare (removeIgnored (b->name)));
-   return rc ? (rc < 0) : (a->name < b->name);
+bool Celebrity::compByName(const HCelebrity& a, const HCelebrity& b) {
+    Check1(a);
+    Check1(b);
+    int rc(removeIgnored(a->name).compare(removeIgnored(b->name)));
+    return rc ? (rc < 0) : (a->name < b->name);
 }
 
 //-----------------------------------------------------------------------------
@@ -98,53 +94,52 @@ bool Celebrity::compByName (const HCelebrity& a, const HCelebrity& b) {
 /// \param b: Second celibrity
 /// \returns bool: True, if a->name < b->name
 //-----------------------------------------------------------------------------
-bool Celebrity::compById (const HCelebrity& a, const HCelebrity& b) {
-   Check1 (a); Check1 (b);
-   return a->getId () < b->getId ();
+bool Celebrity::compById(const HCelebrity& a, const HCelebrity& b) {
+    Check1(a);
+    Check1(b);
+    return a->getId() < b->getId();
 }
 
 //-----------------------------------------------------------------------------
 /// Sets the born and died values from the passed string
 /// \param value: Year the celebrity was born/died in format [born][-died]
 //-----------------------------------------------------------------------------
-void Celebrity::setLifespan (const Glib::ustring& value) {
-   size_t pos (value.find ("- "));
-   if ((pos == std::string::npos)
-       || ((pos > 0) && (value[pos - 1] == ' '))) {
-      YGP::AYear tmp (value.substr (0, pos - 1));
-      if (((unsigned int)tmp < 1850U)
-	  || (unsigned int)tmp > (unsigned int)YGP::ADate::today ().getYear ())
-	 throw std::invalid_argument (_("Invalid birth date!"));
+void Celebrity::setLifespan(const Glib::ustring& value) {
+    size_t pos(value.find("- "));
+    if ((pos == std::string::npos) || ((pos > 0) && (value[pos - 1] == ' '))) {
+        YGP::AYear tmp(value.substr(0, pos - 1));
+        if (((unsigned int)tmp < 1850U) || (unsigned int)tmp > (unsigned int)YGP::ADate::today().getYear())
+            throw std::invalid_argument(_("Invalid birth date!"));
 
-      setBorn (tmp);
-   }
-   else
-      born.undefine ();
+        setBorn(tmp);
+    }
+    else
+        born.undefine();
 
-   if (pos != std::string::npos) {
-      YGP::AYear tmp (value.substr (pos + 2));
-      if ((tmp < born) || (unsigned int)tmp > (unsigned int)YGP::ADate::today ().getYear ())
-	 throw std::invalid_argument (_("Invalid death date!"));
+    if (pos != std::string::npos) {
+        YGP::AYear tmp(value.substr(pos + 2));
+        if ((tmp < born) || (unsigned int)tmp > (unsigned int)YGP::ADate::today().getYear())
+            throw std::invalid_argument(_("Invalid death date!"));
 
-      setDied (tmp);
-   }
-   else
-      died.undefine ();
+        setDied(tmp);
+    }
+    else
+        died.undefine();
 }
 
 //-----------------------------------------------------------------------------
 /// Returns the time of live of the passed celebrity
 /// \returns Glib::ustring: Text to display
 //-----------------------------------------------------------------------------
-Glib::ustring Celebrity::getLifespan () const {
-   TRACE9 ("Celebrity::getLiveSpan () - " << name.c_str ());
+Glib::ustring Celebrity::getLifespan() const {
+    TRACE9("Celebrity::getLiveSpan () - " << name.c_str());
 
-   Glib::ustring tmp (born.toString ());
-   if (died.isDefined ()) {
-      if (tmp.size ())
-	 tmp.append (1, ' ');
-      tmp.append ("- ");
-      tmp.append (died.toString ());
-   }
-   return tmp;
+    Glib::ustring tmp(born.toString());
+    if (died.isDefined()) {
+        if (tmp.size())
+            tmp.append(1, ' ');
+        tmp.append("- ");
+        tmp.append(died.toString());
+    }
+    return tmp;
 }

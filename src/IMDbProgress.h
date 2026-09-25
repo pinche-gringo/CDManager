@@ -16,9 +16,8 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
-#include <map>
 #include <list>
+#include <map>
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/placeholders.hpp>
@@ -26,7 +25,6 @@
 #include <glibmm/ustring.h>
 
 #include <gtkmm/progressbar.h>
-
 
 /**Class reading data from IMDb while showing its status in itself (a
  * progress bar)
@@ -40,82 +38,76 @@
  * \remarks Don't destroy the object within the signal-callbacks
  */
 class IMDbProgress : public Gtk::ProgressBar {
- public:
-   typedef enum { POPULAR, EXACT, PARTIAL } match;
-   typedef struct _IMDbSearchEntry {
-      Glib::ustring url;
-      Glib::ustring title;
+  public:
+    typedef enum { POPULAR, EXACT, PARTIAL } match;
+    typedef struct _IMDbSearchEntry {
+        Glib::ustring url;
+        Glib::ustring title;
 
-      _IMDbSearchEntry (const Glib::ustring& url, const Glib::ustring& title)
-         : url (url), title (title) { }
-   } IMDbSearchEntry;
-   typedef std::list<IMDbSearchEntry> IMDbSearchEntries;
-   typedef std::map<match, IMDbSearchEntries> IMDbMatchData;
+        _IMDbSearchEntry(const Glib::ustring& url, const Glib::ustring& title) : url(url), title(title) {}
+    } IMDbSearchEntry;
+    typedef std::list<IMDbSearchEntry> IMDbSearchEntries;
+    typedef std::map<match, IMDbSearchEntries> IMDbMatchData;
 
-   typedef struct _IMDbEntry {
-      Glib::ustring director;
-      Glib::ustring title;
-      Glib::ustring genre;
-      Glib::ustring summary;
-      std::string image;
+    typedef struct _IMDbEntry {
+        Glib::ustring director;
+        Glib::ustring title;
+        Glib::ustring genre;
+        Glib::ustring summary;
+        std::string image;
 
-      _IMDbEntry (const Glib::ustring& director, const Glib::ustring& title, const Glib::ustring& genre,
-		  const Glib::ustring& summary, const std::string& icon)
-         : director (director), title (title), genre (genre), summary (summary), image (icon) { }
-   } IMDbEntry;
+        _IMDbEntry(const Glib::ustring& director, const Glib::ustring& title, const Glib::ustring& genre,
+                   const Glib::ustring& summary, const std::string& icon)
+            : director(director), title(title), genre(genre), summary(summary), image(icon) {}
+    } IMDbEntry;
 
-   IMDbProgress ();
-   IMDbProgress (const Glib::ustring& film);
-   virtual ~IMDbProgress ();
+    IMDbProgress();
+    IMDbProgress(const Glib::ustring& film);
+    virtual ~IMDbProgress();
 
-   void start (const Glib::ustring& identifier, bool isImage = false);
-   void stop ();
-   void disconnect ();
+    void start(const Glib::ustring& identifier, bool isImage = false);
+    void stop();
+    void disconnect();
 
-   typedef struct ConnectInfo ConnectInfo;
+    typedef struct ConnectInfo ConnectInfo;
 
-   sigc::signal<void (const Glib::ustring&)> sigError;
-   sigc::signal<void (const IMDbMatchData&)> sigAmbiguous;
-   sigc::signal<void (const IMDbEntry&)> sigSuccess;
-   sigc::signal<void (const std::string&)> sigIcon;
+    sigc::signal<void(const Glib::ustring&)> sigError;
+    sigc::signal<void(const IMDbMatchData&)> sigAmbiguous;
+    sigc::signal<void(const IMDbEntry&)> sigSuccess;
+    sigc::signal<void(const std::string&)> sigIcon;
 
-   IMDbProgress (const IMDbProgress& other) = delete;
-   const IMDbProgress& operator= (const IMDbProgress& other) = delete;
+    IMDbProgress(const IMDbProgress& other) = delete;
+    const IMDbProgress& operator=(const IMDbProgress& other) = delete;
 
- protected:
-   sigc::connection conPoll;
-   sigc::connection conProgress;
+  protected:
+    sigc::connection conPoll;
+    sigc::connection conProgress;
 
- private:
+  private:
+    void reStart(const std::string& idFilm);
 
-   void reStart (const std::string& idFilm);
+    bool poll();
+    bool indicateWait();
+    void error(const Glib::ustring& msg);
 
-   bool poll ();
-   bool indicateWait ();
-   void error (const Glib::ustring& msg);
+    static void extractSearch(IMDbSearchEntries& target, const std::string& src, const char** texts, unsigned int offset);
+    Glib::ustring extract(const char* section, const char* subpart, const char* before, const char* after) const;
+    static void convert(Glib::ustring& string);
 
-   static void extractSearch (IMDbSearchEntries& target, const std::string& src,
-			      const char** texts, unsigned int offset);
-   Glib::ustring extract (const char* section, const char* subpart,
-			  const char* before, const char* after) const;
-   static void convert (Glib::ustring& string);
+    void connect();
+    void resolved(const boost::system::error_code& err, boost::asio::ip::tcp::resolver::results_type::iterator iEndpoints);
+    void connected(const boost::system::error_code& err, boost::asio::ip::tcp::resolver::results_type::iterator iEndpoints);
+    void sendRequest();
+    void requestWritten(const boost::system::error_code& err);
+    void readStatus(const boost::system::error_code& err);
+    void readHeaders(const boost::system::error_code& err);
+    void readContent(const boost::system::error_code& err);
+    void readFilm(Glib::ustring& msg);
+    void readImage();
 
-   void connect ();
-   void resolved (const boost::system::error_code& err,
-		  boost::asio::ip::tcp::resolver::results_type::iterator iEndpoints);
-   void connected (const boost::system::error_code& err,
-		   boost::asio::ip::tcp::resolver::results_type::iterator iEndpoints);
-   void sendRequest ();
-   void requestWritten (const boost::system::error_code& err);
-   void readStatus (const boost::system::error_code& err);
-   void readHeaders (const boost::system::error_code& err);
-   void readContent (const boost::system::error_code& err);
-   void readFilm (Glib::ustring& msg);
-   void readImage ();
+    ConnectInfo* data;
 
-   ConnectInfo* data;
-
-   enum { NONE, TITLE, IMAGE } status;
+    enum { NONE, TITLE, IMAGE } status;
 };
 
 #endif

@@ -16,12 +16,10 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <string>
 
 #include <gtkmm/box.h>
 #include <gtkmm/picture.h>
-
 
 /**Class to display an language-image in the statusbar
 
@@ -29,25 +27,25 @@
   side-effects caused by the theme.
  */
 class LanguageImg : public Gtk::Box {
- public:
-   LanguageImg (const std::string& file);
-   LanguageImg (const char* lang = nullptr);
-   ~LanguageImg ();
+  public:
+    LanguageImg(const std::string& file);
+    LanguageImg(const char* lang = nullptr);
+    ~LanguageImg();
 
-   void update (const std::string& file);
-   void update (const char* lang = nullptr);
+    void update(const std::string& file);
+    void update(const char* lang = nullptr);
 
-   sigc::signal<void ()> signal_clicked () { return clicked_; }
+    sigc::signal<void()> signal_clicked() { return clicked_; }
 
- protected:
-  virtual void on_clicked ();
+  protected:
+    virtual void on_clicked();
 
- private:
-   void init ();
-   void onReleased (int nPress, double x, double y);
+  private:
+    void init();
+    void onReleased(int nPress, double x, double y);
 
-   sigc::signal<void ()> clicked_;
-   Gtk::Picture img;
+    sigc::signal<void()> clicked_;
+    Gtk::Picture img;
 };
 
 #endif

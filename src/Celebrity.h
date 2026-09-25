@@ -16,7 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <vector>
 
 #include <boost/shared_ptr.hpp>
@@ -26,48 +25,46 @@
 #include <YGP/AYear.h>
 #include <YGP/Entity.h>
 
-
 class Celebrity;
 typedef boost::shared_ptr<YGP::Entity> HEntity;
-typedef boost::shared_ptr<Celebrity>   HCelebrity;
-
+typedef boost::shared_ptr<Celebrity> HCelebrity;
 
 /**Class to hold an celibrity
  */
 class Celebrity : public YGP::Entity {
- public:
-   Celebrity ();
-   Celebrity (const Celebrity& other);
-   virtual ~Celebrity ();
+  public:
+    Celebrity();
+    Celebrity(const Celebrity& other);
+    virtual ~Celebrity();
 
-   Celebrity& operator= (const Celebrity& other);
+    Celebrity& operator=(const Celebrity& other);
 
-   static bool compById (const HCelebrity& a, const HCelebrity& b);
-   static bool compByName (const HCelebrity& a, const HCelebrity& b);
-   static Glib::ustring removeIgnored (const Glib::ustring& name);
+    static bool compById(const HCelebrity& a, const HCelebrity& b);
+    static bool compByName(const HCelebrity& a, const HCelebrity& b);
+    static Glib::ustring removeIgnored(const Glib::ustring& name);
 
-   unsigned long int getId () const {return id; }
-   const Glib::ustring& getName () const {return name; }
-   const YGP::AYear&    getBorn () const { return born; }
-   const YGP::AYear&    getDied () const { return died; }
-   Glib::ustring getLifespan () const;
+    unsigned long int getId() const { return id; }
+    const Glib::ustring& getName() const { return name; }
+    const YGP::AYear& getBorn() const { return born; }
+    const YGP::AYear& getDied() const { return died; }
+    Glib::ustring getLifespan() const;
 
-   void undefineBorn () { born.undefine (); }
-   void undefineDied () { died.undefine (); }
+    void undefineBorn() { born.undefine(); }
+    void undefineDied() { died.undefine(); }
 
-   void setId   (const unsigned long int value) { id = value; }
-   void setName (const Glib::ustring& value) { name = value; }
-   void setBorn (const YGP::AYear& value) { born = value; }
-   void setBorn (const std::string& value) { born = value; }
-   void setDied (const YGP::AYear& value) { died = value; }
-   void setDied (const std::string& value) { died = value; }
-   void setLifespan (const Glib::ustring& value);
+    void setId(const unsigned long int value) { id = value; }
+    void setName(const Glib::ustring& value) { name = value; }
+    void setBorn(const YGP::AYear& value) { born = value; }
+    void setBorn(const std::string& value) { born = value; }
+    void setDied(const YGP::AYear& value) { died = value; }
+    void setDied(const std::string& value) { died = value; }
+    void setLifespan(const Glib::ustring& value);
 
- private:
-   unsigned long int id;   // %attrib%; ; 0
-   Glib::ustring     name; // %attrib%; Name
-   YGP::AYear        born; // %attrib%; Born
-   YGP::AYear        died; // %attrib%; Died
+  private:
+    unsigned long int id; // %attrib%; ; 0
+    Glib::ustring name;   // %attrib%; Name
+    YGP::AYear born;      // %attrib%; Born
+    YGP::AYear died;      // %attrib%; Died
 };
 
 #endif

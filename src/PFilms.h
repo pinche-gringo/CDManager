@@ -18,6 +18,7 @@
 
 
 #include <map>
+#include <memory>
 #include <vector>
 #include <stdexcept>
 
@@ -37,7 +38,7 @@ class LanguageImg;
 class ImportFromIMDb;
 
 namespace Gtk {
-   class Dialog;
+   class PopoverMenu;
 }
 
 
@@ -45,20 +46,23 @@ namespace Gtk {
  */
 class PFilms : public NBPage {
  public:
-   PFilms (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave, const Genres& genres);
+   PFilms (Gtk::Statusbar& status, Glib::RefPtr<Gio::SimpleAction> menuSave, const Genres& genres);
    virtual ~PFilms ();
 
-   virtual void loadData();
-   virtual void saveData() throw (std::exception);
-   virtual void getFocus();
-   virtual void addMenu(Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAction);
-   virtual void removeMenu();
-   virtual void deleteSelection();
-   virtual void undo();
-   virtual void clear();
-   virtual void export2HTML(unsigned int fd, const std::string& lang);
+   void loadData() override;
+   void saveData() override;
+   void getFocus() override;
+   void addMenu(Glib::RefPtr<Gio::Menu> menuEntries, Glib::RefPtr<Gio::Menu> menuOther,
+		Glib::RefPtr<Gio::SimpleActionGroup> grpAction,
+		Glib::RefPtr<Gtk::ShortcutController> shortcuts) override;
+   void removeMenu() override;
+   void deleteSelection() override;
+   void undo() override;
+   void clear() override;
+   void export2HTML(unsigned int fd, const std::string& lang) override;
 
-   void addLanguageMenus(Glib::ustring& menu, Glib::RefPtr<Gtk::ActionGroup> grpAction);
+   void addLanguageMenus(Glib::RefPtr<Gio::Menu> menu,
+			 Glib::RefPtr<Gtk::ShortcutController> shortcuts = {});
    void editSelection();
 
    static HFilm findFilm(const std::vector<HDirector>& directors,
@@ -68,26 +72,25 @@ class PFilms : public NBPage {
    const std::vector<HDirector>& getDirectors() const { return directors; }
    const YGP::Relation1_N<HDirector, HFilm>& getRelFilms() const { return relFilms; }
 
+   PFilms() = delete;
+   PFilms(const PFilms& other) = delete;
+   const PFilms& operator=(const PFilms& other) = delete;
+
  private:
-   PFilms();
-
-   PFilms(const PFilms& other);
-   const PFilms& operator=(const PFilms& other);
-
    void loadData(const std::string& lang);
 
    void selectLanguage();
    void setLanguage(const std::string& lang);
    void changeLanguage(const std::string& lang);
 
-   void directorChanged(const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
-   void filmChanged(const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
+   void directorChanged(const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
+   void filmChanged(const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
 
    void newDirector();
    Gtk::TreeModel::iterator addDirector(HDirector& hDirector);
    void newFilm();
-   Gtk::TreeModel::iterator addFilm(HFilm& hFilm, Gtk::TreeIter pos);
-   void deleteFilm(const Gtk::TreeIter& film);
+   Gtk::TreeModel::iterator addFilm(HFilm& hFilm, const Gtk::TreeModel::iterator& pos);
+   void deleteFilm(const Gtk::TreeModel::iterator& film);
 
    void undoFilm(const Undo& last);
    void undoDirector(const Undo& last);
@@ -110,6 +113,7 @@ class PFilms : public NBPage {
    bool onQueryTooltip(int x, int y, bool keyboard, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
 
    LanguageImg* imgLang;
+   std::unique_ptr<Gtk::PopoverMenu> popLang;   ///< Popup-menu of imgLang
 
    FilmList films;                              // GUI-element holding films
 
@@ -120,7 +124,8 @@ class PFilms : public NBPage {
 
    std::map<std::string, bool> loadedLangs;
 
-   Glib::RefPtr<Gtk::Action> menuEdit;
+   Glib::RefPtr<Gio::SimpleAction> menuEdit;
+   Glib::RefPtr<Gio::SimpleAction> menuLang;   ///< Radio-action to select the language
 };
 
 #endif

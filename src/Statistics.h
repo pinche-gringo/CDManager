@@ -20,7 +20,7 @@
 #include <XGP/XDialog.h>
 
 namespace Gtk {
-   class Table;
+   class Grid;
 }
 
 
@@ -28,19 +28,22 @@ namespace Gtk {
  */
 class Statistics : public XGP::XDialog {
  public:
-   static Statistics* create (const Glib::RefPtr<Gdk::Window>& parent);
+   static Statistics* create (Gtk::Window& parent);
 
    virtual ~Statistics ();
+
+   //Prohibited manager functions
+   Statistics (const Statistics& other) = delete;
+   const Statistics& operator= (const Statistics& other) = delete;
 
  protected:
    Statistics ();
 
  private:
-   //Prohibited manager functions
-   Statistics (const Statistics& other);
-   const Statistics& operator= (const Statistics& other);
+   void addLine (unsigned int line, const Glib::ustring& title1, int value1,
+		 const Glib::ustring& title2 = Glib::ustring (), int value2 = 0);
 
-   Gtk::Table* pClient;
+   Gtk::Grid* pClient;
 
    static Statistics* instance;
 };

@@ -41,16 +41,16 @@ class StorageFilm : public Storage {
    static void loadDirectors (std::vector<HDirector>& target, YGP::StatusObject& stat) {
       loadCelebrities (target, "Directors", stat); }
    static unsigned int loadFilms (std::map<unsigned int, std::vector<HFilm> >& aFilms,
-				   YGP::StatusObject& stat) throw (std::exception);
-   static void saveFilm (const HFilm film, unsigned int idDirector) throw (std::exception);
-   static void deleteFilm (unsigned int idFilm) throw (std::exception);
-   static void deleteDirector (unsigned int idDirector) throw (std::exception);
-   static void deleteFilmNames (unsigned int idFilm) throw (std::exception);
-   static void saveFilmName (const HFilm film, const std::string& lang) throw (std::exception);
+				   YGP::StatusObject& stat);
+   static void saveFilm (const HFilm film, unsigned int idDirector);
+   static void deleteFilm (unsigned int idFilm);
+   static void deleteDirector (unsigned int idDirector);
+   static void deleteFilmNames (unsigned int idFilm);
+   static void saveFilmName (const HFilm film, const std::string& lang);
 
    static void loadNames (const std::vector<HDirector>& directors,
 			  const YGP::Relation1_N<HDirector, HFilm>& relFilms,
-			  const std::string& lang) throw (std::exception);
+			  const std::string& lang);
 
  private:
    StorageFilm ();

@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009 - 2011
+//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009 - 2011, 2026
 
 // This file is part of CDManager
 //
@@ -25,6 +25,9 @@
 
 #include <cdmgr-cfg.h>
 
+#include <typeinfo>
+
+#include <gtkmm/window.h>
 #include <gtkmm/cellrenderercombo.h>
 
 #include <YGP/Check.h>
@@ -68,13 +71,13 @@ SongList::SongList (const Genres& genres)
       Gtk::CellRendererText* rText (dynamic_cast<Gtk::CellRendererText*> (r));
       rText->property_editable () = true;
       rText->signal_edited ().connect
-	 (bind (mem_fun (*this, &SongList::valueChanged), i));
+	 (sigc::bind (sigc::mem_fun (*this, &SongList::valueChanged), i));
    }
 
-   Gtk::TreeViewColumn* const column (new Gtk::TreeViewColumn (_("Genre")));
-   Gtk::CellRendererCombo* const renderer (new Gtk::CellRendererCombo);
-   column->pack_start (*manage (renderer));
-   append_column (*Gtk::manage (column));
+   Gtk::TreeViewColumn* const column (Gtk::make_managed<Gtk::TreeViewColumn> (_("Genre")));
+   Gtk::CellRendererCombo* const renderer (Gtk::make_managed<Gtk::CellRendererCombo> ());
+   column->pack_start (*renderer);
+   append_column (*column);
 
    column->set_sort_column (colSongs.colGenre);
    column->set_resizable ();
@@ -85,9 +88,9 @@ SongList::SongList (const Genres& genres)
    renderer->property_editable () = true;
 
    renderer->signal_edited ().connect
-      (bind (mem_fun (*this, &SongList::valueChanged), 3));
+      (sigc::bind (sigc::mem_fun (*this, &SongList::valueChanged), 3));
 
-   mSongs->set_sort_column (colSongs.colTrack, Gtk::SORT_ASCENDING);
+   mSongs->set_sort_column (colSongs.colTrack, Gtk::SortType::ASCENDING);
    mSongs->set_sort_func (colSongs.colTrack,
 			  sigc::mem_fun (*this, &SongList::sortByTrack));
    mSongs->set_sort_func (colSongs.colName,
@@ -110,14 +113,15 @@ SongList::~SongList () {
 /// \param pos: Position in model for insert
 /// \returns Gtk::TreeModel::iterator: Inserted row
 //-----------------------------------------------------------------------------
-Gtk::TreeModel::iterator SongList::insert (HSong& song, const Gtk::TreeIter& pos) {
-   TRACE3 ("SongList::insert (HSong&, const TreeIter&) - " << (song ? song->getName ().c_str () : "None"));
+Gtk::TreeModel::iterator SongList::insert (HSong& song, const Gtk::TreeModel::iterator& pos) {
+   TRACE3 ("SongList::insert (HSong&, const Gtk::TreeModel::iterator&) - " << (song ? song->getName ().c_str () : "None"));
    Check1 (song);
 
-   Gtk::TreeModel::Row newSong (*mSongs->insert (pos));
+   Gtk::TreeModel::iterator iSong (mSongs->insert (pos));
+   Gtk::TreeModel::Row newSong (*iSong);
    newSong[colSongs.entry] = song;
    update (newSong);
-   return newSong;
+   return iSong;
 }
 
 //-----------------------------------------------------------------------------
@@ -131,7 +135,8 @@ void SongList::valueChanged (const Glib::ustring& path,
    TRACE9 ("SongList::valueChanged (2x const Glib::ustring&, unsigned int) - "
 	   << path << "->" << value);
 
-   Gtk::TreeModel::Row row (*mSongs->get_iter (Gtk::TreeModel::Path (path)));
+   Gtk::TreeModel::iterator iRow (mSongs->get_iter (Gtk::TreeModel::Path (path)));
+   Gtk::TreeModel::Row row (*iRow);
 
    Glib::ustring oldValue;
    HSong song (row[colSongs.entry]); Check3 (song);
@@ -144,7 +149,7 @@ void SongList::valueChanged (const Glib::ustring& path,
 	       throw (YGP::InvalidValue ("Invalid track number: `0'!"));
 
 	    Gtk::TreeModel::const_iterator i (getSong (track));
-	    if ((i != row) && (i != mSongs->children ().end ())) {
+	    if ((i != iRow) && (i != mSongs->children ().end ())) {
 	       Glib::ustring e (_("Song `%1' already exists!"));
 	       e.replace (e.find ("%1"), 2, value);
 	       throw (YGP::InvalidValue (e));
@@ -157,7 +162,7 @@ void SongList::valueChanged (const Glib::ustring& path,
 
       case 1: {
 	 Gtk::TreeModel::const_iterator i (getSong (value));
-	 if ((i != row) && (i != mSongs->children ().end ())) {
+	 if ((i != iRow) && (i != mSongs->children ().end ())) {
 	    Glib::ustring e (_("Song `%1' already exists!"));
 	    e.replace (e.find ("%1"), 2, value);
 	    throw (YGP::InvalidValue (e));
@@ -169,7 +174,7 @@ void SongList::valueChanged (const Glib::ustring& path,
 
       case 2:
 	 song->setDuration (value);
-	 oldValue = YGP::ATime (row[colSongs.colDuration]).toUnformattedString ();
+	 oldValue = row.get_value (colSongs.colDuration).toUnformattedString ();
 	 row[colSongs.colDuration] = song->getDuration ();
 	 break;
 
@@ -195,9 +200,11 @@ void SongList::valueChanged (const Glib::ustring& path,
 
       XGP::MessageDlg* dlg (XGP::MessageDlg::create (obj));
       dlg->set_title (PACKAGE);
-      dlg->get_window ()->set_transient_for (this->get_window ());
+      Gtk::Window* win (dynamic_cast<Gtk::Window*> (get_root ()));
+      if (win)
+	 dlg->set_transient_for (*win);
    }
-   signalChanged.emit (row, column, oldValue);
+   signalChanged.emit (iRow, column, oldValue);
 }
 
 //-----------------------------------------------------------------------------
@@ -206,13 +213,11 @@ void SongList::valueChanged (const Glib::ustring& path,
 /// \param a: Second entry to compare
 /// \returns int: Value of compare (analogue to strcmp)
 //-----------------------------------------------------------------------------
-int SongList::sortByTrack (const Gtk::TreeModel::iterator& a,
-			   const Gtk::TreeModel::iterator& b) const {
-   Gtk::TreeModel::Row rowa (*a);
-   Gtk::TreeModel::Row rowb (*b);
-   HSong ha (rowa[colSongs.entry]); Check3 (ha);
-   HSong hb (rowb[colSongs.entry]); Check3 (hb);
-   TRACE9 ("SongList::sortByTrack (2x const Gtk::TreeModel::iterator&) - "
+int SongList::sortByTrack (const Gtk::TreeModel::const_iterator& a,
+			   const Gtk::TreeModel::const_iterator& b) const {
+   HSong ha (getSongAt (a)); Check3 (ha);
+   HSong hb (getSongAt (b)); Check3 (hb);
+   TRACE9 ("SongList::sortByTrack (2x const Gtk::TreeModel::const_iterator&) - "
 	   << ha->getTrack () << '/' << hb->getTrack () << '='
 	   << ha->getTrack ().compare (hb->getTrack ()));
 
@@ -225,12 +230,10 @@ int SongList::sortByTrack (const Gtk::TreeModel::iterator& a,
 /// \param a: Second entry to compare
 /// \returns int: Value as strcmp
 //-----------------------------------------------------------------------------
-int SongList::sortByName (const Gtk::TreeModel::iterator& a,
-			   const Gtk::TreeModel::iterator& b) const {
-   Gtk::TreeModel::Row rowa (*a);
-   Gtk::TreeModel::Row rowb (*b);
-   HSong ha (rowa[colSongs.entry]); Check3 (ha);
-   HSong hb (rowb[colSongs.entry]); Check3 (hb);
+int SongList::sortByName (const Gtk::TreeModel::const_iterator& a,
+			   const Gtk::TreeModel::const_iterator& b) const {
+   HSong ha (getSongAt (a)); Check3 (ha);
+   HSong hb (getSongAt (b)); Check3 (hb);
 
    Glib::ustring aname (Words::removeArticle (ha->getName ()));
    Glib::ustring bname (Words::removeArticle (hb->getName ()));
@@ -258,10 +261,9 @@ void SongList::updateGenres () {
 /// \returns Gtk::TreeModel::iterator: Iterator to found song or end ().
 //-----------------------------------------------------------------------------
 Gtk::TreeModel::iterator SongList::getSong (const HSong& song) const {
-   for (Gtk::TreeModel::const_iterator i (mSongs->children ().begin ());
+   for (Gtk::TreeModel::iterator i (mSongs->children ().begin ());
 	i != mSongs->children ().end (); ++i) {
-      Gtk::TreeModel::Row actRow (*i);
-      if (song == (HSong)actRow[colSongs.entry])
+      if (song == i->get_value (colSongs.entry))
 	 return i;
    }
    return mSongs->children ().end ();
@@ -273,10 +275,9 @@ Gtk::TreeModel::iterator SongList::getSong (const HSong& song) const {
 /// \returns Gtk::TreeModel::iterator: Iterator to found song or end ().
 //-----------------------------------------------------------------------------
 Gtk::TreeModel::iterator SongList::getSong (const Glib::ustring& name) const {
-   for (Gtk::TreeModel::const_iterator i (mSongs->children ().begin ());
+   for (Gtk::TreeModel::iterator i (mSongs->children ().begin ());
 	i != mSongs->children ().end (); ++i) {
-      Gtk::TreeModel::Row actRow (*i);
-      if (actRow[colSongs.colName] == name)
+      if (i->get_value (colSongs.colName) == name)
 	 return i;
    }
    return mSongs->children ().end ();
@@ -289,11 +290,9 @@ Gtk::TreeModel::iterator SongList::getSong (const Glib::ustring& name) const {
 //-----------------------------------------------------------------------------
 Gtk::TreeModel::iterator SongList::getSong (const YGP::ANumeric& track) const {
    Glib::ustring strTrack (track.toString ());
-   for (Gtk::TreeModel::const_iterator i (mSongs->children ().begin ());
+   for (Gtk::TreeModel::iterator i (mSongs->children ().begin ());
 	i != mSongs->children ().end (); ++i) {
-      Gtk::TreeModel::Row actRow (*i);
-      Glib::ustring value (actRow[colSongs.colTrack]);
-      if (value == strTrack)
+      if (i->get_value (colSongs.colTrack) == strTrack)
 	 return i;
    }
    return mSongs->children ().end ();
@@ -304,13 +303,13 @@ Gtk::TreeModel::iterator SongList::getSong (const YGP::ANumeric& track) const {
 /// \param iter: Iterator to song to change
 /// \param genre: Genre to set
 //-----------------------------------------------------------------------------
-void SongList::setGenre (Gtk::TreeIter& iter, unsigned int genre) {
-   TRACE9 ("SongList::setGenre (Gtk::TreeIter&, unsigned int) - " << genre);
+void SongList::setGenre (const Gtk::TreeModel::iterator& iter, unsigned int genre) {
+   TRACE9 ("SongList::setGenre (const Gtk::TreeModel::iterator&, unsigned int) - " << genre);
    Check1 (iter);
    HSong song (getSongAt (iter)); Check2 (song);
-   TRACE9 ("SongList::setGenre (Gtk::TreeIter&, unsigned int) - Genre: " << song->getGenre ());
+   TRACE9 ("SongList::setGenre (const Gtk::TreeModel::iterator&, unsigned int) - Genre: " << song->getGenre ());
    if (!song->getGenre ()) {
-      TRACE9 ("SongList::setGenre (Gtk::TreeIter&, unsigned int) - Changing " << song->getName ());
+      TRACE9 ("SongList::setGenre (const Gtk::TreeModel::iterator&, unsigned int) - Changing " << song->getName ());
       Glib::ustring oldValue (1, song->getGenre ());
 
       song->setGenre (genre);

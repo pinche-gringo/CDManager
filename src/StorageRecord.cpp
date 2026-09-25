@@ -43,7 +43,7 @@
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
 unsigned int StorageRecord::loadRecords (std::map<unsigned int, std::vector<HRecord> >& aRecords,
-					 YGP::StatusObject& stat) throw (std::exception) {
+					 YGP::StatusObject& stat) {
    db ().execute ("SELECT id, name, interpret, year, genre FROM "
 		      "Records ORDER BY interpret, year");
    TRACE8 ("StorageRecord::loadRecords () - Records: " << db ().resultSize ());
@@ -87,7 +87,7 @@ unsigned int StorageRecord::loadRecords (std::map<unsigned int, std::vector<HRec
 /// \param songs: Vector to store loaded songs
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
-void StorageRecord::loadSongs (unsigned int idRecord, std::vector<HSong>& songs) throw (std::exception) {
+void StorageRecord::loadSongs (unsigned int idRecord, std::vector<HSong>& songs) {
    TRACE9 ("StorageRecord::loadSongs (unsigned int, std::vector<HSong>&) - " << idRecord);
 
    std::stringstream query;
@@ -118,7 +118,7 @@ void StorageRecord::loadSongs (unsigned int idRecord, std::vector<HSong>& songs)
 /// \param idInterpret: ID of interpret to which to record should be saved
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
-void StorageRecord::saveRecord (const HRecord record, unsigned int idInterpret) throw (std::exception) {
+void StorageRecord::saveRecord (const HRecord record, unsigned int idInterpret) {
    Check3 (idInterpret);
 
    Database::Values values;
@@ -144,7 +144,7 @@ void StorageRecord::saveRecord (const HRecord record, unsigned int idInterpret) 
 /// \param idRecord: ID of record to song belongs to
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
-void StorageRecord::saveSong (const HSong song, unsigned int idRecord) throw (std::exception) {
+void StorageRecord::saveSong (const HSong song, unsigned int idRecord) {
    Check3 (idRecord);
 
    Database::Values values;
@@ -170,7 +170,7 @@ void StorageRecord::saveSong (const HSong song, unsigned int idRecord) throw (st
 /// \param idSongs: Song to delete
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
-void StorageRecord::deleteSong (unsigned int idSong) throw (std::exception) {
+void StorageRecord::deleteSong (unsigned int idSong) {
    std::stringstream query;
    query << "DELETE FROM Songs WHERE id=" << idSong;
    db ().execute (query.str ());
@@ -182,7 +182,7 @@ void StorageRecord::deleteSong (unsigned int idSong) throw (std::exception) {
 /// \param idRecord: ID of record to song belongs to
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
-void StorageRecord::deleteRecord (unsigned int idRecord) throw (std::exception) {
+void StorageRecord::deleteRecord (unsigned int idRecord) {
    std::stringstream query;
    query << "DELETE FROM Records WHERE id=" << idRecord;
    db ().execute (query.str ());
@@ -194,7 +194,7 @@ void StorageRecord::deleteRecord (unsigned int idRecord) throw (std::exception) 
 /// \param idRecord: ID of record to song belongs to
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
-void StorageRecord::deleteInterpret (unsigned int idInterpret) throw (std::exception) {
+void StorageRecord::deleteInterpret (unsigned int idInterpret) {
    std::stringstream query;
    query << "DELETE FROM Interprets WHERE id=" << idInterpret;
    db ().execute (query.str ());

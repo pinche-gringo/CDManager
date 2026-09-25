@@ -34,11 +34,11 @@ struct Language {
  public:
    static void init ();
 
-   static Glib::ustring findInternational (const std::string& lang) throw (std::out_of_range);
-   static const Language& findLanguage (const std::string& lang) throw (std::out_of_range);
+   static Glib::ustring findInternational (const std::string& lang);
+   static const Language& findLanguage (const std::string& lang);
    static bool exists (const std::string& lang);
 #ifdef USE_LANGUAGEPIXMAPS
-   static Glib::RefPtr<Gdk::Pixbuf> findFlag (const std::string& lang) throw (std::out_of_range);
+   static Glib::RefPtr<Gdk::Pixbuf> findFlag (const std::string& lang);
 #endif
 
    Glib::ustring getInternational () const { return nameInternational; }

@@ -4,7 +4,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2019
-//COPYRIGHT   : Copyright (C) 2019
+//COPYRIGHT   : Copyright (C) 2019, 2026
 
 // This file is part of CDManager
 //
@@ -24,12 +24,14 @@
 
 #include <cdmgr-cfg.h>
 
-#include <glibmm/fileutils.h>
+#include <glibmm/bytes.h>
+#include <glibmm/error.h>
 
+#include <gdkmm/texture.h>
 #include <gdkmm/pixbufloader.h>
 
+#include <gtkmm/box.h>
 #include <gtkmm/label.h>
-#include <gtkmm/stock.h>
 #include <gtkmm/image.h>
 #include <gtkmm/button.h>
 #include <gtkmm/textview.h>
@@ -52,32 +54,36 @@ static const unsigned int HEIGHT = 128;
 /// Constructor
 //-----------------------------------------------------------------------------
 FilmDataEditor::FilmDataEditor()
-   : XGP::XDialog(XGP::XDialog::OKCANCEL), txtSummary(new Gtk::TextView()),
-     image(new Gtk::Image()) {
+   : XGP::XDialog(XGP::XDialog::OKCANCEL), txtSummary(Gtk::make_managed<Gtk::TextView>()),
+     image(Gtk::make_managed<Gtk::Image>()) {
 
-   txtSummary->set_wrap_mode(Gtk::WRAP_WORD);
+   txtSummary->set_wrap_mode(Gtk::WrapMode::WORD);
    txtSummary->set_size_request(350, 150);
+   txtSummary->set_expand(true);
 
-   Gtk::HBox* hbox(new Gtk::HBox());
-   Gtk::VBox* vbox(new Gtk::VBox());
+   Gtk::Box* hbox(Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 5));
+   Gtk::Box* vbox(Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 5));
 
-   Gtk::Button* img(new Gtk::Button());
+   Gtk::Button* img(Gtk::make_managed<Gtk::Button>());
    img->set_size_request(WIDTH, HEIGHT);
-   image->set_from_icon_name("image-missing", Gtk::IconSize(6));
+   img->set_valign(Gtk::Align::START);
+   image->set_from_icon_name("image-missing");
+   image->set_pixel_size(HEIGHT);
    image->set_size_request(WIDTH, HEIGHT);
-   img->set_image(*image);
+   img->set_child(*image);
 
-   img->signal_clicked().connect(mem_fun(*this, &FilmDataEditor::loadIcon));
+   img->signal_clicked().connect(sigc::mem_fun(*this, &FilmDataEditor::loadIcon));
 
-   Gtk::Label* lbl(new Gtk::Label(_("Plot summary:")));
-   vbox->pack_start(*manage(lbl), false, false);
-   vbox->pack_start(*manage(txtSummary), true, true, 5);
-   hbox->pack_start(*manage(vbox), true, true, 5);
-   hbox->pack_start(*manage(img), false, false, 5);
+   Gtk::Label* lbl(Gtk::make_managed<Gtk::Label>(_("Plot summary:")));
+   lbl->set_halign(Gtk::Align::START);
+   vbox->append(*lbl);
+   vbox->append(*txtSummary);
+   hbox->append(*vbox);
+   hbox->append(*img);
+   hbox->set_margin(5);
 
-   get_vbox()->pack_start(*manage(hbox), false, false, 5);
+   get_content_area()->append(*hbox);
 
-   show_all_children();
    show();
 }
 
@@ -99,27 +105,47 @@ void FilmDataEditor::setIcon(const std::string& bufImage) {
       picLoader->write((const guint8*)bufImage.data(), (gsize)bufImage.size());
       picLoader->close();
       TRACE9("Size " << picLoader->get_pixbuf()->get_width() << '/' << picLoader->get_pixbuf()->get_height());
-      image->set(picLoader->get_pixbuf()->scale_simple(WIDTH, HEIGHT, Gdk::INTERP_BILINEAR));
-      TRACE9("FilmDataEditor::setIcon(const std::string&) - Dimensions: " << image->get_width() << '/' << image->get_height());
-      image->show();
+      showPoster(picLoader->get_pixbuf()->scale_simple(WIDTH, HEIGHT, Gdk::InterpType::BILINEAR));
    }
-   catch(Gdk::PixbufError& e) { }
-   catch(Glib::FileError& e) { }
    catch(Glib::Error& e) {
       TRACE1("Error: " << e.what());
    }
 }
 
 //-----------------------------------------------------------------------------
+/// Stores and displays the (scaled) poster
+/// \param pic Poster to display
+/// \throw Glib::Error In case of an error
+//-----------------------------------------------------------------------------
+void FilmDataEditor::showPoster(const Glib::RefPtr<Gdk::Pixbuf>& pic) {
+   Check1(pic);
+
+   // Convert the poster to a texture (via PNG, as
+   // Gdk::Texture::create_for_pixbuf is deprecated)
+   gchar* buffer(nullptr);
+   gsize bufSize(0);
+   pic->save_to_buffer(buffer, bufSize, "png");
+   Glib::RefPtr<Glib::Bytes> bytes(Glib::Bytes::create(buffer, bufSize));
+   g_free(buffer);
+
+   image->set(Gdk::Texture::create_from_bytes(bytes));
+   poster = pic;
+}
+
+//-----------------------------------------------------------------------------
 /// Returns the icon of the film
-/// \returns const std::string& Icon data
+/// \returns const std::string& Icon data (empty, if there is no icon)
 //-----------------------------------------------------------------------------
 const std::string FilmDataEditor::getIcon() const {
-   gchar* buffer(NULL);
+   if (!poster)
+      return std::string();
+
+   gchar* buffer(nullptr);
    gsize bufSize(0);
-   image->get_pixbuf()->save_to_buffer(buffer, bufSize, "jpeg");
+   poster->save_to_buffer(buffer, bufSize, "jpeg");
 
    const std::string icon(buffer, bufSize);
+   g_free(buffer);
    return icon;
 }
 
@@ -143,11 +169,12 @@ const Glib::ustring FilmDataEditor::getSummary() const {
 /// Opens the file load dialog to load an icon
 //-----------------------------------------------------------------------------
 void FilmDataEditor::loadIcon() {
-   auto dlg(XGP::FileDialog::create(_("Load icon"), Gtk::FILE_CHOOSER_ACTION_OPEN,
+   auto dlg(XGP::FileDialog::create(_("Load icon"), Gtk::FileChooser::Action::OPEN,
 				    XGP::FileDialog::MUST_EXIST));
 
-   dlg->sigSelected.connect(mem_fun(*this, &FilmDataEditor::addIcon));
-   dlg->run();
+   dlg->set_transient_for(*this);
+   dlg->set_modal(true);
+   dlg->sigSelected.connect(sigc::mem_fun(*this, &FilmDataEditor::addIcon));
 }
 
 //-----------------------------------------------------------------------------
@@ -160,20 +187,20 @@ void FilmDataEditor::addIcon(const std::string& filename) {
    YGP::StatusObject error;
    try {
       img = Gdk::Pixbuf::create_from_file(filename);
+      if (img)
+	 showPoster(img->scale_simple(WIDTH, HEIGHT, Gdk::InterpType::BILINEAR));
    }
-   catch(const Glib::FileError& err) { error.setMessage(YGP::StatusObject::ERROR, err.what()); }
-   catch(const Gdk::PixbufError& err) { error.setMessage(YGP::StatusObject::ERROR, err.what()); }
+   catch(const Glib::Error& err) {
+      error.setMessage(YGP::StatusObject::ERROR, err.what());
+      img.reset();
+   }
 
-   if (img) {
-      img = img->scale_simple(WIDTH, HEIGHT, Gdk::INTERP_BILINEAR);
-      image->set(img);
-   }
-   else {
+   if (!img) {
       Glib::ustring msg(_("Error loading icon from file '%1'!"));
       msg.replace (msg.find ("%1"), 2, filename);
       error.generalize(msg);
       XGP::MessageDlg* dlg(XGP::MessageDlg::create(error));
       dlg->set_title(PACKAGE);
-      dlg->get_window()->set_transient_for (this->get_window ());
+      dlg->set_transient_for(*this);
    }
 }

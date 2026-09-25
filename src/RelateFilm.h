@@ -23,6 +23,9 @@
 
 #include <glibmm/refptr.h>
 
+#include <gtkmm/liststore.h>
+#include <gtkmm/treestore.h>
+
 #include "Actor.h"
 #include "Film.h"
 #include "Director.h"
@@ -30,11 +33,8 @@
 #include <XGP/XDialog.h>
 
 namespace Gtk {
-   class Label;
-   class Table;
    class Button;
    class TreeView;
-   class TreeStore;
    class TreeViewColumn;
 }
 
@@ -73,16 +73,21 @@ class RelateFilm : public XGP::XDialog {
    static RelateFilm* create (const HActor& actor, const std::vector<HFilm>& films,
 			       const Glib::RefPtr<Gtk::TreeStore> allFilms) {
       RelateFilm* dlg (new RelateFilm (actor, films, allFilms));
-      dlg->signal_response ().connect (mem_fun (*dlg, &RelateFilm::free));
+      dlg->signal_response ().connect (sigc::mem_fun (*dlg, &RelateFilm::free));
       return dlg;
    }
    static RelateFilm* create (const HActor& actor, const Glib::RefPtr<Gtk::TreeStore> allFilms) {
       RelateFilm* dlg (new RelateFilm (actor, allFilms));
-      dlg->signal_response ().connect (mem_fun (*dlg, &RelateFilm::free));
+      dlg->signal_response ().connect (sigc::mem_fun (*dlg, &RelateFilm::free));
       return dlg;
    }
 
-   sigc::signal<void, const HActor&, const std::vector<HFilm>&> signalRelateFilms;
+   sigc::signal<void (const HActor&, const std::vector<HFilm>&)> signalRelateFilms;
+
+   //Prohibited manager functions
+   RelateFilm () = delete;
+   RelateFilm (const RelateFilm& other) = delete;
+   const RelateFilm& operator= (const RelateFilm& other) = delete;
 
  private:
    RelateFilm (const HActor& actor, const Glib::RefPtr<Gtk::TreeStore> allFilms);
@@ -91,12 +96,7 @@ class RelateFilm : public XGP::XDialog {
 
    void init ();
 
-   //Prohibited manager functions
-   RelateFilm ();
-   RelateFilm (const RelateFilm& other);
-   const RelateFilm& operator= (const RelateFilm& other);
-
-   virtual void okEvent ();
+   void okEvent () override;
 
    void insertFilm (const HFilm& film);
    void addFilm (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*);

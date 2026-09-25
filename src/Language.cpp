@@ -121,9 +121,8 @@ void Language::init () {
 /// Returns the name (in english) of the passed language (e.g. "Spanish")
 /// \param lang: Language to get
 /// \returns Glib::ustring: Language
-/// \throws std::out_of_range: If the value does not exist
 //-----------------------------------------------------------------------------
-Glib::ustring Language::findInternational (const std::string& lang) throw (std::out_of_range) {
+Glib::ustring Language::findInternational (const std::string& lang) {
    std::map<std::string, Language>::const_iterator i (languages.find (lang));
    if (i != languages.end ())
       return i->second.nameInternational;
@@ -135,9 +134,8 @@ Glib::ustring Language::findInternational (const std::string& lang) throw (std::
 /// Returns the name (in english) of the passed language (e.g. "Spanish")
 /// \param lang: Language to get
 /// \returns Glib::ustring: Language
-/// \throws std::out_of_range: If the value does not exist
 //-----------------------------------------------------------------------------
-Glib::RefPtr<Gdk::Pixbuf> Language::findFlag (const std::string& lang) throw (std::out_of_range) {
+Glib::RefPtr<Gdk::Pixbuf> Language::findFlag (const std::string& lang) {
    std::map<std::string, Language>::const_iterator i (languages.find (lang));
    if (i != languages.end ())
       return i->second.flag;
@@ -149,9 +147,8 @@ Glib::RefPtr<Gdk::Pixbuf> Language::findFlag (const std::string& lang) throw (st
 /// Returns the whole Language-entity
 /// \param lang: Language to get
 /// \returns const Language&: Language
-/// \throws std::out_of_range: If the value does not exist
 //-----------------------------------------------------------------------------
-const Language& Language::findLanguage (const std::string& lang) throw (std::out_of_range) {
+const Language& Language::findLanguage (const std::string& lang) {
    std::map<std::string, Language>::const_iterator i (languages.find (lang));
    if (i != languages.end ())
       return i->second;

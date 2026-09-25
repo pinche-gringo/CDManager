@@ -62,10 +62,10 @@ class Film : public YGP::Entity {
    void setYear     (const YGP::AYear& value) { year = value; }
    void setYear     (const std::string& value) { year = value; }
    void setGenre    (unsigned int value) { genre = value; }
-   void setType     (int value) throw (std::out_of_range) {
+   void setType     (int value) {
       CDType::getInstance ()[value];
       type = value; }
-   void setType     (const std::string& value) throw (std::out_of_range) {
+   void setType     (const std::string& value) {
       type = CDType::getInstance ()[value]; }
    void setLanguage (const std::string& value) { lang = value; }
    void setTitles   (const std::string& value) { titles = value; }

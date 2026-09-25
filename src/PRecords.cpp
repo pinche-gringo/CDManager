@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 24.01.2006
-//COPYRIGHT   : Copyright (C) 2006, 2007, 2009 - 2011
+//COPYRIGHT   : Copyright (C) 2006, 2007, 2009 - 2011, 2026
 
 // This file is part of CDManager
 //
@@ -36,9 +36,9 @@
 #include <fstream>
 #include <sstream>
 
+#include <giomm/file.h>
+
 #include <gtkmm/paned.h>
-#include <gtkmm/stock.h>
-#include <gtkmm/uimanager.h>
 #include <gtkmm/statusbar.h>
 #include <gtkmm/scrolledwindow.h>
 
@@ -70,36 +70,36 @@ static unsigned int getID3Size (const char* buffer) {
 /// \param menuSave Menu-entry to save the database
 /// \param genres Genres to use in actor-list
 //-----------------------------------------------------------------------------
-PRecords::PRecords (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave, const Genres& genres)
+PRecords::PRecords (Gtk::Statusbar& status, Glib::RefPtr<Gio::SimpleAction> menuSave, const Genres& genres)
    : NBPage (status, menuSave), records (genres), songs (genres),
      relRecords ("records"), relSongs ("songs") {
-   TRACE9 ("PRecords::PRecords (Gtk::Statusbar&, Glib::RefPtr<Gtk::Action>, const Genres&)");
+   TRACE9 ("PRecords::PRecords (Gtk::Statusbar&, Glib::RefPtr<Gio::SimpleAction>, const Genres&)");
 
-   Gtk::HPaned* cds (new Gtk::HPaned);
-   Gtk::ScrolledWindow* scrlRecords (new Gtk::ScrolledWindow);
-   Gtk::ScrolledWindow* scrlSongs (new Gtk::ScrolledWindow);
+   Gtk::Paned* cds (new Gtk::Paned (Gtk::Orientation::HORIZONTAL));
+   Gtk::ScrolledWindow* scrlRecords (Gtk::make_managed<Gtk::ScrolledWindow> ());
+   Gtk::ScrolledWindow* scrlSongs (Gtk::make_managed<Gtk::ScrolledWindow> ());
 
-   scrlRecords->set_shadow_type (Gtk::SHADOW_ETCHED_IN);
-   scrlSongs->set_shadow_type (Gtk::SHADOW_ETCHED_IN);
-   scrlRecords->add (records);
-   scrlSongs->add (songs);
-   scrlRecords->set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-   scrlSongs->set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+   scrlRecords->set_has_frame (true);
+   scrlSongs->set_has_frame (true);
+   scrlRecords->set_child (records);
+   scrlSongs->set_child (songs);
+   scrlRecords->set_policy (Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
+   scrlSongs->set_policy (Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
 
    Glib::RefPtr<Gtk::TreeSelection> sel (songs.get_selection ());
-   sel->set_mode (Gtk::SELECTION_MULTIPLE);
-   sel->signal_changed ().connect (mem_fun (*this, &PRecords::songSelected));
-   songs.signalChanged.connect (mem_fun (*this, &PRecords::songChanged));
+   sel->set_mode (Gtk::SelectionMode::MULTIPLE);
+   sel->signal_changed ().connect (sigc::mem_fun (*this, &PRecords::songSelected));
+   songs.signalChanged.connect (sigc::mem_fun (*this, &PRecords::songChanged));
 
-   records.signalOwnerChanged.connect (mem_fun (*this, &PRecords::interpretChanged));
-   records.signalObjectChanged.connect (mem_fun (*this, &PRecords::recordChanged));
+   records.signalOwnerChanged.connect (sigc::mem_fun (*this, &PRecords::interpretChanged));
+   records.signalObjectChanged.connect (sigc::mem_fun (*this, &PRecords::recordChanged));
 
    sel = records.get_selection ();
-   sel->set_mode (Gtk::SELECTION_MULTIPLE);
-   sel->signal_changed ().connect (mem_fun (*this, &PRecords::recordSelected));
+   sel->set_mode (Gtk::SelectionMode::MULTIPLE);
+   sel->signal_changed ().connect (sigc::mem_fun (*this, &PRecords::recordSelected));
 
-   cds->add1 (*manage (scrlRecords));
-   cds->add2 (*manage (scrlSongs));
+   cds->set_start_child (*scrlRecords);
+   cds->set_end_child (*scrlSongs);
    cds->set_position (400);
 
    widget = cds;
@@ -165,7 +165,7 @@ void PRecords::loadData () {
    catch (std::exception& err) {
       Glib::ustring msg (_("Can't query available records!\n\nReason: %1"));
       msg.replace (msg.find ("%1"), 2, err.what ());
-      Gtk::MessageDialog (msg, Gtk::MESSAGE_ERROR).run ();
+      showError (msg);
    }
 }
 
@@ -191,7 +191,7 @@ void PRecords::loadSongs (const HRecord& record) {
       Glib::ustring msg (_("Can't query the songs for record %1!\n\nReason: %2"));
       msg.replace (msg.find ("%1"), 2, record->getName ());
       msg.replace (msg.find ("%2"), 2, err.what ());
-      Gtk::MessageDialog (msg, Gtk::MESSAGE_ERROR).run ();
+      showError (msg);
    }
 }
 
@@ -211,9 +211,9 @@ void PRecords::newRecord () {
    std::vector<Gtk::TreePath> list (recordSel->get_selected_rows ());
    Check3 (list.size ());
    Glib::RefPtr<Gtk::TreeStore> model (records.getModel ());
-   Gtk::TreeIter p (model->get_iter (*list.begin ())); Check3 (p);
-   if ((*p)->parent ())
-      p = ((*p)->parent ());
+   Gtk::TreeModel::iterator p (model->get_iter (*list.begin ())); Check3 (p);
+   if (p->parent ())
+      p = p->parent ();
 
    HRecord record (new Record);
    record->setSongsLoaded ();
@@ -240,9 +240,9 @@ void PRecords::recordSelected () {
       (records.get_selection ()->get_selected_rows ());
    TRACE9 ("PRecords::recordSelected () - Size: " << list.size ());
    if (list.size ()) {
-      Gtk::TreeIter i (records.get_model ()->get_iter (*list.begin ())); Check3 (i);
+      Gtk::TreeModel::iterator i (records.get_model ()->get_iter (*list.begin ())); Check3 (i);
 
-      if ((*i)->parent ()) {
+      if (i->parent ()) {
 	 HRecord hRecord (records.getRecordAt (i)); Check3 (hRecord);
 	 if (hRecord->needsLoading () && hRecord->getId ())
 	    loadSongs (hRecord);
@@ -274,7 +274,7 @@ void PRecords::songSelected () {
    std::vector<Gtk::TreePath> list
       (songs.get_selection ()->get_selected_rows ());
    TRACE9 ("PRecords::songSelected () - Size: " << list.size ());
-   apMenus[DELETE]->set_sensitive (list.size ());
+   apMenus[DELETE]->set_enabled (!list.empty ());
 }
 
 //-----------------------------------------------------------------------------
@@ -283,16 +283,16 @@ void PRecords::songSelected () {
 /// \param column Changed column
 /// \param oldValue Old value of the changed entry
 //-----------------------------------------------------------------------------
-void PRecords::songChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue) {
-   TRACE4 ("PRecords::songChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&) - " << column);
+void PRecords::songChanged (const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue) {
+   TRACE4 ("PRecords::songChanged (const Gtk::TreeModel::iterator&, unsigned int, Glib::ustring&) - " << column);
 
    std::vector<Gtk::TreePath> list
       (records.get_selection ()->get_selected_rows ());
-   TRACE9 ("PRecords::songChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&) - Selected: " << list.size ());
+   TRACE9 ("PRecords::songChanged (const Gtk::TreeModel::iterator&, unsigned int, Glib::ustring&) - Selected: " << list.size ());
    Gtk::TreePath path (*list.begin ());
    aUndo.push (Undo (Undo::CHANGED, SONG, column, songs.getEntryAt (row), path, oldValue));
 
-   apMenus[UNDO]->set_sensitive ();
+   apMenus[UNDO]->set_enabled ();
    enableSave ();
 }
 
@@ -302,13 +302,13 @@ void PRecords::songChanged (const Gtk::TreeIter& row, unsigned int column, Glib:
 /// \param column Changed column
 /// \param oldValue Old value of the changed entry
 //-----------------------------------------------------------------------------
-void PRecords::interpretChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue) {
-   TRACE9 ("PRecords::interpretChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&) - " << column);
+void PRecords::interpretChanged (const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue) {
+   TRACE9 ("PRecords::interpretChanged (const Gtk::TreeModel::iterator&, unsigned int, Glib::ustring&) - " << column);
 
    Gtk::TreePath path (records.getModel ()->get_path (row));
    aUndo.push (Undo (Undo::CHANGED, INTERPRET, column, records.getCelebrityAt (row), path, oldValue));
 
-   apMenus[UNDO]->set_sensitive ();
+   apMenus[UNDO]->set_enabled ();
    enableSave ();
 }
 
@@ -318,8 +318,8 @@ void PRecords::interpretChanged (const Gtk::TreeIter& row, unsigned int column, 
 /// \param column Changed column
 /// \param oldValue Old value of the changed entry
 //-----------------------------------------------------------------------------
-void PRecords::recordChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue) {
-   TRACE9 ("PRecords::recordChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&) - " << column);
+void PRecords::recordChanged (const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue) {
+   TRACE9 ("PRecords::recordChanged (const Gtk::TreeModel::iterator&, unsigned int, Glib::ustring&) - " << column);
 
    Gtk::TreePath path (records.getModel ()->get_path (row));
    aUndo.push (Undo (Undo::CHANGED, RECORD, column, records.getObjectAt (row), path, oldValue));
@@ -337,65 +337,59 @@ void PRecords::recordChanged (const Gtk::TreeIter& row, unsigned int column, Gli
 	 Glib::RefPtr<Gtk::TreeModel> model (songs.get_model ());
 	 std::vector<Gtk::TreePath> list (songs.get_selection ()->get_selected_rows ());
 	 if (list.size ()) {
-	    Gtk::TreeIter iter;
 	    for (std::vector<Gtk::TreePath>::iterator i (list.begin ());
-		 i != list.end (); ++i) {
-	       iter = model->get_iter (*i);
-	       songs.setGenre (iter, genre);
-	    }
+		 i != list.end (); ++i)
+	       songs.setGenre (model->get_iter (*i), genre);
 	 }
 	 else {
 	    Gtk::TreeModel::Children list (model->children ()); Check3 (list.size ());
-	    for (Gtk::TreeIter i (list.begin ()); i != list.end (); ++i)
+	    for (Gtk::TreeModel::iterator i (list.begin ()); i != list.end (); ++i)
 	       songs.setGenre (i, genre);
 	 }
       }
    }
 
-   apMenus[UNDO]->set_sensitive ();
+   apMenus[UNDO]->set_enabled ();
    enableSave ();
 }
 
 //-----------------------------------------------------------------------------
 /// Setting the page-specific menu
-/// \param ui User-interface string holding menus
-/// \param grpActions Added actions
+/// \param menuEdit Edit-menu to add the page-specific entries to
+/// \param menuOther Additional top-level menus (not used)
+/// \param grpAction Action-group to add the actions to
+/// \param shortcuts Controller to add the keyboard shortcuts to
 //-----------------------------------------------------------------------------
-void PRecords::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAction) {
+void PRecords::addMenu (Glib::RefPtr<Gio::Menu> menuEdit, Glib::RefPtr<Gio::Menu>,
+                        Glib::RefPtr<Gio::SimpleActionGroup> grpAction,
+                        Glib::RefPtr<Gtk::ShortcutController> shortcuts) {
    TRACE7 ("PRecords::addMenu");
 
-   ui += ("<menuitem action='RUndo'/>"
-	  "<separator/>"
-	  "<menuitem action='NInterpret'/>"
-	  "<menuitem action='NRecord'/>"
-	  "<menuitem action='NSong'/>"
-	  "<separator/>"
-	  "<menuitem action='RDelete'/>"
-	  "<separator/>"
-	  "<menuitem action='Import'/>"
-	  "</placeholder></menu>");
+   Glib::RefPtr<Gio::Menu> sec (Gio::Menu::create ());
+   apMenus[UNDO] = grpAction->add_action ("RUndo", sigc::mem_fun (*this, &PRecords::undo));
+   addMenuEntry (sec, _("_Undo"), "page.RUndo", _("<ctl>Z"), shortcuts);
+   menuEdit->append_section (sec);
 
-   grpAction->add (apMenus[UNDO] = Gtk::Action::create ("RUndo", Gtk::Stock::UNDO),
-		   Gtk::AccelKey (_("<ctl>Z")),
-		   mem_fun (*this, &PRecords::undo));
-   grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NInterpret", Gtk::Stock::NEW,
-							_("New _interpret")),
-		   Gtk::AccelKey (_("<ctl>N")),
-		   mem_fun (*this, &PRecords::newInterpret));
-   grpAction->add (apMenus[NEW2] = Gtk::Action::create ("NRecord", _("_New record")),
-		   Gtk::AccelKey (_("<ctl><alt>N")),
-		   mem_fun (*this, &PRecords::newRecord));
-   grpAction->add (apMenus[NEW3] = Gtk::Action::create ("NSong", _("New _song")),
-		   Gtk::AccelKey (_("<ctl><shft>N")),
-		   mem_fun (*this, &PRecords::newSong));
-   grpAction->add (apMenus[DELETE] = Gtk::Action::create ("RDelete", Gtk::Stock::DELETE, _("_Delete")),
-		   Gtk::AccelKey (_("<ctl>Delete")),
-		   mem_fun (*this, &PRecords::deleteSelection));
-   grpAction->add (Gtk::Action::create ("Import", _("_Import from file-info ...")),
-		   Gtk::AccelKey (_("<ctl>I")),
-		   mem_fun (*this, &PRecords::importFromFileInfo));
+   sec = Gio::Menu::create ();
+   apMenus[NEW1] = grpAction->add_action ("NInterpret", sigc::mem_fun (*this, &PRecords::newInterpret));
+   addMenuEntry (sec, _("New _interpret"), "page.NInterpret", _("<ctl>N"), shortcuts);
+   apMenus[NEW2] = grpAction->add_action ("NRecord", sigc::mem_fun (*this, &PRecords::newRecord));
+   addMenuEntry (sec, _("_New record"), "page.NRecord", _("<ctl><alt>N"), shortcuts);
+   apMenus[NEW3] = grpAction->add_action ("NSong", sigc::mem_fun (*this, &PRecords::newSong));
+   addMenuEntry (sec, _("New _song"), "page.NSong", _("<ctl><shft>N"), shortcuts);
+   menuEdit->append_section (sec);
 
-   apMenus[UNDO]->set_sensitive (false);
+   sec = Gio::Menu::create ();
+   apMenus[DELETE] = grpAction->add_action ("RDelete", sigc::mem_fun (*this, &PRecords::deleteSelection));
+   addMenuEntry (sec, _("_Delete"), "page.RDelete", _("<ctl>Delete"), shortcuts);
+   menuEdit->append_section (sec);
+
+   sec = Gio::Menu::create ();
+   grpAction->add_action ("Import", sigc::mem_fun (*this, &PRecords::importFromFileInfo));
+   addMenuEntry (sec, _("_Import from file-info ..."), "page.Import", _("<ctl>I"), shortcuts);
+   menuEdit->append_section (sec);
+
+   apMenus[UNDO]->set_enabled (false);
    recordSelected ();
 }
 
@@ -404,11 +398,11 @@ void PRecords::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAct
 //-----------------------------------------------------------------------------
 void PRecords::importFromFileInfo () {
    XGP::FileDialog* dlg (XGP::FileDialog::create (_("Select file(s) to import"),
-						  Gtk::FILE_CHOOSER_ACTION_OPEN,
+						  Gtk::FileChooser::Action::OPEN,
 						  XGP::FileDialog::MUST_EXIST
 						  | XGP::FileDialog::MULTIPLE));
-   dlg->set_current_folder ("/usr/local/Music/K/Käthecore/EKH-Sampler");
-   dlg->sigSelected.connect (mem_fun (*this, &PRecords::parseFileInfo));
+   dlg->set_current_folder (Gio::File::create_for_path ("/usr/local/Music/K/Käthecore/EKH-Sampler"));
+   dlg->sigSelected.connect (sigc::mem_fun (*this, &PRecords::parseFileInfo));
 }
 
 //-----------------------------------------------------------------------------
@@ -426,7 +420,7 @@ void PRecords::parseFileInfo (const std::string& file) {
       Glib::ustring err (_("Can't open file `%1'!\n\nReason: %2"));
       err.replace (err.find ("%1"), 2, file);
       err.replace (err.find ("%2"), 2, strerror (errno));
-      Gtk::MessageDialog (err).run ();
+      showError (err);
       return;
    }
 
@@ -492,7 +486,7 @@ bool PRecords::parseID3Info (std::istream& stream, Glib::ustring& artist, Glib::
       }
 
       do {
-	 Glib::ustring *value (NULL);
+	 Glib::ustring *value (nullptr);
 	 // Read all frames
 	 stream.read (buffer, 10);
 	 unsigned int frameSize (getID3Size (buffer + 4));
@@ -508,19 +502,19 @@ bool PRecords::parseID3Info (std::istream& stream, Glib::ustring& artist, Glib::
 		if (memcmp (buffer, "TALB", 4))
 		   if (memcmp (buffer, "TPE1", 4))
 		      if (memcmp (buffer, "TCON", 4)) {
-			 value = NULL;
+			 value = nullptr;
 			 if (memcmp (buffer, "TDRC", 4))
 			    if (memcmp (buffer, "TRCK", 4))
 			       stream.seekg (frameSize, std::ios::cur);
 			    else {
 			       Check2 (frameSize < sizeof (buffer));
 			       stream.read (buffer, frameSize);
-			       track = strtoul (buffer + 1, NULL, 10);
+			       track = strtoul (buffer + 1, nullptr, 10);
 			    }
 			 else {
 			    Check2 (frameSize < sizeof (buffer));
 			    stream.read (buffer, frameSize);
-			    year = strtoul (buffer + 1, NULL, 10);
+			    year = strtoul (buffer + 1, nullptr, 10);
 			 }
 		      }
 		      else
@@ -628,7 +622,7 @@ bool PRecords::parseOGGCommentHeader (std::istream& stream, Glib::ustring& artis
       return false;
 
    std::string key;
-   Glib::ustring *value (NULL);
+   Glib::ustring *value (nullptr);
    do {
       stream.read ((char*)&len, 4);                  // Read the comment-length
 
@@ -645,12 +639,12 @@ bool PRecords::parseOGGCommentHeader (std::istream& stream, Glib::ustring& artis
       else if (key == "TRACKNUMBER") {
 	 Check2 (len < sizeof (buffer));
 	 stream.read (buffer, len);
-	 track = strtoul (buffer, NULL, 10);
-	 value = NULL;
+	 track = strtoul (buffer, nullptr, 10);
+	 value = nullptr;
 	 len = 0;
       }
       else
-	 value = NULL;
+	 value = nullptr;
 
       if (value) {
 	 unsigned int read (0);
@@ -687,17 +681,17 @@ std::string PRecords::stripString (const std::string& value, unsigned int pos, u
 //-----------------------------------------------------------------------------
 /// Adds an interpret to the record listbox
 /// \param interpret Handle to the new interpret
-/// \returns Gtk::TreeIter Iterator to new added interpret
+/// \returns Gtk::TreeModel::iterator Iterator to new added interpret
 //-----------------------------------------------------------------------------
-Gtk::TreeIter PRecords::addInterpret (const HInterpret& interpret) {
+Gtk::TreeModel::iterator PRecords::addInterpret (const HInterpret& interpret) {
    interprets.push_back (interpret);
 
-   Gtk::TreeModel::iterator i (records.append (interpret));
+   Gtk::TreeModel::iterator i (records.append (interpret).get_iter ());
    Gtk::TreePath path (records.getModel ()->get_path (i));
    records.set_cursor (path, *records.get_column (0), true);
 
    aUndo.push (Undo (Undo::INSERT, INTERPRET, 0, interpret, path, ""));
-   apMenus[UNDO]->set_sensitive ();
+   apMenus[UNDO]->set_enabled ();
    enableSave ();
    return i;
 }
@@ -706,10 +700,10 @@ Gtk::TreeIter PRecords::addInterpret (const HInterpret& interpret) {
 /// Adds a record to the record listbox
 /// \param parent Iterator to the interpret of the record
 /// \param record Handle to the new record
-/// \returns Gtk::TreeIter Iterator to new added record
+/// \returns Gtk::TreeModel::iterator Iterator to new added record
 //-----------------------------------------------------------------------------
-Gtk::TreeIter PRecords::addRecord (Gtk::TreeIter& parent, HRecord& record) {
-   Gtk::TreeIter i (records.append (record, *parent));
+Gtk::TreeModel::iterator PRecords::addRecord (const Gtk::TreeModel::iterator& parent, HRecord& record) {
+   Gtk::TreeModel::iterator i (records.append (record, *parent).get_iter ());
    Glib::RefPtr<Gtk::TreeStore> model (records.getModel ());
    records.expand_row (model->get_path (parent), false);
    Gtk::TreePath path (records.getModel ()->get_path (i));
@@ -720,7 +714,7 @@ Gtk::TreeIter PRecords::addRecord (Gtk::TreeIter& parent, HRecord& record) {
    relRecords.relate (interpret, record);
 
    aUndo.push (Undo (Undo::INSERT, RECORD, 0, record, path, ""));
-   apMenus[UNDO]->set_sensitive ();
+   apMenus[UNDO]->set_enabled ();
    enableSave ();
    return i;
 }
@@ -728,24 +722,24 @@ Gtk::TreeIter PRecords::addRecord (Gtk::TreeIter& parent, HRecord& record) {
 //-----------------------------------------------------------------------------
 /// Adds a song to the song listbox
 /// \param song Handle to the new song
-/// \returns Gtk::TreeIter Iterator to new added song
+/// \returns Gtk::TreeModel::iterator Iterator to the record of the song
 //-----------------------------------------------------------------------------
-Gtk::TreeIter PRecords::addSong (HSong& song) {
+Gtk::TreeModel::iterator PRecords::addSong (HSong& song) {
    Glib::RefPtr<Gtk::TreeSelection> recordSel (records.get_selection ());
    std::vector<Gtk::TreePath> list (recordSel->get_selected_rows ());
    Check3 (list.size ());
-   Gtk::TreeIter p (records.getModel ()->get_iter (*list.begin ())); Check3 (p);
+   Gtk::TreeModel::iterator p (records.getModel ()->get_iter (*list.begin ())); Check3 (p);
 
    HRecord record (records.getRecordAt (p)); Check3 (record);
    relSongs.relate (record, song);
-   Gtk::TreeIter iterSong (songs.append (song));
+   Gtk::TreeModel::iterator iterSong (songs.append (song));
    Gtk::TreePath pathSong (songs.getModel ()->get_path (iterSong));
    songs.set_cursor (pathSong, *songs.get_column (0), true);
 
    Gtk::TreePath path (*list.begin ());
    aUndo.push (Undo (Undo::INSERT, SONG, 0, song, path, ""));
 
-   apMenus[UNDO]->set_sensitive ();
+   apMenus[UNDO]->set_enabled ();
    enableSave ();
    return p;
 }
@@ -754,7 +748,7 @@ Gtk::TreeIter PRecords::addSong (HSong& song) {
 /// Saves the changed information
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
-void PRecords::saveData () throw (std::exception) {
+void PRecords::saveData () {
    TRACE5 ("PRecords::saveData () - " << aUndo.size ());
 
    std::vector<HEntity> aSaved;
@@ -853,7 +847,7 @@ void PRecords::saveData () throw (std::exception) {
       aUndo.pop ();
    } // end-while
    Check3 (apMenus[UNDO]);
-   apMenus[UNDO]->set_sensitive (false);
+   apMenus[UNDO]->set_enabled (false);
 
    Check3 (delRelation.empty ());
 }
@@ -868,7 +862,7 @@ void PRecords::deleteSelection () {
    else if (songs.has_focus ())
       deleteSelectedSongs ();
 
-   apMenus[UNDO]->set_sensitive ();
+   apMenus[UNDO]->set_enabled ();
    enableSave ();
 }
 
@@ -885,15 +879,15 @@ void PRecords::deleteSelectedRecords () {
       Check3 (list.size ());
       std::vector<Gtk::TreePath>::iterator i (list.begin ());
 
-      Gtk::TreeIter iter (records.get_model ()->get_iter (*i)); Check3 (iter);
-      if ((*iter)->parent ())                // A record is going to be deleted
+      Gtk::TreeModel::iterator iter (records.get_model ()->get_iter (*i)); Check3 (iter);
+      if (iter->parent ())                   // A record is going to be deleted
 	 deleteRecord (iter);
       else {                             // An interpret is going to be deleted
 	 TRACE9 ("PRecords::deleteSelectedRecords () - Deleting " <<
 		 iter->children ().size () << " children");
 	 HInterpret interpret (records.getInterpretAt (iter)); Check3 (interpret);
 	 while (iter->children ().size ()) {
-	    Gtk::TreeIter child (iter->children ().begin ());
+	    Gtk::TreeModel::iterator child (iter->children ().begin ());
 	    HRecord hRecord (records.getRecordAt (child));
 	    if (hRecord->needsLoading () && hRecord->getId ())
 	       loadSongs (hRecord);
@@ -910,17 +904,17 @@ void PRecords::deleteSelectedRecords () {
 /// Deletes the passed record
 /// \param record Iterator to record to delete
 //-----------------------------------------------------------------------------
-void PRecords::deleteRecord (const Gtk::TreeIter& record) {
+void PRecords::deleteRecord (const Gtk::TreeModel::iterator& record) {
    Check2 (record->children ().empty ());
 
    HRecord hRec (records.getRecordAt (record));
-   TRACE9 ("PRecords::deleteRecord (const Gtk::TreeIter&) - Deleting record "
+   TRACE9 ("PRecords::deleteRecord (const Gtk::TreeModel::iterator&) - Deleting record "
 	   << hRec->getName ());
    Check3 (relRecords.isRelated (hRec));
    HInterpret hInterpret (relRecords.getParent (hRec)); Check3 (hInterpret);
 
    // Remove related songs
-   TRACE3 ("PRecords::deleteRecord (const Gtk::TreeIter&) - Remove Songs");
+   TRACE3 ("PRecords::deleteRecord (const Gtk::TreeModel::iterator&) - Remove Songs");
    if (relSongs.isRelated (hRec)) {
       const std::vector<HSong>& as (relSongs.getObjects (hRec));
       for (std::vector<HSong>::const_iterator s (as.begin ()); s != as.end (); ++s)
@@ -965,7 +959,7 @@ void PRecords::deleteSelectedSongs () {
       Check3 (list.size ());
       std::vector<Gtk::TreePath>::iterator i (list.begin ());
 
-      Gtk::TreeIter iter (songs.get_model ()->get_iter (*i)); Check3 (iter);
+      Gtk::TreeModel::iterator iter (songs.get_model ()->get_iter (*i)); Check3 (iter);
       HSong song (songs.getSongAt (iter)); Check3 (song);
       Check3 (relSongs.isRelated (song));
       HRecord record (relSongs.getParent (song));
@@ -1001,9 +995,7 @@ void PRecords::export2HTML (unsigned int fd, const std::string&) {
 	 if (::write (fd, output.str ().data (), output.str ().size ()) != (ssize_t)output.str ().size ()) {
 	    Glib::ustring msg (_("Couldn't write data!\n\nReason: %1"));
 	    msg.replace (msg.find ("%1"), 2, strerror (errno));
-	    Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-	    dlg.set_title (_("Error exporting records to HTML!"));
-	    dlg.run ();
+	    showError (msg, _("Error exporting records to HTML!"));
 	    break;
 	 }
       }
@@ -1021,7 +1013,7 @@ void PRecords::export2HTML (unsigned int fd, const std::string&) {
 void PRecords::addEntry (const Glib::ustring&artist, const Glib::ustring& record, const Glib::ustring& song,
 			 unsigned int track, Glib::ustring& genre, unsigned int year) {
    HInterpret interpret;
-   Gtk::TreeIter i (records.getOwner (artist));
+   Gtk::TreeModel::iterator i (records.getOwner (artist));
    if (i == records.getModel ()->children ().end ()) {
       TRACE9 ("PRecords::addEntry (3x const Glib::ustring&, unsigned int) - Adding band " << artist);
 
@@ -1033,7 +1025,7 @@ void PRecords::addEntry (const Glib::ustring&artist, const Glib::ustring& record
       interpret = records.getInterpretAt (i);
 
    HRecord rec;
-   Gtk::TreeIter r (records.getObject (i, record));
+   Gtk::TreeModel::iterator r (records.getObject (i, record));
    if (r == i->children ().end ()) {
       TRACE9 ("PRecords::addEntry (3x const Glib::ustring&, unsigned int) - Adding record " << record);
       rec.reset (new Record);
@@ -1048,7 +1040,7 @@ void PRecords::addEntry (const Glib::ustring&artist, const Glib::ustring& record
 
    int idGenre (songs.getGenre (genre));
    HSong hSong;
-   Gtk::TreeIter s (songs.getSong (song));
+   Gtk::TreeModel::iterator s (songs.getSong (song));
    if (s == songs.getModel ()->children ().end ()) {
       TRACE9 ("PRecords::addEntry (3x const Glib::ustring&, unsigned int) - Adding song " << hSong);
       hSong.reset (new Song);
@@ -1104,7 +1096,7 @@ void PRecords::undo () {
    aUndo.pop ();
    if (aUndo.empty ()) {
       enableSave (false);
-      apMenus[UNDO]->set_sensitive (false);
+      apMenus[UNDO]->set_enabled (false);
    }
 }
 
@@ -1116,7 +1108,7 @@ void PRecords::undoRecord (const Undo& last) {
    TRACE6 ("PRecords::undoRecord (const Undo&)");
 
    Gtk::TreePath path (last.getPath ());
-   Gtk::TreeIter iter (records.getModel ()->get_iter (path)); Check3 (iter->parent ());
+   Gtk::TreeModel::iterator iter (records.getModel ()->get_iter (path)); Check3 (iter->parent ());
 
    Check3 (typeid (*last.getEntity ()) == typeid (Record));
    HRecord record (boost::dynamic_pointer_cast<Record> (last.getEntity ()));
@@ -1157,7 +1149,7 @@ void PRecords::undoRecord (const Undo& last) {
       HInterpret interpret (boost::dynamic_pointer_cast<Interpret> (delRel->second));
       Gtk::TreeRow rowInterpret (*records.getOwner (interpret));
 
-      iter = records.append (record, rowInterpret);
+      iter = records.append (record, rowInterpret).get_iter ();
       path = records.getModel ()->get_path (iter);
 
       relRecords.relate (interpret, record);
@@ -1184,7 +1176,7 @@ void PRecords::undoInterpret (const Undo& last) {
    TRACE6 ("PRecords::undoInterpret (const Undo&)");
 
    Gtk::TreePath path (last.getPath ());
-   Gtk::TreeIter iter (records.getModel ()->get_iter (path));
+   Gtk::TreeModel::iterator iter (records.getModel ()->get_iter (path));
 
    HInterpret interpret (boost::dynamic_pointer_cast<Interpret> (last.getEntity ())); Check3 (interpret);
    TRACE9 ("PRecords::undoInterpret (const Undo&) - " << last.how () << ": " << interpret->getName ());
@@ -1219,7 +1211,7 @@ void PRecords::undoInterpret (const Undo& last) {
 	 Check3 (!iter->parent ());
       else
 	 iter = records.getModel ()->children ().end ();
-      iter = records.insert (interpret, iter);
+      iter = records.insert (interpret, iter).get_iter ();
       path = records.getModel ()->get_path (iter);
       break;
 
@@ -1243,7 +1235,7 @@ void PRecords::undoSong (const Undo& last) {
    TRACE6 ("PRecords::undoSong (const Undo&) - " << last.column ());
 
    Gtk::TreePath path (last.getPath ());
-   Gtk::TreeIter iter (records.getModel ()->get_iter (path));
+   Gtk::TreeModel::iterator iter (records.getModel ()->get_iter (path));
    Glib::RefPtr<Gtk::TreeSelection> sel (records.get_selection ());
    sel->unselect_all ();
    sel->select (iter);

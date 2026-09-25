@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 31.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2019
+//COPYRIGHT   : Copyright (C) 2004 - 2019, 2026
 
 // This file is part of CDManager
 //
@@ -30,6 +30,10 @@
 
 #include <boost/tokenizer.hpp>
 
+#include <glibmm/main.h>
+
+#include <gtkmm/window.h>
+#include <gtkmm/gestureclick.h>
 #include <gtkmm/cellrenderercombo.h>
 
 #include <YGP/Check.h>
@@ -62,19 +66,18 @@ FilmList::FilmList (const Genres& genres)
    init (colFilms);
 
    // Add column "Type"
-   Gtk::CellRendererCombo* renderer (new Gtk::CellRendererCombo ());
+   Gtk::CellRendererCombo* renderer (Gtk::make_managed<Gtk::CellRendererCombo> ());
    renderer->property_text_column () = 0;
    renderer->property_model () = mTypes;
    renderer->property_editable () = true;
-   Gtk::TreeViewColumn* column (new Gtk::TreeViewColumn
-				(_("Type"), *Gtk::manage (renderer)));
-   append_column (*Gtk::manage (column));
+   Gtk::TreeViewColumn* column (Gtk::make_managed<Gtk::TreeViewColumn> (_("Type"), *renderer));
+   append_column (*column);
    column->add_attribute (renderer->property_text (), colFilms.type);
    column->add_attribute (renderer->property_visible(), colFilms.chgAll);
    column->set_resizable ();
 
    renderer->signal_edited ().connect
-      (bind (mem_fun (*this, &FilmList::valueChanged), 0));
+      (sigc::bind (sigc::mem_fun (*this, &FilmList::valueChanged), 0));
 
    CDType& type (CDType::getInstance ());
    for (CDType::const_iterator t (type.begin ()); t != type.end (); ++t) {
@@ -83,19 +86,19 @@ FilmList::FilmList (const Genres& genres)
    }
 
    // Add column "Languages"
-   column = new Gtk::TreeViewColumn (_("Language(s)"));
+   column = Gtk::make_managed<Gtk::TreeViewColumn> (_("Language(s)"));
    column->pack_start (colFilms.lang1, false);
    column->pack_start (colFilms.lang2, false);
    column->pack_start (colFilms.lang3, false);
    column->pack_start (colFilms.lang4, false);
    column->pack_start (colFilms.lang5, false);
 
-   append_column (*Gtk::manage (column));
+   append_column (*column);
    column->set_resizable ();
    column->add_attribute (column->get_first_cell ()->property_visible(), colFilms.chgAll);
 
    // Add column "Subtitles"
-   column = new Gtk::TreeViewColumn (_("Subtitles(s)"));
+   column = Gtk::make_managed<Gtk::TreeViewColumn> (_("Subtitles(s)"));
    column->pack_start (colFilms.sub1, false);
    column->pack_start (colFilms.sub2, false);
    column->pack_start (colFilms.sub3, false);
@@ -107,11 +110,16 @@ FilmList::FilmList (const Genres& genres)
    column->pack_start (colFilms.sub9, false);
    column->pack_start (colFilms.sub10, false);
 
-   append_column (*Gtk::manage (column));
+   append_column (*column);
    column->set_resizable ();
    column->add_attribute (column->get_first_cell ()->property_visible(), colFilms.chgAll);
 
-   set_rules_hint ();
+   // Check clicks (before the list handles them) to edit languages/subtitles
+   Glib::RefPtr<Gtk::GestureClick> click (Gtk::GestureClick::create ());
+   click->set_button (GDK_BUTTON_PRIMARY);
+   click->set_propagation_phase (Gtk::PropagationPhase::CAPTURE);
+   click->signal_pressed ().connect (sigc::mem_fun (*this, &FilmList::onButtonPressed));
+   add_controller (click);
 }
 
 //-----------------------------------------------------------------------------
@@ -128,8 +136,7 @@ FilmList::~FilmList () {
 /// \param director: Director of the film
 /// \returns Gtk::TreeModel::Row: Inserted row
 //-----------------------------------------------------------------------------
-Gtk::TreeModel::Row FilmList::append (HFilm& film,
-				       const Gtk::TreeModel::Row& director) {
+Gtk::TreeModel::Row FilmList::append (HFilm& film, Gtk::TreeModel::Row& director) {
    TRACE3 ("FilmList::append (HFilm&, Gtk::TreeModel::Row) - "
 	   << (film ? film->getName ().c_str () : "None"));
    Check1 (film);
@@ -142,13 +149,13 @@ Gtk::TreeModel::Row FilmList::append (HFilm& film,
 
 //-----------------------------------------------------------------------------
 /// Returns the handle (casted to a HFilm) at the passed position
-/// \param iter: Iterator to position in the list
+/// \param row: Row in the list
 /// \returns HFilm: Handle of the selected line
 //-----------------------------------------------------------------------------
-HFilm FilmList::getFilmAt (const Gtk::TreeIter iter) const {
-   Check2 ((*iter)->parent ());
-   HFilm film (boost::dynamic_pointer_cast<Film> (getObjectAt (iter))); Check3 (film);
-   TRACE7 ("CDManager::getFilmAt (const Gtk::TreeIter&) - Selected film: " <<
+HFilm FilmList::getFilmAt (const Gtk::TreeModel::ConstRow& row) const {
+   Check2 (row.parent ());
+   HFilm film (boost::dynamic_pointer_cast<Film> (getObjectAt (row))); Check3 (film);
+   TRACE7 ("CDManager::getFilmAt (const Gtk::TreeModel::ConstRow&) - Selected film: " <<
 	   film->getId () << '/' << film->getName ());
    return film;
 }
@@ -168,7 +175,7 @@ void FilmList::setName (HEntity& object, const Glib::ustring& value) {
 /// \param value: Value to set
 /// \throw std::exception: In case of an error
 //-----------------------------------------------------------------------------
-void FilmList::setYear (HEntity& object, const Glib::ustring& value) throw (std::exception) {
+void FilmList::setYear (HEntity& object, const Glib::ustring& value) {
    (boost::dynamic_pointer_cast<Film> (object))->setYear (value);
 }
 
@@ -195,8 +202,8 @@ Glib::ustring FilmList::getColumnName () const {
 /// \param a: Second entry to compare
 /// \returns int: Value as strcmp
 //-----------------------------------------------------------------------------
-int FilmList::sortEntity (const Gtk::TreeModel::iterator& a,
-			   const Gtk::TreeModel::iterator& b) const {
+int FilmList::sortEntity (const Gtk::TreeModel::const_iterator& a,
+			   const Gtk::TreeModel::const_iterator& b) const {
    HFilm ha (getFilmAt (a));
    HFilm hb (getFilmAt (b));
    int rc (Film::removeIgnored (ha->getName ()).compare (Film::removeIgnored (hb->getName ())));
@@ -213,9 +220,10 @@ void FilmList::valueChanged (const Glib::ustring& path,
 			      const Glib::ustring& value, unsigned int column) {
    TRACE7 ("FilmList::valueChanged (2x const Glib::ustring&, unsigned int) - "
 	   << path << "->" << value);
-   Check2 (column < 2);
+   Check2 (column < 3);
 
-   Gtk::TreeModel::Row row (*mOwnerObjects->get_iter (Gtk::TreeModel::Path (path)));
+   Gtk::TreeModel::iterator iRow (mOwnerObjects->get_iter (Gtk::TreeModel::Path (path)));
+   Gtk::TreeModel::Row row (*iRow);
 
    try {
       if (row.parent ()) {
@@ -250,7 +258,7 @@ void FilmList::valueChanged (const Glib::ustring& path,
 	 } // end-switch
 
 	 if (value != oldValue)
-	    signalObjectChanged.emit (row, column + 3, oldValue);
+	    signalObjectChanged.emit (iRow, column + 3, oldValue);
       } // endif object edited
    } // end-try
    catch (std::exception& e) {
@@ -259,65 +267,71 @@ void FilmList::valueChanged (const Glib::ustring& path,
 
       XGP::MessageDlg* dlg (XGP::MessageDlg::create (obj));
       dlg->set_title (PACKAGE);
-      dlg->get_window ()->set_transient_for (this->get_window ());
+      Gtk::Window* win (dynamic_cast<Gtk::Window*> (get_root ()));
+      if (win)
+	 dlg->set_transient_for (*win);
    }
 }
 
 //-----------------------------------------------------------------------------
-/// Callback for button-events in the listbox
-/// \param e: Generated event
-/// \returns bool: Whatever the default-method would return
+/// Callback for mouse-clicks in the listbox (called before the list handles
+/// the click): Clicking in the language- or subtitle-column of the already
+/// selected film opens a dialog to edit those values.
+/// \param nPress: Number of presses
+/// \param x: X-position of the click (widget-coordinates)
+/// \param y: Y-position of the click (widget-coordinates)
 //-----------------------------------------------------------------------------
-bool FilmList::on_button_press_event (GdkEventButton* e) {
-   TRACE9 ("FilmList::on_button_press_event (GdkEventButton*)");
-   Check1 (e);
+void FilmList::onButtonPressed (int, double x, double y) {
+   TRACE9 ("FilmList::onButtonPressed (int, 2x double) - " << x << '/' << y);
 
-   Glib::RefPtr<Gtk::TreeSelection> selection (get_selection ());
-   Gtk::TreeIter oldSel (selection->get_selected ());
+   Gtk::TreeModel::iterator sel (get_selection ()->get_selected ());
+   if (!sel || !sel->parent ())
+      return;
 
-   bool rc (OwnerObjectList::on_button_press_event (e));
+   int bx, by, cellX, cellY;
+   convert_widget_to_bin_window_coords ((int)x, (int)y, bx, by);
 
-   // Check if button 1 was pressed in the previously selected row
-   if (((e->type == GDK_BUTTON_PRESS) && (e->button == 1))
-       && selection->get_selected () && oldSel
-       && (oldSel == selection->get_selected ())
-       && (selection->get_selected ()->parent ())) {
+   Gtk::TreeModel::Path path;
+   Gtk::TreeViewColumn* column (nullptr);
+   if (!get_path_at_pos (bx, by, path, column, cellX, cellY)
+       || (path != mOwnerObjects->get_path (sel)))
+      return;
 
-      Gdk::Rectangle areaLang, areaSub;
-      Check2 (get_column (4)); Check2 (get_column (5));
-      Gtk::TreePath path (mOwnerObjects->get_path (oldSel));
-      get_cell_area (path, *get_column (4), areaLang);
-      get_cell_area (path, *get_column (5), areaSub);
-
-      // If event is within the language or the subitles column
-      if ((e->x > areaLang.get_x ())
-	  && (e->x <= (areaSub.get_x () + areaSub.get_width ()))) {
-	 TRACE9 ("FilmList::on_button_press_event (GdkEventButton*) - "
-		 << areaLang.get_x () << '-' << e->x << '-'
-		 << (areaSub.get_x () + areaSub.get_width ()));
-	 // Create the popup-window
-	 HFilm film (getFilmAt (oldSel)); Check3 (film);
-	 if (e->x < areaSub.get_x ()) {
-	    std::string languages (film->getLanguage ());
-	    LanguageDialog dlg (languages, 5);
-	    dlg.run ();
-
-	    if (languages != film->getLanguage ())
-	       valueChanged (path.to_string (), languages, 1);
-	 }
-	 else {
-	    std::string titles (film->getTitles ());
-	    LanguageDialog dlg (titles, 10, false);
-	    dlg.set_title (_("Select subtitles"));
-	    dlg.run ();
-
-	    if (titles != film->getTitles ())
-	       valueChanged (path.to_string (), titles, 2);
-	 }
-
-      }
+   Check2 (get_column (4)); Check2 (get_column (5));
+   if ((column == get_column (4)) || (column == get_column (5))) {
+      // Show the dialog after the click has been processed
+      Glib::ustring strPath (path.to_string ());
+      bool subtitles (column == get_column (5));
+      Glib::signal_idle ().connect_once ([this, strPath, subtitles] () {
+	    editLanguages (strPath, subtitles); });
    }
-   return rc;
+}
+
+//-----------------------------------------------------------------------------
+/// Shows a dialog to edit the languages or subtitles of a film
+/// \param path: Path to the row of the film
+/// \param subtitles: Flag, if subtitles (or languages) should be edited
+//-----------------------------------------------------------------------------
+void FilmList::editLanguages (const Glib::ustring& path, bool subtitles) {
+   TRACE9 ("FilmList::editLanguages (const Glib::ustring&, bool) - " << path << '/' << subtitles);
+
+   Gtk::TreeModel::iterator iRow (mOwnerObjects->get_iter (path));
+   if (!iRow)
+      return;
+
+   HFilm film (getFilmAt (iRow)); Check3 (film);
+   std::string values (subtitles ? film->getTitles () : film->getLanguage ());
+   LanguageDialog dlg (values, subtitles ? 10 : 5, !subtitles);
+   if (subtitles)
+      dlg.set_title (_("Select subtitles"));
+
+   Gtk::Window* win (dynamic_cast<Gtk::Window*> (get_root ()));
+   if (win)
+      dlg.set_transient_for (*win);
+   XGP::runModal (dlg);
+
+   if (values != (subtitles ? film->getTitles () : film->getLanguage ()))
+      valueChanged (path, values, subtitles ? 2 : 1);
 }
 
 //-----------------------------------------------------------------------------
@@ -329,17 +343,17 @@ void FilmList::setLanguage (Gtk::TreeModel::Row& row, const std::string& languag
    tokenizer langs (languages, boost::char_separator<char> (","));
    tokenizer::iterator l (langs.begin ());
    bool countSet (false);
-   static const Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> >* columns[] =
+   const Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> >* columns[] =
       { &colFilms.lang1, &colFilms.lang2, &colFilms.lang3, &colFilms.lang4,
 	&colFilms.lang5 };
 
    for (unsigned int i (0); i < (sizeof (columns) / sizeof (*columns)); ++i)
       if (l != langs.end ()) {
-	 row[(*columns)[i]] = Language::findFlag (*l);
+	 row[*columns[i]] = Language::findFlag (*l);
 	 ++l;
       }
       else {
-	 row[(*columns)[i]] = Glib::RefPtr<Gdk::Pixbuf> ();
+	 row[*columns[i]] = Glib::RefPtr<Gdk::Pixbuf> ();
 	 if (!countSet) {
 	    row[colFilms.langs] = i;
 	    countSet = true;
@@ -356,19 +370,19 @@ void FilmList::setTitles (Gtk::TreeModel::Row& row, const std::string& titles) {
    tokenizer langs (titles, boost::char_separator<char> (","));
    tokenizer::iterator l (langs.begin ());
    bool countSet (false);
-   static const Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> >* columns[] =
+   const Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf> >* columns[] =
       { &colFilms.sub1, &colFilms.sub2, &colFilms.sub3, &colFilms.sub4,
 	&colFilms.sub5, &colFilms.sub6, &colFilms.sub7, &colFilms.sub8,
 	&colFilms.sub9, &colFilms.sub10 };
 
    for (unsigned int i (0); i < (sizeof (columns) / sizeof (*columns)); ++i)
       if (l != langs.end ()) {
-	 row[(*columns)[i]] = Language::findFlag (*l);
+	 row[*columns[i]] = Language::findFlag (*l);
 	 ++l;
       }
       else {
 	 TRACE1 ("Set Title: " << titles << " = " << i);
-	 row[(*columns)[i]] = Glib::RefPtr<Gdk::Pixbuf> ();
+	 row[*columns[i]] = Glib::RefPtr<Gdk::Pixbuf> ();
 	 if (!countSet) {
 	    row[colFilms.titles] = i;
 	    countSet = true;
@@ -383,9 +397,9 @@ void FilmList::setTitles (Gtk::TreeModel::Row& row, const std::string& titles) {
 void FilmList::update (const std::string& lang) {
    TRACE9 ("FilmList::update (const std::string&) - " << lang);
 
-   for (Gtk::TreeModel::const_iterator d (mOwnerObjects->children ().begin ());
+   for (Gtk::TreeModel::iterator d (mOwnerObjects->children ().begin ());
 	d != mOwnerObjects->children ().end (); ++d) {
-      for (Gtk::TreeIter m (d->children ().begin ()); m != d->children ().end (); ++m) {
+      for (Gtk::TreeModel::iterator m (d->children ().begin ()); m != d->children ().end (); ++m) {
 	 HFilm film (getFilmAt (m)); Check3 (film);
 	 TRACE9 ("FilmList::update (const std::string&) - Updating " << film->getName (lang));
 	 (*m)[colOwnerObjects->name] = film->getName (lang);
@@ -399,7 +413,7 @@ void FilmList::update (const std::string& lang) {
 /// \param row: Row to update
 //-----------------------------------------------------------------------------
 void FilmList::update (Gtk::TreeModel::Row& row) {
-   if (row->parent ()) {
+   if (row.parent ()) {
       HFilm film (getFilmAt (row));
       row[colFilms.name] = film->getName ();
       row[colFilms.year] = film->getYear ().toString ();

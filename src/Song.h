@@ -60,9 +60,9 @@ class Song : public YGP::Entity {
    void setId       (const unsigned long int value) { id = value; }
    void setName     (const Glib::ustring& value) { name = value; }
    void setTrack    (const YGP::ANumeric& value) { track = value; }
-   void setTrack    (const std::string& value) throw (std::invalid_argument) { track = value; }
+   void setTrack    (const std::string& value) { track = value; }
    void setDuration (const YGP::ATime& value) { duration = value; }
-   void setDuration (const std::string& value) throw (std::invalid_argument) { duration = value; }
+   void setDuration (const std::string& value) { duration = value; }
    void setGenre    (const unsigned int value) { genre = value; }
 
  private:

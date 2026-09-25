@@ -19,38 +19,35 @@
 
 #include <string>
 
-#include <gdkmm/pixbuf.h>
-
-#include <gtkmm/image.h>
-#include <gtkmm/eventbox.h>
+#include <gtkmm/box.h>
+#include <gtkmm/picture.h>
 
 
 /**Class to display an language-image in the statusbar
 
-  This is actually an event-box and not a button, to avoid
+  This is actually a box with a click-gesture and not a button, to avoid
   side-effects caused by the theme.
  */
-class LanguageImg : public Gtk::EventBox {
+class LanguageImg : public Gtk::Box {
  public:
    LanguageImg (const std::string& file);
-   LanguageImg (const char* lang = NULL);
+   LanguageImg (const char* lang = nullptr);
    ~LanguageImg ();
 
    void update (const std::string& file);
-   void update (const char* lang = NULL);
+   void update (const char* lang = nullptr);
 
-   sigc::signal0<void> signal_clicked () { return clicked_; }
+   sigc::signal<void ()> signal_clicked () { return clicked_; }
 
  protected:
   virtual void on_clicked ();
-  virtual bool on_button_press_event (GdkEventButton* ev);
-  virtual bool on_button_release_event (GdkEventButton* ev);
 
  private:
-   sigc::signal0<void> clicked_;
-   Gtk::Image img;
+   void init ();
+   void onReleased (int nPress, double x, double y);
 
-   static gdouble saveX, saveY;
+   sigc::signal<void ()> clicked_;
+   Gtk::Picture img;
 };
 
 #endif

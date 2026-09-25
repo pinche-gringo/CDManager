@@ -39,10 +39,10 @@ class StorageActor : public Storage {
  public:
    static void loadActors (std::vector<HActor>& target, YGP::StatusObject& stat) {
       loadCelebrities (target, "Actors", stat); }
-   static void loadActorsInFilms (std::map<unsigned int, std::vector<unsigned int> >& aActors) throw (std::exception);
-   static void deleteActor (unsigned int idActor) throw (std::exception);
-   static void deleteActorFilms (unsigned int idActor) throw (std::exception);
-   static void saveActorFilm (unsigned int idActor, unsigned int idFilm) throw (std::exception);
+   static void loadActorsInFilms (std::map<unsigned int, std::vector<unsigned int> >& aActors);
+   static void deleteActor (unsigned int idActor);
+   static void deleteActorFilms (unsigned int idActor);
+   static void saveActorFilm (unsigned int idActor, unsigned int idFilm);
 
  private:
    StorageActor ();

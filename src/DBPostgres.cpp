@@ -67,8 +67,8 @@ void DBPostgres::connect (const char* db, const char* user, const char* pwd) {
    TRACE9 ("DBPostgres::connect (const char* (3x) - " << db << " from " << user);
    Check2 (!conn);
 
-   const char* keys[] = { "dbname", "user", "password", "client_encoding", NULL };
-   const char* values[] = { db, user, pwd, "UTF8", NULL };
+   const char* keys[] = { "hostaddr", "dbname", "user", "password", "client_encoding", NULL };
+   const char* values[] = { "127.0.0.1", db, user, pwd, "UTF8", NULL };
    conn = PQconnectdbParams (keys, values, 0);
    if (!conn)
       throw std::runtime_error ("Out of memory initialising PostgreSQL");

@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 11.12.2004
-//COPYRIGHT   : Copyright (C) 2004, 2005, 2009 - 2011
+//COPYRIGHT   : Copyright (C) 2004, 2005, 2009 - 2011, 2026
 
 // This file is part of CDManager
 //
@@ -48,19 +48,19 @@ class LanguageModel : public Gtk::ListStore {
  public:
    static Glib::RefPtr<LanguageModel> create (const LanguageColumns& columns,
 					      bool withUndefined = false) {
-      return Glib::RefPtr<LanguageModel> (new LanguageModel (columns, withUndefined));
+      return Glib::make_refptr_for_instance<LanguageModel> (new LanguageModel (columns, withUndefined));
    }
    ~LanguageModel () { }
 
    /// Returns the line of the passed language
-   Gtk::TreeIter getLine (const std::string& lang) {
-      return children ()[lines[lang]]; }
+   Gtk::TreeModel::iterator getLine (const std::string& lang) {
+      return children ()[lines[lang]].get_iter (); }
 
    // Deletes the line with the passed language
    void eraseLanguage (const std::string& lang) {
       TRACE9 ("LanguageModel::eraseLanguage (const std::string&) - " << lang
 	      << '=' << lines[lang]);
-      erase (children ()[lines[lang]]);
+      erase (getLine (lang));
    }
    void insertLanguage (const std::string& lang, const LanguageColumns& cols) {
       insertLanguage (lang, Language::findLanguage (lang), cols); }
@@ -72,9 +72,9 @@ protected:
 			const LanguageColumns& cols);
 
  private:
-   LanguageModel ();
-   LanguageModel (const LanguageModel&);
-   LanguageModel& operator= (const LanguageModel&);
+   LanguageModel () = delete;
+   LanguageModel (const LanguageModel&) = delete;
+   LanguageModel& operator= (const LanguageModel&) = delete;
 
    std::map<std::string, unsigned int> lines;
 };
@@ -109,14 +109,15 @@ void LanguageModel::insertLanguage (const std::string& id, const Language& lang,
 				    const LanguageColumns& cols) {
    TRACE9 ("LanguageModel::insertLanguage (const std::string&, const Language&, const Columns&) - "
 	   << id << '=' << ((lines.find (id) == lines.end ()) ? children ().size () : lines[id]));
-   Gtk::TreeModel::Row row;
+   Gtk::TreeModel::iterator iRow;
    if (lines.find (id) == lines.end ()) {
       lines[id] = children ().size ();
-      row = *append ();
+      iRow = append ();
    }
    else
-      row = *insert (children ()[lines[id]]);
+      iRow = insert (getLine (id));
 
+   Gtk::TreeModel::Row row (*iRow);
    row[cols.id] = id;
    row[cols.flag] = lang.getFlag ();
    row[cols.name] = lang.getInternational ();
@@ -131,10 +132,11 @@ void LanguageModel::insertLanguage (const std::string& id, const Language& lang,
 //-----------------------------------------------------------------------------
 LanguageDialog::LanguageDialog (std::string& languages, unsigned int maxLangs,
 				bool showMainLang)
-   : XGP::XDialog (OKCANCEL), pClient (new Gtk::VBox), languages (languages),
-      maxLangs (maxLangs),
-     mainLang (new Gtk::ComboBox),
-     listLang (new Gtk::TreeView),
+   : XGP::XDialog (OKCANCEL),
+     pClient (Gtk::make_managed<Gtk::Box> (Gtk::Orientation::VERTICAL, 5)),
+     languages (languages), maxLangs (maxLangs),
+     mainLang (nullptr),
+     listLang (Gtk::make_managed<Gtk::TreeView> ()),
      modelMain (LanguageModel::create (colLang, true)),
      modelList (LanguageModel::create (colLang)) {
    TRACE9 ("LanguageDialog::LanguageDialog (std::string&, unsigned int) - Main: "
@@ -144,26 +146,28 @@ LanguageDialog::LanguageDialog (std::string& languages, unsigned int maxLangs,
 
    if (showMainLang) {
       // Label of the main language
-      Gtk::Label*  lblLang (new Gtk::Label (_("_Language: "), true));
+      Gtk::Label*  lblLang (Gtk::make_managed<Gtk::Label> (_("_Language: "), true));
 
       // Combobox to select the main language
+      mainLang = Gtk::make_managed<Gtk::ComboBox> ();
       mainLang->pack_start (colLang.flag, false);
       mainLang->pack_start (colLang.name);
       mainLang->set_model (modelMain);
+      lblLang->set_mnemonic_widget (*mainLang);
 
-      mainLang->signal_changed ().connect (mem_fun (*this, &LanguageDialog::selectLanguage));
+      mainLang->signal_changed ().connect (sigc::mem_fun (*this, &LanguageDialog::selectLanguage));
 
-      pClient->pack_start (*manage (lblLang), Gtk::PACK_EXPAND_PADDING, 5);
-      pClient->pack_start (*manage (mainLang), Gtk::PACK_EXPAND_PADDING, 5);
+      pClient->append (*lblLang);
+      pClient->append (*mainLang);
    }
 
    // Listbox to select further languages
    if (maxLangs > 1)
-      listLang->get_selection ()->set_mode (Gtk::SELECTION_MULTIPLE);
-   Gtk::TreeViewColumn* column (new Gtk::TreeViewColumn (_("Translations")));
+      listLang->get_selection ()->set_mode (Gtk::SelectionMode::MULTIPLE);
+   Gtk::TreeViewColumn* column (Gtk::make_managed<Gtk::TreeViewColumn> (_("Translations")));
    column->pack_start (colLang.flag, false);
    column->pack_start (colLang.name);
-   listLang->append_column (*Gtk::manage (column));
+   listLang->append_column (*column);
    listLang->set_model (modelList);
 
    std::string tmp;
@@ -190,11 +194,12 @@ LanguageDialog::LanguageDialog (std::string& languages, unsigned int maxLangs,
       main = tmp;
    }
 
-   pClient->pack_start (*manage (listLang), Gtk::PACK_EXPAND_WIDGET, 5);
-   pClient->show ();
+   listLang->set_expand (true);
+   pClient->append (*listLang);
+   pClient->set_margin (5);
+   pClient->set_expand (true);
 
-   get_vbox ()->pack_start (*manage (pClient), false, false, 5);
-   show_all_children ();
+   get_content_area ()->append (*pClient);
    show ();
 }
 
@@ -214,10 +219,10 @@ void LanguageDialog::okEvent () {
    std::vector<Gtk::TreePath> list (listLang->get_selection ()->get_selected_rows ());
    if (list.size ()) {
       std::vector<Gtk::TreePath>::const_iterator i (list.begin ());
-      translations = (*modelList->get_iter (*i++))[colLang.id];
+      translations = modelList->get_iter (*i++)->get_value (colLang.id);
       for (unsigned int c (0); (i != list.end ()) && (++c < maxLangs); ++i) {
 	 translations.append (1, ',');
-	 translations += (*modelList->get_iter (*i))[colLang.id];
+	 translations += modelList->get_iter (*i)->get_value (colLang.id);
       }
 
       if (main.size ())
@@ -234,14 +239,15 @@ void LanguageDialog::okEvent () {
 /// \param lang: Language to set
 //-----------------------------------------------------------------------------
 void LanguageDialog::selectLanguage () {
+   Check3 (mainLang);
    TRACE9 ("LanguageDialog::selectLanguage () - " << main << "->"
-	   << (std::string)(*mainLang->get_active ())[colLang.id]);
+	   << mainLang->get_active ()->get_value (colLang.id));
 
    if (main.size ())
       modelList->insertLanguage (main, colLang);
-   main = (*mainLang->get_active ())[colLang.id];
+   main = mainLang->get_active ()->get_value (colLang.id);
 
    if (main.size ())
       modelList->eraseLanguage (main);
-   listLang->set_sensitive (main.size ());
+   listLang->set_sensitive (!main.empty ());
 }

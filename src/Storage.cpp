@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 21.01.2006
-//COPYRIGHT   : Copyright (C) 2006, 2009 - 2011
+//COPYRIGHT   : Copyright (C) 2006, 2009 - 2011, 2026
 
 // This file is part of CDManager
 //
@@ -44,9 +44,8 @@ std::unique_ptr<Database> Storage::database;
 /// \param db Name of database
 /// \param user User to use for the DB
 /// \param pwd Password of user
-/// \throw std::exception Occurred error
 //-----------------------------------------------------------------------------
-void Storage::login (const char* db, const char* user, const char* pwd) throw (std::exception) {
+void Storage::login (const char* db, const char* user, const char* pwd) {
    std::unique_ptr<Database> newDB (Database::create ());
    newDB->connect (db, user, pwd);
    database = std::move (newDB);
@@ -73,7 +72,6 @@ bool Storage::connected () {
 //-----------------------------------------------------------------------------
 /// Returns the database to work with
 /// \returns Database& The database
-/// \throw std::exception If not logged in
 //-----------------------------------------------------------------------------
 Database& Storage::db () {
    if (!database)
@@ -84,7 +82,7 @@ Database& Storage::db () {
 //-----------------------------------------------------------------------------
 /// Loads the special words from the database
 //-----------------------------------------------------------------------------
-void Storage::loadSpecialWords () throw (std::exception) {
+void Storage::loadSpecialWords () {
    Words::create ();
 
    db ().execute ("SELECT word FROM Words");
@@ -107,33 +105,30 @@ void Storage::loadSpecialWords () throw (std::exception) {
 //-----------------------------------------------------------------------------
 /// Stores one name into the database
 /// \param word Word to store
-/// \throw std::exception Occurred error
 //-----------------------------------------------------------------------------
-void Storage::storeWord (const char* word) throw (std::exception) {
+void Storage::storeWord (const char* word) {
    db ().execute ("INSERT INTO Words VALUES (" + db ().quote (word) + ')');
 }
 
 //-----------------------------------------------------------------------------
 /// Stores one artice into the database
 /// \param article Article to store
-/// \throw std::exception Occurred error
 //-----------------------------------------------------------------------------
-void Storage::storeArticle (const char* article) throw (std::exception) {
+void Storage::storeArticle (const char* article) {
    db ().execute ("INSERT INTO Articles VALUES (" + db ().quote (article) + ')');
 }
 
 //-----------------------------------------------------------------------------
 /// Deletes all names stored in the database
-/// \throw std::exception Occurred error
 //-----------------------------------------------------------------------------
-void Storage::deleteNames () throw (std::exception) {
+void Storage::deleteNames () {
    db ().execute ("DELETE FROM Words");
 }
 
 //-----------------------------------------------------------------------------
 /// Deletes all articles stored in the database
 //-----------------------------------------------------------------------------
-void Storage::deleteArticles () throw (std::exception) {
+void Storage::deleteArticles () {
    db ().execute ("DELETE FROM Articles");
 }
 
@@ -144,7 +139,7 @@ void Storage::deleteArticles () throw (std::exception) {
 /// \param stat Statusobject, in which to return the errors
 //-----------------------------------------------------------------------------
 void Storage::loadCelebrities (std::vector<HCelebrity>& target, const std::string& table,
-			       YGP::StatusObject& stat) throw (std::exception) {
+			       YGP::StatusObject& stat) {
    TRACE9 ("Storage::loadCelebrities (std::vector<HCelebrity>&, const std::string&,\n\tYGP::StatusObject&) - " << table);
 
    // Load data from Celebrities table
@@ -228,9 +223,8 @@ Database::Values Storage::celebrityValues (const HCelebrity celeb) {
 /// Saves the passed interpret.
 /// \param interpret Interpret to save
 /// \returns bool True, if entry was created, false if updated
-/// \throw std::exception In case of error
 //-----------------------------------------------------------------------------
-void Storage::insertCelebrity (const HCelebrity celeb, const char* role) throw (std::exception) {
+void Storage::insertCelebrity (const HCelebrity celeb, const char* role) {
    Check1 (celeb);
    TRACE8 ("Storage::insertCelebrity (const HCelebrity, const char*) - " << role << ": " << celeb->getName ());
    Check1 (!celeb->getId ());
@@ -244,9 +238,8 @@ void Storage::insertCelebrity (const HCelebrity celeb, const char* role) throw (
 /// Updates the passed interpret.
 /// \param interpret Interpret to save
 /// \returns bool True, if entry was created, false if updated
-/// \throw std::exception In case of error
 //-----------------------------------------------------------------------------
-void Storage::updateCelebrity (const HCelebrity celeb) throw (std::exception) {
+void Storage::updateCelebrity (const HCelebrity celeb) {
    Check1 (celeb);
    TRACE8 ("Storage::updateCelebrity (const HCelebrity) - " << celeb->getName ());
    Check1 (celeb->getId ());
@@ -261,9 +254,8 @@ void Storage::updateCelebrity (const HCelebrity celeb) throw (std::exception) {
 /// \param name Name of celebrity to query
 /// \param target Vector to store the found celebrities
 /// \returns unsigned long Id of found celebrity or 0, if not found
-/// \throw std::exception In case of error
 //-----------------------------------------------------------------------------
-void Storage::getCelebrities (const std::string& name, std::vector<HCelebrity>& target) throw (std::exception) {
+void Storage::getCelebrities (const std::string& name, std::vector<HCelebrity>& target) {
    YGP::StatusObject stat;
    std::stringstream query;
    query << "SELECT id, name, born, died FROM Celebrities WHERE name=" << db ().quote (name);
@@ -276,10 +268,9 @@ void Storage::getCelebrities (const std::string& name, std::vector<HCelebrity>& 
 /// \param idCeleb ID of celebrity
 /// \param role Role of celebrity
 /// \returns bool True, if the celebrity has the passed role
-/// \throw std::exception In case of an error
 /// \remarks The roles are the name of the DB-tables
 //-----------------------------------------------------------------------------
-bool Storage::hasRole (unsigned int idCeleb, const char* role) throw (std::exception) {
+bool Storage::hasRole (unsigned int idCeleb, const char* role) {
    std::stringstream query;
    query << "SELECT id FROM " << role << " WHERE id=" << idCeleb;
    db ().execute (query.str ());
@@ -290,10 +281,9 @@ bool Storage::hasRole (unsigned int idCeleb, const char* role) throw (std::excep
 /// Sets a role for a celebrity
 /// \param idCeleb ID of celebrity
 /// \param role Role to set for celebrity
-/// \throw std::exception In case of an error
 /// \remarks The roles are the name of the DB-tables
 //-----------------------------------------------------------------------------
-void Storage::setRole (unsigned int idCeleb, const char* role) throw (std::exception) {
+void Storage::setRole (unsigned int idCeleb, const char* role) {
    std::stringstream query;
    query << "INSERT INTO " << role << " (id) VALUES (" << idCeleb << ')';
    db ().execute (query.str ());
@@ -304,10 +294,9 @@ void Storage::setRole (unsigned int idCeleb, const char* role) throw (std::excep
 /// \param counts Array receiving the statistical information in order
 ///               words/articles/interpret/records/director/films/actors
 /// \param role: Role to set for celebrity
-/// \throw std::exception In case of error
 /// \remarks If some pages are disabled the responding columns are returned as -1
 //-----------------------------------------------------------------------------
-void Storage::getStatistics (int counts[7]) throw (std::exception) {
+void Storage::getStatistics (int counts[7]) {
    const char* query ("SELECT count(*) FROM Words UNION ALL SELECT count(*) FROM Articles UNION ALL "
 #ifdef WITH_RECORDS
 		      "SELECT count(*) FROM Interprets UNION ALL SELECT count(*) FROM Records"

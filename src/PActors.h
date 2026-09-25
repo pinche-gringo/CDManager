@@ -20,8 +20,6 @@
 #include <vector>
 #include <stdexcept>
 
-#include <gtkmm/radioaction.h>
-
 #include <YGP/Relation.h>
 
 #include "Film.h"
@@ -41,28 +39,29 @@ class PFilms;
  */
 class PActors : public NBPage {
  public:
-   PActors (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave,
+   PActors (Gtk::Statusbar& status, Glib::RefPtr<Gio::SimpleAction> menuSave,
 	    const Genres& genres, PFilms& films);
    virtual ~PActors ();
 
-   virtual void loadData ();
-   virtual void saveData () throw (std::exception);
-   virtual void getFocus ();
-   virtual void addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAction);
-   virtual void deleteSelection ();
-   virtual void undo ();
-   virtual void clear ();
+   void loadData () override;
+   void saveData () override;
+   void getFocus () override;
+   void addMenu (Glib::RefPtr<Gio::Menu> menuEdit, Glib::RefPtr<Gio::Menu> menuOther,
+		 Glib::RefPtr<Gio::SimpleActionGroup> grpAction,
+		 Glib::RefPtr<Gtk::ShortcutController> shortcuts) override;
+   void deleteSelection () override;
+   void undo () override;
+   void clear () override;
 
    HFilm findFilm (unsigned int id) const;
 
+   PActors () = delete;
+   PActors (const PActors& other) = delete;
+   const PActors& operator= (const PActors& other) = delete;
+
  private:
-   PActors ();
-
-   PActors (const PActors& other);
-   const PActors& operator= (const PActors& other);
-
    void actorSelected ();
-   void actorChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
+   void actorChanged (const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
    bool onQueryTooltip (int x, int y, bool keyboard, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
 
    void newActor ();
@@ -72,11 +71,12 @@ class PActors : public NBPage {
    void relateFilms (const HActor& actor, const std::vector<HFilm>& films);
    void showFilms (const HActor& actor, const std::vector<HFilm>& newFilms);
 
+   void changeView (const Glib::ustring& view);
    void viewByActor ();
    void viewByFilm ();
 
-   void changeAllEntries (const HEntity& entry, Gtk::TreeIter begin, Gtk::TreeIter end);
-   void saveRelatedFilms (const HActor& actor) throw (std::exception);
+   void changeAllEntries (const HEntity& entry, Gtk::TreeModel::iterator begin, Gtk::TreeModel::iterator end);
+   void saveRelatedFilms (const HActor& actor);
 
    ActorList actors;                              // GUI-element holding actors
 
@@ -89,9 +89,9 @@ class PActors : public NBPage {
    // Reference to film-page
    PFilms& films;
 
-   // Menus for switching view
+   // Menu (radio-action) for switching view
    unsigned int actView;
-   Glib::RefPtr<Gtk::RadioAction> menuView[2];
+   Glib::RefPtr<Gio::SimpleAction> menuView;
 
    // Info for undoing relating actors and films
    class RelUndo : public YGP::Entity {

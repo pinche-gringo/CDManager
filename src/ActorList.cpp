@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.09.2005
-//COPYRIGHT   : Copyright (C) 2005 - 2007, 2009 - 2011
+//COPYRIGHT   : Copyright (C) 2005 - 2007, 2009 - 2011, 2026
 
 // This file is part of CDManager
 //
@@ -28,6 +28,9 @@
 #include <cerrno>
 #include <cstdlib>
 
+#include <typeinfo>
+
+#include <gtkmm/window.h>
 #include <gtkmm/cellrenderercombo.h>
 
 #include <YGP/Check.h>
@@ -68,11 +71,11 @@ ActorList::ActorList (const Genres& genres) : genres (genres) {
       Check3 (typeid (*get_column_cell_renderer (i)) == typeid (Gtk::CellRendererText));
       Gtk::CellRendererText* rText (dynamic_cast<Gtk::CellRendererText*> (get_column_cell_renderer (i)));
       column->add_attribute (rText->property_editable(), colActors.editable);
-      rText->signal_edited ().connect (bind (mem_fun (*this, &ActorList::valueChanged), i));
+      rText->signal_edited ().connect (sigc::bind (sigc::mem_fun (*this, &ActorList::valueChanged), i));
    }
 
-   mOwnerObjects->set_sort_func (colActors.name, mem_fun (*this, &ActorList::sortByName));
-   mOwnerObjects->set_sort_func (colActors.year, mem_fun (*this, &ActorList::sortByYear));
+   mOwnerObjects->set_sort_func (colActors.name, sigc::mem_fun (*this, &ActorList::sortByName));
+   mOwnerObjects->set_sort_func (colActors.year, sigc::mem_fun (*this, &ActorList::sortByYear));
 }
 
 //-----------------------------------------------------------------------------
@@ -89,8 +92,8 @@ ActorList::~ActorList () {
 /// \param pos: Position in model for insert
 /// \returns Gtk::TreeModel::Row: Inserted row
 //-----------------------------------------------------------------------------
-Gtk::TreeRow ActorList::insert (const HEntity& entity, const Gtk::TreeIter& pos) {
-   TRACE7 ("ActorList::insert (const HEntity&, const Gtk::TreeIter&)");
+Gtk::TreeRow ActorList::insert (const HEntity& entity, const Gtk::TreeModel::iterator& pos) {
+   TRACE7 ("ActorList::insert (const HEntity&, const Gtk::TreeModel::iterator&)");
    Check1 (entity);
 
    Gtk::TreeRow newRow (*mOwnerObjects->insert (pos));
@@ -102,14 +105,14 @@ Gtk::TreeRow ActorList::insert (const HEntity& entity, const Gtk::TreeIter& pos)
 //-----------------------------------------------------------------------------
 /// Appends a actor to the list
 /// \param entity: Entity to add
-/// \param artist: Actor starring in the film
+/// \param owner: Line to which the entity should be appended as child
 /// \returns Gtk::TreeModel::Row: Inserted row
 //-----------------------------------------------------------------------------
-Gtk::TreeRow ActorList::append (const HEntity& entity, const Gtk::TreeIter& pos) {
-   TRACE7 ("ActorList::append (const HEntity&, const Gtk::TreeRow&)");
+Gtk::TreeRow ActorList::append (const HEntity& entity, Gtk::TreeRow& owner) {
+   TRACE7 ("ActorList::append (const HEntity&, Gtk::TreeRow&)");
    Check1 (entity);
 
-   Gtk::TreeRow newLine (*mOwnerObjects->append (pos->children ()));
+   Gtk::TreeRow newLine (*mOwnerObjects->append (owner.children ()));
    newLine[colActors.entry] = entity;
    update (newLine);
    return newLine;
@@ -152,7 +155,8 @@ void ActorList::valueChanged (const Glib::ustring& path,
 	   << path << "->" << value);
    Check2 (column < 3);
 
-   Gtk::TreeModel::Row row (*mOwnerObjects->get_iter (Gtk::TreeModel::Path (path)));
+   Gtk::TreeModel::iterator iRow (mOwnerObjects->get_iter (Gtk::TreeModel::Path (path)));
+   Gtk::TreeModel::Row row (*iRow);
    Glib::ustring oldValue;
 
    try {
@@ -163,7 +167,7 @@ void ActorList::valueChanged (const Glib::ustring& path,
       case 0:
 	 if (value.size ()) {
 	    Gtk::TreeModel::const_iterator i (findName (value));
-	    if ((i != row) && (i != mOwnerObjects->children ().end ())) {
+	    if ((i != iRow) && (i != mOwnerObjects->children ().end ())) {
 	       Glib::ustring e (_("Entry `%1' already exists!"));
 	       e.replace (e.find ("%1"), 2, value);
 	       throw (YGP::InvalidValue (e));
@@ -182,7 +186,7 @@ void ActorList::valueChanged (const Glib::ustring& path,
       } // end-switch
 
       if (value != oldValue)
-	 signalActorChanged.emit (row, column, oldValue);
+	 signalActorChanged.emit (iRow, column, oldValue);
    } // end-try
    catch (std::exception& e) {
       YGP::StatusObject obj (YGP::StatusObject::ERROR, e.what ());
@@ -190,7 +194,9 @@ void ActorList::valueChanged (const Glib::ustring& path,
 
       XGP::MessageDlg* dlg (XGP::MessageDlg::create (obj));
       dlg->set_title (PACKAGE);
-      dlg->get_window ()->set_transient_for (this->get_window ());
+      Gtk::Window* win (dynamic_cast<Gtk::Window*> (get_root ()));
+      if (win)
+	 dlg->set_transient_for (*win);
    }
 }
 
@@ -215,16 +221,15 @@ void ActorList::selectRow (const Gtk::TreeModel::const_iterator& i) {
 /// \param end: End object
 /// \returns Gtk::TreeModel::iterator: Iterator to found entry or mOwnerObjects->children ().end ().
 //-----------------------------------------------------------------------------
-Gtk::TreeIter ActorList::findName (const Glib::ustring& name, unsigned int level,
-				   Gtk::TreeIter begin, Gtk::TreeIter end) const {
+Gtk::TreeModel::iterator ActorList::findName (const Glib::ustring& name, unsigned int level,
+					      Gtk::TreeModel::iterator begin, Gtk::TreeModel::iterator end) const {
    while (begin != end) {
-      Gtk::TreeModel::Row actRow (*begin);
-      if ((actRow[colActors.editable] == true) && (name == actRow[colActors.name]))
+      if (begin->get_value (colActors.editable) && (name == begin->get_value (colActors.name)))
 	 return begin;
 
       if (level && begin->children ().size ()) {
-	 Gtk::TreeIter res (findName (name, level - 1, begin->children ().begin (),
-				      begin->children ().end ()));
+	 Gtk::TreeModel::iterator res (findName (name, level - 1, begin->children ().begin (),
+						 begin->children ().end ()));
 	 if (res != mOwnerObjects->children ().end ())
 	    return res;
       }
@@ -241,16 +246,15 @@ Gtk::TreeIter ActorList::findName (const Glib::ustring& name, unsigned int level
 /// \param end: End object
 /// \returns Gtk::TreeModel::iterator: Iterator to found entry or mOwnerObjects->children ().end ().
 //-----------------------------------------------------------------------------
-Gtk::TreeIter ActorList::findEntity (const HEntity& entry, unsigned int level,
-				     Gtk::TreeIter begin, Gtk::TreeIter end) const {
+Gtk::TreeModel::iterator ActorList::findEntity (const HEntity& entry, unsigned int level,
+						Gtk::TreeModel::iterator begin, Gtk::TreeModel::iterator end) const {
    while (begin != end) {
-      Gtk::TreeModel::Row actRow (*begin);
-      if (entry == (HEntity)actRow[colActors.entry])
+      if (entry == begin->get_value (colActors.entry))
 	 return begin;
 
       if (level && begin->children ().size ()) {
-	 Gtk::TreeIter res (findEntity (entry, level - 1, begin->children ().begin (),
-					begin->children ().end ()));
+	 Gtk::TreeModel::iterator res (findEntity (entry, level - 1, begin->children ().begin (),
+						   begin->children ().end ()));
 	 if (res != mOwnerObjects->children ().end ())
 	    return res;
       }
@@ -266,17 +270,17 @@ Gtk::TreeIter ActorList::findEntity (const HEntity& entry, unsigned int level,
 /// \param a: Second entry to compare
 /// \returns int: Value as strcmp
 //-----------------------------------------------------------------------------
-int ActorList::sortByName (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) const {
+int ActorList::sortByName (const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const {
    Check2 (a->parent () == b->parent ());
-   Gtk::TreeRow ra (*a);
-   Gtk::TreeRow rb (*b);
+   Glib::ustring nameA (a->get_value (colActors.name));
+   Glib::ustring nameB (b->get_value (colActors.name));
 
-   HEntity entity (ra[colActors.entry]);
+   HEntity entity (getEntityAt (a));
    int rc ((typeid (*entity.get ()) == typeid (Actor))
-	   ? Actor::removeIgnored (ra[colActors.name]).compare (Actor::removeIgnored (rb[colActors.name]))
-	   : Film::removeIgnored (ra[colActors.name]).compare (Film::removeIgnored (rb[colActors.name])));
+	   ? Actor::removeIgnored (nameA).compare (Actor::removeIgnored (nameB))
+	   : Film::removeIgnored (nameA).compare (Film::removeIgnored (nameB)));
    if (!rc)
-      rc = ((Glib::ustring)ra[colActors.name]).compare ((Glib::ustring)rb[colActors.name]);
+      rc = nameA.compare (nameB);
    return rc;
 }
 
@@ -286,22 +290,20 @@ int ActorList::sortByName (const Gtk::TreeModel::iterator& a, const Gtk::TreeMod
 /// \param a: Second entry to compare
 /// \returns int: Value as strcmp
 //-----------------------------------------------------------------------------
-int ActorList::sortByYear (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) const {
+int ActorList::sortByYear (const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const {
    Check2 (a->parent () == b->parent ());
-   Gtk::TreeRow ra (*a);
-   Gtk::TreeRow rb (*b);
    YGP::AYear ya;
    YGP::AYear yb;
 
-   HEntity entity (ra[colActors.entry]);
+   HEntity entity (getEntityAt (a));
    if (typeid (*entity) == typeid (Actor)) {
       ya = boost::dynamic_pointer_cast<Actor> (entity)->getBorn ();
-      entity = rb[colActors.entry];
+      entity = getEntityAt (b);
       yb = boost::dynamic_pointer_cast<Actor> (entity)->getBorn ();
    }
    else {
       ya = boost::dynamic_pointer_cast<Film> (entity)->getYear ();
-      entity = rb[colActors.entry];
+      entity = getEntityAt (b);
       yb = boost::dynamic_pointer_cast<Film> (entity)->getYear ();
    }
    return ya.compare (yb);

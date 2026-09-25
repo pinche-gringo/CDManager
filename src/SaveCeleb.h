@@ -23,6 +23,7 @@
 #include "Celebrity.h"
 
 #include <gtkmm/treeview.h>
+#include <gtkmm/liststore.h>
 #include <gtkmm/messagedialog.h>
 
 
@@ -36,26 +37,26 @@ class SaveCelebrity : public Gtk::MessageDialog {
     */
    class DlgCanceled : public std::runtime_error {
     public:
-      explicit DlgCanceled () : std::runtime_error ("By user") { }
-      virtual ~DlgCanceled () throw () { }
+      DlgCanceled () : std::runtime_error ("By user") { }
+      virtual ~DlgCanceled () noexcept { }
    };
 
    virtual ~SaveCelebrity ();
 
-   static void store (const HCelebrity celeb, const char* role,
-		      Gtk::Widget& parent) throw (std::exception, DlgCanceled);
+   static void store (const HCelebrity celeb, const char* role, Gtk::Widget& parent);
    static SaveCelebrity* create (Gtk::Window& parent, const HCelebrity celeb, const std::vector<HCelebrity>& celebs);
 
+   int run ();
    unsigned long getIdOfSelection ();
+
+   //Prohibited manager functions
+   SaveCelebrity (const SaveCelebrity& other) = delete;
+   const SaveCelebrity& operator= (const SaveCelebrity& other) = delete;
 
  protected:
    SaveCelebrity (Gtk::Window& parent, const HCelebrity celeb, const std::vector<HCelebrity>& celebs);
 
  private:
-   //Prohibited manager functions
-   SaveCelebrity (const SaveCelebrity& other);
-   const SaveCelebrity& operator= (const SaveCelebrity& other);
-
    void rowSelected ();
 
    Gtk::TreeView* lstCelebs;

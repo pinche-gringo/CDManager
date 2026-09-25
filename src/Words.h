@@ -34,8 +34,8 @@ class Words {
  public:
    /// \name Management methods
    //@{
-   static void create (unsigned int words = 1000) throw (std::invalid_argument);
-   static void access (unsigned int key) throw (std::invalid_argument);
+   static void create (unsigned int words = 1000);
+   static void access (unsigned int key);
    static bool areAvailable ();
    static void destroy ();
    //@}

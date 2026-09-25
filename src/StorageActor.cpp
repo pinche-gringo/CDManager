@@ -36,8 +36,7 @@
 /// Loads the actors and its films from the database
 /// \param aActors: Map to map an actor-id to film-IDs
 //-----------------------------------------------------------------------------
-void StorageActor::StorageActor::loadActorsInFilms (std::map<unsigned int, std::vector<unsigned int> >& aActors)
-   throw (std::exception) {
+void StorageActor::StorageActor::loadActorsInFilms (std::map<unsigned int, std::vector<unsigned int> >& aActors) {
    TRACE7 ("StorageActor::loadActorsInFilms (std::map<...>&)");
 
    db ().execute ("SELECT idActor, idFilm FROM ActorsInFilms ORDER BY idActor");
@@ -62,7 +61,7 @@ void StorageActor::StorageActor::loadActorsInFilms (std::map<unsigned int, std::
 /// Deletes the actor with the passed ID from the database
 /// \param idActor: Actor to remove
 //-----------------------------------------------------------------------------
-void StorageActor::deleteActor (unsigned int idActor) throw (std::exception) {
+void StorageActor::deleteActor (unsigned int idActor) {
    TRACE9 ("StorageActor::deleteActor (unsigned int)");
    Check3 (idActor);
 
@@ -79,7 +78,7 @@ void StorageActor::deleteActor (unsigned int idActor) throw (std::exception) {
 /// Deletes the films of the actor with the passed ID from the database
 /// \param idActor: Actor to remove
 //-----------------------------------------------------------------------------
-void StorageActor::deleteActorFilms (unsigned int idActor) throw (std::exception) {
+void StorageActor::deleteActorFilms (unsigned int idActor) {
    TRACE9 ("StorageActor::deleteActorFilms (unsigned int)");
    Check3 (idActor);
 
@@ -93,7 +92,7 @@ void StorageActor::deleteActorFilms (unsigned int idActor) throw (std::exception
 /// \param idActor: Actor to connect
 /// \param idFilm: ID of film the actors plays in
 //-----------------------------------------------------------------------------
-void StorageActor::saveActorFilm (unsigned int idActor, unsigned int idFilm) throw (std::exception) {
+void StorageActor::saveActorFilm (unsigned int idActor, unsigned int idFilm) {
    std::stringstream query;
    query << "INSERT INTO ActorsInFilms (idActor, idFilm) VALUES (" << idActor << ", " << idFilm << ')';
    db ().execute (query.str ());

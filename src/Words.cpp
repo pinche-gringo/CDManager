@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009 - 2011, 2015
+//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009 - 2011, 2015, 2026
 
 // This file is part of CDManager
 //
@@ -57,11 +57,10 @@ static std::map<pid_t, WordPtrs*> ptrs;
 //-----------------------------------------------------------------------------
 /// Creates the memory for the reserved words.
 /// \param words: Minimal number of reserved words
-/// \throw std::invalid_argument: Describing text in case of error
 /// \remarks The words are stored in shared memory (to be accessible by other
 ///    processes
 //-----------------------------------------------------------------------------
-void Words::create (unsigned int words) throw (std::invalid_argument) {
+void Words::create (unsigned int words) {
    TRACE1 ("Words::create (unsigned int) - " << words);
    if ((_key != -1) || areAvailable ())
       return;
@@ -91,9 +90,8 @@ void Words::create (unsigned int words) throw (std::invalid_argument) {
 /// Gets access to the shared memory with the passed id
 /// \param key: ID of shared memory
 /// \pre Requires the shared memory to be already created
-/// \throw std::invalid_argument: Describing text in case of error
 //-----------------------------------------------------------------------------
-void Words::access (unsigned int key) throw (std::invalid_argument) {
+void Words::access (unsigned int key) {
    TRACE8 ("Words::access (unsigned int) - " << key);
    if (!key || areAvailable ())
       return;

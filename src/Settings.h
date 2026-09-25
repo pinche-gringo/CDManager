@@ -29,26 +29,22 @@
 // Forward declarations
 class Options;
 
-namespace Gtk {
-   class Table;
-}
-
 
 class Settings : public XGP::XDialog {
  public:
    virtual ~Settings ();
 
-   static Settings* create (const Glib::RefPtr<Gdk::Window>& parent, Options& options);
+   static Settings* create (Gtk::Window& parent, Options& options);
+
+   //Prohibited manager functions
+   Settings (const Settings& other) = delete;
+   const Settings& operator= (const Settings& other) = delete;
 
  protected:
    Settings (Options& options);
 
  private:
-   //Prohibited manager functions
-   Settings (const Settings& other);
-   const Settings& operator= (const Settings& other);
-
-   virtual void okEvent ();
+   void okEvent () override;
 
    XGP::XAttributeEntry<std::string> txtOutput;
    XGP::XAttributeEntry<std::string> hdrFilm;

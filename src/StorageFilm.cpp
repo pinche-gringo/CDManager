@@ -45,7 +45,7 @@
 //-----------------------------------------------------------------------------
 void StorageFilm::loadNames (const std::vector<HDirector>& directors,
 			      const YGP::Relation1_N<HDirector, HFilm>& relFilms,
-			      const std::string& lang) throw (std::exception) {
+			      const std::string& lang) {
    db ().execute ("SELECT id, name from FilmNames WHERE language=" + db ().quote (lang));
 
    while (db ().hasData ()) {
@@ -66,7 +66,7 @@ void StorageFilm::loadNames (const std::vector<HDirector>& directors,
 /// \returns unsigned int: Number of loaded films
 //-----------------------------------------------------------------------------
 unsigned int StorageFilm::loadFilms (std::map<unsigned int, std::vector<HFilm> >& aFilms,
-				     YGP::StatusObject& stat) throw (std::exception) {
+				     YGP::StatusObject& stat) {
    db ().execute ("SELECT id, name, director, year, genre, type, languages"
 		      ", subtitles, summary, image FROM Films ORDER BY director, year, name");
    if (db ().resultSize ()) {
@@ -112,7 +112,7 @@ unsigned int StorageFilm::loadFilms (std::map<unsigned int, std::vector<HFilm> >
 /// \param film: Film to save
 /// \param idDirector: ID of director
 //-----------------------------------------------------------------------------
-void StorageFilm::saveFilm (const HFilm film, unsigned int idDirector) throw (std::exception) {
+void StorageFilm::saveFilm (const HFilm film, unsigned int idDirector) {
    Database::Values values;
    values ("name", db ().quote (film->getName ("")))
       ("summary", db ().quote (film->getDescription ()))
@@ -144,7 +144,7 @@ void StorageFilm::saveFilm (const HFilm film, unsigned int idDirector) throw (st
 /// Deletes all the names of the passed film
 /// \param idFilm: ID of film whose (translated) names should be deleted
 //-----------------------------------------------------------------------------
-void StorageFilm::deleteFilmNames (unsigned int idFilm) throw (std::exception) {
+void StorageFilm::deleteFilmNames (unsigned int idFilm) {
    std::stringstream del;
    del << "DELETE FROM FilmNames WHERE id=" << idFilm;
    db ().execute (del.str ());
@@ -155,7 +155,7 @@ void StorageFilm::deleteFilmNames (unsigned int idFilm) throw (std::exception) {
 /// \param film: Film to save
 /// \param lang: Identification of the language
 //-----------------------------------------------------------------------------
-void StorageFilm::saveFilmName (const HFilm film, const std::string& lang) throw (std::exception) {
+void StorageFilm::saveFilmName (const HFilm film, const std::string& lang) {
    std::stringstream where;
    where << "id=" << film->getId () << " AND language=" << db ().quote (lang);
 
@@ -181,7 +181,7 @@ void StorageFilm::saveFilmName (const HFilm film, const std::string& lang) throw
 /// Deletes the passed director from the database
 /// \param idDirector: ID of director to delete
 //-----------------------------------------------------------------------------
-void StorageFilm::deleteDirector (unsigned int idDirector) throw (std::exception) {
+void StorageFilm::deleteDirector (unsigned int idDirector) {
    std::stringstream query;
    query << "DELETE FROM Directors WHERE id=" << idDirector;
    db ().execute (query.str ());
@@ -191,7 +191,7 @@ void StorageFilm::deleteDirector (unsigned int idDirector) throw (std::exception
 /// Deletes the passed film from the database
 /// \param idFilm: ID of film to delete
 //-----------------------------------------------------------------------------
-void StorageFilm::deleteFilm (unsigned int idFilm) throw (std::exception) {
+void StorageFilm::deleteFilm (unsigned int idFilm) {
    std::stringstream query;
    query << "DELETE FROM Films WHERE id=" << idFilm;
    db ().execute (query.str ());

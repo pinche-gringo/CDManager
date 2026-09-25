@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.01.2006
-//COPYRIGHT   : Copyright (C) 2006, 2009 - 2011
+//COPYRIGHT   : Copyright (C) 2006, 2009 - 2011, 2026
 
 // This file is part of CDManager
 //
@@ -27,9 +27,11 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <gdkmm/pixbufloader.h>
+#include <glibmm/bytes.h>
 
-#include <gtkmm/stock.h>
+#include <gdkmm/texture.h>
+
+#include <gtkmm/window.h>
 #include <gtkmm/scrolledwindow.h>
 
 #include <YGP/Check.h>
@@ -55,22 +57,21 @@
 /// \param genres: Genres to use in actor-list
 /// \param films: Reference to film-page
 //-----------------------------------------------------------------------------
-PActors::PActors (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave,
-		  const Genres& genres, PFilms& films)
+PActors::PActors (Gtk::Statusbar& status, Glib::RefPtr<Gio::SimpleAction> menuSave, const Genres& genres, PFilms& films)
    : NBPage (status, menuSave), actors (genres), relActors ("actors"),
      films (films), actView (0) {
-   TRACE9 ("PActors::PActors (Gtk::Statusbar&, Glib::RefPtr<Gtk::Action>, const Genres&, PFilms&)");
+   TRACE9 ("PActors::PActors (Gtk::Statusbar&, Glib::RefPtr<Gio::SimpleAction>, const Genres&, PFilms&)");
 
-   Gtk::ScrolledWindow* scrl (new Gtk::ScrolledWindow);
-   scrl->set_shadow_type (Gtk::SHADOW_ETCHED_IN);
-   scrl->add (actors);
-   scrl->set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+   Gtk::ScrolledWindow* scrl (Gtk::make_managed<Gtk::ScrolledWindow> ());
+   scrl->set_has_frame (true);
+   scrl->set_child (actors);
+   scrl->set_policy (Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
 
    Glib::RefPtr<Gtk::TreeSelection> sel (actors.get_selection ());
-   sel->signal_changed ().connect (mem_fun (*this, &PActors::actorSelected));
-   actors.signalActorChanged.connect (mem_fun (*this, &PActors::actorChanged));
+   sel->signal_changed ().connect (sigc::mem_fun (*this, &PActors::actorSelected));
+   actors.signalActorChanged.connect (sigc::mem_fun (*this, &PActors::actorChanged));
    actors.set_has_tooltip ();
-   actors.signal_query_tooltip ().connect (mem_fun (*this, &PActors::onQueryTooltip));
+   actors.signal_query_tooltip ().connect (sigc::mem_fun (*this, &PActors::onQueryTooltip), true);
 
    widget = scrl;
 }
@@ -90,15 +91,15 @@ void PActors::actorSelected () {
    TRACE9 ("PActords::actorSelected ()");
    Check3 (actors.get_selection ());
 
-   Gtk::TreeIter s (actors.get_selection ()->get_selected ());
+   Gtk::TreeModel::iterator s (actors.get_selection ()->get_selected ());
    if (actView) {
-      enableEdit ((s && (*s)->parent ()) ? OWNER_SELECTED : NONE_SELECTED);
-      apMenus[NEW1]->set_sensitive (false);
+      enableEdit ((s && s->parent ()) ? OWNER_SELECTED : NONE_SELECTED);
+      apMenus[NEW1]->set_enabled (false);
    }
    else {
       enableEdit (s ? OWNER_SELECTED : NONE_SELECTED);
-      if (s && (*s)->parent ())
-	 apMenus[DELETE]->set_sensitive (false);
+      if (s && s->parent ())
+	 apMenus[DELETE]->set_enabled (false);
    }
 }
 
@@ -108,8 +109,8 @@ void PActors::actorSelected () {
 /// \param column: Changed column
 /// \param oldValue: Old value of the changed entry
 //-----------------------------------------------------------------------------
-void PActors::actorChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue) {
-   TRACE9 ("PActors::actorChanged (const Gtk::TreeIter&, unsigned int, Glib::ustring&)");
+void PActors::actorChanged (const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue) {
+   TRACE9 ("PActors::actorChanged (const Gtk::TreeModel::iterator&, unsigned int, Glib::ustring&)");
 
    Gtk::TreePath path (actors.get_model ()->get_path (row));
    HEntity entity (actors.getEntityAt (row));
@@ -119,7 +120,7 @@ void PActors::actorChanged (const Gtk::TreeIter& row, unsigned int column, Glib:
       changeAllEntries (entity, actors.getModel ()->children ().begin (), actors.getModel ()->children ().end ());
    std::sort (aActors.begin (), aActors.end (), &Actor::compByName);
 
-   apMenus[UNDO]->set_sensitive ();
+   apMenus[UNDO]->set_enabled ();
    enableSave ();
 }
 
@@ -131,10 +132,10 @@ void PActors::newActor () {
    Gtk::TreeModel::iterator i;
    if (actView) {
       Check3 (actors.get_selection ()->get_selected ());
-      i = actors.append (actor, actors.get_selection ()->get_selected ());
+      i = actors.append (actor, actors.get_selection ()->get_selected ()).get_iter ();
    }
    else
-      i = actors.append (actor);
+      i = actors.append (actor).get_iter ();
    aActors.insert (lower_bound (aActors.begin (), aActors.end (), actor,
 				&Actor::compByName), actor);
 
@@ -144,7 +145,7 @@ void PActors::newActor () {
 
    aUndo.push (Undo (Undo::INSERT, ACTOR, 0, actor, path, ""));
 
-   apMenus[UNDO]->set_sensitive ();
+   apMenus[UNDO]->set_enabled ();
    enableSave ();
 }
 
@@ -154,12 +155,12 @@ void PActors::newActor () {
 void PActors::actorPlaysInFilm () {
    TRACE9 ("PActors::actorPlaysInFilm ()");
    Check3 (actors.get_selection ());
-   Gtk::TreeIter p (actors.get_selection ()->get_selected ()); Check3 (p);
+   Gtk::TreeModel::iterator p (actors.get_selection ()->get_selected ()); Check3 (p);
 
    HActor actor (boost::dynamic_pointer_cast<Actor> (actors.getEntityAt (p)));
    if (!actor) {
-      Check3 ((*p)->parent ());
-      p = (*p)->parent ();
+      Check3 (p->parent ());
+      p = p->parent ();
       actor = boost::dynamic_pointer_cast<Actor> (actors.getEntityAt (p));
    }
    Check3 (actor);
@@ -169,8 +170,10 @@ void PActors::actorPlaysInFilm () {
 		     ? RelateFilm::create (actor, relActors.getObjects (actor),
 					    films.getFilmList ().getModel ())
 		     : RelateFilm::create (actor, films.getFilmList ().getModel ()));
-   dlg->get_window ()->set_transient_for (actors.get_window ());
-   dlg->signalRelateFilms.connect (mem_fun (*this, &PActors::relateFilms));
+   Gtk::Window* win (dynamic_cast<Gtk::Window*> (actors.get_root ()));
+   if (win)
+      dlg->set_transient_for (*win);
+   dlg->signalRelateFilms.connect (sigc::mem_fun (*this, &PActors::relateFilms));
 }
 
 //-----------------------------------------------------------------------------
@@ -183,7 +186,7 @@ void PActors::relateFilms (const HActor& actor, const std::vector<HFilm>& films)
    Check2 (actor);
 
    Glib::RefPtr<Gtk::TreeStore> model (actors.getModel ());
-   Gtk::TreeIter i (actors.findEntity (actor)); Check3 (i);
+   Gtk::TreeModel::iterator i (actors.findEntity (actor)); Check3 (i);
    Gtk::TreePath path (model->get_path (i));
 
    // Unrelate old films and relate with newly selected ones
@@ -196,7 +199,7 @@ void PActors::relateFilms (const HActor& actor, const std::vector<HFilm>& films)
 
    showFilms (actor, films);
 
-   apMenus[UNDO]->set_sensitive ();
+   apMenus[UNDO]->set_enabled ();
    enableSave ();
 }
 
@@ -207,19 +210,19 @@ void PActors::relateFilms (const HActor& actor, const std::vector<HFilm>& films)
 //-----------------------------------------------------------------------------
 void PActors::showFilms (const HActor& actor, const std::vector<HFilm>& newFilms) {
    Glib::RefPtr<Gtk::TreeStore> model (actors.getModel ());
-   Gtk::TreeIter i (actors.findEntity (actor)); Check3 (i);
+   Gtk::TreeModel::iterator i (actors.findEntity (actor)); Check3 (i);
 
    // Unrelate old films from actor; in view-by-film mode this means also
    // remove the actors from the films
    TRACE5 ("PActors::showFilms (HActor, std::vector<HFilm>) - Relate to " << newFilms.size () << " films");
-   std::vector<Gtk::TreeIter> emptyFilms;
+   std::vector<Gtk::TreeModel::iterator> emptyFilms;
    if (relActors.isRelated (actor)) {
       if (actView) {
 	 for (std::vector<HFilm>::const_iterator m (relActors.getObjects (actor).begin ());
 	      m != relActors.getObjects (actor).end (); ++m) {
-	    Gtk::TreeIter i (actors.findEntity (actor, 2)); Check2 (i);
-	    Check3 ((*i)->parent ());
-	    Gtk::TreeIter parent ((*i)->parent ()); Check3 (parent);
+	    Gtk::TreeModel::iterator i (actors.findEntity (actor, 2)); Check2 (i);
+	    Check3 (i->parent ());
+	    Gtk::TreeModel::iterator parent (i->parent ()); Check3 (parent);
 	    model->erase (i);
 
 	    // Check if parent of deleted actor has now no more childs;
@@ -229,8 +232,8 @@ void PActors::showFilms (const HActor& actor, const std::vector<HFilm>& newFilms
 	 }
       }
       else
-	 while ((*i)->children ().size ())
-	    model->erase ((*i)->children ().begin ());
+	 while (i->children ().size ())
+	    model->erase (i->children ().begin ());
       relActors.unrelateAll (actor);
    }
 
@@ -240,13 +243,12 @@ void PActors::showFilms (const HActor& actor, const std::vector<HFilm>& newFilms
       relActors.relate (actor, *m);
 
       if (actView) {
-	 Gtk::TreeIter iter (*actors.findEntity (*m, 1));
+	 Gtk::TreeModel::iterator iter (actors.findEntity (*m, 1));
 	 if (!iter)
-	    iter = actors.append (*m);
+	    iter = actors.append (*m).get_iter ();
 
-	 Gtk::TreeRow row (*iter);
-	 actors.append (actor, row);
-	 actors.expand_row (model->get_path (row), true);
+	 actors.append (actor, iter);
+	 actors.expand_row (model->get_path (iter), true);
       }
       else
 	 actors.append (*m, *i);
@@ -254,7 +256,7 @@ void PActors::showFilms (const HActor& actor, const std::vector<HFilm>& newFilms
 
    if (actView) {
       // Remove all films without actors
-      for (std::vector<Gtk::TreeIter>::iterator i (emptyFilms.begin ());
+      for (std::vector<Gtk::TreeModel::iterator>::iterator i (emptyFilms.begin ());
 	   i != emptyFilms.end (); ++i)
 	 if ((*i)->children ().empty ())
 	    model->erase (*i);
@@ -339,8 +341,7 @@ void PActors::PActors::loadData () {
    catch (std::exception& err) {
       Glib::ustring msg (_("Can't query the actors1!\n\nReason: %1"));
       msg.replace (msg.find ("%1"), 2, err.what ());
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.run ();
+      showError(msg);
    }
 }
 
@@ -362,51 +363,55 @@ HFilm PActors::findFilm (unsigned int id) const {
 
 //-----------------------------------------------------------------------------
 /// Setting the page-specific menu
-/// \param ui: User-interface string holding menus
-/// \param grpActions: Added actions
+/// \param menuEdit: Edit-menu to add the page-specific entries to
+/// \param menuOther: Menu to add further top-level menus to
+/// \param grpAction: Action-group to add the actions to
+/// \param shortcuts: Controller to add the keyboard shortcuts to
 //-----------------------------------------------------------------------------
-void PActors::addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAction) {
-   ui += ("<menuitem action='AUndo'/>"
-	  "<separator/>"
-	  "<menuitem action='NActor'/>"
-	  "<menuitem action='AddFilm'/>"
-	  "<separator/>"
-	  "<menuitem action='ADelete'/>"
-	  "</placeholder></menu>"
-	  "<placeholder name='Other'><menu action='View'>"
-	  "<menuitem action='ByActor'/>"
-	  "<menuitem action='ByFilm'/>"
-	  "</menu></placeholder>");
-
+void PActors::addMenu (Glib::RefPtr<Gio::Menu> menuEdit, Glib::RefPtr<Gio::Menu> menuOther,
+		       Glib::RefPtr<Gio::SimpleActionGroup> grpAction,
+		       Glib::RefPtr<Gtk::ShortcutController> shortcuts) {
    // Add edit-menu
-   grpAction->add (apMenus[UNDO] = Gtk::Action::create ("AUndo", Gtk::Stock::UNDO),
-		   Gtk::AccelKey (_("<ctl>Z")),
-		   mem_fun (*this, &PActors::undo));
-   grpAction->add (apMenus[NEW1] = Gtk::Action::create ("NActor", Gtk::Stock::NEW,
-							_("New _actor")),
-		   Gtk::AccelKey (_("<ctl>N")),
-		   mem_fun (*this, &PActors::newActor));
-   grpAction->add (apMenus[NEW2] = Gtk::Action::create ("AddFilm", _("_Plays in film...")),
-		   Gtk::AccelKey (_("<ctl><alt>N")),
-		   mem_fun (*this, &PActors::actorPlaysInFilm));
-   grpAction->add (apMenus[DELETE] = Gtk::Action::create ("ADelete", Gtk::Stock::DELETE, _("_Delete")),
-		   Gtk::AccelKey (_("<ctl>Delete")),
-		   mem_fun (*this, &PActors::deleteSelection));
+   Glib::RefPtr<Gio::Menu> sec (Gio::Menu::create ());
+   apMenus[UNDO] = grpAction->add_action ("AUndo", sigc::mem_fun (*this, &PActors::undo));
+   addMenuEntry (sec, _("_Undo"), "page.AUndo", _("<ctl>Z"), shortcuts);
+   menuEdit->append_section (sec);
 
-   apMenus[UNDO]->set_sensitive (false);
+   sec = Gio::Menu::create ();
+   apMenus[NEW1] = grpAction->add_action ("NActor", sigc::mem_fun (*this, &PActors::newActor));
+   addMenuEntry (sec, _("New _actor"), "page.NActor", _("<ctl>N"), shortcuts);
+   apMenus[NEW2] = grpAction->add_action ("AddFilm", sigc::mem_fun (*this, &PActors::actorPlaysInFilm));
+   addMenuEntry (sec, _("_Plays in film..."), "page.AddFilm", _("<ctl><alt>N"), shortcuts);
+   menuEdit->append_section (sec);
 
-   // Add view-menu
-   grpAction->add (Gtk::Action::create ("View", _("_View")));
-   Gtk::RadioButtonGroup grpOrder;
-   grpAction->add (menuView[0] = Gtk::RadioAction::create (grpOrder, "ByActor", _("By _actor")),
-		   Gtk::AccelKey ("<ctl>1"), mem_fun (*this, &PActors::viewByActor));
-   grpAction->add (menuView[1] = Gtk::RadioAction::create (grpOrder, "ByFilm", _("By _film")),
-		   Gtk::AccelKey ("<ctl>2"), mem_fun (*this, &PActors::viewByFilm));
+   sec = Gio::Menu::create ();
+   apMenus[DELETE] = grpAction->add_action ("ADelete", sigc::mem_fun (*this, &PActors::deleteSelection));
+   addMenuEntry (sec, _("_Delete"), "page.ADelete", _("<ctl>Delete"), shortcuts);
+   menuEdit->append_section (sec);
 
-   Check2 (actView < (sizeof (menuView) / sizeof (*menuView)));
-   menuView[actView]->set_active ();
+   apMenus[UNDO]->set_enabled (false);
+
+   // Add view-menu (as radio-action)
+   Check2 (actView < 2);
+   menuView = grpAction->add_action_radio_string ("View", sigc::mem_fun (*this, &PActors::changeView),
+						  actView ? "ByFilm" : "ByActor");
+   Glib::RefPtr<Gio::Menu> menuViews (Gio::Menu::create ());
+   addMenuEntry (menuViews, _("By _actor"), "page.View::ByActor", "<ctl>1", shortcuts);
+   addMenuEntry (menuViews, _("By _film"), "page.View::ByFilm", "<ctl>2", shortcuts);
+   menuOther->append_submenu (_("_View"), menuViews);
 
    actView ? viewByFilm () : viewByActor ();
+}
+
+//-----------------------------------------------------------------------------
+/// Callback after selecting a view in the menu
+/// \param view: Selected view ("ByActor" or "ByFilm")
+//-----------------------------------------------------------------------------
+void PActors::changeView (const Glib::ustring& view) {
+   TRACE9 ("PActors::changeView (const Glib::ustring&) - " << view);
+   Check3 (menuView);
+   menuView->change_state (view);
+   (view == "ByFilm") ? viewByFilm () : viewByActor ();
 }
 
 //-----------------------------------------------------------------------------
@@ -416,7 +421,7 @@ void PActors::deleteSelection () {
    TRACE9 ("PActors::deleteSelection ()");
 
    Glib::RefPtr<Gtk::TreeSelection> selection (actors.get_selection ());
-   Gtk::TreeIter selRow (selection->get_selected ());
+   Gtk::TreeModel::iterator selRow (selection->get_selected ());
    Glib::RefPtr<Gtk::TreeStore> model (actors.getModel ());
    Gtk::TreePath path (model->get_path (selRow));
 
@@ -441,7 +446,7 @@ void PActors::deleteSelection () {
       aUndo.push (Undo (Undo::DELETE, ACTOR, actor->getId (), actor, path, ""));
       model->erase (selRow);
    }
-   apMenus[UNDO]->set_sensitive ();
+   apMenus[UNDO]->set_enabled ();
    enableSave ();
 }
 
@@ -480,7 +485,7 @@ void PActors::undo () {
    aUndo.pop ();
    if (aUndo.empty ()) {
       enableSave (false);
-      apMenus[UNDO]->set_sensitive (false);
+      apMenus[UNDO]->set_enabled (false);
    }
 }
 
@@ -493,7 +498,7 @@ void PActors::undoActor (const Undo& last) {
 
    Glib::RefPtr<Gtk::TreeStore> model (actors.getModel ());
    Gtk::TreePath path (last.getPath ());
-   Gtk::TreeIter iter (model->get_iter (path));
+   Gtk::TreeModel::iterator iter (model->get_iter (path));
 
    Check3 (typeid (*last.getEntity ()) == typeid (Actor));
    HActor actor (boost::dynamic_pointer_cast<Actor> (last.getEntity ()));
@@ -524,7 +529,7 @@ void PActors::undoActor (const Undo& last) {
       break;
 
    case Undo::DELETE:
-      iter = actors.insert (actor, iter);
+      iter = actors.insert (actor, iter).get_iter ();
       path = model->get_path (iter);
       break;
 
@@ -556,7 +561,7 @@ void PActors::clear () {
 /// Saves the changed information
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
-void PActors::saveData () throw (std::exception) {
+void PActors::saveData () {
    TRACE9 ("PActors::saveData ()");
 
    std::vector<HEntity> aSaved;
@@ -601,7 +606,7 @@ void PActors::saveData () throw (std::exception) {
       aUndo.pop ();
    } // end-while
    Check3 (apMenus[UNDO]);
-   apMenus[UNDO]->set_sensitive (false);
+   apMenus[UNDO]->set_enabled (false);
 
    delRelation.clear ();
 }
@@ -611,7 +616,7 @@ void PActors::saveData () throw (std::exception) {
 /// \param actor: Actor whose films shall be stored
 /// \throw std::exception in case of an error
 //-----------------------------------------------------------------------------
-void PActors::saveRelatedFilms (const HActor& actor) throw (std::exception) {
+void PActors::saveRelatedFilms (const HActor& actor) {
    TRACE9 ("PActors::saveRelatedFilms (const HActor&)");
    StorageActor::startTransaction ();
    StorageActor::deleteActorFilms (actor->getId ());
@@ -622,9 +627,9 @@ void PActors::saveRelatedFilms (const HActor& actor) throw (std::exception) {
 	 StorageActor::saveActorFilm (actor->getId (), (*m)->getId ());
       StorageActor::commitTransaction ();
    }
-   catch (std::exception& e) {
+   catch (std::exception&) {
       StorageActor::abortTransaction ();
-      throw e;
+      throw;
    }
 }
 
@@ -632,7 +637,7 @@ void PActors::saveRelatedFilms (const HActor& actor) throw (std::exception) {
 /// Views the list sorted by actor
 //-----------------------------------------------------------------------------
 void PActors::viewByActor () {
-   if (menuView[0]->get_active ()) {
+   {
       TRACE9 ("PActors::viewByActor () - Actors: " << aActors.size ());
       actView = 0;
 
@@ -659,7 +664,7 @@ void PActors::viewByActor () {
 /// Views the list sorted by film
 //-----------------------------------------------------------------------------
 void PActors::viewByFilm () {
-   if (menuView[1]->get_active ()) {
+   {
       actView = 1;
 
       Check3 (actors.get_column (0));
@@ -699,7 +704,7 @@ void PActors::viewByFilm () {
 /// \param begin: Start object
 /// \param end: End object
 //-----------------------------------------------------------------------------
-void PActors::changeAllEntries (const HEntity& entry, Gtk::TreeIter begin, Gtk::TreeIter end) {
+void PActors::changeAllEntries (const HEntity& entry, Gtk::TreeModel::iterator begin, Gtk::TreeModel::iterator end) {
    Check1 (entry);
 
    while (begin != end) {
@@ -723,7 +728,6 @@ void PActors::changeAllEntries (const HEntity& entry, Gtk::TreeIter begin, Gtk::
 bool PActors::onQueryTooltip (int x, int y, bool keyboard, const Glib::RefPtr<Gtk::Tooltip>& tooltip) {
    Gtk::TreeModel::iterator iter;
    if (actors.get_tooltip_context_iter (x, y, keyboard, iter)) {
-      Gtk::TreeModel::Row row (*iter);
       HFilm film (boost::dynamic_pointer_cast<Film> (actors.getEntityAt (iter)));
       if (film) {
 	 Glib::ustring summary (film->getDescription ());
@@ -732,11 +736,8 @@ bool PActors::onQueryTooltip (int x, int y, bool keyboard, const Glib::RefPtr<Gt
 
 	 std::string image (film->getImage ());
 	 if (image.size ()) {
-	    Glib::RefPtr<Gdk::PixbufLoader> picLoader (Gdk::PixbufLoader::create ());
 	    try {
-	       picLoader->write ((const guint8*)image.data (), (gsize)image.size ());
-	       picLoader->close ();
-	       tooltip->set_icon (picLoader->get_pixbuf ());
+	       tooltip->set_icon (Gdk::Texture::create_from_bytes (Glib::Bytes::create (image.data (), image.size ())));
 	    }
 	    catch (Glib::Error& e) {
 	       image.clear ();

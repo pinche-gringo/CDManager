@@ -42,18 +42,18 @@ class StorageRecord : public Storage {
    static void loadInterprets (std::vector<HInterpret>& target, YGP::StatusObject& stat) {
       loadCelebrities (target, "Interprets", stat); }
    static unsigned int loadRecords (std::map<unsigned int, std::vector<HRecord> >& aRecords,
-				    YGP::StatusObject& stat) throw (std::exception);
-   static void loadSongs (unsigned int idRecord, std::vector<HSong>& songs) throw (std::exception);
+				    YGP::StatusObject& stat);
+   static void loadSongs (unsigned int idRecord, std::vector<HSong>& songs);
 
-   static void saveSong (const HSong song, unsigned int idRecord) throw (std::exception);
-   static void saveRecord (const HRecord record, unsigned int idInterpret) throw (std::exception);
-   static void deleteSong (unsigned int idSong) throw (std::exception);
-   static void deleteRecord (unsigned int idRecord) throw (std::exception);
-   static void deleteInterpret (unsigned int idInterpret) throw (std::exception);
+   static void saveSong (const HSong song, unsigned int idRecord);
+   static void saveRecord (const HRecord record, unsigned int idInterpret);
+   static void deleteSong (unsigned int idSong);
+   static void deleteRecord (unsigned int idRecord);
+   static void deleteInterpret (unsigned int idInterpret);
 
    static void loadNames (const std::vector<HInterpret>& interprets,
 			  const YGP::Relation1_N<HInterpret, HRecord>& relRecords,
-			  const std::string& lang) throw (std::exception);
+			  const std::string& lang);
 
  private:
    StorageRecord ();

@@ -26,8 +26,12 @@
 #include <map>
 #include <vector>
 
-#include <gtkmm/table.h>
+#include <giomm/menu.h>
+#include <giomm/simpleaction.h>
+#include <giomm/simpleactiongroup.h>
+
 #include <gtkmm/notebook.h>
+#include <gtkmm/shortcutcontroller.h>
 #include <gtkmm/treeview.h>
 #include <gtkmm/statusbar.h>
 
@@ -55,11 +59,10 @@ class CDManager : public XGP::XApplication {
    CDManager (Options& options);
    ~CDManager ();
 
- private:
-   // Protected manager functions
-   CDManager (const CDManager&);
-   const CDManager& operator= (const CDManager&);
+   CDManager (const CDManager&) = delete;
+   const CDManager& operator= (const CDManager&) = delete;
 
+ private:
    // Event-handling
    void save ();
    void showLogin ();
@@ -72,16 +75,22 @@ class CDManager : public XGP::XApplication {
    void editPreferences ();
    void savePreferences ();
 
-   virtual void showAboutbox ();
-   virtual const char* getHelpfile ();
+   void showAboutbox () override;
+   const char* getHelpfile () override;
    void pageSwitched (Gtk::Widget* page, guint iPage);
+   void enablePageMenus (bool enable);
 
    bool login (const Glib::ustring& user, const Glib::ustring& pwd);
    void loadDatabase ();
 
    void enableMenus (bool enable);
    void exit ();
-   bool on_delete_event (GdkEventAny*);
+   void querySave ();
+   bool on_close_request () override;
+   void showError (const Glib::ustring& msg, const Glib::ustring& title = Glib::ustring ());
+   Glib::RefPtr<Gio::SimpleAction> addMenuEntry (const Glib::RefPtr<Gio::Menu>& menu, const Glib::ustring& label,
+		      const char* action, const sigc::slot<void ()>& callback,
+		      const Glib::ustring& accel = Glib::ustring ());
 
    static const char* xpmProgram[];
    static const char* xpmAuthor[];
@@ -97,12 +106,19 @@ class CDManager : public XGP::XApplication {
    Gtk::Notebook  nb;
    Gtk::Statusbar status;
 
-   enum { LOGIN = 0, SAVE, LOGOUT, MEDIT, STATISTICS, SAVE_PREFS,
+   enum { LOGIN = 0, SAVE, LOGOUT, STATISTICS, SAVE_PREFS,
 #if (WITH_RECORDS == 1) || (WITH_FILMS == 1)
 	  EXPORT,
 #endif
    	  LAST };
-   Glib::RefPtr<Gtk::Action> apMenus[LAST];
+   Glib::RefPtr<Gio::SimpleAction> apMenus[LAST];
+
+   Glib::RefPtr<Gio::Menu>               menuEdit;     ///< Edit-menu; filled by the pages
+   Glib::RefPtr<Gio::Menu>               menuOther;    ///< Additional top-level menus of the pages
+   Glib::RefPtr<Gio::SimpleActionGroup>  grpPage;      ///< Actions ("page.*") of the current page
+   Glib::RefPtr<Gtk::ShortcutController> ctrlPage;     ///< Shortcuts of the current page
+   Glib::RefPtr<Gtk::ShortcutController> ctrlMain;     ///< Shortcuts of the main menu
+   bool                                  pageMenusOn;  ///< Flag, if the page-menus are enabled
    Options& opt;
 
    NBPage* pages[WITH_ACTORS + WITH_FILMS + WITH_RECORDS];

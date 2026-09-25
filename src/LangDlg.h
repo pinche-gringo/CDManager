@@ -21,6 +21,8 @@
 
 #include <glibmm/ustring.h>
 
+#include <gdkmm/pixbuf.h>
+
 #include <gtkmm/liststore.h>
 #include <gtkmm/treemodelcolumn.h>
 
@@ -62,17 +64,17 @@ class LanguageDialog : public XGP::XDialog {
    static LanguageDialog* create (std::string& languages, unsigned int maxLangs,
 				  bool mainLang = true) {
       LanguageDialog* dlg (new LanguageDialog (languages, maxLangs, mainLang));
-      dlg->signal_response ().connect (mem_fun (*dlg, &LanguageDialog::free));
+      dlg->signal_response ().connect (sigc::mem_fun (*dlg, &LanguageDialog::free));
       return dlg;
    }
 
- private:
    //Prohibited manager functions
-   LanguageDialog ();
-   LanguageDialog (const LanguageDialog&);
-   const LanguageDialog& operator= (const LanguageDialog& other);
+   LanguageDialog () = delete;
+   LanguageDialog (const LanguageDialog&) = delete;
+   const LanguageDialog& operator= (const LanguageDialog& other) = delete;
 
-   virtual void okEvent ();
+ private:
+   void okEvent () override;
 
    void selectLanguage ();
 

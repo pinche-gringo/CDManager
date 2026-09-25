@@ -17,7 +17,7 @@
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#include <gtkmm/table.h>
+#include <gdkmm/pixbuf.h>
 
 #include <XGP/XDialog.h>
 
@@ -45,9 +45,13 @@ class FilmDataEditor : public XGP::XDialog {
    /// \remarks Cares also about freeing the dialog
    static FilmDataEditor* create() {
       FilmDataEditor* dlg(new FilmDataEditor);
-      dlg->signal_response().connect(mem_fun(*dlg, &FilmDataEditor::free));
+      dlg->signal_response().connect(sigc::mem_fun(*dlg, &FilmDataEditor::free));
       return dlg;
    }
+
+   // Prohibited manager functions
+   FilmDataEditor(const FilmDataEditor&) = delete;
+   const FilmDataEditor& operator=(const FilmDataEditor&) = delete;
 
  protected:
    Gtk::TextView* txtSummary;   ///< Field displaying the summary of the plot
@@ -57,9 +61,9 @@ class FilmDataEditor : public XGP::XDialog {
   void addIcon(const std::string& file);
 
  private:
-   // Prohibited manager functions
-   FilmDataEditor(const FilmDataEditor&);
-   const FilmDataEditor& operator=(const FilmDataEditor&);
+   void showPoster(const Glib::RefPtr<Gdk::Pixbuf>& pic);
+
+   Glib::RefPtr<Gdk::Pixbuf> poster;  ///< Poster of the film (scaled to the displayed size)
 };
 
 #endif

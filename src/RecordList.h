@@ -35,31 +35,33 @@ class RecordList : public OwnerObjectList {
    RecordList (const Genres& genres);
    virtual ~RecordList ();
 
-   Gtk::TreeModel::Row insert (const HInterpret& artist, const Gtk::TreeIter& pos) {
+   Gtk::TreeModel::Row insert (const HInterpret& artist, const Gtk::TreeModel::iterator& pos) {
       return OwnerObjectList::insert (artist, pos); }
    Gtk::TreeModel::Row append (const HInterpret& artist) { return insert (artist, mOwnerObjects->children ().end ()); }
    Gtk::TreeModel::Row prepend (const HInterpret& artist) { return insert (artist, mOwnerObjects->children ().begin ()); }
 
-   Gtk::TreeModel::Row append (HRecord& record, const Gtk::TreeModel::Row& artist);
+   Gtk::TreeModel::Row append (HRecord& record, Gtk::TreeModel::Row& artist);
 
-   HRecord getRecordAt (const Gtk::TreeIter iterator) const;
-   HInterpret getInterpretAt (const Gtk::TreeIter iterator) const {
+   HRecord getRecordAt (const Gtk::TreeModel::ConstRow& row) const;
+   HRecord getRecordAt (const Gtk::TreeModel::const_iterator& iterator) const {
+      return getRecordAt (*iterator); }
+   HInterpret getInterpretAt (const Gtk::TreeModel::const_iterator& iterator) const {
       return getCelebrityAt (iterator); }
 
-   virtual void update (Gtk::TreeModel::Row& row);
+   void update (Gtk::TreeModel::Row& row) override;
+
+   RecordList (const RecordList& other) = delete;
+   const RecordList& operator= (const RecordList& other) = delete;
 
  protected:
-   virtual void setName (HEntity& object, const Glib::ustring& value);
-   virtual void setYear (HEntity& object, const Glib::ustring& value) throw (std::exception);
-   virtual void setGenre (HEntity& object, unsigned int value);
+   void setName (HEntity& object, const Glib::ustring& value) override;
+   void setYear (HEntity& object, const Glib::ustring& value) override;
+   void setGenre (HEntity& object, unsigned int value) override;
 
-   virtual Glib::ustring getColumnName () const;
-   virtual int sortEntity (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) const;
+   Glib::ustring getColumnName () const override;
+   int sortEntity (const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const override;
 
  private:
-   RecordList (const RecordList& other);
-   const RecordList& operator= (const RecordList& other);
-
    OwnerObjectColumns colOwnerObjects;
 };
 

@@ -21,8 +21,8 @@
 
 #include "Genres.h"
 
-#include "gtkmm/treeview.h"
-#include "gtkmm/treestore.h"
+#include <gtkmm/treeview.h>
+#include <gtkmm/treestore.h>
 
 
 /**Class describing the columns in the Object-Owner list
@@ -46,11 +46,13 @@ class ActorList : public Gtk::TreeView {
    ActorList (const Genres& genres);
    virtual ~ActorList ();
 
-   Gtk::TreeRow insert (const HEntity& entity, const Gtk::TreeIter& pos);
+   Gtk::TreeRow insert (const HEntity& entity, const Gtk::TreeModel::iterator& pos);
    Gtk::TreeRow append (const HEntity& entity) { return insert (entity, mOwnerObjects->children ().end ()); }
    Gtk::TreeRow prepend (const HEntity& entity) { return insert (entity, mOwnerObjects->children ().begin ()); }
 
-   Gtk::TreeRow append (const HEntity& object, const Gtk::TreeIter& owner);
+   Gtk::TreeRow append (const HEntity& object, Gtk::TreeRow& owner);
+   Gtk::TreeRow append (const HEntity& object, const Gtk::TreeModel::iterator& owner) {
+      return append (object, *owner); }
    void clear () { mOwnerObjects->clear (); }
 
    void update (Gtk::TreeRow& row);
@@ -58,41 +60,46 @@ class ActorList : public Gtk::TreeView {
    Glib::RefPtr<Gtk::TreeStore> getModel () const { return mOwnerObjects; }
 
    /// Returns the handle at the passed position
+   /// \param row: Row in the list
+   /// \returns HEntity: Handle of the selected line
+   HEntity getEntityAt (const Gtk::TreeModel::ConstRow& row) const {
+      return row.get_value (colActors.entry);
+   }
+   /// Returns the handle at the passed position
    /// \param iter: Iterator to position in the list
-   /// \returns HFilm: Handle of the selected line
-   HEntity getEntityAt (const Gtk::TreeIter iter) const {
-      HEntity hEntity ((*iter)[colActors.entry]);
-      return hEntity;
+   /// \returns HEntity: Handle of the selected line
+   HEntity getEntityAt (const Gtk::TreeModel::const_iterator& iter) const {
+      return getEntityAt (*iter);
    }
 
-   Gtk::TreeIter findEntity (const HEntity& entry, unsigned int level,
-			     Gtk::TreeIter begin, Gtk::TreeIter end) const;
-   Gtk::TreeIter findEntity (const HEntity& entry, unsigned int level = -1U) const {
+   Gtk::TreeModel::iterator findEntity (const HEntity& entry, unsigned int level,
+					Gtk::TreeModel::iterator begin, Gtk::TreeModel::iterator end) const;
+   Gtk::TreeModel::iterator findEntity (const HEntity& entry, unsigned int level = -1U) const {
       return findEntity (entry, level, mOwnerObjects->children ().begin (),
 			 mOwnerObjects->children ().end ());
    }
-   Gtk::TreeIter findName (const Glib::ustring& name,  unsigned int level = -1U) const {
+   Gtk::TreeModel::iterator findName (const Glib::ustring& name,  unsigned int level = -1U) const {
       return findName (name, level, mOwnerObjects->children ().begin (),
 		       mOwnerObjects->children ().end ());
    }
-   Gtk::TreeIter findName (const Glib::ustring& name, unsigned int level,
-			   Gtk::TreeIter begin, Gtk::TreeIter end) const;
+   Gtk::TreeModel::iterator findName (const Glib::ustring& name, unsigned int level,
+				      Gtk::TreeModel::iterator begin, Gtk::TreeModel::iterator end) const;
 
    void selectRow (const Gtk::TreeModel::const_iterator& i);
 
-   sigc::signal<void, const Gtk::TreeIter&, unsigned int, Glib::ustring&> signalActorChanged;
+   sigc::signal<void (const Gtk::TreeModel::iterator&, unsigned int, Glib::ustring&)> signalActorChanged;
+
+   ActorList (const ActorList& other) = delete;
+   const ActorList& operator= (const ActorList& other) = delete;
 
  protected:
    void valueChanged (const Glib::ustring& path, const Glib::ustring& value,
 		      unsigned int column);
 
-   int sortByName (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) const;
-   int sortByYear (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) const;
+   int sortByName (const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const;
+   int sortByYear (const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const;
 
  private:
-   ActorList (const ActorList& other);
-   const ActorList& operator= (const ActorList& other);
-
    ActorColumns colActors;
    Glib::RefPtr<Gtk::TreeStore> mOwnerObjects;
 

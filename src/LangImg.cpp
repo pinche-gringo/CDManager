@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 18.02.2005
-//COPYRIGHT   : Copyright (C) 2005, 2010, 2012
+//COPYRIGHT   : Copyright (C) 2005, 2010, 2012, 2026
 
 // This file is part of CDManager
 //
@@ -23,9 +23,11 @@
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#include <glibmm/fileutils.h>
+#include <glibmm/error.h>
 
-#include <gtkmm/misc.h>
+#include <gdkmm/texture.h>
+
+#include <gtkmm/gestureclick.h>
 
 #include <YGP/File.h>
 #include <YGP/Check.h>
@@ -34,17 +36,13 @@
 #include "LangImg.h"
 
 
-gdouble LanguageImg::saveX (-1);
-gdouble LanguageImg::saveY (-1);
-
-
 //-----------------------------------------------------------------------------
 /// Defaultconstructor
 /// \param lang: Language whose icon should be displayed; if NULL use
 ///    an international icon
 //-----------------------------------------------------------------------------
 LanguageImg::LanguageImg (const char* lang){
-   add (img);
+   init ();
    update (lang);
 }
 
@@ -53,8 +51,21 @@ LanguageImg::LanguageImg (const char* lang){
 /// \param file: Name of file; if it is not an absolut path, search in DATADIR
 //-----------------------------------------------------------------------------
 LanguageImg::LanguageImg (const std::string& file) {
-   add (img);
+   init ();
    update (file);
+}
+
+//-----------------------------------------------------------------------------
+/// Initializes the object: Adds the image and the handling of clicks
+//-----------------------------------------------------------------------------
+void LanguageImg::init () {
+   img.set_can_shrink (false);             // Display the flag in its real size
+   append (img);
+
+   Glib::RefPtr<Gtk::GestureClick> click (Gtk::GestureClick::create ());
+   click->set_button (GDK_BUTTON_PRIMARY);
+   click->signal_released ().connect (sigc::mem_fun (*this, &LanguageImg::onReleased));
+   add_controller (click);
 }
 
 //-----------------------------------------------------------------------------
@@ -84,13 +95,10 @@ void LanguageImg::update (const std::string& file) {
    try {
       img.hide ();
       TRACE2 ("LanguageImg::update (const std::string&) - Loading: " << path);
-      img.set (Gdk::Pixbuf::create_from_file (path.c_str ()));
+      img.set_paintable (Gdk::Texture::create_from_filename (path));
       img.show ();
    }
-   catch (Gdk::PixbufError& e) {
-      TRACE1 ("LanguageImg::update (const std::string&): " <<  e.what ());
-   }
-   catch (Glib::FileError& e) {
+   catch (Glib::Error& e) {
       TRACE1 ("LanguageImg::update (const std::string&): " <<  e.what ());
    }
    catch (...) {
@@ -119,37 +127,18 @@ void LanguageImg::on_clicked () {
 }
 
 //-----------------------------------------------------------------------------
-/// Callback after releasing the button on a LanguageImg
+/// Callback after releasing the (first) mouse-button on a LanguageImg; if it
+/// is released within the image a clicked signal is generated. (The gesture
+/// itself is cancelled, if the pointer was moved too far while pressed.)
+/// \param x: X-position of the pointer
+/// \param y: Y-position of the pointer
 //-----------------------------------------------------------------------------
-bool LanguageImg::on_button_release_event (GdkEventButton* ev) {
-   Check1 (ev);
-   TRACE9 ("LanguageImg::on_button_release_event (GdkEventButton*) - "
-           << ev->button << "; X: " << ev->x - 1 << "; Y: " << ev->y - 1
+void LanguageImg::onReleased (int, double x, double y) {
+   TRACE9 ("LanguageImg::onReleased (int, 2x double) - X: " << x << "; Y: " << y
            << "; W: " << get_width () << "; H: " << get_height ());
 
-   // It button 1 is released within the image: Generate a clicked signal
-   if ((ev->button == 1)
-       && (((ev->x - saveX) < 3) && ((ev->y - saveY) < 3))) {
+   if ((x >= 0) && (y >= 0) && (x < get_width ()) && (y < get_height ())) {
       clicked_.emit ();
       on_clicked ();
    }
-   return false;
-}
-
-//-----------------------------------------------------------------------------
-/// Callback after pressing a button on a LanguageImg
-//-----------------------------------------------------------------------------
-bool LanguageImg::on_button_press_event (GdkEventButton* ev) {
-   Check1 (ev);
-   TRACE9 ("LanguageImg::on_button_press_event (GdkEventButton*) - "
-           << ev->button << "; X: " << ev->x - 1 << "; Y: " << ev->y - 1
-           << "; W: " << get_width () << "; H: " << get_height ());
-
-   // It button 1 is pressed within the image: store position
-   if ((ev->button == 1)
-       && ((ev->x - 1) < get_width ()) && ((ev->y - 1) < get_height ())) {
-      saveX = ev->x - 1;
-      saveY = ev->y - 1;
-   }
-   return false;
 }

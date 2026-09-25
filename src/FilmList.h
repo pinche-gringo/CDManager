@@ -78,36 +78,39 @@ class FilmList : public OwnerObjectList {
 
    Gtk::TreeModel::Row append (const HDirector& director) {
       return OwnerObjectList::append (director); }
-   Gtk::TreeModel::Row append (HFilm& film, const Gtk::TreeModel::Row& director);
+   Gtk::TreeModel::Row append (HFilm& film, Gtk::TreeModel::Row& director);
 
-   HFilm getFilmAt (const Gtk::TreeIter iterator) const;
-   HDirector getDirectorAt (const Gtk::TreeIter iterator) const {
+   HFilm getFilmAt (const Gtk::TreeModel::ConstRow& row) const;
+   HFilm getFilmAt (const Gtk::TreeModel::const_iterator& iterator) const {
+      return getFilmAt (*iterator); }
+   HDirector getDirectorAt (const Gtk::TreeModel::const_iterator& iterator) const {
       return getCelebrityAt (iterator); }
 
    void update (const std::string& lang);
 
-   virtual void update (Gtk::TreeModel::Row& row);
+   void update (Gtk::TreeModel::Row& row) override;
+
+   FilmList (const FilmList& other) = delete;
+   const FilmList& operator= (const FilmList& other) = delete;
 
  protected:
-   virtual void setName (HEntity& object, const Glib::ustring& value);
-   virtual void setYear (HEntity& object, const Glib::ustring& value) throw (std::exception);
-   virtual void setGenre (HEntity& object, unsigned int value);
+   void setName (HEntity& object, const Glib::ustring& value) override;
+   void setYear (HEntity& object, const Glib::ustring& value) override;
+   void setGenre (HEntity& object, unsigned int value) override;
 
-   virtual Glib::ustring getColumnName () const;
-   virtual int sortEntity (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) const;
+   Glib::ustring getColumnName () const override;
+   int sortEntity (const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const override;
 
    void valueChanged (const Glib::ustring& path, const Glib::ustring& value,
 		      unsigned int column);
 
-   virtual bool on_button_press_event (GdkEventButton* event);
+   void onButtonPressed (int nPress, double x, double y);
+   void editLanguages (const Glib::ustring& path, bool subtitles);
 
    void setLanguage (Gtk::TreeModel::Row& row, const std::string& languages);
    void setTitles (Gtk::TreeModel::Row& row, const std::string& titles);
 
  private:
-   FilmList (const FilmList& other);
-   const FilmList& operator= (const FilmList& other);
-
    TypeColumns colTypes;
    FilmColumns colFilms;
 

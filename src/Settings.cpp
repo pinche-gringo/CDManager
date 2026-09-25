@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 23.12.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009 - 2011
+//COPYRIGHT   : Copyright (C) 2004 - 2006, 2009 - 2011, 2026
 
 // This file is part of CDManager
 //
@@ -25,8 +25,9 @@
 
 #include <cdmgr-cfg.h>
 
+#include <gtkmm/box.h>
+#include <gtkmm/grid.h>
 #include <gtkmm/label.h>
-#include <gtkmm/table.h>
 #include <gtkmm/notebook.h>
 
 #include "Words.h"
@@ -41,7 +42,7 @@ XGP::XAttributeEntry<std::string> Settings::* Settings::fields[] =
    { &Settings::txtOutput, &Settings::hdrFilm, &Settings::ftrFilm,
      &Settings::hdrRecord, &Settings::ftrRecord };
 
-Settings* Settings::instance (NULL);
+Settings* Settings::instance (nullptr);
 
 
 //-----------------------------------------------------------------------------
@@ -60,8 +61,14 @@ Settings::Settings (Options& options)
    set_title (_("Preferences"));
    set_size_request (450, 350);
 
-   Gtk::Notebook& nb (*manage (new Gtk::Notebook));
-   Gtk::Table& pagExport (*manage (new Gtk::Table (5, 2)));
+   Gtk::Notebook& nb (*Gtk::make_managed<Gtk::Notebook> ());
+   nb.set_expand (true);
+   nb.set_margin (5);
+
+   Gtk::Grid& pagExport (*Gtk::make_managed<Gtk::Grid> ());
+   pagExport.set_row_spacing (5);
+   pagExport.set_column_spacing (5);
+   pagExport.set_margin (5);
 
    Glib::ustring lbls[sizeof (fields) / sizeof (*fields)] =
       { _("Output _directory:"), _("_Header for films:"),
@@ -70,17 +77,17 @@ Settings::Settings (Options& options)
 
    Gtk::Label* lbl;
    for (unsigned int i (0); i < (sizeof (fields) / sizeof (*fields)); ++i) {
-      lbl = manage (new Gtk::Label (lbls[i], true));
+      lbl = Gtk::make_managed<Gtk::Label> (lbls[i], true);
       lbl->set_mnemonic_widget (this->*fields[i]);
-      pagExport.attach (*lbl, 0, 1, i, i + 1, Gtk::FILL, Gtk::FILL, 5);
-      pagExport.attach (this->*fields[i], 1, 2, i, i + 1, Gtk::FILL | Gtk::EXPAND, Gtk::FILL, 5);
+      pagExport.attach (*lbl, 0, i);
+      (this->*fields[i]).set_hexpand (true);
+      pagExport.attach (this->*fields[i], 1, i);
    }
 
-   nb.append_page (*manage (wordDialog), _("Reserved _words"), true);
+   nb.append_page (*Gtk::manage (wordDialog), _("Reserved _words"), true);
    nb.append_page (pagExport, _("_Export"), true);
 
-   get_vbox ()->pack_start (nb, true, true, 5);
-   show_all_children ();
+   get_content_area ()->append (nb);
    show ();
 }
 
@@ -88,7 +95,7 @@ Settings::Settings (Options& options)
 /// Destructor
 //-----------------------------------------------------------------------------
 Settings::~Settings () {
-   instance = NULL;
+   instance = nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -108,12 +115,11 @@ void Settings::okEvent () {
 /// \param parent: Parent window
 /// \returns Settings*: Pointer to the created window
 //-----------------------------------------------------------------------------
-Settings* Settings::create (const Glib::RefPtr<Gdk::Window>& parent,
-			    Options& options) {
-   if (instance == NULL) {
+Settings* Settings::create (Gtk::Window& parent, Options& options) {
+   if (instance == nullptr) {
       new Settings (options); Check3 (instance);
-      instance->get_window ()->set_transient_for (parent);
-      instance->signal_response ().connect (mem_fun (*instance, &Settings::free));
+      instance->set_transient_for (parent);
+      instance->signal_response ().connect (sigc::mem_fun (*instance, &Settings::free));
    }
    else
       instance->present ();

@@ -44,12 +44,12 @@ class CDAppl : public YGP::IVIOApplication {
    // Help-handling
    virtual void showHelp () const;
 
- private:
    // Prohobited manager functions
-   CDAppl ();
-   CDAppl (const CDAppl&);
-   const CDAppl& operator= (const CDAppl&);
+   CDAppl () = delete;
+   CDAppl (const CDAppl&) = delete;
+   const CDAppl& operator= (const CDAppl&) = delete;
 
+ private:
    Options options;
 
    static const longOptions lo[];

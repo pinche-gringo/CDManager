@@ -40,34 +40,35 @@ class LanguageImg;
  */
 class PRecords : public NBPage {
  public:
-   PRecords (Gtk::Statusbar& status, Glib::RefPtr<Gtk::Action> menuSave, const Genres& genres);
+   PRecords (Gtk::Statusbar& status, Glib::RefPtr<Gio::SimpleAction> menuSave, const Genres& genres);
    virtual ~PRecords ();
 
-   virtual void loadData ();
-   virtual void saveData () throw (std::exception);
-   virtual void getFocus ();
-   virtual void addMenu (Glib::ustring& ui, Glib::RefPtr<Gtk::ActionGroup> grpAction);
-   virtual void deleteSelection ();
-   virtual void undo ();
-   virtual void clear ();
+   void loadData () override;
+   void saveData () override;
+   void getFocus () override;
+   void addMenu (Glib::RefPtr<Gio::Menu> menuEdit, Glib::RefPtr<Gio::Menu> menuOther,
+		 Glib::RefPtr<Gio::SimpleActionGroup> grpAction,
+		 Glib::RefPtr<Gtk::ShortcutController> shortcuts) override;
+   void deleteSelection () override;
+   void undo () override;
+   void clear () override;
 
-   virtual void export2HTML (unsigned int fd, const std::string& lang);
+   void export2HTML (unsigned int fd, const std::string& lang) override;
    void addEntry (const Glib::ustring&artist, const Glib::ustring& record, const Glib::ustring& song,
 		  unsigned int track, Glib::ustring& genre, unsigned int year);
 
+   PRecords () = delete;
+   PRecords (const PRecords& other) = delete;
+   const PRecords& operator= (const PRecords& other) = delete;
+
  private:
-   PRecords ();
+   void interpretChanged (const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
+   void recordChanged (const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
+   void songChanged (const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
 
-   PRecords (const PRecords& other);
-   const PRecords& operator= (const PRecords& other);
-
-   void interpretChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
-   void recordChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
-   void songChanged (const Gtk::TreeIter& row, unsigned int column, Glib::ustring& oldValue);
-
-   Gtk::TreeIter addInterpret (const HInterpret& interpret);
-   Gtk::TreeIter addRecord (Gtk::TreeIter& parent, HRecord& record);
-   Gtk::TreeIter addSong (HSong& song);
+   Gtk::TreeModel::iterator addInterpret (const HInterpret& interpret);
+   Gtk::TreeModel::iterator addRecord (const Gtk::TreeModel::iterator& parent, HRecord& record);
+   Gtk::TreeModel::iterator addSong (HSong& song);
 
    void newInterpret ();
    void newRecord ();
@@ -75,7 +76,7 @@ class PRecords : public NBPage {
 
    void songSelected ();
    void recordSelected ();
-   void deleteRecord (const Gtk::TreeIter& record);
+   void deleteRecord (const Gtk::TreeModel::iterator& record);
    void deleteSelectedRecords ();
    void deleteSelectedSongs ();
    void deleteSong (const HSong& song, const HRecord& record);

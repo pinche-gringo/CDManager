@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 20.4.2005
-//COPYRIGHT   : Copyright (C) 2005, 2006, 2010, 2011
+//COPYRIGHT   : Copyright (C) 2005, 2006, 2010, 2011, 2026
 
 // This file is part of CDManager
 //
@@ -27,12 +27,10 @@
 
 #include <glibmm/ustring.h>
 
+#include <gtkmm/box.h>
 #include <gtkmm/label.h>
 #include <gtkmm/entry.h>
-#include <gtkmm/stock.h>
-#include <gtkmm/table.h>
 #include <gtkmm/button.h>
-#include <gtkmm/buttonbox.h>
 #include <gtkmm/scrolledwindow.h>
 
 #include <YGP/Check.h>
@@ -47,86 +45,84 @@
 /// Default constructor
 //-----------------------------------------------------------------------------
 WordDialog::WordDialog ()
-   : Gtk::Table (3, 2),
-     names (Gtk::ListStore::create (colWords)),
+   : names (Gtk::ListStore::create (colWords)),
      articles (Gtk::ListStore::create (colWords)),
-     txtName (*manage (new Gtk::Entry)),
-     txtArticle (*manage (new Gtk::Entry)),
-     addName (*manage (new Gtk::Button (Gtk::Stock::ADD))),
-     deleteName (*manage (new Gtk::Button (Gtk::Stock::DELETE))),
-     addArticle (*manage (new Gtk::Button (Gtk::Stock::ADD))),
-     deleteArticle (*manage (new Gtk::Button (Gtk::Stock::DELETE))),
-     lstNames (*manage (new Gtk::TreeView (names))),
-     lstArticles (*manage (new Gtk::TreeView (articles))) {
+     txtName (*Gtk::make_managed<Gtk::Entry> ()),
+     txtArticle (*Gtk::make_managed<Gtk::Entry> ()),
+     addName (*Gtk::make_managed<Gtk::Button> (_("_Add"), true)),
+     deleteName (*Gtk::make_managed<Gtk::Button> (_("_Delete"), true)),
+     addArticle (*Gtk::make_managed<Gtk::Button> (_("A_dd"), true)),
+     deleteArticle (*Gtk::make_managed<Gtk::Button> (_("D_elete"), true)),
+     lstNames (*Gtk::make_managed<Gtk::TreeView> (names)),
+     lstArticles (*Gtk::make_managed<Gtk::TreeView> (articles)) {
    TRACE9 ("WordDialog::WordDialog ()");
-   Gtk::ScrolledWindow& scrlNames (*manage (new Gtk::ScrolledWindow));
-   Gtk::ScrolledWindow& scrlArticles (*manage (new Gtk::ScrolledWindow));
+   Gtk::ScrolledWindow& scrlNames (*Gtk::make_managed<Gtk::ScrolledWindow> ());
+   Gtk::ScrolledWindow& scrlArticles (*Gtk::make_managed<Gtk::ScrolledWindow> ());
 
-   Gtk::HButtonBox& bboxNames (*manage (new Gtk::HButtonBox (Gtk::BUTTONBOX_END, 3)));
-   Gtk::HButtonBox& bboxArticle (*manage (new Gtk::HButtonBox (Gtk::BUTTONBOX_END, 3)));
+   Gtk::Box& bboxNames (*Gtk::make_managed<Gtk::Box> (Gtk::Orientation::HORIZONTAL, 3));
+   Gtk::Box& bboxArticle (*Gtk::make_managed<Gtk::Box> (Gtk::Orientation::HORIZONTAL, 3));
+   bboxNames.set_halign (Gtk::Align::END);
+   bboxArticle.set_halign (Gtk::Align::END);
 
    lstNames.append_column (_("First names"), colWords.word);
    lstArticles.append_column (_("Articles"), colWords.word);
 
    Gtk::TreeView* views[] = { &lstNames, &lstArticles };
    for (unsigned int i (0); i < (sizeof (views) / sizeof (*views)); ++i) {
-      views[i]->set_can_focus ();
-      views[i]->set_border_width (1);
       views[i]->set_headers_visible (true);
       views[i]->set_enable_search (true);
       views[i]->set_search_column (colWords.word);
 
       Glib::RefPtr<Gtk::TreeSelection> listSelection (views[i]->get_selection ());
-      listSelection->set_mode (Gtk::SELECTION_MULTIPLE);
+      listSelection->set_mode (Gtk::SelectionMode::MULTIPLE);
       listSelection->signal_changed ().connect
-	 (bind (mem_fun (*this, &WordDialog::entrySelected), i));
+	 (sigc::bind (sigc::mem_fun (*this, &WordDialog::entrySelected), i));
    }
-   scrlNames.set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-   scrlNames.set_shadow_type (Gtk::SHADOW_ETCHED_IN);
-   scrlNames.add (lstNames);
+   scrlNames.set_policy (Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
+   scrlNames.set_has_frame (true);
+   scrlNames.set_expand (true);
+   scrlNames.set_child (lstNames);
 
-   scrlArticles.set_shadow_type (Gtk::SHADOW_ETCHED_IN);
-   scrlArticles.set_policy (Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-   scrlArticles.add (lstArticles);
+   scrlArticles.set_has_frame (true);
+   scrlArticles.set_policy (Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
+   scrlArticles.set_hexpand (true);
+   scrlArticles.set_child (lstArticles);
 
    txtName.set_max_length (32);
    txtName.set_activates_default (true);
    txtArticle.set_max_length (9);
    txtArticle.set_activates_default (true);
+   txtName.set_hexpand (true);
+   txtArticle.set_hexpand (true);
 
-   addName.set_can_focus ();
-   deleteName.set_can_focus ();
    addName.set_sensitive (false);
    deleteName.set_sensitive (false);
-   bboxNames.pack_start (addName);
-   bboxNames.pack_start (deleteName);
+   bboxNames.append (addName);
+   bboxNames.append (deleteName);
 
-   addArticle.set_can_focus ();
    addArticle.set_sensitive (false);
    deleteArticle.set_sensitive (false);
-   deleteArticle.set_can_focus ();
-   bboxArticle.pack_start (addArticle);
-   bboxArticle.pack_start (deleteArticle);
+   bboxArticle.append (addArticle);
+   bboxArticle.append (deleteArticle);
 
-   set_row_spacings (3);
-   set_col_spacings (5);
-   attach (scrlNames, 0, 1, 0, 1, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL, 5, 5);
-   attach (scrlArticles , 1, 2, 0, 1, Gtk::EXPAND | Gtk::FILL, Gtk::FILL, 5, 5);
-   attach (txtName, 0, 1, 1, 2, Gtk::EXPAND | Gtk::FILL, Gtk::SHRINK, 5, 5);
-   attach (txtArticle, 1, 2, 1, 2, Gtk::EXPAND | Gtk::FILL, Gtk::SHRINK, 5, 5);
-   attach (bboxNames, 0, 1, 2, 3, Gtk::FILL, Gtk::SHRINK, 5, 5);
-   attach (bboxArticle, 1, 2, 2, 3, Gtk::FILL, Gtk::SHRINK, 5, 5);
-
-   show_all_children ();
+   set_row_spacing (3);
+   set_column_spacing (5);
+   set_margin (5);
+   attach (scrlNames, 0, 0);
+   attach (scrlArticles , 1, 0);
+   attach (txtName, 0, 1);
+   attach (txtArticle, 1, 1);
+   attach (bboxNames, 0, 2);
+   attach (bboxArticle, 1, 2);
 
    if (Words::areAvailable ()) {
-      addName.signal_clicked ().connect (bind (mem_fun (*this, &WordDialog::onAdd), 0));
-      deleteName.signal_clicked ().connect (bind (mem_fun (*this, &WordDialog::onDelete), 0));
-      addArticle.signal_clicked ().connect (bind (mem_fun (*this, &WordDialog::onAdd), 1));
-      deleteArticle.signal_clicked ().connect (bind (mem_fun (*this, &WordDialog::onDelete), 1));
+      addName.signal_clicked ().connect (sigc::bind (sigc::mem_fun (*this, &WordDialog::onAdd), 0));
+      deleteName.signal_clicked ().connect (sigc::bind (sigc::mem_fun (*this, &WordDialog::onDelete), 0));
+      addArticle.signal_clicked ().connect (sigc::bind (sigc::mem_fun (*this, &WordDialog::onAdd), 1));
+      deleteArticle.signal_clicked ().connect (sigc::bind (sigc::mem_fun (*this, &WordDialog::onDelete), 1));
 
-      txtName.signal_changed ().connect (bind (mem_fun (*this, &WordDialog::entryChanged), 0));
-      txtArticle.signal_changed ().connect (bind (mem_fun (*this, &WordDialog::entryChanged), 1));
+      txtName.signal_changed ().connect (sigc::bind (sigc::mem_fun (*this, &WordDialog::entryChanged), 0));
+      txtArticle.signal_changed ().connect (sigc::bind (sigc::mem_fun (*this, &WordDialog::entryChanged), 1));
 
       // Fill listboxes
       TRACE1 ("WordDialog::WordDialog () - Words: " << Words::cNames ()
@@ -134,8 +130,8 @@ WordDialog::WordDialog ()
       Words::forEachName (0U, Words::cNames (), *this, &WordDialog::appendWord);
       Words::forEachArticle (0, Words::cArticles (), *this, &WordDialog::appendArticle);
 
-      names->set_sort_column (colWords.word, Gtk::SORT_ASCENDING);
-      articles->set_sort_column (colWords.word, Gtk::SORT_ASCENDING);
+      names->set_sort_column (colWords.word, Gtk::SortType::ASCENDING);
+      articles->set_sort_column (colWords.word, Gtk::SortType::ASCENDING);
    }
    else
       set_sensitive (false);
@@ -190,7 +186,7 @@ void WordDialog::entrySelected (unsigned int which) {
    Check3 ((sizeof (buttons) / sizeof (*buttons)) > which);
 
    buttons[which]->set_sensitive
-      (lists[which]->get_selection ()->get_selected_rows ().size ());
+      (!lists[which]->get_selection ()->get_selected_rows ().empty ());
 }
 
 //-----------------------------------------------------------------------------
@@ -242,10 +238,10 @@ void WordDialog::onAdd (unsigned int which) {
    Check2 (fields[which]->get_text_length ());
    buttons[which]->set_sensitive (false);
    Gtk::TreeModel::Row row (append (models[which], fields[which]->get_text ()));
-   lists[which]->scroll_to_row (models[which]->get_path (row), 0.8);
+   lists[which]->scroll_to_row (models[which]->get_path (row.get_iter ()), 0.8);
    Glib::RefPtr<Gtk::TreeSelection> sel (lists[which]->get_selection ());
    sel->unselect_all ();
-   sel->select (row);
+   sel->select (row.get_iter ());
 
    fields[which]->set_text ("");
 }
@@ -263,12 +259,12 @@ void WordDialog::onDelete (unsigned int which) {
    Check3 ((sizeof (models) / sizeof (*models)) > which);
 
    Glib::RefPtr<Gtk::TreeSelection> selection (lists[which]->get_selection ());
-   while (selection->get_selected_rows ().size ()) {
+   while (!selection->get_selected_rows ().empty ()) {
       std::vector<Gtk::TreeModel::Path> list (selection->get_selected_rows ());
       Check3 (list.size ());
       std::vector<Gtk::TreeModel::Path>::iterator i (list.begin ());
 
-      Gtk::TreeIter iter (models[which]->get_iter (*i)); Check3 (iter);
+      Gtk::TreeModel::iterator iter (models[which]->get_iter (*i)); Check3 (iter);
       models[which]->erase (iter);
    }
 }

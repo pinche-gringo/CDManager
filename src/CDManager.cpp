@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 10.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2011
+//COPYRIGHT   : Copyright (C) 2004 - 2011, 2026
 
 // This file is part of CDManager
 //
@@ -30,14 +30,18 @@
 #include <clocale>
 #include <unistd.h>
 
+#include <fstream>
 #include <sstream>
+
+#include <glibmm/main.h>
 
 #include <gdkmm/pixbuf.h>
 
 #include <gtkmm/box.h>
-#include <gtkmm/stock.h>
 #include <gtkmm/label.h>
 #include <gtkmm/button.h>
+#include <gtkmm/messagedialog.h>
+#include <gtkmm/popovermenubar.h>
 #include <gtkmm/scrolledwindow.h>
 
 // TRACELEVEL 1 shows shared-memory key; TRACELEVEL 9 shows password
@@ -95,7 +99,7 @@ const char* const CDManager::DBNAME ("CDMedia");
 //-----------------------------------------------------------------------------
 CDManager::CDManager (Options& options)
    : XApplication (PACKAGE " V" PRG_RELEASE),
-     opt (options) {
+     pageMenusOn (false), opt (options) {
    TRACE8 ("CDManager::CDManager (Options&)");
 
    Language::init ();
@@ -103,79 +107,61 @@ CDManager::CDManager (Options& options)
    setIconProgram (picProgram, sizeof (picProgram));
    set_default_size (WIDTH, HEIGHT);
 
-   // Create controls
-   Glib::ustring ui ("<ui><menubar name='Menu'>"
-		     "  <menu action='CD'>"
-		     "    <menuitem action='Login'/>"
-		     "    <menuitem action='SaveDB'/>"
-		     "    <menuitem action='Logout'/>"
+   // Create menus
+   ctrlMain = Gtk::ShortcutController::create ();
+   ctrlMain->set_scope (Gtk::ShortcutScope::GLOBAL);
+   add_controller (ctrlMain);
+
+   Glib::RefPtr<Gio::Menu> menu (Gio::Menu::create ());
+
+   Glib::RefPtr<Gio::Menu> menuCD (Gio::Menu::create ());
+   Glib::RefPtr<Gio::Menu> sec (Gio::Menu::create ());
+   apMenus[LOGIN] = addMenuEntry (sec, _("_Login"), "Login", sigc::mem_fun (*this, &CDManager::showLogin), _("<ctl>L"));
+   apMenus[SAVE] = addMenuEntry (sec, _("_Save"), "SaveDB", sigc::mem_fun (*this, &CDManager::save));
+   apMenus[LOGOUT] = addMenuEntry (sec, _("Log_out"), "Logout", sigc::mem_fun (*this, &CDManager::logout), _("<ctl>O"));
+   menuCD->append_section (sec);
+
+   sec = Gio::Menu::create ();
 #if (WITH_RECORDS == 1) || (WITH_FILMS == 1)
-		     "    <separator/>"
-		     "    <menuitem action='Export'/>"
+   apMenus[EXPORT] = addMenuEntry (sec, _("_Export to HTML"), "Export", sigc::mem_fun (*this, &CDManager::export2HTML), _("<ctl>E"));
 #endif
-		     "    <menuitem action='Stats'/>"
-		     "    <separator/>"
-		     "    <menuitem action='FQuit'/>"
-		     "  </menu>"
-		     "  <menu action='Edit'>"
-		     "    <placeholder name='EditAction'/>"
-		     "  </menu>"
-		     "  <placeholder name='Other'/>"
-		     "  <menu action='Options'>"
-		     "    <menuitem action='Prefs'/>"
-		     "    <menuitem action='SavePrefs'/>"
-		     "  </menu>");
+   apMenus[STATISTICS] = addMenuEntry (sec, _("_Information"), "Stats", sigc::mem_fun (*this, &CDManager::showStatistics), _("F12"));
+   menuCD->append_section (sec);
 
-   grpAction->add (Gtk::Action::create ("CD", _("_CD")));
-   grpAction->add (apMenus[LOGIN] = Gtk::Action::create ("Login", _("_Login")),
-		   Gtk::AccelKey (_("<ctl>L")),
-		   mem_fun (*this, &CDManager::showLogin));
-   grpAction->add (apMenus[SAVE] = Gtk::Action::create ("SaveDB", Gtk::Stock::SAVE),
-		   mem_fun (*this, &CDManager::save));
-   grpAction->add (apMenus[LOGOUT] = Gtk::Action::create ("Logout", _("Log_out")),
-		   Gtk::AccelKey (_("<ctl>O")),
-		   mem_fun (*this, &CDManager::logout));
-#if (WITH_RECORDS == 1) || (WITH_FILMS == 1)
-   grpAction->add (apMenus[EXPORT] = Gtk::Action::create ("Export", _("_Export to HTML")),
-		   Gtk::AccelKey (_("<ctl>E")),
-		   mem_fun (*this, &CDManager::export2HTML));
-#endif
-   grpAction->add (apMenus[STATISTICS] = Gtk::Action::create ("Stats", Gtk::Stock::INFO),
-		   Gtk::AccelKey (_("F12")),
-		   mem_fun (*this, &CDManager::showStatistics));
-   grpAction->add (Gtk::Action::create ("FQuit", Gtk::Stock::QUIT),
-		   mem_fun (*this, &CDManager::exit));
-   grpAction->add (apMenus[MEDIT] = Gtk::Action::create ("Edit", _("_Edit")));
-   grpAction->add (Gtk::Action::create ("Options", _("_Options")));
-   grpAction->add (Gtk::Action::create ("Prefs", Gtk::Stock::PREFERENCES),
-		   Gtk::AccelKey (_("F9")),
-		   mem_fun (*this, &CDManager::editPreferences));
-   grpAction->add (apMenus[SAVE_PREFS] = Gtk::Action::create ("SavePrefs", _("_Save preferences")),
-		   Gtk::AccelKey (_("<ctl>F9")),
-		   mem_fun (*this, &CDManager::savePreferences));
+   addMenuEntry (menuCD, _("_Quit"), "FQuit", sigc::mem_fun (*this, &CDManager::exit));
+   menu->append_submenu (_("_CD"), menuCD);
 
-   addHelpMenu (ui);
-   ui += "</menubar></ui>";
-   mgrUI->insert_action_group (grpAction);
-   add_accel_group (mgrUI->get_accel_group ());
-   mgrUI->add_ui_from_string (ui);
+   menuEdit = Gio::Menu::create ();
+   menu->append_submenu (_("_Edit"), menuEdit);
+   menuOther = Gio::Menu::create ();
+   menu->append_section (menuOther);
 
-   Check3 (mgrUI->get_widget("/Menu/Help"));
-   ((Gtk::MenuItem*)(mgrUI->get_widget("/Menu/Help")))->set_right_justified ();
+   Glib::RefPtr<Gio::Menu> menuOptions (Gio::Menu::create ());
+   addMenuEntry (menuOptions, _("_Preferences"), "Prefs", sigc::mem_fun (*this, &CDManager::editPreferences), _("F9"));
+   apMenus[SAVE_PREFS] = addMenuEntry (menuOptions, _("_Save preferences"), "SavePrefs", sigc::mem_fun (*this, &CDManager::savePreferences), _("<ctl>F9"));
+   menu->append_submenu (_("_Options"), menuOptions);
+
+   addHelpMenu (menu);
 
    enableMenus (false);
 
-   nb.set_show_tabs (WITH_ACTORS + WITH_RECORDS + WITH_FILMS - 1);
+   nb.set_show_tabs ((WITH_ACTORS + WITH_RECORDS + WITH_FILMS) > 1);
+   nb.set_expand (true);
 
-   getClient ()->pack_start (*mgrUI->get_widget("/Menu"), Gtk::PACK_SHRINK);
-   getClient ()->pack_start (nb, Gtk::PACK_EXPAND_WIDGET);
-   getClient ()->pack_end (status, Gtk::PACK_SHRINK);
+   getClient ()->append (*Gtk::make_managed<Gtk::PopoverMenuBar> (menu));
+   getClient ()->append (nb);
+
+   // Pages can add widgets next to the statusbar (see NBPage::addStatusWidget)
+   Gtk::Box* boxStatus (Gtk::make_managed<Gtk::Box> (Gtk::Orientation::HORIZONTAL, 5));
+   status.set_hexpand (true);
+   boxStatus->append (status);
+   getClient ()->append (*boxStatus);
 
    try {
       const char* pLang (getenv ("LANGUAGE"));
       if (!pLang) {
 #ifdef HAVE_LC_MESSAGES
-	 pLang = setlocale (LC_MESSAGES, NULL);
+	 pLang = setlocale (LC_MESSAGES, nullptr);
 #else
 	 pLang = getenv ("LANG");
 #endif
@@ -186,40 +172,66 @@ CDManager::CDManager (Options& options)
    catch (std::exception& e) {
       Glib::ustring msg (_("Can't read datafile containing the genres!\n\nReason: %1"));
       msg.replace (msg.find ("%1"), 2, e.what ());
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.run ();
+      showError (msg);
    }
 
    if (opt.getUser ().empty ()
        || !login (opt.getUser (), opt.getPassword ()))
-      Glib::signal_idle ().connect
-	 (bind_return (mem_fun (*this, &CDManager::showLogin), false));
+      Glib::signal_idle ().connect_once (sigc::mem_fun (*this, &CDManager::showLogin));
 
    TRACE8 ("CDManager::CDManager (Options&) - Add NB");
 #if WITH_RECORDS == 1
    NBPage* pgRecords = (new PRecords (status, apMenus[SAVE], recGenres));
    pages[0] = pgRecords;
-   nb.append_page (*manage (pgRecords->getWindow ()), _("_Records"), true);
+   nb.append_page (*Gtk::manage (pgRecords->getWindow ()), _("_Records"), true);
 #endif
 
 #if WITH_FILMS == 1
    PFilms* pgFilms = (new PFilms (status, apMenus[SAVE], filmGenres));
    pages[WITH_RECORDS] = pgFilms;
-   nb.append_page (*manage (pgFilms->getWindow ()), _("_Films"), true);
+   nb.append_page (*Gtk::manage (pgFilms->getWindow ()), _("_Films"), true);
 #endif
 
 #if WITH_ACTORS == 1
    NBPage* pgActor = (new PActors (status, apMenus[SAVE], filmGenres, *pgFilms));
    pages[WITH_RECORDS + WITH_FILMS] = pgActor;
-   nb.append_page (*manage (pgActor->getWindow ()), _("_Actors"), true);
+   nb.append_page (*Gtk::manage (pgActor->getWindow ()), _("_Actors"), true);
 #endif
-   nb.signal_switch_page ().connect (mem_fun (*this, &CDManager::pageSwitched), false);
+   nb.signal_switch_page ().connect (sigc::mem_fun (*this, &CDManager::pageSwitched), false);
    status.push (_("Connect to a database ..."));
-   apMenus[SAVE]->set_sensitive (false);
+   apMenus[SAVE]->set_enabled (false);
 
    TRACE8 ("CDManager::CDManager (Options&) - Show");
-   show_all_children ();
    show ();
+}
+
+//-----------------------------------------------------------------------------
+/// Adds an entry to a menu of the main window, creating the according action
+/// \param menu: Menu to add the entry to
+/// \param label: Label of the entry
+/// \param action: Name of the action (without the "win."-prefix)
+/// \param callback: Method to call, when the entry is activated
+/// \param accel: Accelerator of the entry; may be empty
+/// \returns Glib::RefPtr<Gio::SimpleAction> Created action
+//-----------------------------------------------------------------------------
+Glib::RefPtr<Gio::SimpleAction> CDManager::addMenuEntry (const Glib::RefPtr<Gio::Menu>& menu, const Glib::ustring& label,
+							 const char* action, const sigc::slot<void ()>& callback,
+							 const Glib::ustring& accel) {
+   Glib::RefPtr<Gio::SimpleAction> act (grpAction->add_action (action, callback));
+   NBPage::addMenuEntry (menu, label, Glib::ustring ("win.") + action, accel, ctrlMain);
+   return act;
+}
+
+//-----------------------------------------------------------------------------
+/// Shows a (modal) error message
+/// \param msg: Message to display
+/// \param title: Title of the dialog; may be empty
+//-----------------------------------------------------------------------------
+void CDManager::showError (const Glib::ustring& msg, const Glib::ustring& title) {
+   Gtk::MessageDialog dlg (*this, msg, false, Gtk::MessageType::ERROR);
+   if (title.size ())
+      dlg.set_title (title);
+   XGP::runModal (dlg);
 }
 
 //-----------------------------------------------------------------------------
@@ -242,15 +254,14 @@ void CDManager::save () {
 	    pages[i]->saveData ();
 
       Check3 (apMenus[SAVE]);
-      apMenus[SAVE]->set_sensitive (false);
+      apMenus[SAVE]->set_enabled (false);
    }
    catch (SaveCelebrity::DlgCanceled&) {
    }
    catch (std::exception& err) {
       Glib::ustring msg (_("Error saving data!\n\nReason: %1"));
       msg.replace (msg.find ("%1"), 2, err.what ());
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.run ();
+      showError (msg);
    }
 }
 
@@ -258,14 +269,14 @@ void CDManager::save () {
 /// Shows the statistic-dialog
 //-----------------------------------------------------------------------------
 void CDManager::showStatistics () {
-   Statistics::create (get_window ());
+   Statistics::create (*this);
 }
 
 //-----------------------------------------------------------------------------
 /// Edits the preferences
 //-----------------------------------------------------------------------------
 void CDManager::editPreferences () {
-   Settings::create (get_window (), opt);
+   Settings::create (*this, opt);
 }
 
 //-----------------------------------------------------------------------------
@@ -280,7 +291,7 @@ void CDManager::showAboutbox () {
    XGP::XAbout* about (XGP::XAbout::create (ver, PACKAGE " V" VERSION));
    about->setIconProgram (picProgram, sizeof (picProgram));
    about->setIconAuthor (picAuthor, sizeof (picAuthor));
-   about->get_window ()->set_transient_for (get_window ());
+   about->set_transient_for (*this);
 }
 
 //-----------------------------------------------------------------------------
@@ -297,8 +308,8 @@ const char* CDManager::getHelpfile () {
 void CDManager::showLogin () {
    TRACE8 ("CDManager::showLogin ()");
    XGP::LoginDialog* dlg (XGP::LoginDialog::create (_("Database login")));
-   dlg->get_window ()->set_transient_for (get_window ());
-   dlg->sigLogin.connect (mem_fun (*this, &CDManager::login));
+   dlg->set_transient_for (*this);
+   dlg->sigLogin.connect (sigc::mem_fun (*this, &CDManager::login));
 
    if (opt.getUser ().size ())
       dlg->setUser (opt.getUser ());
@@ -312,18 +323,34 @@ void CDManager::showLogin () {
 /// \param enable: Flag, if menus should be enabled
 //-----------------------------------------------------------------------------
 void CDManager::enableMenus (bool enable) {
-   apMenus[LOGOUT]->set_sensitive (enable);
-   apMenus[MEDIT]->set_sensitive (enable);
+   for (unsigned int i (0); i < LAST; ++i)
+      Check3 (apMenus[i]);
+
+   apMenus[LOGOUT]->set_enabled (enable);
+   enablePageMenus (enable);
 #if (WITH_RECORDS == 1) || (WITH_FILMS == 1)
-   apMenus[EXPORT]->set_sensitive (enable);
+   apMenus[EXPORT]->set_enabled (enable);
 #endif
-   apMenus[STATISTICS]->set_sensitive (enable);
-   apMenus[SAVE_PREFS]->set_sensitive (enable);
+   apMenus[STATISTICS]->set_enabled (enable);
+   apMenus[SAVE_PREFS]->set_enabled (enable);
 
    nb.set_sensitive (enable);
 
-   apMenus[LOGIN]->set_sensitive (enable = !enable);
-   apMenus[SAVE]->set_sensitive (false);
+   apMenus[LOGIN]->set_enabled (enable = !enable);
+   apMenus[SAVE]->set_enabled (false);
+}
+
+//-----------------------------------------------------------------------------
+/// Enables or disables the menus of the current page, by (un)registering its
+/// actions (without actions the menu-entries are insensitive)
+/// \param enable: Flag, if menus should be enabled
+//-----------------------------------------------------------------------------
+void CDManager::enablePageMenus (bool enable) {
+   pageMenusOn = enable;
+   if (enable && grpPage)
+      insert_action_group ("page", grpPage);
+   else
+      remove_action_group ("page");
 }
 
 //-----------------------------------------------------------------------------
@@ -354,67 +381,59 @@ void CDManager::pageSwitched (Gtk::Widget*, guint iPage) {
    TRACE6 ("CDManager::pageSwitched (Gtk::Widget*, guint) - " << iPage);
    Check1 (iPage < 3);
 
-   static Gtk::UIManager::ui_merge_id idPageMrg (-1U);
-   Glib::ustring ui ("<menubar name='Menu'>"
-		     "  <menu action='Edit'>"
-		     "    <placeholder name='EditAction'>");
-
    if (nb.get_current_page () != -1) {
       Check3 (pages[nb.get_current_page ()]);
       pages[nb.get_current_page ()]->removeMenu ();
    }
-   if (idPageMrg != -1U)
-      mgrUI->remove_ui (idPageMrg);
+   menuEdit->remove_all ();
+   menuOther->remove_all ();
+   if (ctrlPage)
+      remove_controller (ctrlPage);
 
    Check3 (pages[iPage]);
    if (!pages[iPage]->isLoaded () && Storage::connected ())
       pages[iPage]->loadData ();
 
-   Glib::RefPtr<Gtk::ActionGroup> grpAction (Gtk::ActionGroup::create ("agPage"));
-   pages[iPage]->addMenu (ui, grpAction);
-
-   ui += "</menubar>";
-
-   Glib::ListHandle<Glib::RefPtr<Gtk::ActionGroup> > lstAGroups (mgrUI->get_action_groups ());
-   for (Glib::ListHandle<Glib::RefPtr<Gtk::ActionGroup> >::iterator i (lstAGroups.begin ());
-	i != lstAGroups.end (); ++i)
-	if ((*i)->get_name () == "agPage") {
-	   mgrUI->remove_action_group (*i);
-	   break;
-	}
-
-   mgrUI->insert_action_group (grpAction);
-   idPageMrg = mgrUI->add_ui_from_string (ui);
+   grpPage = Gio::SimpleActionGroup::create ();
+   ctrlPage = Gtk::ShortcutController::create ();
+   ctrlPage->set_scope (Gtk::ShortcutScope::GLOBAL);
+   add_controller (ctrlPage);
+   pages[iPage]->addMenu (menuEdit, menuOther, grpPage, ctrlPage);
+   enablePageMenus (pageMenusOn);
 
    pages[iPage]->getFocus ();
 }
 
 //-----------------------------------------------------------------------------
-/// Checks if the DB has been change and asks if it should be safed, before
-/// hiding (closing) the main window
+/// Closes the main window (checking before, if changes should be saved)
 //-----------------------------------------------------------------------------
 void CDManager::exit () {
-   on_delete_event (NULL);
-   hide ();
+   close ();
 }
 
 //-----------------------------------------------------------------------------
-/// Checks if the DB has been changed and asks if it should be safed, before
-/// hiding (closing) the main window
-/// \param ev: Event
-/// \returns bool: True, if message has been processed
+/// Checks if the DB has been changed and asks if it should be saved
 //-----------------------------------------------------------------------------
-bool CDManager::on_delete_event (GdkEventAny* ev) {
+void CDManager::querySave () {
    for (unsigned int i (0); i < (sizeof (pages) / sizeof (*pages)); ++i)
       if (pages[i]->isChanged ()) {
-	 Gtk::MessageDialog dlg (_("The data has been modified! Save those changes?"),
-				 false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO);
+	 Gtk::MessageDialog dlg (*this, _("The data has been modified! Save those changes?"),
+				 false, Gtk::MessageType::QUESTION, Gtk::ButtonsType::YES_NO);
 	 dlg.set_title (PACKAGE);
-	 if (dlg.run () == Gtk::RESPONSE_YES)
+	 if (XGP::runModal (dlg) == Gtk::ResponseType::YES)
 	    save ();
 	 break;
       }
-   return ev ? XApplication::on_delete_event (ev) : true;
+}
+
+//-----------------------------------------------------------------------------
+/// Checks if the DB has been changed and asks if it should be saved, before
+/// closing the main window
+/// \returns bool: True, if closing should be prevented
+//-----------------------------------------------------------------------------
+bool CDManager::on_close_request () {
+   querySave ();
+   return XApplication::on_close_request ();
 }
 
 //-----------------------------------------------------------------------------
@@ -432,9 +451,7 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
    catch (std::exception& err) {
       Glib::ustring msg (_("Can't connect to database!\n\nReason: %1"));
       msg.replace (msg.find ("%1"), 2, err.what ());
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.set_title (_("Login error"));
-      dlg.run ();
+      showError (msg, _("Login error"));
       return false;
    }
 
@@ -445,8 +462,7 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
    catch (std::exception& err) {
       Glib::ustring msg (_("Can't query needed information!\n\nReason: %1"));
       msg.replace (msg.find ("%1"), 2, err.what ());
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.run ();
+      showError (msg);
    }
 
    enableMenus (true);
@@ -459,7 +475,7 @@ bool CDManager::login (const Glib::ustring& user, const Glib::ustring& pwd) {
 //-----------------------------------------------------------------------------
 void CDManager::logout () {
    TRACE8 ("CDManager::logout ()");
-   on_delete_event (NULL);
+   querySave ();
 
    for (unsigned int i (0); i < (sizeof (pages) / sizeof (*pages)); ++i)
       pages[i]->clear ();
@@ -494,8 +510,7 @@ void CDManager::savePreferences () {
 	 Glib::ustring msg (_("Can't create file `%1'!\n\nReason: %2."));
 	 msg.replace (msg.find ("%1"), 2, opt.pINIFile);
 	 msg.replace (msg.find ("%2"), 2, strerror (errno));
-	 Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-	 dlg.run ();
+	 showError (msg);
       }
    }
 
@@ -515,8 +530,7 @@ void CDManager::savePreferences () {
       Storage::abortTransaction ();
       Glib::ustring msg (_("Can't store special names!\n\nReason: %1."));
       msg.replace (msg.find ("%1"), 2, e.what ());
-      Gtk::MessageDialog dlg (msg, Gtk::MESSAGE_ERROR);
-      dlg.run ();
+      showError (msg);
    }
 }
 
@@ -555,7 +569,7 @@ void CDManager::export2HTML() {
 			  "--filmHeader", opt.getMHeader().c_str(),
 			  "--filmFooter", opt.getMFooter().c_str(),
 #endif
-			  NULL, key.c_str(), NULL };
+			  nullptr, key.c_str(), nullptr };
    const unsigned int POS_LANG((sizeof(args) / sizeof(*args)) - 3);
    Check2(!args[POS_LANG]);
 
@@ -598,14 +612,13 @@ void CDManager::export2HTML() {
 	 Check3(pid != -1);
 	 YGP::Process::waitForProcess(pid);
 	 if (allOut.size()) {
-	    Gtk::MessageDialog dlg(*this, Glib::locale_to_utf8(allOut), Gtk::MESSAGE_INFO);
+	    Gtk::MessageDialog dlg(*this, Glib::locale_to_utf8(allOut), false, Gtk::MessageType::INFO);
 	    dlg.set_title(_("Export Warning!"));
-	    dlg.run();
+	    XGP::runModal(dlg);
 	 }
       }
       catch (std::exception& err) {
-	 Gtk::MessageDialog dlg(*this, err.what(), Gtk::MESSAGE_ERROR);
-	 dlg.run();
+	 showError(err.what());
       }
       ::close(pipes[0]);
       status.pop();

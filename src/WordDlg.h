@@ -17,6 +17,7 @@
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
 
+#include <gtkmm/grid.h>
 #include <gtkmm/treeview.h>
 #include <gtkmm/liststore.h>
 
@@ -29,7 +30,7 @@ namespace Gtk {
 
 /**Table permitting to manipulate the words.
  */
-class WordDialog : public Gtk::Table {
+class WordDialog : public Gtk::Grid {
  public:
    static Gtk::Widget* makeDialog () { return new WordDialog (); }
    static void commitDialogData (Gtk::Widget* dialog);

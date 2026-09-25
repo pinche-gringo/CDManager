@@ -32,7 +32,7 @@ class Genres {
    virtual ~Genres () { }
 
    static void loadFromFile (const char* file, Genres& records, Genres& films,
-			     const char* languages) throw (YGP::ParseError, YGP::FileError);
+			     const char* languages);
 
    int getId (const Glib::ustring& genre) const;
 

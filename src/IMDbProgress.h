@@ -74,18 +74,19 @@ class IMDbProgress : public Gtk::ProgressBar {
 
    typedef struct ConnectInfo ConnectInfo;
 
-   sigc::signal<void, const Glib::ustring&> sigError;
-   sigc::signal<void, const IMDbMatchData&> sigAmbiguous;
-   sigc::signal<void, const IMDbEntry&> sigSuccess;
-   sigc::signal<void, const std::string&> sigIcon;
+   sigc::signal<void (const Glib::ustring&)> sigError;
+   sigc::signal<void (const IMDbMatchData&)> sigAmbiguous;
+   sigc::signal<void (const IMDbEntry&)> sigSuccess;
+   sigc::signal<void (const std::string&)> sigIcon;
+
+   IMDbProgress (const IMDbProgress& other) = delete;
+   const IMDbProgress& operator= (const IMDbProgress& other) = delete;
 
  protected:
    sigc::connection conPoll;
    sigc::connection conProgress;
 
  private:
-   IMDbProgress (const IMDbProgress& other);
-   const IMDbProgress& operator= (const IMDbProgress& other);
 
    void reStart (const std::string& idFilm);
 
@@ -101,9 +102,9 @@ class IMDbProgress : public Gtk::ProgressBar {
 
    void connect ();
    void resolved (const boost::system::error_code& err,
-		  boost::asio::ip::tcp::resolver::iterator iEndpoints);
+		  boost::asio::ip::tcp::resolver::results_type::iterator iEndpoints);
    void connected (const boost::system::error_code& err,
-		   boost::asio::ip::tcp::resolver::iterator iEndpoints);
+		   boost::asio::ip::tcp::resolver::results_type::iterator iEndpoints);
    void sendRequest ();
    void requestWritten (const boost::system::error_code& err);
    void readStatus (const boost::system::error_code& err);

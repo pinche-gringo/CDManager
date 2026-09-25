@@ -47,10 +47,8 @@
 /// \param records: Object, to load the record genres into
 /// \param film: Object, to load the film genres into
 /// \param languages: Colon-separated list of languages
-/// \throw YGP::ParseError, YGP::FileError: In case of an error
 //-----------------------------------------------------------------------------
-void Genres::loadFromFile (const char* file, Genres& records, Genres& films,
-			   const char* languages) throw (YGP::ParseError, YGP::FileError) {
+void Genres::loadFromFile (const char* file, Genres& records, Genres& films, const char* languages) {
    Check1 (file); Check1 (languages);
    std::string name (file);
 

@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 11.03.2006
-//COPYRIGHT   : Copyright (C) 2006, 2009 - 2011
+//COPYRIGHT   : Copyright (C) 2006, 2009 - 2011, 2026
 
 // This file is part of CDManager
 //
@@ -25,9 +25,10 @@
 
 #include <cdmgr-cfg.h>
 
+#include <glibmm/main.h>
+
+#include <gtkmm/box.h>
 #include <gtkmm/label.h>
-#include <gtkmm/stock.h>
-#include <gtkmm/liststore.h>
 
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
@@ -45,8 +46,8 @@
 //-----------------------------------------------------------------------------
 SaveCelebrity::SaveCelebrity (Gtk::Window& parent, const HCelebrity celeb, const std::vector<HCelebrity>& celebs)
    : Gtk::MessageDialog (parent, _("A celebrity with the same name already exists! Are they identic?"),
-			 false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true),
-     lstCelebs (NULL) {
+			 false, Gtk::MessageType::QUESTION, Gtk::ButtonsType::YES_NO, true),
+     lstCelebs (nullptr) {
    set_title (_("Choose matching celebrity"));
    Check1 (celeb);
    Check1 (celebs.size ());
@@ -56,22 +57,24 @@ SaveCelebrity::SaveCelebrity (Gtk::Window& parent, const HCelebrity celeb, const
    if (celeb->getBorn ().isDefined () || celeb->getDied ().isDefined ())
       newCeleb += " (" + celeb->getLifespan () + ") ";
 
-   Gtk::Label* lblNewCeleb (new Gtk::Label (newCeleb));
+   Gtk::Label* lblNewCeleb (Gtk::make_managed<Gtk::Label> (newCeleb));
+   lblNewCeleb->set_margin (5);
 
    Glib::RefPtr <Gtk::ListStore> model (Gtk::ListStore::create (colCeleb));
-   lstCelebs = new Gtk::TreeView (model);
+   lstCelebs = Gtk::make_managed<Gtk::TreeView> (model);
+   lstCelebs->set_margin (5);
 
    lstCelebs->append_column (_("Name"), colCeleb.name);
    lstCelebs->append_column (_("Born"), colCeleb.born);
    lstCelebs->append_column (_("Died"), colCeleb.died);
 
-   set_response_sensitive (Gtk::RESPONSE_YES, false);
-   lstCelebs->get_selection ()->signal_changed ().connect (mem_fun (*this, &SaveCelebrity::rowSelected));
+   set_response_sensitive (Gtk::ResponseType::YES, false);
+   lstCelebs->get_selection ()->signal_changed ().connect (sigc::mem_fun (*this, &SaveCelebrity::rowSelected));
 
-   add_button (Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+   add_button (_("_Cancel"), Gtk::ResponseType::CANCEL);
 
-   get_vbox ()->pack_start (*manage (lblNewCeleb), false, false, 5);
-   get_vbox ()->pack_start (*manage (lstCelebs), false, false, 5);
+   get_content_area ()->append (*lblNewCeleb);
+   get_content_area ()->append (*lstCelebs);
 
    struct {
       const char*   table;
@@ -103,9 +106,6 @@ SaveCelebrity::SaveCelebrity (Gtk::Window& parent, const HCelebrity celeb, const
 
       row[colCeleb.name] = name;
    }
-
-   show_all_children ();
-   show ();
 }
 
 //-----------------------------------------------------------------------------
@@ -126,8 +126,7 @@ SaveCelebrity::~SaveCelebrity () {
 ///      a celebrity with the same name, it checks the DB-tables "Directors",
 ///      "Actors" and "Interpret" for the role of this celebrity
 //-----------------------------------------------------------------------------
-void SaveCelebrity::store (const HCelebrity celeb, const char* role,
-			   Gtk::Widget& parent) throw (std::exception, DlgCanceled) {
+void SaveCelebrity::store (const HCelebrity celeb, const char* role, Gtk::Widget& parent) {
    Check1 (celeb);
    TRACE8 ("SaveCelebrity::store (const HCelebrity, const char*, Gtk::Widget&) - " << celeb->getName ());
 
@@ -137,11 +136,11 @@ void SaveCelebrity::store (const HCelebrity celeb, const char* role,
       std::vector<HCelebrity> celebs;
       Storage::getCelebrities (celeb->getName (), celebs);
       if (celebs.size ()) {
-	 Check3 (parent.get_toplevel ());
-	 SaveCelebrity dlg (*(Gtk::Window*)parent.get_toplevel (), celeb, celebs);
-	 dlg.get_window ()->set_transient_for (parent.get_window ());
+	 Gtk::Window* win (dynamic_cast<Gtk::Window*> (parent.get_root ()));
+	 Check3 (win);
+	 SaveCelebrity dlg (*win, celeb, celebs);
 	 switch (dlg.run ()) {
-	 case Gtk::RESPONSE_YES:
+	 case Gtk::ResponseType::YES:
 	    Check3 (dlg.getIdOfSelection ());
 
 	    celeb->setId (dlg.getIdOfSelection ());
@@ -149,7 +148,7 @@ void SaveCelebrity::store (const HCelebrity celeb, const char* role,
 	    Storage::setRole (celeb->getId (), role);
 	    return;
 
-	 case Gtk::RESPONSE_NO:
+	 case Gtk::ResponseType::NO:
 	    break;
 
 	 default:
@@ -170,9 +169,30 @@ void SaveCelebrity::store (const HCelebrity celeb, const char* role,
 //-----------------------------------------------------------------------------
 SaveCelebrity* SaveCelebrity::create (Gtk::Window& parent, const HCelebrity celeb,
 			   const std::vector<HCelebrity>& celebs) {
-   SaveCelebrity* dlg (new SaveCelebrity (*(Gtk::Window*)parent.get_toplevel (), celeb, celebs));
-   dlg->get_window ()->set_transient_for (parent.get_window ());
-   return dlg;
+   return new SaveCelebrity (parent, celeb, celebs);
+}
+
+//-----------------------------------------------------------------------------
+/// Shows the dialog modally and waits until the user responds (replacement
+/// for Gtk::Dialog::run, which doesn't exist anymore in GTKMM-4)
+/// \returns int Response of the user (Gtk::ResponseType::DELETE_EVENT, if
+///          the dialog was closed)
+//-----------------------------------------------------------------------------
+int SaveCelebrity::run () {
+   TRACE9 ("SaveCelebrity::run ()");
+
+   int response (Gtk::ResponseType::NONE);
+   Glib::RefPtr<Glib::MainLoop> loop (Glib::MainLoop::create ());
+   sigc::connection conn (signal_response ().connect ([&response, loop] (int id) {
+	    response = id;
+	    loop->quit ();
+	 }));
+
+   show ();
+   loop->run ();
+   conn.disconnect ();
+   hide ();
+   return response;
 }
 
 //-----------------------------------------------------------------------------
@@ -193,5 +213,5 @@ unsigned long SaveCelebrity::getIdOfSelection () {
 /// Callback after selecting a row: Enables/disables the YES-button
 //-----------------------------------------------------------------------------
 void SaveCelebrity::rowSelected () {
-   set_response_sensitive (Gtk::RESPONSE_YES, lstCelebs->get_selection ()->get_selected ());
+   set_response_sensitive (Gtk::ResponseType::YES, bool (lstCelebs->get_selection ()->get_selected ()));
 }

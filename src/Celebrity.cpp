@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 30.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009, 2010
+//COPYRIGHT   : Copyright (C) 2004 - 2007, 2009, 2010, 2026
 
 // This file is part of CDManager
 //
@@ -106,9 +106,8 @@ bool Celebrity::compById (const HCelebrity& a, const HCelebrity& b) {
 //-----------------------------------------------------------------------------
 /// Sets the born and died values from the passed string
 /// \param value: Year the celebrity was born/died in format [born][-died]
-/// \throw std::exception in case of error
 //-----------------------------------------------------------------------------
-void Celebrity::setLifespan (const Glib::ustring& value) throw (std::invalid_argument) {
+void Celebrity::setLifespan (const Glib::ustring& value) {
    size_t pos (value.find ("- "));
    if ((pos == std::string::npos)
        || ((pos > 0) && (value[pos - 1] == ' '))) {

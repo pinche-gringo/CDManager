@@ -27,6 +27,8 @@
 
 #include <glibmm/convert.h>
 
+#include <gtkmm/application.h>
+
 #include <YGP/INIFile.h>
 
 #if WITH_FILMS == 1
@@ -43,7 +45,7 @@ const YGP::IVIOApplication::longOptions CDAppl::lo[] = {
    { "password", 'p' },
    { "file", 'f' },
    { "version", 'V' },
-   { NULL, '\0' } };
+   { nullptr, '\0' } };
 
 
 //-----------------------------------------------------------------------------
@@ -184,9 +186,10 @@ int CDAppl::perform (int, const char**) {
       std::cerr << PACKAGE << _("-warning: Can't convert username to UTF-8! Ignoring ...\n");
    }
 
-   CDManager win (options);
-   Gtk::Main::run (win);
-   return 0;
+   // The options are already handled; so don't pass them to GTK
+   Glib::RefPtr<Gtk::Application> app
+      (Gtk::Application::create ("net.sourceforge.CDManager", Gio::Application::Flags::NON_UNIQUE));
+   return app->make_window_and_run<CDManager> (0, nullptr, options);
 }
 
 //-----------------------------------------------------------------------------
@@ -214,7 +217,6 @@ const char* CDAppl::description () const {
 int main (int argc, char* argv[]) {
    YGP::IVIOApplication::initI18n (PACKAGE, LOCALEDIR);
 
-   Gtk::Main gtk (argc, argv);
    CDAppl appl (argc, const_cast<const char**> (argv));
    return appl.run ();
 }

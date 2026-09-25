@@ -36,6 +36,9 @@
 #include "Storage.h"
 
 
+std::unique_ptr<Database> Storage::database;
+
+
 //-----------------------------------------------------------------------------
 /// Login to the database with the passed user/password pair
 /// \param db Name of database
@@ -44,14 +47,19 @@
 /// \throw std::exception Occurred error
 //-----------------------------------------------------------------------------
 void Storage::login (const char* db, const char* user, const char* pwd) throw (std::exception) {
-   Database::connect (db, user, pwd);
+   std::unique_ptr<Database> newDB (Database::create ());
+   newDB->connect (db, user, pwd);
+   database = std::move (newDB);
 }
 
 //-----------------------------------------------------------------------------
 /// Log-out from the database
 //-----------------------------------------------------------------------------
 void Storage::logout () {
-   Database::close ();
+   if (database) {
+      database->close ();
+      database.reset ();
+   }
 }
 
 //-----------------------------------------------------------------------------
@@ -59,7 +67,18 @@ void Storage::logout () {
 /// \returns bool: True, if connections is established
 //-----------------------------------------------------------------------------
 bool Storage::connected () {
-   return Database::connected ();
+   return database && database->connected ();
+}
+
+//-----------------------------------------------------------------------------
+/// Returns the database to work with
+/// \returns Database& The database
+/// \throw std::exception If not logged in
+//-----------------------------------------------------------------------------
+Database& Storage::db () {
+   if (!database)
+      throw std::runtime_error ("Not connected to the database");
+   return *database;
 }
 
 //-----------------------------------------------------------------------------
@@ -68,19 +87,19 @@ bool Storage::connected () {
 void Storage::loadSpecialWords () throw (std::exception) {
    Words::create ();
 
-   Database::execute ("SELECT word FROM Words");
-   while (Database::hasData ()) {
+   db ().execute ("SELECT word FROM Words");
+   while (db ().hasData ()) {
       // Fill and store artist entry from DB-values
-      Words::addName2Ignore (Database::getResultColumnAsString (0), Words::POS_END);
-      Database::getNextResultRow ();
+      Words::addName2Ignore (db ().getResultColumnAsString (0), Words::POS_END);
+      db ().getNextResultRow ();
    }
    TRACE1 ("Storage::loadSpecialWords () - " << Words::cNames() << '/' << Words::cArticles());
 
-   Database::execute ("SELECT article FROM Articles");
-   while (Database::hasData ()) {
+   db ().execute ("SELECT article FROM Articles");
+   while (db ().hasData ()) {
       // Fill and store artist entry from DB-values
-      Words::addArticle (Database::getResultColumnAsString (0), Words::POS_END);
-      Database::getNextResultRow ();
+      Words::addArticle (db ().getResultColumnAsString (0), Words::POS_END);
+      db ().getNextResultRow ();
    }
    TRACE1 ("Storage::loadSpecialWords () - " << Words::cNames() << '/' << Words::cArticles());
 }
@@ -91,10 +110,7 @@ void Storage::loadSpecialWords () throw (std::exception) {
 /// \throw std::exception Occurred error
 //-----------------------------------------------------------------------------
 void Storage::storeWord (const char* word) throw (std::exception) {
-   std::string ins ("INSERT INTO Words VALUES ('%1')");
-   ins.replace (ins.find ("%1"), 2, word);
-
-   Database::execute (ins.c_str ());
+   db ().execute ("INSERT INTO Words VALUES (" + db ().quote (word) + ')');
 }
 
 //-----------------------------------------------------------------------------
@@ -103,10 +119,7 @@ void Storage::storeWord (const char* word) throw (std::exception) {
 /// \throw std::exception Occurred error
 //-----------------------------------------------------------------------------
 void Storage::storeArticle (const char* article) throw (std::exception) {
-   std::string ins ("INSERT INTO Articles VALUES ('%1')");
-   ins.replace (ins.find ("%1"), 2, article);
-
-   Database::execute (ins.c_str ());
+   db ().execute ("INSERT INTO Articles VALUES (" + db ().quote (article) + ')');
 }
 
 //-----------------------------------------------------------------------------
@@ -114,14 +127,14 @@ void Storage::storeArticle (const char* article) throw (std::exception) {
 /// \throw std::exception Occurred error
 //-----------------------------------------------------------------------------
 void Storage::deleteNames () throw (std::exception) {
-   Database::execute ("DELETE FROM Words");
+   db ().execute ("DELETE FROM Words");
 }
 
 //-----------------------------------------------------------------------------
 /// Deletes all articles stored in the database
 //-----------------------------------------------------------------------------
 void Storage::deleteArticles () throw (std::exception) {
-   Database::execute ("DELETE FROM Articles");
+   db ().execute ("DELETE FROM Articles");
 }
 
 //-----------------------------------------------------------------------------
@@ -138,7 +151,7 @@ void Storage::loadCelebrities (std::vector<HCelebrity>& target, const std::strin
    std::string cmd ("SELECT c.id, c.name, c.born, c.died FROM Celebrities c, ");
    cmd += table;
    cmd += " x WHERE c.id = x.id";
-   Database::execute (cmd.c_str ());
+   db ().execute (cmd.c_str ());
    fillCelebrities (target, stat);
 }
 
@@ -149,19 +162,19 @@ void Storage::loadCelebrities (std::vector<HCelebrity>& target, const std::strin
 //-----------------------------------------------------------------------------
 void Storage::fillCelebrities (std::vector<HCelebrity>& target, YGP::StatusObject& stat) {
    HCelebrity hCeleb;
-   while (Database::hasData ()) {
-      TRACE5 ("Storage::fillCelebrities (std::vector<HCelebrity>&, YGP::StatusObject&)) - Adding " << Database::getResultColumnAsUInt (0) << '/' << Database::getResultColumnAsString (1));
+   while (db ().hasData ()) {
+      TRACE5 ("Storage::fillCelebrities (std::vector<HCelebrity>&, YGP::StatusObject&)) - Adding " << db ().getResultColumnAsUInt (0) << '/' << db ().getResultColumnAsString (1));
 
       // Fill and store entry from DB-values
       try {
 	 hCeleb.reset (new Celebrity);
-	 hCeleb->setId (Database::getResultColumnAsUInt (0));
-	 hCeleb->setName (Database::getResultColumnAsString (1));
+	 hCeleb->setId (db ().getResultColumnAsUInt (0));
+	 hCeleb->setName (db ().getResultColumnAsString (1));
 
-	 unsigned int tmp (Database::getResultColumnAsUInt (2));
+	 unsigned int tmp (db ().getResultColumnAsUInt (2));
 	 if (tmp != 0)
 	    hCeleb->setBorn (tmp);
-	 tmp = Database::getResultColumnAsUInt (3);
+	 tmp = db ().getResultColumnAsUInt (3);
 	 if (tmp != 0)
 	    hCeleb->setDied (tmp);
       }
@@ -173,7 +186,7 @@ void Storage::fillCelebrities (std::vector<HCelebrity>& target, YGP::StatusObjec
       }
       target.push_back (hCeleb);
 
-      Database::getNextResultRow ();
+      db ().getNextResultRow ();
    }
 }
 
@@ -181,21 +194,34 @@ void Storage::fillCelebrities (std::vector<HCelebrity>& target, YGP::StatusObjec
 /// Starts a database-transaction
 //-----------------------------------------------------------------------------
 void Storage::startTransaction () {
-   Database::execute ("START TRANSACTION");
+   db ().execute ("START TRANSACTION");
 }
 
 //-----------------------------------------------------------------------------
 /// Aborts a database-transaction
 //-----------------------------------------------------------------------------
 void Storage::abortTransaction () {
-   Database::execute ("ROLLBACK");
+   db ().execute ("ROLLBACK");
 }
 
 //-----------------------------------------------------------------------------
 /// Commits a database-transaction
 //-----------------------------------------------------------------------------
 void Storage::commitTransaction () {
-   Database::execute ("COMMIT");
+   db ().execute ("COMMIT");
+}
+
+//-----------------------------------------------------------------------------
+/// Returns the columns of the passed celebrity to store in the database
+/// \param celeb Celebrity to store
+/// \returns Database::Values Columns and their values
+//-----------------------------------------------------------------------------
+Database::Values Storage::celebrityValues (const HCelebrity celeb) {
+   Database::Values values;
+   values ("name", db ().quote (celeb->getName ()))
+      ("born", celeb->getBorn ().isDefined () ? celeb->getBorn () : YGP::AYear (0))
+      ("died", celeb->getDied ().isDefined () ? celeb->getDied () : YGP::AYear (0));
+   return values;
 }
 
 //-----------------------------------------------------------------------------
@@ -209,14 +235,8 @@ void Storage::insertCelebrity (const HCelebrity celeb, const char* role) throw (
    TRACE8 ("Storage::insertCelebrity (const HCelebrity, const char*) - " << role << ": " << celeb->getName ());
    Check1 (!celeb->getId ());
 
-   std::stringstream query;
-   query << "INSERT INTO Celebrities  SET name=\"" << Database::escapeDBValue (celeb->getName ())
-	 << "\", born="
-	 << (celeb->getBorn ().isDefined () ? celeb->getBorn () : YGP::AYear (0))
-	 << ", died="
-	 << (celeb->getDied ().isDefined () ? celeb->getDied () : YGP::AYear (0));
-   Database::execute (query.str ().c_str ());
-   celeb->setId (Database::getIDOfInsert ());
+   db ().insert ("Celebrities", celebrityValues (celeb));
+   celeb->setId (db ().getIDOfInsert ());
    setRole (celeb->getId (), role);
 }
 
@@ -231,14 +251,9 @@ void Storage::updateCelebrity (const HCelebrity celeb) throw (std::exception) {
    TRACE8 ("Storage::updateCelebrity (const HCelebrity) - " << celeb->getName ());
    Check1 (celeb->getId ());
 
-   std::stringstream query;
-   query << "UPDATE Celebrities SET name=\"" << Database::escapeDBValue (celeb->getName ())
-	 << "\", born="
-	 << (celeb->getBorn ().isDefined () ? celeb->getBorn () : YGP::AYear (0))
-	 << ", died="
-	 << (celeb->getDied ().isDefined () ? celeb->getDied () : YGP::AYear (0))
-	 << " WHERE id=" << celeb->getId ();
-   Database::execute (query.str ().c_str ());
+   std::stringstream where;
+   where << "id=" << celeb->getId ();
+   db ().update ("Celebrities", celebrityValues (celeb), where.str ());
 }
 
 //-----------------------------------------------------------------------------
@@ -251,8 +266,8 @@ void Storage::updateCelebrity (const HCelebrity celeb) throw (std::exception) {
 void Storage::getCelebrities (const std::string& name, std::vector<HCelebrity>& target) throw (std::exception) {
    YGP::StatusObject stat;
    std::stringstream query;
-   query << "SELECT id, name, born, died FROM Celebrities WHERE name=\"" << Database::escapeDBValue (name) << '"';
-   Database::execute (query.str ().c_str ());
+   query << "SELECT id, name, born, died FROM Celebrities WHERE name=" << db ().quote (name);
+   db ().execute (query.str ());
    fillCelebrities (target, stat);
 }
 
@@ -267,8 +282,8 @@ void Storage::getCelebrities (const std::string& name, std::vector<HCelebrity>& 
 bool Storage::hasRole (unsigned int idCeleb, const char* role) throw (std::exception) {
    std::stringstream query;
    query << "SELECT id FROM " << role << " WHERE id=" << idCeleb;
-   Database::execute (query.str ().c_str ());
-   return Database::hasData ();
+   db ().execute (query.str ());
+   return db ().hasData ();
 }
 
 //-----------------------------------------------------------------------------
@@ -280,8 +295,8 @@ bool Storage::hasRole (unsigned int idCeleb, const char* role) throw (std::excep
 //-----------------------------------------------------------------------------
 void Storage::setRole (unsigned int idCeleb, const char* role) throw (std::exception) {
    std::stringstream query;
-   query << "INSERT INTO " << role << " set id="<< idCeleb;
-   Database::execute (query.str ().c_str ());
+   query << "INSERT INTO " << role << " (id) VALUES (" << idCeleb << ')';
+   db ().execute (query.str ());
 }
 
 //-----------------------------------------------------------------------------
@@ -312,9 +327,9 @@ void Storage::getStatistics (int counts[7]) throw (std::exception) {
 		      "SELECT -1"
 #endif
 		      );
-   Database::execute (query);
-   while (Database::hasData ()) {
-      *counts++ = Database::getResultColumnAsInt (0);
-      Database::getNextResultRow ();
+   db ().execute (query);
+   while (db ().hasData ()) {
+      *counts++ = db ().getResultColumnAsInt (0);
+      db ().getNextResultRow ();
    }
 }

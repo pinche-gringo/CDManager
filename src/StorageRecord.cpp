@@ -44,27 +44,27 @@
 //-----------------------------------------------------------------------------
 unsigned int StorageRecord::loadRecords (std::map<unsigned int, std::vector<HRecord> >& aRecords,
 					 YGP::StatusObject& stat) throw (std::exception) {
-   Database::execute ("SELECT id, name, interpret, year, genre FROM "
+   db ().execute ("SELECT id, name, interpret, year, genre FROM "
 		      "Records ORDER BY interpret, year");
-   TRACE8 ("StorageRecord::loadRecords () - Records: " << Database::resultSize ());
+   TRACE8 ("StorageRecord::loadRecords () - Records: " << db ().resultSize ());
 
-   if (Database::resultSize ()) {
+   if (db ().resultSize ()) {
       HRecord newRec;
-      while (Database::hasData ()) {
+      while (db ().hasData ()) {
 	 // Fill and store record entry from DB-values
 	 TRACE8 ("StorageRecords::loadRecords (...) - Adding record "
-		 << Database::getResultColumnAsUInt (0) << '/'
-		 << Database::getResultColumnAsString (1));
+		 << db ().getResultColumnAsUInt (0) << '/'
+		 << db ().getResultColumnAsString (1));
 	 newRec.reset (new Record);
 
 	 try {
-	    newRec->setId (Database::getResultColumnAsUInt (0));
-	    newRec->setName (Database::getResultColumnAsString (1));
-	    if (Database::getResultColumnAsUInt (3))
-	       newRec->setYear (Database::getResultColumnAsUInt (3));
-	    newRec->setGenre (Database::getResultColumnAsUInt (4));
+	    newRec->setId (db ().getResultColumnAsUInt (0));
+	    newRec->setName (db ().getResultColumnAsString (1));
+	    if (db ().getResultColumnAsUInt (3))
+	       newRec->setYear (db ().getResultColumnAsUInt (3));
+	    newRec->setGenre (db ().getResultColumnAsUInt (4));
 
-	    aRecords[Database::getResultColumnAsUInt (2)].push_back (newRec);
+	    aRecords[db ().getResultColumnAsUInt (2)].push_back (newRec);
 	 }
 	 catch (std::exception& e) {
 	    Glib::ustring msg (_("Warning loading record `%1': %2"));
@@ -73,12 +73,12 @@ unsigned int StorageRecord::loadRecords (std::map<unsigned int, std::vector<HRec
 	    stat.setMessage (YGP::StatusObject::WARNING, msg);
 	 }
 
-	 Database::getNextResultRow ();
+	 db ().getNextResultRow ();
       } // end-while has records
    } // endif has records
 
    TRACE9 ("StorageRecord::loadRecords () - Records: " << aRecords.size ());
-   return Database::resultSize ();
+   return db ().resultSize ();
 }
 
 //-----------------------------------------------------------------------------
@@ -92,23 +92,23 @@ void StorageRecord::loadSongs (unsigned int idRecord, std::vector<HSong>& songs)
 
    std::stringstream query;
    query << "SELECT id, name, duration, genre, track FROM Songs WHERE idRecord=" << idRecord;
-   Database::execute (query.str ().c_str ());
+   db ().execute (query.str ());
 
    HSong song;
-   while (Database::hasData ()) {
+   while (db ().hasData ()) {
       song.reset (new Song);
-      song->setId (Database::getResultColumnAsUInt (0));
-      song->setName (Database::getResultColumnAsString (1));
-      std::string time (Database::getResultColumnAsString (2));
+      song->setId (db ().getResultColumnAsUInt (0));
+      song->setName (db ().getResultColumnAsString (1));
+      std::string time (db ().getResultColumnAsString (2));
       if (time != "00:00:00")
 	 song->setDuration (time);
-      song->setGenre (Database::getResultColumnAsUInt (3));
-      unsigned int track (Database::getResultColumnAsUInt (4));
+      song->setGenre (db ().getResultColumnAsUInt (3));
+      unsigned int track (db ().getResultColumnAsUInt (4));
       if (track)
 	 song->setTrack (track);
 
       songs.push_back (song);
-      Database::getNextResultRow ();
+      db ().getNextResultRow ();
    } // end-while
 }
 
@@ -121,18 +121,21 @@ void StorageRecord::loadSongs (unsigned int idRecord, std::vector<HSong>& songs)
 void StorageRecord::saveRecord (const HRecord record, unsigned int idInterpret) throw (std::exception) {
    Check3 (idInterpret);
 
-   std::stringstream query;
-   query << (record->getId () ? "UPDATE Records" : "INSERT INTO Records")
-	 << " SET name=\"" << Database::escapeDBValue (record->getName ())
-	 << "\", interpret=" << idInterpret
-	 << ", genre=" << record->getGenre ()
-	 << ", year=" << (record->getYear ().isDefined () ? (unsigned int)record->getYear () : 0);
-   if (record->getId ())
-      query << " WHERE id=" << record->getId ();
-   Database::execute (query.str ().c_str ());
+   Database::Values values;
+   values ("name", db ().quote (record->getName ()))
+      ("interpret", idInterpret)
+      ("genre", record->getGenre ())
+      ("year", record->getYear ().isDefined () ? (unsigned int)record->getYear () : 0);
 
-   if (!record->getId ())
-      record->setId (Database::getIDOfInsert ());
+   if (record->getId ()) {
+      std::stringstream where;
+      where << "id=" << record->getId ();
+      db ().update ("Records", values, where.str ());
+   }
+   else {
+      db ().insert ("Records", values);
+      record->setId (db ().getIDOfInsert ());
+   }
 }
 
 //-----------------------------------------------------------------------------
@@ -144,19 +147,22 @@ void StorageRecord::saveRecord (const HRecord record, unsigned int idInterpret) 
 void StorageRecord::saveSong (const HSong song, unsigned int idRecord) throw (std::exception) {
    Check3 (idRecord);
 
-   std::stringstream query;
-   query << (song->getId () ? "UPDATE Songs" : "INSERT INTO Songs")
-	 << " SET name=\"" << Database::escapeDBValue (song->getName ())
-	 << "\", idRecord=" << idRecord
-	 << ", duration=\"" << song->getDuration () << "\", genre="
-	 << song->getGenre ()
-	 << ", track=" << (song->getTrack ().isDefined () ? song->getTrack () : YGP::ANumeric (0));
-   if (song->getId ())
-      query << " WHERE id=" << song->getId ();
-   Database::execute (query.str ().c_str ());
+   Database::Values values;
+   values ("name", db ().quote (song->getName ()))
+      ("idRecord", idRecord)
+      ("duration", db ().quote (song->getDuration ().toUnformattedString ()))
+      ("genre", song->getGenre ())
+      ("track", song->getTrack ().isDefined () ? song->getTrack () : YGP::ANumeric (0));
 
-   if (!song->getId ())
-      song->setId (Database::getIDOfInsert ());
+   if (song->getId ()) {
+      std::stringstream where;
+      where << "id=" << song->getId ();
+      db ().update ("Songs", values, where.str ());
+   }
+   else {
+      db ().insert ("Songs", values);
+      song->setId (db ().getIDOfInsert ());
+   }
 }
 
 //-----------------------------------------------------------------------------
@@ -167,7 +173,7 @@ void StorageRecord::saveSong (const HSong song, unsigned int idRecord) throw (st
 void StorageRecord::deleteSong (unsigned int idSong) throw (std::exception) {
    std::stringstream query;
    query << "DELETE FROM Songs WHERE id=" << idSong;
-   Database::execute (query.str ().c_str ());
+   db ().execute (query.str ());
 }
 
 //-----------------------------------------------------------------------------
@@ -179,7 +185,7 @@ void StorageRecord::deleteSong (unsigned int idSong) throw (std::exception) {
 void StorageRecord::deleteRecord (unsigned int idRecord) throw (std::exception) {
    std::stringstream query;
    query << "DELETE FROM Records WHERE id=" << idRecord;
-   Database::execute (query.str ().c_str ());
+   db ().execute (query.str ());
 }
 
 //-----------------------------------------------------------------------------
@@ -191,5 +197,5 @@ void StorageRecord::deleteRecord (unsigned int idRecord) throw (std::exception) 
 void StorageRecord::deleteInterpret (unsigned int idInterpret) throw (std::exception) {
    std::stringstream query;
    query << "DELETE FROM Interprets WHERE id=" << idInterpret;
-   Database::execute (query.str ().c_str ());
+   db ().execute (query.str ());
 }

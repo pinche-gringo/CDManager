@@ -19,10 +19,12 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 #include <stdexcept>
 
 #include <YGP/StatusObj.h>
 
+#include "DB.h"
 #include "Actor.h"
 
 
@@ -63,6 +65,9 @@ class Storage {
 
    static void getStatistics (int counts[7]) throw (std::exception);
 
+ protected:
+   static Database& db ();
+
  private:
    Storage ();
    Storage (const Storage& other);
@@ -71,6 +76,9 @@ class Storage {
    const Storage& operator= (const Storage& other);
 
    static void fillCelebrities (std::vector<HCelebrity>& target, YGP::StatusObject& stat);
+   static Database::Values celebrityValues (const HCelebrity celeb);
+
+   static std::unique_ptr<Database> database;
 };
 
 #endif

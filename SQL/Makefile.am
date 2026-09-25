@@ -1,7 +1,18 @@
 ## Process this file with automake to produce Makefile.in
 
-EXTRA_DIST=createDB.sql populateDB.sql
+EXTRA_DIST=createDB.sql createDB-pg.sql populateDB.sql
 
+if WITH_POSTGRESQL
+createDB:
+	@echo Creating database ...
+	createdb -E UTF8 CDMedia
+	psql -d CDMedia -f $(srcdir)/createDB-pg.sql
+
+# populateDB.sql is Latin-1 encoded and starts with MySQL's USE-statement
+populateDB:
+	@echo Populating database ...
+	sed '/^USE /d' $(srcdir)/populateDB.sql | PGCLIENTENCODING=LATIN1 psql -U cdmgr -d CDMedia
+else
 createDB:
 	@echo Creating database ...
 	mysql -u root -p -f < createDB.sql
@@ -9,6 +20,7 @@ createDB:
 populateDB:
 	@echo Populating database ...
 	mysql -u cdmgr -p < populateDB.sql
+endif
 
 
 updateDB_Subtitles:

@@ -50,7 +50,7 @@ PKG_CHECK_MODULES(DEPS, glibmm-2.68 >= 2.68.0 YGP >= 0.9.42)
 PKG_CHECK_MODULES(XGP, gtkmm-4.0 >= 3.0.0 gthread-2.0 > 2.2.0 XGP >= 0.9.50)
 
 #
-# Database backend: MySQL (with optional MySQL++) or PostgreSQL (libpq)
+# Database backend: MySQL (libmysqlclient) or PostgreSQL (libpq)
 #
 AC_ARG_WITH(database,
     AC_HELP_STRING([--with-database=DB],
@@ -87,24 +87,6 @@ AC_ARG_WITH(mysql-include,
     AC_HELP_STRING([--with-mysql-include=DIR],
                    [directory of MySQL header installation]),
     [MYSQL_inc_check=$withval/mysql])
-
-AC_ARG_WITH(mysqlpp,
-    AC_HELP_STRING([--with-mysqlpp=DIR],
-	           [search for MySQL++ in DIR/include and DIR/lib]),
-    [MYSQLPP_lib_check="$withval/mysql++ $withval/lib"
-     MYSQLPP_inc_check="$withval/mysql++"],
-    [MYSQLPP_lib_check="/usr/local/mysql++/lib/mysql++ /usr/local/lib/mysql++ /opt/mysql++/lib/mysql++ /usr/lib/mysql++ /usr/local/mysql++/lib /usr/local/lib /opt/mysql++/lib /usr/lib /usr/lib64"
-     MYSQLPP_inc_check="/usr/local/mysql/include/mysql++ /usr/local/include/mysql++ /opt/mysql/include/mysql++ /usr/include/mysql++"])
-
-AC_ARG_WITH(mysqlpp-lib,
-    AC_HELP_STRING([--with-mysqlpp-lib=DIR],
-	           [directory of MySQL++ library installation]),
-    [MYSQLPP_lib_check=$withval])
-
-AC_ARG_WITH(mysqlpp-include,
-    AC_HELP_STRING([--with-mysqlpp-include=DIR],
-                   [directory of MySQL++ header installation]),
-    [MYSQLPP_inc_check=$withval])
 
 AC_ARG_WITH(postgresql,
     AC_HELP_STRING([--with-postgresql=DIR],
@@ -149,45 +131,6 @@ if test "$DB_BACKEND" = mysql -o "$DB_BACKEND" = auto; then
         AC_DEFINE_UNQUOTED(HAVE_LIBMYSQL, "1", [Define to 1, if libmysql is installed])
         DB_BACKEND=mysql
         DB_FOUND=yes
-
-        #
-        # Location of MySQL++ installation (optional)
-        #
-        AC_MSG_CHECKING([for MySQL++ library directory])
-        MYSQLPP_libdir=
-        for m in $MYSQLPP_lib_check; do
-            if test -d "$m" && test -f "$m/libmysqlpp.so"
-            then
-                MYSQLPP_libdir=$m
-                break
-            fi
-        done
-        AC_MSG_RESULT([${MYSQLPP_libdir:-no}])
-
-        AC_MSG_CHECKING([for MySQL++ include directory])
-        MYSQLPP_incdir=
-        for m in $MYSQLPP_inc_check; do
-            if test -d "$m" && test -f "$m/mysql++.h"
-            then
-                MYSQLPP_incdir=$m
-                break
-            fi
-        done
-        AC_MSG_RESULT([${MYSQLPP_incdir:-no}])
-
-        if test -n "$MYSQLPP_libdir" -a -n "$MYSQLPP_incdir"; then
-            case "$MYSQLPP_libdir" in
-              /usr/lib | /usr/lib64 ) ;;
-              /* ) DBLIBS="$DBLIBS -L${MYSQLPP_libdir}" ;;
-              * )  AC_MSG_ERROR([The MySQL++ library directory ($MYSQLPP_libdir) must be an absolute path.]) ;;
-            esac
-            case "$MYSQLPP_incdir" in
-              /* ) INCLUDES="$INCLUDES -I$MYSQLPP_incdir" ;;
-              * ) AC_MSG_ERROR([The MySQL++ include directory ($MYSQLPP_incdir) must be an absolute path.]) ;;
-            esac
-            DBLIBS="$DBLIBS -lmysqlpp"
-            AC_DEFINE_UNQUOTED(HAVE_LIBMYSQLPP, "1", [Define to 1, if libmysqlpp is installed])
-        fi
     elif test "$DB_BACKEND" = mysql; then
         AC_MSG_ERROR([MySQL requested, but its library/headers weren't found in '$MYSQL_lib_check' / '$MYSQL_inc_check'])
     fi
@@ -241,7 +184,7 @@ fi
 
 if test "$DB_FOUND" = no; then
     AC_MSG_ERROR([No supported database found! Install the development files of
-either MySQL (libmysqlclient, optionally MySQL++) or PostgreSQL (libpq) or
+either MySQL (libmysqlclient) or PostgreSQL (libpq) or
 specify their location with --with-mysql=DIR or --with-postgresql=DIR])
 fi
 

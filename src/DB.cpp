@@ -5,7 +5,7 @@
 //BUGS        :
 //AUTHOR      : Markus Schwab
 //CREATED     : 16.10.2004
-//COPYRIGHT   : Copyright (C) 2004 - 2007, 2010, 2011
+//COPYRIGHT   : Copyright (C) 2004 - 2007, 2010, 2011, 2026
 
 // This file is part of CDManager
 //
@@ -24,240 +24,137 @@
 
 #include <cdmgr-cfg.h>
 
+#include <cstdlib>
+
 #include <YGP/Check.h>
 #include <YGP/Trace.h>
 
 #include "DB.h"
 
-
-#if defined HAVE_LIBMYSQLPP
-#  include <cstring>   // Only needed by mysql++.h (when compiled with GCC 4.3)
-#  include <mysql++.h>
-
-static mysqlpp::Connection       con (mysqlpp::use_exceptions);
-
-#if MYSQLPP_HEADER_VERSION < 0x030000
-   static mysqlpp::Result           result;
-   static mysqlpp::Result::iterator i;
-#else
-   static mysqlpp::StoreQueryResult result;
-   static mysqlpp::StoreQueryResult::iterator i;
-
-   static long lastIDInsert = 0;
-#endif
-
-
-void Database::connect (const char* db, const char* user, const char* pwd) throw (std::exception&) {
-   TRACE9 ("Database::connect (const char* (3x) - " << db << " from " << user);
-   con.connect (db, NULL, user, pwd);
-}
-
-void Database::close () throw (std::exception&) {
-   TRACE9 ("Database::close ()");
-#if MYSQLPP_HEADER_VERSION < 0x030000
-   con.close ();
-#else
-   con.disconnect ();
-#endif
-}
-
-bool Database::connected () {
-   return con.connected ();
-}
-
-void Database::execute (const char* query) throw (std::exception&) {
-   TRACE1 ("Database::execute (const char*) - " << query);
-   mysqlpp::Query q (con.query ());
-   result = q.store (query);
-   i = result.begin ();
-
-#if MYSQLPP_HEADER_VERSION >= 0x030000
-   lastIDInsert = q.insert_id ();
-#endif
-}
-
-unsigned int Database::resultSize () {
-   TRACE9 ("Database::resultSize () - " << result.size ());
-   return result.size ();
-}
-
-bool Database::hasData () {
-   TRACE9 ("Database::hasData () - " << (i != result.end () ? "Yes" : "No"));
-   return i != result.end ();
-}
-
-void Database::getNextResultRow () {
-   TRACE9 ("Database::getNextResultRow ()");
-   ++i;
-}
-
-std::string Database::getResultColumnAsBlob (unsigned int column) {
-   TRACE9 ("Database::getResultColumnAsBlob (unsigned int) - " << column);
-   mysqlpp::String ret ((*i)[column]);
-   std::string result;
-   ret.to_string (result);
-   return result;
-}
-
-std::string Database::getResultColumnAsString (unsigned int column) {
-   TRACE9 ("Database::getResultColumnAsString (unsigned int) - " << column);
-   std::string ret ((*i)[column]);
-   return ret;
-}
-
-unsigned int Database::getResultColumnAsUInt (unsigned int column) {
-   TRACE9 ("Database::getResultColumnAsUInt (unsigned int) - " << column);
-   unsigned int ret ((*i)[column]);
-   return ret;
-}
-
-int Database::getResultColumnAsInt (unsigned int column) {
-   TRACE9 ("Database::getResultColumnAsInt (unsigned int) - " << column);
-   int ret ((*i)[column]);
-   return ret;
-}
-
-long Database::getIDOfInsert () {
-#if MYSQLPP_HEADER_VERSION < 0x030000
-   return con.insert_id ();
-#else
-   return lastIDInsert;
-#endif
-}
-
-//-----------------------------------------------------------------------------
-/// Escapes the quotes in values for the database
-/// \param value: Value to escape
-/// \returns Glib::ustring: Escaped text
-//-----------------------------------------------------------------------------
-std::string Database::escapeDBValue (const std::string& value) {
-   mysqlpp::Query q (con.query ());
-   std::string conv;
-   char* buffer = new char [(value.length () << 1) + 1];
-   conv = std::string (buffer, q.escape_string (buffer, value.c_str (), value.length ()));
-   delete [] buffer;
-   return conv;
-}
-
-
+#if defined HAVE_LIBPQ
+#  include "DBPostgres.h"
 #elif defined HAVE_LIBMYSQL
-#  include <cstdlib>
-
-#  include <mysql.h>
-
-
-static MYSQL* mysql (NULL);
-static MYSQL_RES* result (NULL);
-static MYSQL_ROW row (NULL);
-static unsigned int sizeResult (0);
-
-
-void Database::connect (const char* db, const char* user, const char* pwd) throw (std::exception&) {
-   TRACE9 ("Database::connect (const char* (3x) - " << db << " from " << user);
-   Check2 (!mysql);
-   mysql = mysql_init (NULL);
-   if (!mysql_real_connect (mysql, NULL, user, pwd, db, 0, NULL, 0)) {
-      std::runtime_error error (mysql_error (mysql));
-      close ();
-      throw error;
-   }
-}
-
-void Database::close () throw (std::exception&) {
-   TRACE9 ("Database::close ()");
-   mysql_close (mysql);
-   mysql = NULL;
-}
-
-bool Database::connected () {
-   return mysql != NULL;
-}
-
-void Database::execute (const char* query) throw (std::exception&) {
-   TRACE1 ("Database::execute (const char*) - " << query);
-   if (mysql_query (mysql, query))
-      throw std::runtime_error (mysql_error (mysql));
-
-   if (!result)
-      mysql_free_result (result);
-
-   if ((result = mysql_store_result (mysql)) != NULL) {
-      row = mysql_fetch_row (result);
-      sizeResult = mysql_num_rows (result);
-   }
-   else {
-      if (mysql_errno (mysql))
-	 throw std::runtime_error (mysql_error (mysql));
-      sizeResult = 0;
-   }
-}
-
-unsigned int Database::resultSize () {
-   TRACE9 ("Database::resultSize () - " << sizeResult);
-   return sizeResult;
-}
-
-bool Database::hasData () {
-   TRACE9 ("Database::hasData () - " << (row ? "Yes" : "No"));
-   return row;
-}
-
-void Database::getNextResultRow () {
-   TRACE9 ("Database::getNextResultRow ()");
-   row = mysql_fetch_row (result);
-   if (!row) {
-      mysql_free_result (result);
-      result = NULL;
-   }
-}
-
-std::string Database::getResultColumnAsBlob (unsigned int column) {
-   TRACE9 ("Database::getResultColumnAsBlob (unsigned int) - " << column);
-   Check2 (result); Check2 (row);
-   Check1 (column < mysql_num_fields (result));
-   unsigned long* lengths (mysql_fetch_lengths(result));
-   return std::string(row[column], lengths[column]);
-}
-
-std::string Database::getResultColumnAsString (unsigned int column) {
-   TRACE9 ("Database::getResultColumnAsString (unsigned int) - " << column);
-   Check2 (result); Check2 (row);
-   Check1 (column < mysql_num_fields (result));
-   return row[column];
-}
-
-unsigned int Database::getResultColumnAsUInt (unsigned int column) {
-   TRACE9 ("Database::getResultColumnAsUInt (unsigned int) - " << column);
-   TRACE9 ("Database::getResultColumnAsUInt (unsigned int) - " << row[column]);
-   Check2 (result); Check2 (row);
-   Check1 (column < mysql_num_fields (result));
-   return strtoul (row[column], NULL, 10);
-}
-
-int Database::getResultColumnAsInt (unsigned int column) {
-   TRACE9 ("Database::getResultColumnAsInt (unsigned int) - " << column);
-   Check2 (result); Check2 (row);
-   Check1 (column < mysql_num_fields (result));
-   return strtol (row[column], NULL, 10);
-}
-
-long Database::getIDOfInsert () {
-   return mysql_insert_id (mysql);
-}
-
-//-----------------------------------------------------------------------------
-/// Escapes the quotes in values for the database
-/// \param value: Value to escape
-/// \returns Glib::ustring: Escaped text
-//-----------------------------------------------------------------------------
-std::string Database::escapeDBValue (const std::string& value) {
-   std::string conv;
-   char* buffer = new char [(value.length () << 1) + 1];
-   conv = std::string (buffer, mysql_real_escape_string (mysql, buffer, value.c_str (), value.length ()));
-   delete [] buffer;
-   return conv;
-}
-
+#  include "DBMySQL.h"
 #else
 #  error No supported database detected!
 #endif
+
+
+//-----------------------------------------------------------------------------
+/// Creates the database-object for the database configured at compile-time
+/// \returns Database* Newly created object; free it with delete
+//-----------------------------------------------------------------------------
+Database* Database::create () {
+#if defined HAVE_LIBPQ
+   return new DBPostgres;
+#else
+   return new DBMySQL;
+#endif
+}
+
+//-----------------------------------------------------------------------------
+/// Defaultconstructor
+//-----------------------------------------------------------------------------
+Database::Database () : current (0) {
+}
+
+//-----------------------------------------------------------------------------
+/// Destructor
+//-----------------------------------------------------------------------------
+Database::~Database () {
+}
+
+//-----------------------------------------------------------------------------
+/// Executes the passed query; its result can be accessed afterwards
+/// \param query Query to execute
+/// \throw std::exception In case of an error
+//-----------------------------------------------------------------------------
+void Database::execute (const char* query) {
+   TRACE1 ("Database::execute (const char*) - " << query);
+   Check1 (query);
+   Check2 (connected ());
+
+   rows.clear ();
+   current = 0;
+   this->query (query, rows);
+}
+
+//-----------------------------------------------------------------------------
+/// Inserts a new row into a table
+/// \param table Table to insert into
+/// \param values Columns and values of the new row
+/// \throw std::exception In case of an error
+//-----------------------------------------------------------------------------
+void Database::insert (const char* table, const Values& values) {
+   Check1 (table); Check1 (!values.empty ());
+
+   std::string columns, data;
+   for (Values::const_iterator i (values.begin ()); i != values.end (); ++i) {
+      if (i != values.begin ()) {
+	 columns += ", ";
+	 data += ", ";
+      }
+      columns += i->first;
+      data += i->second;
+   }
+   execute (std::string ("INSERT INTO ") + table + " (" + columns + ") VALUES (" + data + ')');
+}
+
+//-----------------------------------------------------------------------------
+/// Updates the rows of a table
+/// \param table Table to update
+/// \param values Columns and their new values
+/// \param where Condition selecting the rows to update
+/// \throw std::exception In case of an error
+//-----------------------------------------------------------------------------
+void Database::update (const char* table, const Values& values, const std::string& where) {
+   Check1 (table); Check1 (!values.empty ()); Check1 (where.size ());
+
+   std::string cmd (std::string ("UPDATE ") + table + " SET ");
+   for (Values::const_iterator i (values.begin ()); i != values.end (); ++i) {
+      if (i != values.begin ())
+	 cmd += ", ";
+      cmd += i->first + '=' + i->second;
+   }
+   execute (cmd + " WHERE " + where);
+}
+
+//-----------------------------------------------------------------------------
+/// Returns the passed text as quoted SQL string
+/// \param value Text to quote
+/// \returns std::string Escaped text surrounded by single quotes
+//-----------------------------------------------------------------------------
+std::string Database::quote (const std::string& value) const {
+   return '\'' + escapeDBValue (value) + '\'';
+}
+
+//-----------------------------------------------------------------------------
+/// Returns the passed column of the actual row of the result
+/// \param column Index of column
+/// \returns const std::string& Value of column
+//-----------------------------------------------------------------------------
+const std::string& Database::column (unsigned int column) const {
+   Check2 (hasData ());
+   Check1 (column < rows[current].size ());
+   return rows[current][column];
+}
+
+const std::string& Database::getResultColumnAsBlob (unsigned int column) const {
+   TRACE9 ("Database::getResultColumnAsBlob (unsigned int) - " << column);
+   return this->column (column);
+}
+
+const std::string& Database::getResultColumnAsString (unsigned int column) const {
+   TRACE9 ("Database::getResultColumnAsString (unsigned int) - " << column);
+   return this->column (column);
+}
+
+unsigned int Database::getResultColumnAsUInt (unsigned int column) const {
+   TRACE9 ("Database::getResultColumnAsUInt (unsigned int) - " << column);
+   return strtoul (this->column (column).c_str (), NULL, 10);
+}
+
+int Database::getResultColumnAsInt (unsigned int column) const {
+   TRACE9 ("Database::getResultColumnAsInt (unsigned int) - " << column);
+   return strtol (this->column (column).c_str (), NULL, 10);
+}

@@ -11,10 +11,6 @@ The following packages are needed
   - My YGP library; also availabe as a Sourceforge project
     (http://libymp.sourceforge.net/)
 
-The following packages are optional, but recommended
-
-  - The libmysql++ library (only for MySQL). Also available at http://www.mysql.com/
-
 
 How to build (if extracted from an (tar-)archive)
 -------------------------------------------------
@@ -62,7 +58,6 @@ Common options for configure
   --disable-records
   --with-database=<db>		# mysql, postgresql or auto (default)
   --with-mysql[-{lib,include}]	# Path to mysql header/libs
-  --with-mysqlpp[-{lib,include}]
   --with-postgresql=<path>	# Path to PostgreSQL (libpq) installation
   --enable-checks[=level]	# Adds asserts and Checks
   --enable-debug[=level]	# Sets tracelevel & generation of debuginfo

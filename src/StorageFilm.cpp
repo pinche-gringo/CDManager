@@ -46,19 +46,17 @@
 void StorageFilm::loadNames (const std::vector<HDirector>& directors,
 			      const YGP::Relation1_N<HDirector, HFilm>& relFilms,
 			      const std::string& lang) throw (std::exception) {
-   std::string cmd ("SELECT id, name from FilmNames WHERE language='"
-		    + lang + '\'');
-   Database::execute (cmd.c_str ());
+   db ().execute ("SELECT id, name from FilmNames WHERE language=" + db ().quote (lang));
 
-   while (Database::hasData ()) {
-      TRACE9 ("StorageFilm::loadNames (const std::string&) - " << Database::getResultColumnAsUInt (0) << '/'
-	      << Database::getResultColumnAsString (1));
+   while (db ().hasData ()) {
+      TRACE9 ("StorageFilm::loadNames (const std::string&) - " << db ().getResultColumnAsUInt (0) << '/'
+	      << db ().getResultColumnAsString (1));
 
       HFilm film (PFilms::findFilm (directors, relFilms,
-					Database::getResultColumnAsUInt (0)));
+					db ().getResultColumnAsUInt (0)));
       Check3 (film);
-      film->setName (Database::getResultColumnAsString (1), lang);
-      Database::getNextResultRow ();
+      film->setName (db ().getResultColumnAsString (1), lang);
+      db ().getNextResultRow ();
    }
 }
 
@@ -69,32 +67,32 @@ void StorageFilm::loadNames (const std::vector<HDirector>& directors,
 //-----------------------------------------------------------------------------
 unsigned int StorageFilm::loadFilms (std::map<unsigned int, std::vector<HFilm> >& aFilms,
 				     YGP::StatusObject& stat) throw (std::exception) {
-   Database::execute ("SELECT id, name, director, year, genre, type, languages"
+   db ().execute ("SELECT id, name, director, year, genre, type, languages"
 		      ", subtitles, summary, image FROM Films ORDER BY director, year, name");
-   if (Database::resultSize ()) {
+   if (db ().resultSize ()) {
       HFilm film;
       unsigned int tmp;
-      while (Database::hasData ()) {
+      while (db ().hasData ()) {
 	 // Fill and store film entry from DB-values
 	 TRACE8 ("StorageFilm::loadData () - Adding film "
-		 << Database::getResultColumnAsUInt (0) << '/'
-		 << Database::getResultColumnAsString (1));
+		 << db ().getResultColumnAsUInt (0) << '/'
+		 << db ().getResultColumnAsString (1));
 
 	 try {
 	    film.reset (new Film);
-	    film->setName (Database::getResultColumnAsString (1), "");
-	    film->setId (Database::getResultColumnAsUInt (0));
+	    film->setName (db ().getResultColumnAsString (1), "");
+	    film->setId (db ().getResultColumnAsUInt (0));
 
-	    tmp = Database::getResultColumnAsUInt (3);
+	    tmp = db ().getResultColumnAsUInt (3);
 	    if (tmp)
 	       film->setYear (tmp);
-	    film->setGenre (Database::getResultColumnAsUInt (4));
-	    film->setType (Database::getResultColumnAsUInt (5));
-	    film->setLanguage (Database::getResultColumnAsString (6));
-	    film->setTitles (Database::getResultColumnAsString (7));
-	    film->setDescription (Database::getResultColumnAsString (8));
-	    film->setImage (Database::getResultColumnAsBlob (9));
-	    aFilms[Database::getResultColumnAsUInt (2)].push_back (film);
+	    film->setGenre (db ().getResultColumnAsUInt (4));
+	    film->setType (db ().getResultColumnAsUInt (5));
+	    film->setLanguage (db ().getResultColumnAsString (6));
+	    film->setTitles (db ().getResultColumnAsString (7));
+	    film->setDescription (db ().getResultColumnAsString (8));
+	    film->setImage (db ().getResultColumnAsBlob (9));
+	    aFilms[db ().getResultColumnAsUInt (2)].push_back (film);
 	 }
 	 catch (std::exception& e) {
 	    Glib::ustring msg (_("Warning loading film `%1': %2"));
@@ -103,10 +101,10 @@ unsigned int StorageFilm::loadFilms (std::map<unsigned int, std::vector<HFilm> >
 	    stat.setMessage (YGP::StatusObject::WARNING, msg);
 	 }
 
-	 Database::getNextResultRow ();
+	 db ().getNextResultRow ();
       } // end-while has films
    } // endif films found
-   return Database::resultSize ();
+   return db ().resultSize ();
 }
 
 //-----------------------------------------------------------------------------
@@ -115,23 +113,26 @@ unsigned int StorageFilm::loadFilms (std::map<unsigned int, std::vector<HFilm> >
 /// \param idDirector: ID of director
 //-----------------------------------------------------------------------------
 void StorageFilm::saveFilm (const HFilm film, unsigned int idDirector) throw (std::exception) {
-   std::stringstream query;
-   query << (film->getId () ? "UPDATE" : "INSERT INTO")
-	 << " Films SET name=\"" << Database::escapeDBValue (film->getName (""))
-	 << "\", summary=\"" << Database::escapeDBValue (film->getDescription ())
-	 << "\", image=\"" << Database::escapeDBValue (film->getImage ())
-	 << "\", genre=" << film->getGenre () << ", languages=\""
-	 << film->getLanguage () << "\", subtitles=\""
-	 << film->getTitles () << "\", type=" << film->getType ()
-	 << ", director=" << idDirector << ", year="
-	 << (film->getYear ().isDefined () ? (int)film->getYear () : 0);
-   if (film->getId ())
-      query << " WHERE id=" << film->getId ();
-   TRACE1 ("saveFilm " << query.str ());
+   Database::Values values;
+   values ("name", db ().quote (film->getName ("")))
+      ("summary", db ().quote (film->getDescription ()))
+      ("image", db ().quoteBlob (film->getImage ()))
+      ("genre", film->getGenre ())
+      ("languages", db ().quote (film->getLanguage ()))
+      ("subtitles", db ().quote (film->getTitles ()))
+      ("type", film->getType ())
+      ("director", idDirector)
+      ("year", film->getYear ().isDefined () ? (int)film->getYear () : 0);
 
-   Database::execute (query.str ().c_str ());
-   if (!film->getId ())
-      film->setId (Database::getIDOfInsert ());
+   if (film->getId ()) {
+      std::stringstream where;
+      where << "id=" << film->getId ();
+      db ().update ("Films", values, where.str ());
+   }
+   else {
+      db ().insert ("Films", values);
+      film->setId (db ().getIDOfInsert ());
+   }
 
    const std::map<std::string, Glib::ustring>& names (film->getNames ()); Check3 (names.begin () != names.end ());
    for (std::map<std::string, Glib::ustring>::const_iterator i (names.begin ());
@@ -146,7 +147,7 @@ void StorageFilm::saveFilm (const HFilm film, unsigned int idDirector) throw (st
 void StorageFilm::deleteFilmNames (unsigned int idFilm) throw (std::exception) {
    std::stringstream del;
    del << "DELETE FROM FilmNames WHERE id=" << idFilm;
-   Database::execute (del.str ().c_str ());
+   db ().execute (del.str ());
 }
 
 //-----------------------------------------------------------------------------
@@ -155,25 +156,25 @@ void StorageFilm::deleteFilmNames (unsigned int idFilm) throw (std::exception) {
 /// \param lang: Identification of the language
 //-----------------------------------------------------------------------------
 void StorageFilm::saveFilmName (const HFilm film, const std::string& lang) throw (std::exception) {
-   std::stringstream cmd;
+   std::stringstream where;
+   where << "id=" << film->getId () << " AND language=" << db ().quote (lang);
+
    if (film->getName (lang).size ()) {
-      cmd << "INSERT INTO FilmNames SET id=" << film->getId ()
-	  << ", name=\"" << Database::escapeDBValue (film->getName (lang))
-	  << "\", language='" << lang << '\'';
-      try {
-	 Database::execute (cmd.str ().c_str ());
-      }
-      catch (...) {
-	 std::stringstream upd;
-	 upd << "UPDATE FilmNames SET name=\"" << Database::escapeDBValue (film->getName (lang)) << '"'
-	     << " WHERE id=" << film->getId () << " AND language='" << lang << '\'';
-	 Database::execute (upd.str ().c_str ());
+      // Check for an existing entry (instead of catching the failing INSERT),
+      // as a failing statement aborts the whole transaction in PostgreSQL
+      db ().execute ("SELECT id FROM FilmNames WHERE " + where.str ());
+
+      Database::Values values;
+      values ("name", db ().quote (film->getName (lang)));
+      if (db ().hasData ())
+	 db ().update ("FilmNames", values, where.str ());
+      else {
+	 values ("id", film->getId ()) ("language", db ().quote (lang));
+	 db ().insert ("FilmNames", values);
       }
    }
-   else {
-      cmd << "DELETE FROM FilmNames" << " WHERE id=" << film->getId () << " AND language='" << lang << '\'';
-      Database::execute (cmd.str ().c_str ());
-   }
+   else
+      db ().execute ("DELETE FROM FilmNames WHERE " + where.str ());
 }
 
 //-----------------------------------------------------------------------------
@@ -183,7 +184,7 @@ void StorageFilm::saveFilmName (const HFilm film, const std::string& lang) throw
 void StorageFilm::deleteDirector (unsigned int idDirector) throw (std::exception) {
    std::stringstream query;
    query << "DELETE FROM Directors WHERE id=" << idDirector;
-   Database::execute (query.str ().c_str ());
+   db ().execute (query.str ());
 }
 
 //-----------------------------------------------------------------------------
@@ -193,7 +194,7 @@ void StorageFilm::deleteDirector (unsigned int idDirector) throw (std::exception
 void StorageFilm::deleteFilm (unsigned int idFilm) throw (std::exception) {
    std::stringstream query;
    query << "DELETE FROM Films WHERE id=" << idFilm;
-   Database::execute (query.str ().c_str ());
+   db ().execute (query.str ());
 
    deleteFilmNames (idFilm);
 }

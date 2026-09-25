@@ -40,20 +40,20 @@ void StorageActor::StorageActor::loadActorsInFilms (std::map<unsigned int, std::
    throw (std::exception) {
    TRACE7 ("StorageActor::loadActorsInFilms (std::map<...>&)");
 
-   Database::execute ("SELECT idActor, idFilm FROM ActorsInFilms ORDER BY idActor");
-   if (Database::resultSize ()) {
+   db ().execute ("SELECT idActor, idFilm FROM ActorsInFilms ORDER BY idActor");
+   if (db ().resultSize ()) {
       std::map<unsigned int, std::vector<unsigned int> >::iterator iter (aActors.end ());
-      while (Database::hasData ()) {
+      while (db ().hasData ()) {
 	 unsigned int idLast (0);
-	 unsigned int idAct (Database::getResultColumnAsUInt (0)); Check3 (idAct);
+	 unsigned int idAct (db ().getResultColumnAsUInt (0)); Check3 (idAct);
 	 if (idAct != idLast) {
 	    idLast = idAct;
 	    iter = aActors.insert (aActors.end (), std::pair<unsigned int, std::vector<unsigned int> > (idAct, std::vector<unsigned int> ()));
 	 }
 	 Check3 (iter != aActors.end ());
-	 iter->second.push_back (Database::getResultColumnAsUInt (1));
+	 iter->second.push_back (db ().getResultColumnAsUInt (1));
 
-	 Database::getNextResultRow ();
+	 db ().getNextResultRow ();
       } // end-while actors for films available
    } // endif actors for films stored in the DB
 }
@@ -68,11 +68,11 @@ void StorageActor::deleteActor (unsigned int idActor) throw (std::exception) {
 
    std::stringstream query;
    query << "DELETE FROM Actors WHERE id=" << idActor;
-   Database::execute (query.str ().c_str ());
+   db ().execute (query.str ());
 
    std::stringstream query2;
    query2 << "DELETE FROM ActorsInFilms WHERE idActor=" << idActor;
-   Database::execute (query2.str ().c_str ());
+   db ().execute (query2.str ());
 }
 
 //-----------------------------------------------------------------------------
@@ -85,7 +85,7 @@ void StorageActor::deleteActorFilms (unsigned int idActor) throw (std::exception
 
    std::stringstream del;
    del << "DELETE FROM ActorsInFilms WHERE idActor=" << idActor;
-   Database::execute (del.str ().c_str ());
+   db ().execute (del.str ());
 }
 
 //-----------------------------------------------------------------------------
@@ -95,6 +95,6 @@ void StorageActor::deleteActorFilms (unsigned int idActor) throw (std::exception
 //-----------------------------------------------------------------------------
 void StorageActor::saveActorFilm (unsigned int idActor, unsigned int idFilm) throw (std::exception) {
    std::stringstream query;
-   query << "INSERT INTO ActorsInFilms SET idActor=" << idActor << ", idFilm=" << idFilm;
-   Database::execute (query.str ().c_str ());
+   query << "INSERT INTO ActorsInFilms (idActor, idFilm) VALUES (" << idActor << ", " << idFilm << ')';
+   db ().execute (query.str ());
 }

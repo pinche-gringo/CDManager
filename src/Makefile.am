@@ -25,6 +25,15 @@ if WITH_ACTORS
    USE_GENACTOR=$(SRC_GENACTOR)
 endif
 
+SRC_MYSQL=DBMySQL.cpp DBMySQL.h
+SRC_POSTGRES=DBPostgres.cpp DBPostgres.h
+if WITH_MYSQL
+   USE_DB=$(SRC_MYSQL)
+endif
+if WITH_POSTGRESQL
+   USE_DB=$(SRC_POSTGRES)
+endif
+
 lib_LTLIBRARIES=libCDMgr.la
 
 bin_PROGRAMS=CDManager CDWriter
@@ -40,7 +49,7 @@ libCDMgr_la_LIBADD=@DEPS_LIBS@
 CDManager_SOURCES=NBPage.cpp Storage.cpp NBPage.h Storage.h		\
 SaveCeleb.cpp SaveCeleb.h Settings.cpp Settings.h LangDlg.cpp		\
 LangDlg.h OOList.cpp OOList.h LangImg.cpp LangImg.h WordDlg.cpp		\
-WordDlg.h Language.cpp Language.h DB.cpp DB.h Statistics.cpp		\
+WordDlg.h Language.cpp Language.h DB.cpp DB.h $(USE_DB) Statistics.cpp		\
 Statistics.h $(USE_FILM) $(USE_RECORD) $(USE_ACTOR) CDManager.h	\
 CDManager.cpp CDAppl.cpp CDAppl.h IconAuthor.h IconProgram.h
 
@@ -66,4 +75,5 @@ Record.meta: Record.h
 	mgeni.pl Record.h > Record.meta
 
 EXTRA_DIST=Options.meta Celebrity.meta Film.meta Record.meta $(SRC_FILM) \
-$(SRC_GENFILM) $(SRC_RECORD) $(SRC_GENREC) $(SRC_ACTOR) $(SRC_GENACTOR)
+$(SRC_GENFILM) $(SRC_RECORD) $(SRC_GENREC) $(SRC_ACTOR) $(SRC_GENACTOR) \
+$(SRC_MYSQL) $(SRC_POSTGRES)

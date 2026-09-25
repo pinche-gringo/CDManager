@@ -45,7 +45,7 @@ Statistics.h $(USE_FILM) $(USE_RECORD) $(USE_ACTOR) CDManager.h	\
 CDManager.cpp CDAppl.cpp CDAppl.h IconAuthor.h IconProgram.h
 
 CDManager_CPPFLAGS=@INCLUDES@ -I../Common @DEPS_CFLAGS@ @XGP_CFLAGS@ -DUSE_LANGUAGEPIXMAPS -Wall
-CDManager_LDFLAGS=-lCDMgr @DEPS_LIBS@ @XGP_LIBS@ @LTLIBINTL@ @MYSQLLIBS@
+CDManager_LDFLAGS=-lCDMgr @DEPS_LIBS@ @XGP_LIBS@ @LTLIBINTL@ @DBLIBS@
 
 CDWriter_SOURCES=CDWriter.cpp CDWriter.h Writer.cpp Writer.h \
 		 Language.cpp Language.h

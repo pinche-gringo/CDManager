@@ -312,7 +312,8 @@ int CDWriter::perform (int argc, const char** argv) {
    size_t pos (0);
 #if WITH_FILMS == 1
    std::ofstream fileFilm;
-   createFile (opt.getDirOutput () + "Films.html", argv[0], fileFilm);
+   if (createFile (opt.getDirOutput () + "Films.html", argv[0], fileFilm))
+      return -5;
 
    // Writing the title for films
    std::string titleFilm (htmlData[0].target);
@@ -337,7 +338,8 @@ int CDWriter::perform (int argc, const char** argv) {
 
 #if WITH_RECORDS == 1
    std::ofstream fileRec;
-   createFile (opt.getDirOutput () + "Records.html", argv[0], fileRec);
+   if (createFile (opt.getDirOutput () + "Records.html", argv[0], fileRec))
+      return -5;
 
    // Writing the title for records
    std::string titleRec (htmlData[WITH_FILMS << 1].target);
@@ -451,7 +453,8 @@ int CDWriter::perform (int argc, const char** argv) {
    fileFilm.close ();
 
    // Write reverse file
-   createFile (opt.getDirOutput () + "Filmsdown.html", argv[0], fileFilm);
+   if (createFile (opt.getDirOutput () + "Filmsdown.html", argv[0], fileFilm))
+      return -5;
    fileFilm << titleFilm;
    writeHeader (argv[0], "[d-n-y-g-m-l]", fileFilm, false);
 
@@ -481,7 +484,8 @@ int CDWriter::perform (int argc, const char** argv) {
    fileRec.close ();
 
    // Write reverse file
-   createFile (opt.getDirOutput () + "Recordsdown.html", argv[0], fileRec);
+   if (createFile (opt.getDirOutput () + "Recordsdown.html", argv[0], fileRec))
+      return -5;
    fileRec << titleRec;
    writeHeader (argv[0], "[a-n-y-g]", fileRec, false, "Records");
 
@@ -543,7 +547,8 @@ int CDWriter::perform (int argc, const char** argv) {
    std::string strTitle;
    // This combines writing films and records
    for (unsigned int i (0); i < (sizeof (aOutputs) / sizeof (*aOutputs)); ++i) {
-      createFile (opt.getDirOutput () + aOutputs[i].file, argv[0], fileOut);
+      if (createFile (opt.getDirOutput () + aOutputs[i].file, argv[0], fileOut))
+         return -5;
       strTitle = htmlData[aOutputs[i].type << 1].target;
       pos = 0;
       while ((pos = strTitle.find ("%1", pos)) != std::string::npos)
@@ -593,7 +598,8 @@ int CDWriter::perform (int argc, const char** argv) {
       fileOut << htmlData[(aOutputs[i].type << 1) + 1 ].target;
       fileOut.close ();
 
-      createFile (opt.getDirOutput () + aOutputs[i].filedown, argv[0], fileOut);
+      if (createFile (opt.getDirOutput () + aOutputs[i].filedown, argv[0], fileOut))
+         return -5;
       fileOut << strTitle;
 
       std::stringstream rheader;
@@ -635,7 +641,8 @@ int CDWriter::perform (int argc, const char** argv) {
 
 #if WITH_FILMS == 1
    // Export films by language
-   createFile (opt.getDirOutput () + "Films-Lang.html", argv[0], fileOut);
+   if (createFile (opt.getDirOutput () + "Films-Lang.html", argv[0], fileOut))
+      return -5;
    titleFilm = htmlData[0].target;
    pos = 0;
    while ((pos = titleFilm.find ("%1", pos)) != std::string::npos)
@@ -709,8 +716,9 @@ const char* CDWriter::description () const {
 /// \param filename: Name of file to create
 /// \param lang: Language-id
 /// \param file: Created stream
+/// \returns int: Error code
 //-----------------------------------------------------------------------------
-void CDWriter::createFile (const std::string& filename, const char* lang, std::ofstream& file) {
+int CDWriter::createFile (const std::string& filename, const char* lang, std::ofstream& file) {
    TRACE9 ("CDWriter::createFile (const std::string&, const char*, std::ofstream&) - " << filename);
    Check1 (filename.size ());
    Check1 (lang);
@@ -724,7 +732,9 @@ void CDWriter::createFile (const std::string& filename, const char* lang, std::o
       msg.replace (msg.find ("%1"), 2, utf8file);
       msg.replace (msg.find ("%2"), 2, strerror (errno));
       std::cerr << name () << _("-error: ") << msg;
+      return errno;
    }
+   return 0;
 }
 
 //-----------------------------------------------------------------------------

@@ -524,92 +524,92 @@ void CDManager::savePreferences () {
 //-----------------------------------------------------------------------------
 /// Exports the stored information to HTML documents
 //-----------------------------------------------------------------------------
-void CDManager::export2HTML () {
-   std::string dir (opt.getDirOutput ());
-   if (dir.size () && (dir[dir.size () - 1] != YGP::File::DIRSEPARATOR)) {
+void CDManager::export2HTML() {
+   std::string dir(opt.getDirOutput());
+   if (dir.size() && (dir[dir.size() - 1] != YGP::File::DIRSEPARATOR)) {
       dir += YGP::File::DIRSEPARATOR;
-      opt.setDirOutput (dir);
+      opt.setDirOutput(dir);
    }
 
    // Load data
-   for (unsigned int i (0); i < (WITH_RECORDS + WITH_FILMS); ++i)
-      if (!pages[i]->isLoaded ())
-	 pages[i]->loadData ();
+   for (unsigned int i(0); i < (WITH_RECORDS + WITH_FILMS); ++i)
+      if (!pages[i]->isLoaded())
+	 pages[i]->loadData();
 
    // Get the key for the shared memory holding the special words
    std::ostringstream memKey;
-   memKey << Words::getMemoryKey () << std::ends;
+   memKey << Words::getMemoryKey() << std::ends;
 
-   const char* envLang (getenv ("LANGUAGE"));
+   const char* envLang(getenv("LANGUAGE"));
    std::string oldLang;
    if (envLang)
       oldLang = envLang;
 
-   std::string key (memKey.str ());
-   const char* args[] = { "CDWriter", "--outputDir", opt.getDirOutput ().c_str (),
+   std::string key(memKey.str());
+   const char* args[] = { "CDWriter", "--outputDir", opt.getDirOutput().c_str(),
 #if WITH_RECORDS == 1
-			  "--recHeader", opt.getRHeader ().c_str (),
-			  "--recFooter", opt.getRFooter ().c_str (),
+			  "--recHeader", opt.getRHeader().c_str(),
+			  "--recFooter", opt.getRFooter().c_str(),
 #endif
 #if WITH_FILMS == 1
-			  "--filmHeader", opt.getMHeader ().c_str (),
-			  "--filmFooter", opt.getMFooter ().c_str (),
+			  "--filmHeader", opt.getMHeader().c_str(),
+			  "--filmFooter", opt.getMFooter().c_str(),
 #endif
-			  NULL, key.c_str (), NULL };
-   const unsigned int POS_LANG ((sizeof (args) / sizeof (*args)) - 3);
-   Check2 (!args[POS_LANG]);
+			  NULL, key.c_str(), NULL };
+   const unsigned int POS_LANG((sizeof(args) / sizeof(*args)) - 3);
+   Check2(!args[POS_LANG]);
 
    // Export to every language supported
-   Glib::ustring statMsg (_("Exporting (language %1) ..."));
-   std::string allLangs (LANGUAGES, sizeof (LANGUAGES) - 1);
-   boost::tokenizer<> langs (allLangs);
-   for (boost::tokenizer<>::iterator l (langs.begin ()); l != langs.end (); ++l) {
-      TRACE6 ("CDManager::export2HTML () - Lang: " << *l);
-      Glib::ustring stat (statMsg);
-      stat.replace (stat.find ("%1"), 2, Language::findInternational (*l));
-      status.push (stat);
+   Glib::ustring statMsg(_("Exporting (language %1) ..."));
+   std::string allLangs(LANGUAGES, sizeof(LANGUAGES) - 1);
+   boost::tokenizer<> langs(allLangs);
+   for (boost::tokenizer<>::iterator l(langs.begin()); l != langs.end(); ++l) {
+      TRACE6("CDManager::export2HTML() - Lang: " << *l);
+      Glib::ustring stat(statMsg);
+      stat.replace(stat.find("%1"), 2, Language::findInternational(*l));
+      status.push(stat);
 
-      Glib::RefPtr<Glib::MainContext> ctx (Glib::MainContext::get_default ());
-      while (ctx->iteration (false));                      // Update statusbar
+      Glib::RefPtr<Glib::MainContext> ctx(Glib::MainContext::get_default());
+      while (ctx->iteration(false));                      // Update statusbar
 
-      pid_t pid (-1);
+      pid_t pid(-1);
       int pipes[2];
       try {
-	 setenv ("LANGUAGE", l->c_str (), true);
-	 args[POS_LANG] = l->c_str ();
-	 TRACE3 ("CDManager::export2HTML () - Parms: " << args[POS_LANG] << ' ' << args[POS_LANG + 1]);
+	 setenv("LANGUAGE", l->c_str(), true);
+	 args[POS_LANG] = l->c_str();
+	 TRACE3("CDManager::export2HTML() - Parms: " << args[POS_LANG] << ' ' << args[POS_LANG + 1]);
 
-	 if (pipe (pipes) < 0)
-	    throw std::runtime_error (strerror (errno));
-	 pid = YGP::Process::execIOConnected ("CDWriter", args, pipes);
+	 if (pipe(pipes) < 0)
+	    throw std::runtime_error(strerror(errno));
+	 pid = YGP::Process::execIOConnected("CDWriter", args, pipes);
 
-	 for (unsigned int i (0); i < (WITH_RECORDS + WITH_FILMS); ++i)
-	    pages[i]->export2HTML (pipes[1], *l);
-	 ::close (pipes[1]);
+	 for (unsigned int i(0); i < (WITH_RECORDS + WITH_FILMS); ++i)
+	    pages[i]->export2HTML(pipes[1], *l);
+	 ::close(pipes[1]);
 
 	 char output[128] = "";
 	 std::string allOut;
 	 int cRead;
-	 while ((cRead = ::read (pipes[0], output, sizeof (output))) != -1) {
-	    allOut.append (output, cRead);
+	 while ((cRead = ::read(pipes[0], output, sizeof(output))) != -1) {
+	    allOut.append(output, cRead);
 	    if (!cRead)
 	       break;
 	 }
-	 if (allOut.size ()) {
-	    Gtk::MessageDialog dlg (Glib::locale_to_utf8 (output), Gtk::MESSAGE_INFO);
-	    dlg.set_title (_("Export Warning!"));
-	    dlg.run ();
+	 Check3(pid != -1);
+	 YGP::Process::waitForProcess(pid);
+	 if (allOut.size()) {
+	    Gtk::MessageDialog dlg(*this, Glib::locale_to_utf8(allOut), Gtk::MESSAGE_INFO);
+	    dlg.set_title(_("Export Warning!"));
+	    dlg.run();
 	 }
-	 Check3 (pid != -1);
-	 YGP::Process::waitForProcess (pid);
       }
-      catch (std::exception& e) {
-	 Gtk::MessageDialog dlg (e.what (), Gtk::MESSAGE_ERROR);
-	 dlg.run ();
+      catch (std::exception& err) {
+	 Gtk::MessageDialog dlg(*this, err.what(), Gtk::MESSAGE_ERROR);
+	 dlg.run();
       }
-      ::close (pipes[0]);
-      status.pop ();
+      ::close(pipes[0]);
+      status.pop();
    } // end-while
-   setenv ("LANGUAGE", oldLang.c_str (), true);
+   setenv("LANGUAGE", oldLang.c_str(), true);
 }
 #endif

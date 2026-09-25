@@ -50,7 +50,7 @@ class CDWriter : public YGP::IVIOApplication {
    CDWriter (const CDWriter&);
    const CDWriter& operator= (const CDWriter&);
 
-   void createFile (const std::string& name, const char* lang, std::ofstream& file);
+   int createFile (const std::string& name, const char* lang, std::ofstream& file);
    static bool readHeaderFile (const char* file, const char* lang,
 			       std::string& target, const Glib::ustring& title);
 

@@ -5,13 +5,15 @@ The following packages are needed
 
   - Boost
   - Gtkmm-2.4 (which itself needs GTK+-2.4). Available at http://www.gktmm.org/
-  - MySQL developer files. Available via http://www.mysql.com/
+  - The developer files of one of the supported databases:
+    - MySQL (libmysqlclient). Available via http://www.mysql.com/
+    - PostgreSQL (libpq). Available via https://www.postgresql.org/
   - My YGP library; also availabe as a Sourceforge project
     (http://libymp.sourceforge.net/)
 
 The following packages are optional, but recommended
 
-  - The libmysql++ library. Also available at http://www.mysql.com/
+  - The libmysql++ library (only for MySQL). Also available at http://www.mysql.com/
 
 
 How to build (if extracted from an (tar-)archive)
@@ -58,8 +60,10 @@ Common options for configure
   --disable-actors		# To don't store actor-information
   --disable-films		# To not handle a certain type of media
   --disable-records
+  --with-database=<db>		# mysql, postgresql or auto (default)
   --with-mysql[-{lib,include}]	# Path to mysql header/libs
   --with-mysqlpp[-{lib,include}]
+  --with-postgresql=<path>	# Path to PostgreSQL (libpq) installation
   --enable-checks[=level]	# Adds asserts and Checks
   --enable-debug[=level]	# Sets tracelevel & generation of debuginfo
 

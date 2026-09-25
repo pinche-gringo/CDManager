@@ -40,7 +40,7 @@ static mysqlpp::Connection       con (mysqlpp::use_exceptions);
    static mysqlpp::Result           result;
    static mysqlpp::Result::iterator i;
 #else
-   static mysqlpp::StoreQueryResult           result;
+   static mysqlpp::StoreQueryResult result;
    static mysqlpp::StoreQueryResult::iterator i;
 
    static long lastIDInsert = 0;

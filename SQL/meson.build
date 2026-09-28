@@ -3,10 +3,10 @@ sql_dir = meson.current_source_dir()
 
 if db_backend == 'postgresql'
     run_target('createDB',
-               command: ['sh', '-c', 'echo Creating database ... && createdb -E UTF8 CDMedia && psql -d CDMedia -f "$0"',
+               command: ['sh', '-c', 'echo Creating database ... && createdb -E UTF8 cdmedia && psql -d cdmedia -f "$0"',
                          sql_dir / 'createDB-pg.sql'])
     run_target('populateDB',
-               command: ['sh', '-c', 'echo Populating database ... && sed "/^USE /d" "$0" | PGCLIENTENCODING=LATIN1 psql -U cdmgr -d CDMedia',
+               command: ['sh', '-c', 'echo Populating database ... && sed "/^USE /d" "$0" | PGCLIENTENCODING=LATIN1 psql -U cdmgr -d cdmedia',
                          sql_dir / 'populateDB.sql'])
 else
     run_target('createDB',

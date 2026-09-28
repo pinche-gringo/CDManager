@@ -25,10 +25,12 @@
 #include <cdmgr-cfg.h>
 
 #include <array>
+#include <cctype>
 #include <cstdlib>
 #include <format>
 #include <memory>
 #include <ranges>
+#include <string>
 #include <vector>
 
 #include <libpq-fe.h>
@@ -59,8 +61,13 @@ void DBPostgres::connect(const char* db, const char* user, const char* pwd) {
     TRACE9("DBPostgres::connect (const char* (3x) - " << db << " from " << user);
     contract_assert(!conn);
 
+    // PostgreSQL folds unquoted names to lower case (CREATE DATABASE CDMedia creates cdmedia),
+    // but compares the name passed when connecting exactly; so connect to the folded name
+    const std::string dbName(std::string_view(db) | std::views::transform([](unsigned char c) { return std::tolower(c); })
+                             | std::ranges::to<std::string>());
+
     const std::array<const char*, 6> keys{"hostaddr", "dbname", "user", "password", "client_encoding", nullptr};
-    const std::array<const char*, 6> values{"127.0.0.1", db, user, pwd, "UTF8", nullptr};
+    const std::array<const char*, 6> values{"127.0.0.1", dbName.c_str(), user, pwd, "UTF8", nullptr};
     conn = PQconnectdbParams(keys.data(), values.data(), 0);
     if (!conn)
         throw std::runtime_error("Out of memory initialising PostgreSQL");

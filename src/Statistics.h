@@ -28,7 +28,7 @@ class Statistics : public XGP::XDialog {
   public:
     static Statistics* create(Gtk::Window& parent);
 
-    virtual ~Statistics();
+    ~Statistics() override;
 
     // Prohibited manager functions
     Statistics(const Statistics& other) = delete;
@@ -43,7 +43,7 @@ class Statistics : public XGP::XDialog {
 
     Gtk::Grid* pClient;
 
-    static Statistics* instance;
+    static inline Statistics* instance{nullptr};
 };
 
 #endif

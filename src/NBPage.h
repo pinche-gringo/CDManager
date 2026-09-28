@@ -17,11 +17,11 @@
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <map>
+#include <memory>
 #include <stack>
 #include <stdexcept>
+#include <utility>
 #include <vector>
-
-#include <boost/shared_ptr.hpp>
 
 #include <glibmm/ustring.h>
 
@@ -36,7 +36,7 @@
 
 #include <sigc++/trackable.h>
 
-typedef boost::shared_ptr<YGP::Entity> HEntity;
+using HEntity = std::shared_ptr<YGP::Entity>;
 
 // Forward declarations
 namespace Gtk {
@@ -48,11 +48,11 @@ class Statusbar;
  */
 class NBPage : public sigc::trackable {
   public:
-    virtual ~NBPage();
+    virtual ~NBPage() = default;
 
     virtual Gtk::Widget* getWindow() const { return widget; }
 
-    bool isLoaded() const { return loaded; }
+    [[nodiscard]] bool isLoaded() const { return loaded; }
 
     virtual void loadData() = 0;
     virtual void saveData() = 0;
@@ -69,24 +69,25 @@ class NBPage : public sigc::trackable {
     virtual void clear();
     virtual void export2HTML(unsigned int fd, const std::string& lang);
 
-    bool isChanged() const { return !aUndo.empty(); }
+    [[nodiscard]] bool isChanged() const { return !aUndo.empty(); }
 
     NBPage(const NBPage&) = delete;
     NBPage& operator=(const NBPage&) = delete;
 
     static void addMenuEntry(const Glib::RefPtr<Gio::Menu>& menu, const Glib::ustring& label, const Glib::ustring& action,
                              const Glib::ustring& accel = Glib::ustring(),
-                             const Glib::RefPtr<Gtk::ShortcutController>& shortcuts = {});
+                             const Glib::RefPtr<Gtk::ShortcutController>& shortcuts = {})
+        pre(menu);
 
   protected:
     NBPage(Gtk::Statusbar& status, Glib::RefPtr<Gio::SimpleAction> menuSave)
-        : widget(nullptr), menuSave(menuSave), statusbar(status), loaded(false) {}
+        : menuSave(std::move(menuSave)), statusbar(status) {}
 
-    Gtk::Widget* widget;
+    Gtk::Widget* widget{nullptr};
     Glib::RefPtr<Gio::SimpleAction> menuSave;
     Gtk::Statusbar& statusbar;
 
-    typedef enum { NONE_SELECTED, OWNER_SELECTED, OBJECT_SELECTED } SELECTED;
+    enum SELECTED { NONE_SELECTED, OWNER_SELECTED, OBJECT_SELECTED };
     void enableEdit(SELECTED selected);
     void showStatus(const Glib::ustring& msgStatus);
     void showError(const Glib::ustring& msg, const Glib::ustring& title = Glib::ustring());
@@ -101,31 +102,31 @@ class NBPage : public sigc::trackable {
      */
     class Undo {
       public:
-        typedef enum { UNDEFINED = 0, INSERT, DELETE, CHANGED } CHGSPEC;
-        Undo() { chgSpec.how = UNDEFINED; };
+        enum CHGSPEC { UNDEFINED = 0, INSERT, DELETE, CHANGED };
+        Undo() = default;
         Undo(CHGSPEC chg, unsigned int what, unsigned int col, HEntity entity, const Gtk::TreePath& row,
              const Glib::ustring& value);
 
-        unsigned int how() const { return chgSpec.how; }
-        unsigned int what() const { return chgSpec.what; }
-        unsigned int column() const { return chgSpec.column; }
+        [[nodiscard]] unsigned int how() const { return chgSpec.how; }
+        [[nodiscard]] unsigned int what() const { return chgSpec.what; }
+        [[nodiscard]] unsigned int column() const { return chgSpec.column; }
 
-        const HEntity getEntity() const { return entity; }
-        const Gtk::TreePath& getPath() const { return row; }
-        const Glib::ustring& getValue() const { return value; }
+        [[nodiscard]] const HEntity getEntity() const { return entity; }
+        [[nodiscard]] const Gtk::TreePath& getPath() const { return row; }
+        [[nodiscard]] const Glib::ustring& getValue() const { return value; }
 
       private:
         struct {
-            unsigned int column : 16;
-            unsigned int how : 2;
-            unsigned int what : 3;
+            unsigned int column : 16 {0};
+            unsigned int how : 2 {UNDEFINED};
+            unsigned int what : 3 {0};
         } chgSpec;
         HEntity entity;
         Gtk::TreePath row;
         Glib::ustring value;
     };
 
-    bool loaded;
+    bool loaded{false};
     std::stack<Undo> aUndo;
     std::map<HEntity, HEntity> delRelation;
 };

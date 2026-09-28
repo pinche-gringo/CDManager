@@ -24,8 +24,6 @@
 
 #include <glibmm/ustring.h>
 
-#include <YGP/Check.h>
-
 // #include <XGP/XAttribute.h>  // Needed for specialization of YGP::Attribute for Glib::ustring
 
 #include "Film.h"
@@ -35,7 +33,7 @@
 namespace YGP {
 
 template <> inline bool Attribute<std::map<std::string, Glib::ustring>>::assignFromString(const char* value) const {
-    Check3(value);
+    contract_assert(value);
     attr_[Film::currLang] = value;
     return true;
 }
@@ -46,9 +44,12 @@ template <> inline std::string Attribute<std::map<std::string, Glib::ustring>>::
 
 } // namespace YGP
 
-#include "Film.meta"
-
 std::string Film::currLang;
+
+//-----------------------------------------------------------------------------
+/// Default constructor
+//-----------------------------------------------------------------------------
+Film::Film() { registerAttributes(*this); }
 
 //-----------------------------------------------------------------------------
 /// Copyonstructor
@@ -92,8 +93,6 @@ Glib::ustring Film::removeIgnored(const Glib::ustring& name) { return Words::rem
 /// \returns bool True, if a->name < b->name
 //-----------------------------------------------------------------------------
 bool Film::compByName(const HFilm& a, const HFilm& b) {
-    Check1(a.isDefined());
-    Check1(b.isDefined());
     Glib::ustring aname(removeIgnored(a->getName()));
     Glib::ustring bname(removeIgnored(b->getName()));
     int rc(aname.compare(bname));
@@ -109,8 +108,6 @@ bool Film::compByName(const HFilm& a, const HFilm& b) {
 /// \returns bool True, if a->year < b->year
 //-----------------------------------------------------------------------------
 bool Film::compByYear(const HFilm& a, const HFilm& b) {
-    Check1(a.isDefined());
-    Check1(b.isDefined());
     int rc(a->year - b->year);
     if (!rc) {
         Glib::ustring aname(removeIgnored(a->getName()));
@@ -127,8 +124,6 @@ bool Film::compByYear(const HFilm& a, const HFilm& b) {
 /// \returns bool True, if a->genre < b->genre
 //-----------------------------------------------------------------------------
 bool Film::compByGenre(const HFilm& a, const HFilm& b) {
-    Check1(a.isDefined());
-    Check1(b.isDefined());
     int rc(a->genre - b->genre);
     return rc ? (rc < 0) : compByName(a, b);
 }
@@ -140,8 +135,6 @@ bool Film::compByGenre(const HFilm& a, const HFilm& b) {
 /// \returns bool True, if a->type < b->type
 //-----------------------------------------------------------------------------
 bool Film::compByMedia(const HFilm& a, const HFilm& b) {
-    Check1(a.isDefined());
-    Check1(b.isDefined());
     int rc(a->type - b->type);
     return rc ? (rc < 0) : compByName(a, b);
 }
@@ -154,8 +147,8 @@ bool Film::compByMedia(const HFilm& a, const HFilm& b) {
 /// \returns bool True, if a->type < b->type
 //-----------------------------------------------------------------------------
 const Glib::ustring& Film::getName(const std::string& lang) {
-    Check2(name.find("") != name.end());
-    std::map<std::string, Glib::ustring>::const_iterator i(name.find(lang));
+    contract_assert(name.contains(""));
+    const auto i(name.find(lang));
     return ((i != name.end()) ? i->second : name[""]);
 }
 
@@ -164,7 +157,7 @@ const Glib::ustring& Film::getName(const std::string& lang) {
 /// If the default-name of the film is not set, use the passed value.
 /// \param value New name of the film
 //-----------------------------------------------------------------------------
-void Film::setName(const Glib::ustring& value) { setName(value, (name.find("") != name.end()) ? currLang : ""); }
+void Film::setName(const Glib::ustring& value) { setName(value, name.contains("") ? currLang : ""); }
 
 //-----------------------------------------------------------------------------
 /// Sets the name in a certain language of the film. If the name is
@@ -175,8 +168,7 @@ void Film::setName(const Glib::ustring& value) { setName(value, (name.find("") !
 //-----------------------------------------------------------------------------
 void Film::setName(const Glib::ustring& value, const std::string& lang) {
     if (value.empty()) {
-        std::map<std::string, Glib::ustring>::iterator i(name.find(currLang));
-        if (i != name.end()) {
+        if (const auto i(name.find(currLang)); i != name.end()) {
             name.erase(i);
             return;
         }

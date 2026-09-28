@@ -55,10 +55,10 @@ class SongColumns : public Gtk::TreeModel::ColumnRecord {
  */
 class SongList : public Gtk::TreeView {
   public:
-    SongList(const Genres& genres);
-    virtual ~SongList();
+    SongList(const Genres& genres) pre(genres.size());
+    ~SongList() override;
 
-    Gtk::TreeModel::iterator insert(HSong& song, const Gtk::TreeModel::iterator& pos);
+    Gtk::TreeModel::iterator insert(HSong& song, const Gtk::TreeModel::iterator& pos) pre(song);
     Gtk::TreeModel::iterator append(HSong& song) { return insert(song, mSongs->children().end()); }
     Gtk::TreeModel::iterator prepend(HSong& song) { return insert(song, mSongs->children().begin()); }
     void clear() { mSongs->clear(); }
@@ -74,17 +74,17 @@ class SongList : public Gtk::TreeView {
         row[colSongs.colGenre] = genre;
         signalChanged.emit(row.get_iter(), 3, oldValue);
     }
-    void setGenre(const Gtk::TreeModel::iterator& iter, unsigned int genre);
-    int getGenre(const Glib::ustring& genre) const { return genres.getId(genre); }
+    void setGenre(const Gtk::TreeModel::iterator& iter, unsigned int genre) pre(iter);
+    [[nodiscard]] int getGenre(const Glib::ustring& genre) const { return genres.getId(genre); }
 
     virtual void update(Gtk::TreeModel::Row& row);
 
-    Glib::RefPtr<Gtk::ListStore> getModel() const { return mSongs; }
-    HSong getSongAt(const Gtk::TreeModel::const_iterator& row) const { return row->get_value(colSongs.entry); }
-    HEntity getEntryAt(const Gtk::TreeModel::const_iterator& row) const { return getSongAt(row); }
-    Gtk::TreeModel::iterator getSong(const HSong& song) const;
-    Gtk::TreeModel::iterator getSong(const YGP::ANumeric& track) const;
-    Gtk::TreeModel::iterator getSong(const Glib::ustring& name) const;
+    [[nodiscard]] Glib::RefPtr<Gtk::ListStore> getModel() const { return mSongs; }
+    [[nodiscard]] HSong getSongAt(const Gtk::TreeModel::const_iterator& row) const { return row->get_value(colSongs.entry); }
+    [[nodiscard]] HEntity getEntryAt(const Gtk::TreeModel::const_iterator& row) const { return getSongAt(row); }
+    [[nodiscard]] Gtk::TreeModel::iterator getSong(const HSong& song) const;
+    [[nodiscard]] Gtk::TreeModel::iterator getSong(const YGP::ANumeric& track) const;
+    [[nodiscard]] Gtk::TreeModel::iterator getSong(const Glib::ustring& name) const;
 
     sigc::signal<void(const Gtk::TreeModel::iterator&, unsigned int, Glib::ustring&)> signalChanged;
 

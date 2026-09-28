@@ -35,7 +35,7 @@ AC_DEFINE_UNQUOTED(CATALOGS, "$ALL_LINGUAS", [Translations])
 
 dnl Checks for header files.
 
-AC_CHECK_HEADERS(boost/shared_ptr.hpp boost/tokenizer.hpp boost/bind.hpp boost/asio.hpp,,
+AC_CHECK_HEADERS(boost/asio.hpp,,
 	         AC_MSG_ERROR([Required headers not found]))
 
 dnl Checks for libraries.
@@ -224,8 +224,12 @@ AC_ARG_ENABLE(checks,
               if test "$enableval" != "no"; then
                   test "$enableval" = "yes" && enableval=0
                   CXXFLAGS="$CXXFLAGS -DCHECK=$enableval";
+                  CONTRACT_SEMANTIC=enforce;
               else
                   CXXFLAGS="$CXXFLAGS -DNDEBUG -UCHECK"; fi)
+dnl C++26 contracts (pre/post/contract_assert) are only enforced with --enable-checks
+test -z "$CONTRACT_SEMANTIC" && CONTRACT_SEMANTIC=ignore
+AC_SUBST(CONTRACT_SEMANTIC)
 AC_ARG_ENABLE(actors,
               AC_HELP_STRING([--disable-actors],
                              [Disables handling of actors]))

@@ -24,6 +24,10 @@
 
 #include <cdmgr-cfg.h>
 
+#include <array>
+#include <ranges>
+#include <tuple>
+
 #include <glibmm/ustring.h>
 
 #include <gtkmm/box.h>
@@ -32,7 +36,6 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scrolledwindow.h>
 
-#include <YGP/Check.h>
 #include <YGP/Trace.h>
 
 #include "Words.h"
@@ -61,15 +64,15 @@ WordDialog::WordDialog()
     lstNames.append_column(_("First names"), colWords.word);
     lstArticles.append_column(_("Articles"), colWords.word);
 
-    Gtk::TreeView* views[] = {&lstNames, &lstArticles};
-    for (unsigned int i(0); i < (sizeof(views) / sizeof(*views)); ++i) {
-        views[i]->set_headers_visible(true);
-        views[i]->set_enable_search(true);
-        views[i]->set_search_column(colWords.word);
+    for (const auto [i, view] : std::views::enumerate(std::array{&lstNames, &lstArticles})) {
+        view->set_headers_visible(true);
+        view->set_enable_search(true);
+        view->set_search_column(colWords.word);
 
-        Glib::RefPtr<Gtk::TreeSelection> listSelection(views[i]->get_selection());
+        Glib::RefPtr<Gtk::TreeSelection> listSelection(view->get_selection());
         listSelection->set_mode(Gtk::SelectionMode::MULTIPLE);
-        listSelection->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &WordDialog::entrySelected), i));
+        listSelection->signal_changed().connect(
+            sigc::bind(sigc::mem_fun(*this, &WordDialog::entrySelected), static_cast<unsigned int>(i)));
     }
     scrlNames.set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
     scrlNames.set_has_frame(true);
@@ -130,11 +133,6 @@ WordDialog::WordDialog()
 }
 
 //-----------------------------------------------------------------------------
-/// Destructor
-//-----------------------------------------------------------------------------
-WordDialog::~WordDialog() {}
-
-//-----------------------------------------------------------------------------
 /// Callback after an entryfield has been  changed; the buttons are enabled
 /// accordingly.
 /// \param which: Flag, which field has been changed
@@ -142,23 +140,16 @@ WordDialog::~WordDialog() {}
 void WordDialog::entryChanged(unsigned int which) {
     TRACE8("WordDialog::entryChanged (unsigned int) - " << which);
     Words::values* shMem(Words::getInfo());
-    Check2(shMem);
+    contract_assert(shMem);
 
-    Gtk::Entry* fields[] = {&txtName, &txtArticle};
-    Gtk::Button* buttons[] = {&addName, &addArticle};
+    const std::array<Gtk::Entry*, 2> fields{&txtName, &txtArticle};
+    const std::array<Gtk::Button*, 2> buttons{&addName, &addArticle};
 
-    unsigned int starts[] = {0, shMem->maxEntries - shMem->cArticles};
-    unsigned int ends[] = {Words::cNames(), shMem->maxEntries};
+    const std::array<unsigned int, 2> starts{0, shMem->maxEntries - shMem->cArticles};
+    const std::array<unsigned int, 2> ends{Words::cNames(), shMem->maxEntries};
 
-    Check1(which < 2);
-    Check3((sizeof(fields) / sizeof(*fields)) > which);
-    Check3((sizeof(buttons) / sizeof(*buttons)) > which);
-    Check3((sizeof(starts) / sizeof(*starts)) > which);
-    Check3((sizeof(ends) / sizeof(*ends)) > which);
-
-    bool unique(false);
-    if (fields[which]->get_text_length() && !Words::containsWord(starts[which], ends[which], fields[which]->get_text()))
-        unique = true;
+    const bool unique(fields[which]->get_text_length()
+                      && !Words::containsWord(starts[which], ends[which], fields[which]->get_text()));
     buttons[which]->set_sensitive(unique);
 }
 
@@ -169,11 +160,8 @@ void WordDialog::entryChanged(unsigned int which) {
 //-----------------------------------------------------------------------------
 void WordDialog::entrySelected(unsigned int which) {
     TRACE8("WordDialog::entrySelected (unsigned int) - " << which);
-    Gtk::TreeView* lists[] = {&lstNames, &lstArticles};
-    Gtk::Button* buttons[] = {&deleteName, &deleteArticle};
-    Check1(which < 2);
-    Check3((sizeof(lists) / sizeof(*lists)) > which);
-    Check3((sizeof(buttons) / sizeof(*buttons)) > which);
+    const std::array<Gtk::TreeView*, 2> lists{&lstNames, &lstArticles};
+    const std::array<Gtk::Button*, 2> buttons{&deleteName, &deleteArticle};
 
     buttons[which]->set_sensitive(!lists[which]->get_selection()->get_selected_rows().empty());
 }
@@ -214,17 +202,12 @@ void WordDialog::appendArticle(const char* value) {
 /// \param which: Flag, to which list a value should be added
 //-----------------------------------------------------------------------------
 void WordDialog::onAdd(unsigned int which) {
-    Check1(which < 2);
-    Gtk::Entry* fields[] = {&txtName, &txtArticle};
-    Gtk::Button* buttons[] = {&addName, &addArticle};
-    Gtk::TreeView* lists[] = {&lstNames, &lstArticles};
-    Glib::RefPtr<Gtk::ListStore> models[] = {names, articles};
-    Check3((sizeof(fields) / sizeof(*fields)) > which);
-    Check3((sizeof(buttons) / sizeof(*buttons)) > which);
-    Check3((sizeof(models) / sizeof(*models)) > which);
-    Check3((sizeof(lists) / sizeof(*lists)) > which);
+    const std::array<Gtk::Entry*, 2> fields{&txtName, &txtArticle};
+    const std::array<Gtk::Button*, 2> buttons{&addName, &addArticle};
+    const std::array<Gtk::TreeView*, 2> lists{&lstNames, &lstArticles};
+    std::array models{names, articles};
 
-    Check2(fields[which]->get_text_length());
+    contract_assert(fields[which]->get_text_length());
     buttons[which]->set_sensitive(false);
     Gtk::TreeModel::Row row(append(models[which], fields[which]->get_text()));
     lists[which]->scroll_to_row(models[which]->get_path(row.get_iter()), 0.8);
@@ -241,20 +224,14 @@ void WordDialog::onAdd(unsigned int which) {
 //-----------------------------------------------------------------------------
 void WordDialog::onDelete(unsigned int which) {
     TRACE8("WordDialog::onDelete (unsigned int) - " << which);
-    Gtk::TreeView* lists[] = {&lstNames, &lstArticles};
-    Glib::RefPtr<Gtk::ListStore> models[] = {names, articles};
-    Check1(which < 2);
-    Check3((sizeof(lists) / sizeof(*lists)) > which);
-    Check3((sizeof(models) / sizeof(*models)) > which);
+    const std::array<Gtk::TreeView*, 2> lists{&lstNames, &lstArticles};
+    const std::array models{names, articles};
 
     Glib::RefPtr<Gtk::TreeSelection> selection(lists[which]->get_selection());
-    while (!selection->get_selected_rows().empty()) {
-        std::vector<Gtk::TreeModel::Path> list(selection->get_selected_rows());
-        Check3(list.size());
-        std::vector<Gtk::TreeModel::Path>::iterator i(list.begin());
-
-        Gtk::TreeModel::iterator iter(models[which]->get_iter(*i));
-        Check3(iter);
+    for (std::vector<Gtk::TreeModel::Path> list(selection->get_selected_rows()); !list.empty();
+         list = selection->get_selected_rows()) {
+        Gtk::TreeModel::iterator iter(models[which]->get_iter(list.front()));
+        contract_assert(iter);
         models[which]->erase(iter);
     }
 }
@@ -266,20 +243,18 @@ void WordDialog::commit() {
     TRACE9("WordDialog::commit ()");
 
     if (Words::areAvailable()) {
-        Glib::RefPtr<Gtk::ListStore> models[] = {names, articles};
-        void (*fnInsert[])(const Glib::ustring& word, unsigned int pos) = {&Words::addName2Ignore, &Words::addArticle};
-        Check3((sizeof(models) / sizeof(*models)) == (sizeof(fnInsert) / sizeof(*fnInsert)));
+        using FnInsert = void (*)(const Glib::ustring& word, unsigned int pos);
+        const std::array models{names, articles};
+        const std::array<FnInsert, 2> fnInsert{&Words::addName2Ignore, &Words::addArticle};
+        static_assert(std::tuple_size_v<decltype(models)> == std::tuple_size_v<decltype(fnInsert)>);
 
         Words::values* shMem(Words::getInfo());
-        Check2(shMem);
+        contract_assert(shMem);
         shMem->cArticles = shMem->cNames = 0;
 
-        Glib::ustring value;
-        for (unsigned int i(0); i < (sizeof(models) / sizeof(*models)); ++i)
-            for (Gtk::TreeModel::const_iterator l(models[i]->children().begin()); l != models[i]->children().end(); ++l) {
-                value = (*l)[colWords.word];
-                fnInsert[i](value, Words::POS_END);
-            }
+        for (const auto& [model, insert] : std::views::zip(models, fnInsert))
+            for (const auto& row : model->children())
+                insert(row.get_value(colWords.word), Words::POS_END);
     }
 }
 
@@ -288,6 +263,5 @@ void WordDialog::commit() {
 /// \param dialog
 //-----------------------------------------------------------------------------
 void WordDialog::commitDialogData(Gtk::Widget* dialog) {
-    Check3(dialog);
     dynamic_cast<WordDialog*>(dialog)->commit();
 }

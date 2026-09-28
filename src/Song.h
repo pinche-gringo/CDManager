@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include <glibmm/ustring.h>
 
@@ -25,15 +25,15 @@
 
 #include <YGP/Entity.h>
 
-typedef boost::shared_ptr<YGP::Entity> HEntity;
+using HEntity = std::shared_ptr<YGP::Entity>;
 
 /**Class to hold an interpret
  */
 class Song : public YGP::Entity {
   public:
-    Song() : id(0), genre(0) { duration.setMode(YGP::ATime::MODE_MMSS); }
+    Song() { duration.setMode(YGP::ATime::MODE_MMSS); }
     Song(const Song& other) : id(other.id), name(other.name), track(other.track), duration(other.duration), genre(other.genre) {}
-    virtual ~Song() {}
+    ~Song() override = default;
 
     Song& operator=(const Song& other) {
         if (this != &other) {
@@ -47,11 +47,11 @@ class Song : public YGP::Entity {
         return *this;
     }
 
-    unsigned long int getId() const { return id; }
-    const Glib::ustring& getName() const { return name; }
-    const YGP::ANumeric& getTrack() const { return track; }
-    const YGP::ATime& getDuration() const { return duration; }
-    unsigned int getGenre() const { return genre; }
+    [[nodiscard]] unsigned long int getId() const { return id; }
+    [[nodiscard]] const Glib::ustring& getName() const { return name; }
+    [[nodiscard]] const YGP::ANumeric& getTrack() const { return track; }
+    [[nodiscard]] const YGP::ATime& getDuration() const { return duration; }
+    [[nodiscard]] unsigned int getGenre() const { return genre; }
 
     void setId(const unsigned long int value) { id = value; }
     void setName(const Glib::ustring& value) { name = value; }
@@ -62,12 +62,12 @@ class Song : public YGP::Entity {
     void setGenre(const unsigned int value) { genre = value; }
 
   private:
-    unsigned long int id;
+    unsigned long int id{};
     Glib::ustring name;
     YGP::ANumeric track;
     YGP::ATime duration;
-    unsigned long int genre;
+    unsigned long int genre{};
 };
-typedef boost::shared_ptr<Song> HSong;
+using HSong = std::shared_ptr<Song>;
 
 #endif

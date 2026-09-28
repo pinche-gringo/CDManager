@@ -16,11 +16,11 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "Celebrity.h"
 
-typedef Celebrity Interpret;
-typedef boost::shared_ptr<Interpret> HInterpret;
+using Interpret = Celebrity;
+using HInterpret = std::shared_ptr<Interpret>;
 
 #endif

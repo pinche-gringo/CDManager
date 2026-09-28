@@ -24,12 +24,13 @@
 
 #include <cdmgr-cfg.h>
 
+#include <array>
+
 #include <glibmm/main.h>
 
 #include <gtkmm/box.h>
 #include <gtkmm/label.h>
 
-#include <YGP/Check.h>
 #include <YGP/Trace.h>
 
 #include "Storage.h"
@@ -44,18 +45,15 @@
 //-----------------------------------------------------------------------------
 SaveCelebrity::SaveCelebrity(Gtk::Window& parent, const HCelebrity celeb, const std::vector<HCelebrity>& celebs)
     : Gtk::MessageDialog(parent, _("A celebrity with the same name already exists! Are they identic?"), false,
-                         Gtk::MessageType::QUESTION, Gtk::ButtonsType::YES_NO, true),
-      lstCelebs(nullptr) {
+                         Gtk::MessageType::QUESTION, Gtk::ButtonsType::YES_NO, true) {
     set_title(_("Choose matching celebrity"));
-    Check1(celeb);
-    Check1(celebs.size());
 
     // Create string identifying celebrity to save
     Glib::ustring newCeleb(celeb->getName());
     if (celeb->getBorn().isDefined() || celeb->getDied().isDefined())
         newCeleb += " (" + celeb->getLifespan() + ") ";
 
-    Gtk::Label* lblNewCeleb(Gtk::make_managed<Gtk::Label>(newCeleb));
+    auto* lblNewCeleb(Gtk::make_managed<Gtk::Label>(newCeleb));
     lblNewCeleb->set_margin(5);
 
     Glib::RefPtr<Gtk::ListStore> model(Gtk::ListStore::create(colCeleb));
@@ -74,25 +72,26 @@ SaveCelebrity::SaveCelebrity(Gtk::Window& parent, const HCelebrity celeb, const 
     get_content_area()->append(*lblNewCeleb);
     get_content_area()->append(*lstCelebs);
 
-    struct {
+    struct Role {
         const char* table;
         Glib::ustring role;
-    } roles[] = {{"Actors", _("actor")}, {"Interprets", _("interpret")}, {"Directors", _("director")}};
+    };
+    const std::array<Role, 3> roles{{{"Actors", _("actor")}, {"Interprets", _("interpret")}, {"Directors", _("director")}}};
 
     // Fill table with matching celebrities
-    for (std::vector<HCelebrity>::const_iterator i(celebs.begin()); i != celebs.end(); ++i) {
-        Glib::ustring name((*i)->getName());
+    for (const auto& c : celebs) {
+        Glib::ustring name(c->getName());
 
         Gtk::TreeRow row(*model->append());
-        row[colCeleb.id] = (*i)->getId();
-        row[colCeleb.born] = (*i)->getBorn().toString();
-        row[colCeleb.died] = (*i)->getDied().toString();
+        row[colCeleb.id] = c->getId();
+        row[colCeleb.born] = c->getBorn().toString();
+        row[colCeleb.died] = c->getDied().toString();
 
         bool first(true);
-        for (unsigned int r(0); r < (sizeof(roles) / sizeof(*roles)); ++r)
-            if (Storage::hasRole((*i)->getId(), (roles[r]).table)) {
+        for (const auto& [table, role] : roles)
+            if (Storage::hasRole(c->getId(), table)) {
                 name += first ? " (" : ", ";
-                name += roles[r].role;
+                name += role;
                 first = false;
             }
         if (!first)
@@ -105,7 +104,7 @@ SaveCelebrity::SaveCelebrity(Gtk::Window& parent, const HCelebrity celeb, const 
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------
-SaveCelebrity::~SaveCelebrity() {}
+SaveCelebrity::~SaveCelebrity() = default;
 
 //-----------------------------------------------------------------------------
 /// Saves a celebrity in the passed role
@@ -120,7 +119,6 @@ SaveCelebrity::~SaveCelebrity() {}
 ///      "Actors" and "Interpret" for the role of this celebrity
 //-----------------------------------------------------------------------------
 void SaveCelebrity::store(const HCelebrity celeb, const char* role, Gtk::Widget& parent) {
-    Check1(celeb);
     TRACE8("SaveCelebrity::store (const HCelebrity, const char*, Gtk::Widget&) - " << celeb->getName());
 
     if (celeb->getId())
@@ -128,18 +126,20 @@ void SaveCelebrity::store(const HCelebrity celeb, const char* role, Gtk::Widget&
     else {
         std::vector<HCelebrity> celebs;
         Storage::getCelebrities(celeb->getName(), celebs);
-        if (celebs.size()) {
-            Gtk::Window* win(dynamic_cast<Gtk::Window*>(parent.get_root()));
-            Check3(win);
+        if (!celebs.empty()) {
+            auto* win(dynamic_cast<Gtk::Window*>(parent.get_root()));
+            contract_assert(win);
             SaveCelebrity dlg(*win, celeb, celebs);
             switch (dlg.run()) {
-            case Gtk::ResponseType::YES:
-                Check3(dlg.getIdOfSelection());
+            case Gtk::ResponseType::YES: {
+                const auto idSelected(dlg.getIdOfSelection());
+                contract_assert(idSelected);
 
-                celeb->setId(dlg.getIdOfSelection());
+                celeb->setId(idSelected);
                 Storage::updateCelebrity(celeb);
                 Storage::setRole(celeb->getId(), role);
                 return;
+            }
 
             case Gtk::ResponseType::NO:
                 break;
@@ -193,9 +193,8 @@ int SaveCelebrity::run() {
 //-----------------------------------------------------------------------------
 unsigned long SaveCelebrity::getIdOfSelection() {
     TRACE9("SaveCelebrity::getIdOfSelection ()");
-    Check1(lstCelebs);
-    Check3(lstCelebs->get_selection());
-    Check3(lstCelebs->get_selection()->get_selected());
+    contract_assert(lstCelebs->get_selection());
+    contract_assert(lstCelebs->get_selection()->get_selected());
 
     Gtk::TreeRow row(*lstCelebs->get_selection()->get_selected());
     return row[colCeleb.id];

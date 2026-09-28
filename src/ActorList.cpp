@@ -24,15 +24,12 @@
 
 #include <cdmgr-cfg.h>
 
-#include <cerrno>
-#include <cstdlib>
-
+#include <array>
 #include <typeinfo>
 
 #include <gtkmm/cellrenderercombo.h>
 #include <gtkmm/window.h>
 
-#include <YGP/Check.h>
 #include <YGP/StatusObj.h>
 #include <YGP/Trace.h>
 
@@ -58,18 +55,20 @@ ActorList::ActorList(const Genres& genres) : genres(genres) {
     append_column(_("Year"), colActors.year);
     append_column(_("Genre"), colActors.genre);
 
-    Check3(get_columns().size() == 3);
-    int index[] = {colActors.name.index(), colActors.year.index()};
-    for (unsigned int i(0); i < (sizeof(index) / sizeof(*index)); ++i) {
+    contract_assert(get_columns().size() == 3);
+    const std::array index{colActors.name.index(), colActors.year.index()};
+    for (unsigned int i(0); i < index.size(); ++i) {
         Gtk::TreeViewColumn* column(get_column(i));
         column->set_sort_column(index[i]);
         column->set_resizable();
 
-        Check3(get_column_cell_renderer(i));
-        Check3(typeid(*get_column_cell_renderer(i)) == typeid(Gtk::CellRendererText));
-        Gtk::CellRendererText* rText(dynamic_cast<Gtk::CellRendererText*>(get_column_cell_renderer(i)));
+        Gtk::CellRenderer* renderer(get_column_cell_renderer(i));
+        contract_assert(renderer);
+        contract_assert(typeid(*renderer) == typeid(Gtk::CellRendererText));
+        auto* rText(dynamic_cast<Gtk::CellRendererText*>(renderer));
         column->add_attribute(rText->property_editable(), colActors.editable);
-        rText->signal_edited().connect(sigc::bind(sigc::mem_fun(*this, &ActorList::valueChanged), i));
+        rText->signal_edited().connect(
+            [this, i](const Glib::ustring& path, const Glib::ustring& value) { valueChanged(path, value, i); });
     }
 
     mOwnerObjects->set_sort_func(colActors.name, sigc::mem_fun(*this, &ActorList::sortByName));
@@ -89,7 +88,6 @@ ActorList::~ActorList() { TRACE9("ActorList::~ActorList ()"); }
 //-----------------------------------------------------------------------------
 Gtk::TreeRow ActorList::insert(const HEntity& entity, const Gtk::TreeModel::iterator& pos) {
     TRACE7("ActorList::insert (const HEntity&, const Gtk::TreeModel::iterator&)");
-    Check1(entity);
 
     Gtk::TreeRow newRow(*mOwnerObjects->insert(pos));
     newRow[colActors.entry] = entity;
@@ -105,7 +103,6 @@ Gtk::TreeRow ActorList::insert(const HEntity& entity, const Gtk::TreeModel::iter
 //-----------------------------------------------------------------------------
 Gtk::TreeRow ActorList::append(const HEntity& entity, Gtk::TreeRow& owner) {
     TRACE7("ActorList::append (const HEntity&, Gtk::TreeRow&)");
-    Check1(entity);
 
     Gtk::TreeRow newLine(*mOwnerObjects->append(owner.children()));
     newLine[colActors.entry] = entity;
@@ -119,8 +116,7 @@ Gtk::TreeRow ActorList::append(const HEntity& entity, Gtk::TreeRow& owner) {
 //-----------------------------------------------------------------------------
 void ActorList::update(Gtk::TreeRow& row) {
     HEntity obj(row[colActors.entry]);
-    HFilm film(boost::dynamic_pointer_cast<Film>(obj));
-    if (film) {
+    if (HFilm film(std::dynamic_pointer_cast<Film>(obj)); film) {
         row[colActors.name] = film->getName();
         row[colActors.year] = film->getYear().toString();
 
@@ -131,8 +127,8 @@ void ActorList::update(Gtk::TreeRow& row) {
         row[colActors.editable] = false;
     }
     else {
-        HActor actor(boost::dynamic_pointer_cast<Actor>(obj));
-        Check3(actor);
+        HActor actor(std::dynamic_pointer_cast<Actor>(obj));
+        contract_assert(actor);
         row[colActors.name] = actor->getName();
         row[colActors.year] = actor->getLifespan();
         row[colActors.editable] = true;
@@ -147,7 +143,6 @@ void ActorList::update(Gtk::TreeRow& row) {
 //-----------------------------------------------------------------------------
 void ActorList::valueChanged(const Glib::ustring& path, const Glib::ustring& value, unsigned int column) {
     TRACE9("ActorList::valueChanged (2x const Glib::ustring&, unsigned int) - " << path << "->" << value);
-    Check2(column < 3);
 
     Gtk::TreeModel::iterator iRow(mOwnerObjects->get_iter(Gtk::TreeModel::Path(path)));
     Gtk::TreeModel::Row row(*iRow);
@@ -155,18 +150,15 @@ void ActorList::valueChanged(const Glib::ustring& path, const Glib::ustring& val
 
     try {
         HEntity hEntity(row[colActors.entry]);
-        HActor actor(boost::dynamic_pointer_cast<Actor>(hEntity));
-        Check3(actor);
+        HActor actor(std::dynamic_pointer_cast<Actor>(hEntity));
+        contract_assert(actor);
 
         switch (column) {
         case 0:
-            if (value.size()) {
+            if (!value.empty()) {
                 Gtk::TreeModel::const_iterator i(findName(value));
-                if ((i != iRow) && (i != mOwnerObjects->children().end())) {
-                    Glib::ustring e(_("Entry `%1' already exists!"));
-                    e.replace(e.find("%1"), 2, value);
-                    throw(YGP::InvalidValue(e));
-                }
+                if ((i != iRow) && (i != mOwnerObjects->children().end()))
+                    throw YGP::InvalidValue(Glib::ustring::compose(_("Entry `%1' already exists!"), value));
             }
             actor->setName(value);
             oldValue = row[colActors.name];
@@ -183,14 +175,13 @@ void ActorList::valueChanged(const Glib::ustring& path, const Glib::ustring& val
         if (value != oldValue)
             signalActorChanged.emit(iRow, column, oldValue);
     } // end-try
-    catch (std::exception& e) {
+    catch (const std::exception& e) {
         YGP::StatusObject obj(YGP::StatusObject::ERROR, e.what());
         obj.generalize(_("Invalid value!"));
 
         XGP::MessageDlg* dlg(XGP::MessageDlg::create(obj));
         dlg->set_title(PACKAGE);
-        Gtk::Window* win(dynamic_cast<Gtk::Window*>(get_root()));
-        if (win)
+        if (auto* win(dynamic_cast<Gtk::Window*>(get_root())); win)
             dlg->set_transient_for(*win);
     }
 }
@@ -222,8 +213,8 @@ Gtk::TreeModel::iterator ActorList::findName(const Glib::ustring& name, unsigned
         if (begin->get_value(colActors.editable) && (name == begin->get_value(colActors.name)))
             return begin;
 
-        if (level && begin->children().size()) {
-            Gtk::TreeModel::iterator res(findName(name, level - 1, begin->children().begin(), begin->children().end()));
+        if (level && !begin->children().empty()) {
+            const Gtk::TreeModel::iterator res(findName(name, level - 1, begin->children().begin(), begin->children().end()));
             if (res != mOwnerObjects->children().end())
                 return res;
         }
@@ -246,8 +237,8 @@ Gtk::TreeModel::iterator ActorList::findEntity(const HEntity& entry, unsigned in
         if (entry == begin->get_value(colActors.entry))
             return begin;
 
-        if (level && begin->children().size()) {
-            Gtk::TreeModel::iterator res(findEntity(entry, level - 1, begin->children().begin(), begin->children().end()));
+        if (level && !begin->children().empty()) {
+            const Gtk::TreeModel::iterator res(findEntity(entry, level - 1, begin->children().begin(), begin->children().end()));
             if (res != mOwnerObjects->children().end())
                 return res;
         }
@@ -264,12 +255,11 @@ Gtk::TreeModel::iterator ActorList::findEntity(const HEntity& entry, unsigned in
 /// \returns int: Value as strcmp
 //-----------------------------------------------------------------------------
 int ActorList::sortByName(const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const {
-    Check2(a->parent() == b->parent());
     Glib::ustring nameA(a->get_value(colActors.name));
     Glib::ustring nameB(b->get_value(colActors.name));
 
-    HEntity entity(getEntityAt(a));
-    int rc((typeid(*entity.get()) == typeid(Actor)) ? Actor::removeIgnored(nameA).compare(Actor::removeIgnored(nameB))
+    const HEntity entity(getEntityAt(a));
+    int rc((typeid(*entity) == typeid(Actor)) ? Actor::removeIgnored(nameA).compare(Actor::removeIgnored(nameB))
                                                     : Film::removeIgnored(nameA).compare(Film::removeIgnored(nameB)));
     if (!rc)
         rc = nameA.compare(nameB);
@@ -283,20 +273,19 @@ int ActorList::sortByName(const Gtk::TreeModel::const_iterator& a, const Gtk::Tr
 /// \returns int: Value as strcmp
 //-----------------------------------------------------------------------------
 int ActorList::sortByYear(const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const {
-    Check2(a->parent() == b->parent());
     YGP::AYear ya;
     YGP::AYear yb;
 
     HEntity entity(getEntityAt(a));
     if (typeid(*entity) == typeid(Actor)) {
-        ya = boost::dynamic_pointer_cast<Actor>(entity)->getBorn();
+        ya = std::dynamic_pointer_cast<Actor>(entity)->getBorn();
         entity = getEntityAt(b);
-        yb = boost::dynamic_pointer_cast<Actor>(entity)->getBorn();
+        yb = std::dynamic_pointer_cast<Actor>(entity)->getBorn();
     }
     else {
-        ya = boost::dynamic_pointer_cast<Film>(entity)->getYear();
+        ya = std::dynamic_pointer_cast<Film>(entity)->getYear();
         entity = getEntityAt(b);
-        yb = boost::dynamic_pointer_cast<Film>(entity)->getYear();
+        yb = std::dynamic_pointer_cast<Film>(entity)->getYear();
     }
     return ya.compare(yb);
 }

@@ -18,9 +18,11 @@
 
 #include <list>
 #include <map>
+#include <memory>
+#include <string>
+#include <string_view>
 
 #include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/placeholders.hpp>
 
 #include <glibmm/ustring.h>
 
@@ -39,37 +41,35 @@
  */
 class IMDbProgress : public Gtk::ProgressBar {
   public:
-    typedef enum { POPULAR, EXACT, PARTIAL } match;
-    typedef struct _IMDbSearchEntry {
+    enum match { POPULAR, EXACT, PARTIAL };
+    struct IMDbSearchEntry {
         Glib::ustring url;
         Glib::ustring title;
 
-        _IMDbSearchEntry(const Glib::ustring& url, const Glib::ustring& title) : url(url), title(title) {}
-    } IMDbSearchEntry;
-    typedef std::list<IMDbSearchEntry> IMDbSearchEntries;
-    typedef std::map<match, IMDbSearchEntries> IMDbMatchData;
+        IMDbSearchEntry(const Glib::ustring& url, const Glib::ustring& title) : url(url), title(title) {}
+    };
+    using IMDbSearchEntries = std::list<IMDbSearchEntry>;
+    using IMDbMatchData = std::map<match, IMDbSearchEntries>;
 
-    typedef struct _IMDbEntry {
+    struct IMDbEntry {
         Glib::ustring director;
         Glib::ustring title;
         Glib::ustring genre;
         Glib::ustring summary;
         std::string image;
 
-        _IMDbEntry(const Glib::ustring& director, const Glib::ustring& title, const Glib::ustring& genre,
-                   const Glib::ustring& summary, const std::string& icon)
+        IMDbEntry(const Glib::ustring& director, const Glib::ustring& title, const Glib::ustring& genre,
+                  const Glib::ustring& summary, const std::string& icon)
             : director(director), title(title), genre(genre), summary(summary), image(icon) {}
-    } IMDbEntry;
+    };
 
     IMDbProgress();
     IMDbProgress(const Glib::ustring& film);
-    virtual ~IMDbProgress();
+    ~IMDbProgress() override;
 
     void start(const Glib::ustring& identifier, bool isImage = false);
     void stop();
     void disconnect();
-
-    typedef struct ConnectInfo ConnectInfo;
 
     sigc::signal<void(const Glib::ustring&)> sigError;
     sigc::signal<void(const IMDbMatchData&)> sigAmbiguous;
@@ -84,14 +84,17 @@ class IMDbProgress : public Gtk::ProgressBar {
     sigc::connection conProgress;
 
   private:
+    struct ConnectInfo;
+
     void reStart(const std::string& idFilm);
 
     bool poll();
     bool indicateWait();
     void error(const Glib::ustring& msg);
 
-    static void extractSearch(IMDbSearchEntries& target, const std::string& src, const char** texts, unsigned int offset);
-    Glib::ustring extract(const char* section, const char* subpart, const char* before, const char* after) const;
+    static void extractSearch(IMDbSearchEntries& target, const std::string& src, std::string_view section);
+    Glib::ustring extract(const char* section, const char* subpart, const char* before, const char* after) const
+        pre(section != nullptr) pre(before != nullptr) pre(after != nullptr);
     static void convert(Glib::ustring& string);
 
     void connect();
@@ -105,9 +108,9 @@ class IMDbProgress : public Gtk::ProgressBar {
     void readFilm(Glib::ustring& msg);
     void readImage();
 
-    ConnectInfo* data;
+    std::unique_ptr<ConnectInfo> data;
 
-    enum { NONE, TITLE, IMAGE } status;
+    enum { NONE, TITLE, IMAGE } status {NONE};
 };
 
 #endif

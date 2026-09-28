@@ -31,7 +31,6 @@
 #include <gtkmm/treestore.h>
 #include <gtkmm/treeview.h>
 
-#include <YGP/Check.h>
 #include <YGP/Trace.h>
 
 #include "RelateFilm.h"
@@ -47,10 +46,9 @@ RelateFilm::RelateFilm(const HActor& actor, const std::vector<HFilm>& films, con
       addFilms(*Gtk::make_managed<Gtk::Button>()), removeFilms(*Gtk::make_managed<Gtk::Button>()),
       lstFilms(*Gtk::make_managed<Gtk::TreeView>()), lstAllFilms(*Gtk::make_managed<Gtk::TreeView>()), actor(actor) {
     TRACE9("RelateFilm::RelateFilm (const HActor&, const std::vector<HFilm>&, const Glib::RefPtr<Gtk::TreeStore>)");
-    Check3(actor);
 
-    for (std::vector<HFilm>::const_iterator i(films.begin()); i != films.end(); ++i)
-        insertFilm(*i);
+    for (const auto& film : films)
+        insertFilm(film);
 
     init();
 }
@@ -72,17 +70,17 @@ RelateFilm::RelateFilm(const HActor& actor, const Glib::RefPtr<Gtk::TreeStore> a
 //-----------------------------------------------------------------------------
 /// Destructor
 //-----------------------------------------------------------------------------
-RelateFilm::~RelateFilm() {}
+RelateFilm::~RelateFilm() = default;
 
 //-----------------------------------------------------------------------------
 /// Handling of the OK button; closes the dialog with commiting data
 //-----------------------------------------------------------------------------
 void RelateFilm::okEvent() {
-    Check3(actor);
+    contract_assert(actor);
 
     std::vector<HFilm> films;
-    for (Gtk::TreeModel::const_iterator i(mFilms->children().begin()); i != mFilms->children().end(); ++i)
-        films.push_back(i->get_value(colFilms.hFilm));
+    for (const auto& row : mFilms->children())
+        films.push_back(row.get_value(colFilms.hFilm));
     signalRelateFilms.emit(actor, films);
 }
 
@@ -92,24 +90,24 @@ void RelateFilm::okEvent() {
 //-----------------------------------------------------------------------------
 void RelateFilm::addFilm(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*) {
     TRACE7("RelateFilm::addFilm (const Gtk::TreeModel::Path&, Gtk::TreeViewColumn*)");
-    Check3(lstAllFilms.get_model());
+    contract_assert(lstAllFilms.get_model());
 
     Gtk::TreeModel::iterator sel(availFilms->get_iter(path));
-    Check3(sel);
+    contract_assert(sel);
     if (sel->parent()) {
         HEntity entry(sel->get_value(colAllFilms.entry));
-        Check3(entry);
-        HFilm film(boost::dynamic_pointer_cast<Film>(entry));
-        Check3(film);
+        contract_assert(entry);
+        HFilm film(std::dynamic_pointer_cast<Film>(entry));
+        contract_assert(film);
         TRACE9("RelateFilm::addFilm (const Gtk::TreeModel::Path&, Gtk::TreeViewColumn*) - " << film->getName());
         insertFilm(film);
     }
     else {
-        for (Gtk::TreeModel::iterator i(sel->children().begin()); i != sel->children().end(); ++i) {
-            HEntity entry(i->get_value(colAllFilms.entry));
-            Check3(entry);
-            HFilm film(boost::dynamic_pointer_cast<Film>(entry));
-            Check3(film);
+        for (const auto& child : sel->children()) {
+            HEntity entry(child.get_value(colAllFilms.entry));
+            contract_assert(entry);
+            HFilm film(std::dynamic_pointer_cast<Film>(entry));
+            contract_assert(film);
             TRACE9("RelateFilm::addFilm (const Gtk::TreeModel::Path&, Gtk::TreeViewColumn*) - " << film->getName())
             insertFilm(film);
         }
@@ -133,11 +131,10 @@ void RelateFilm::removeFilm(const Gtk::TreeModel::Path& path, Gtk::TreeViewColum
 //-----------------------------------------------------------------------------
 void RelateFilm::insertFilm(const HFilm& film) {
     TRACE9("RelateFilm::insertFilm (const HFilm&) - " << (film ? film->getName().c_str() : ""));
-    Check1(film);
 
     // Check that film does not exist
-    for (Gtk::TreeModel::const_iterator i(mFilms->children().begin()); i != mFilms->children().end(); ++i)
-        if (film == i->get_value(colFilms.hFilm))
+    for (const auto& row : mFilms->children())
+        if (film == row.get_value(colFilms.hFilm))
             return;
 
     Gtk::TreeModel::Row newFilm(*mFilms->append());
@@ -151,10 +148,8 @@ void RelateFilm::insertFilm(const HFilm& film) {
 void RelateFilm::addSelected() {
     TRACE9("RelateFilm::addSelected ()");
 
-    Glib::RefPtr<Gtk::TreeSelection> filmSel(lstAllFilms.get_selection());
-    std::vector<Gtk::TreePath> list(filmSel->get_selected_rows());
-    for (std::vector<Gtk::TreePath>::iterator i(list.begin()); i != list.end(); ++i)
-        addFilm(*i, nullptr);
+    for (const auto& path : lstAllFilms.get_selection()->get_selected_rows())
+        addFilm(path, nullptr);
 }
 
 //-----------------------------------------------------------------------------
@@ -163,10 +158,8 @@ void RelateFilm::addSelected() {
 void RelateFilm::removeSelected() {
     TRACE9("RelateFilm::removeSelected ()");
 
-    Glib::RefPtr<Gtk::TreeSelection> filmSel(lstFilms.get_selection());
-    std::vector<Gtk::TreePath> list(filmSel->get_selected_rows());
-    for (std::vector<Gtk::TreePath>::iterator i(list.begin()); i != list.end(); ++i)
-        removeFilm(*i, nullptr);
+    for (const auto& path : lstFilms.get_selection()->get_selected_rows())
+        removeFilm(path, nullptr);
 }
 
 //-----------------------------------------------------------------------------
@@ -185,13 +178,11 @@ void RelateFilm::allFilmsSelected() { addFilms.set_sensitive(!lstAllFilms.get_se
 /// Inititalizes the class
 //-----------------------------------------------------------------------------
 void RelateFilm::init() {
-    Check2(actor);
-    Glib::ustring title(_("Films starring %1"));
-    title.replace(title.find("%1"), 2, actor->getName());
-    set_title(title);
+    contract_assert(actor);
+    set_title(Glib::ustring::compose(_("Films starring %1"), actor->getName()));
     set_default_size(580, 450);
 
-    Check1(mFilms);
+    contract_assert(mFilms);
     lstFilms.set_model(mFilms);
     lstAllFilms.set_model(availFilms);
 

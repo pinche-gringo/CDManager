@@ -35,16 +35,16 @@ class StorageActor : public Storage {
   public:
     static void loadActors(std::vector<HActor>& target, YGP::StatusObject& stat) { loadCelebrities(target, "Actors", stat); }
     static void loadActorsInFilms(std::map<unsigned int, std::vector<unsigned int>>& aActors);
-    static void deleteActor(unsigned int idActor);
-    static void deleteActorFilms(unsigned int idActor);
+    static void deleteActor(unsigned int idActor) pre(idActor);
+    static void deleteActorFilms(unsigned int idActor) pre(idActor);
     static void saveActorFilm(unsigned int idActor, unsigned int idFilm);
 
   private:
-    StorageActor();
-    StorageActor(const StorageActor& other);
-    virtual ~StorageActor();
+    StorageActor() = delete;
+    StorageActor(const StorageActor& other) = delete;
+    ~StorageActor() override;
 
-    const StorageActor& operator=(const StorageActor& other);
+    const StorageActor& operator=(const StorageActor& other) = delete;
 };
 
 #endif

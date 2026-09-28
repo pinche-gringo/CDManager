@@ -47,39 +47,39 @@ class ActorColumns : public Gtk::TreeModel::ColumnRecord {
 class ActorList : public Gtk::TreeView {
   public:
     ActorList(const Genres& genres);
-    virtual ~ActorList();
+    ~ActorList() override;
 
-    Gtk::TreeRow insert(const HEntity& entity, const Gtk::TreeModel::iterator& pos);
+    Gtk::TreeRow insert(const HEntity& entity, const Gtk::TreeModel::iterator& pos) pre(entity);
     Gtk::TreeRow append(const HEntity& entity) { return insert(entity, mOwnerObjects->children().end()); }
     Gtk::TreeRow prepend(const HEntity& entity) { return insert(entity, mOwnerObjects->children().begin()); }
 
-    Gtk::TreeRow append(const HEntity& object, Gtk::TreeRow& owner);
+    Gtk::TreeRow append(const HEntity& object, Gtk::TreeRow& owner) pre(object);
     Gtk::TreeRow append(const HEntity& object, const Gtk::TreeModel::iterator& owner) { return append(object, *owner); }
     void clear() { mOwnerObjects->clear(); }
 
     void update(Gtk::TreeRow& row);
 
-    Glib::RefPtr<Gtk::TreeStore> getModel() const { return mOwnerObjects; }
+    [[nodiscard]] Glib::RefPtr<Gtk::TreeStore> getModel() const { return mOwnerObjects; }
 
     /// Returns the handle at the passed position
     /// \param row: Row in the list
     /// \returns HEntity: Handle of the selected line
-    HEntity getEntityAt(const Gtk::TreeModel::ConstRow& row) const { return row.get_value(colActors.entry); }
+    [[nodiscard]] HEntity getEntityAt(const Gtk::TreeModel::ConstRow& row) const { return row.get_value(colActors.entry); }
     /// Returns the handle at the passed position
     /// \param iter: Iterator to position in the list
     /// \returns HEntity: Handle of the selected line
-    HEntity getEntityAt(const Gtk::TreeModel::const_iterator& iter) const { return getEntityAt(*iter); }
+    [[nodiscard]] HEntity getEntityAt(const Gtk::TreeModel::const_iterator& iter) const { return getEntityAt(*iter); }
 
-    Gtk::TreeModel::iterator findEntity(const HEntity& entry, unsigned int level, Gtk::TreeModel::iterator begin,
-                                        Gtk::TreeModel::iterator end) const;
-    Gtk::TreeModel::iterator findEntity(const HEntity& entry, unsigned int level = -1U) const {
+    [[nodiscard]] Gtk::TreeModel::iterator findEntity(const HEntity& entry, unsigned int level, Gtk::TreeModel::iterator begin,
+                                                      Gtk::TreeModel::iterator end) const;
+    [[nodiscard]] Gtk::TreeModel::iterator findEntity(const HEntity& entry, unsigned int level = -1U) const {
         return findEntity(entry, level, mOwnerObjects->children().begin(), mOwnerObjects->children().end());
     }
-    Gtk::TreeModel::iterator findName(const Glib::ustring& name, unsigned int level = -1U) const {
+    [[nodiscard]] Gtk::TreeModel::iterator findName(const Glib::ustring& name, unsigned int level = -1U) const {
         return findName(name, level, mOwnerObjects->children().begin(), mOwnerObjects->children().end());
     }
-    Gtk::TreeModel::iterator findName(const Glib::ustring& name, unsigned int level, Gtk::TreeModel::iterator begin,
-                                      Gtk::TreeModel::iterator end) const;
+    [[nodiscard]] Gtk::TreeModel::iterator findName(const Glib::ustring& name, unsigned int level, Gtk::TreeModel::iterator begin,
+                                                    Gtk::TreeModel::iterator end) const;
 
     void selectRow(const Gtk::TreeModel::const_iterator& i);
 
@@ -89,10 +89,12 @@ class ActorList : public Gtk::TreeView {
     const ActorList& operator=(const ActorList& other) = delete;
 
   protected:
-    void valueChanged(const Glib::ustring& path, const Glib::ustring& value, unsigned int column);
+    void valueChanged(const Glib::ustring& path, const Glib::ustring& value, unsigned int column) pre(column < 3);
 
-    int sortByName(const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const;
-    int sortByYear(const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const;
+    int sortByName(const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const
+        pre(a->parent() == b->parent());
+    int sortByYear(const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const
+        pre(a->parent() == b->parent());
 
   private:
     ActorColumns colActors;

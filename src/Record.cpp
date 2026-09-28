@@ -24,14 +24,17 @@
 
 #include <glibmm/ustring.h>
 
-#include <YGP/Check.h>
 #include <YGP/Trace.h>
 
 #include <XGP/XAttribute.h> // Needed for specialization of YGP::Attribute for Glib::ustring
 
 #include "Record.h"
-#include "Record.meta"
 #include "Words.h"
+
+//-----------------------------------------------------------------------------
+/// Default constructor
+//-----------------------------------------------------------------------------
+Record::Record() { registerAttributes(*this); }
 
 //-----------------------------------------------------------------------------
 /// Copyconstructor
@@ -70,13 +73,7 @@ Glib::ustring Record::removeIgnored(const Glib::ustring& name) { return Words::r
 /// \param b: Second record
 /// \returns bool: True, if a->name < b->name
 //-----------------------------------------------------------------------------
-bool Record::compByName(const HRecord& a, const HRecord& b) {
-    Check1(a);
-    Check1(b);
-    Glib::ustring aname(removeIgnored(a->name));
-    Glib::ustring bname(removeIgnored(b->name));
-    return aname < bname;
-}
+bool Record::compByName(const HRecord& a, const HRecord& b) { return removeIgnored(a->name) < removeIgnored(b->name); }
 
 //-----------------------------------------------------------------------------
 /// Sorts records by year.
@@ -85,8 +82,6 @@ bool Record::compByName(const HRecord& a, const HRecord& b) {
 /// \returns bool: True, if a->year < b->year
 //-----------------------------------------------------------------------------
 bool Record::compByYear(const HRecord& a, const HRecord& b) {
-    Check1(a);
-    Check1(b);
     return a->year < b->year;
 }
 
@@ -97,7 +92,5 @@ bool Record::compByYear(const HRecord& a, const HRecord& b) {
 /// \returns bool: True, if a->genre < b->genre
 //-----------------------------------------------------------------------------
 bool Record::compByGenre(const HRecord& a, const HRecord& b) {
-    Check1(a);
-    Check1(b);
     return a->genre < b->genre;
 }

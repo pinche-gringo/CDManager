@@ -18,16 +18,18 @@
 
 #include <vector>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include <glibmm/ustring.h>
 
 #include <YGP/AYear.h>
 #include <YGP/Entity.h>
 
+#include "EntityAttributes.h"
+
 class Celebrity;
-typedef boost::shared_ptr<YGP::Entity> HEntity;
-typedef boost::shared_ptr<Celebrity> HCelebrity;
+using HEntity = std::shared_ptr<YGP::Entity>;
+using HCelebrity = std::shared_ptr<Celebrity>;
 
 /**Class to hold an celibrity
  */
@@ -35,19 +37,19 @@ class Celebrity : public YGP::Entity {
   public:
     Celebrity();
     Celebrity(const Celebrity& other);
-    virtual ~Celebrity();
+    ~Celebrity() override = default;
 
     Celebrity& operator=(const Celebrity& other);
 
-    static bool compById(const HCelebrity& a, const HCelebrity& b);
-    static bool compByName(const HCelebrity& a, const HCelebrity& b);
-    static Glib::ustring removeIgnored(const Glib::ustring& name);
+    [[nodiscard]] static bool compById(const HCelebrity& a, const HCelebrity& b) pre(a) pre(b);
+    [[nodiscard]] static bool compByName(const HCelebrity& a, const HCelebrity& b) pre(a) pre(b);
+    [[nodiscard]] static Glib::ustring removeIgnored(const Glib::ustring& name);
 
-    unsigned long int getId() const { return id; }
-    const Glib::ustring& getName() const { return name; }
-    const YGP::AYear& getBorn() const { return born; }
-    const YGP::AYear& getDied() const { return died; }
-    Glib::ustring getLifespan() const;
+    [[nodiscard]] unsigned long int getId() const { return id; }
+    [[nodiscard]] const Glib::ustring& getName() const { return name; }
+    [[nodiscard]] const YGP::AYear& getBorn() const { return born; }
+    [[nodiscard]] const YGP::AYear& getDied() const { return died; }
+    [[nodiscard]] Glib::ustring getLifespan() const;
 
     void undefineBorn() { born.undefine(); }
     void undefineDied() { died.undefine(); }
@@ -61,10 +63,10 @@ class Celebrity : public YGP::Entity {
     void setLifespan(const Glib::ustring& value);
 
   private:
-    unsigned long int id; // %attrib%; ; 0
-    Glib::ustring name;   // %attrib%; Name
-    YGP::AYear born;      // %attrib%; Born
-    YGP::AYear died;      // %attrib%; Died
+    unsigned long int id{};
+    [[=Attrib{"Name"}]] Glib::ustring name;
+    [[=Attrib{"Born"}]] YGP::AYear born;
+    [[=Attrib{"Died"}]] YGP::AYear died;
 };
 
 #endif

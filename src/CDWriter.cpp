@@ -25,22 +25,28 @@
 #define DONT_CONVERT
 #include <cdmgr-cfg.h>
 
+#include <cerrno>
+#include <cstdlib>
 #include <cstring>
 
+#include <algorithm>
+#include <array>
+#include <format>
 #include <fstream>
 #include <iostream>
+#include <memory>
+#include <ranges>
 #include <sstream>
 #include <stdexcept>
 #include <string>
-
-#include <boost/tokenizer.hpp>
+#include <string_view>
+#include <vector>
 
 #include <glibmm/convert.h>
 #include <glibmm/ustring.h>
 
 #include <YGP/ADate.h>
 #include <YGP/ATStamp.h>
-#include <YGP/Check.h>
 #include <YGP/Exception.h>
 #include <YGP/File.h>
 #include <YGP/Relation.h>
@@ -63,7 +69,6 @@
 #endif
 
 #include "CDWriter.h"
-#include "Options.meta"
 
 const YGP::IVIOApplication::longOptions CDWriter::lo[] = {{IVIOAPPL_HELP_OPTION}, {"version", 'V'},
 #if WITH_RECORDS == 1
@@ -72,7 +77,23 @@ const YGP::IVIOApplication::longOptions CDWriter::lo[] = {{IVIOAPPL_HELP_OPTION}
 #if WITH_FILMS == 1
                                                           {"filmHeader", 'm'},    {"filmFooter", 'M'},
 #endif
-                                                          {"outputDir", 'd'},     {NULL, '\0'}};
+                                                          {"outputDir", 'd'},     {nullptr, '\0'}};
+
+namespace {
+
+//-----------------------------------------------------------------------------
+/// Replaces every occurrence of %1 in the passed text
+/// \param text: Text to change
+/// \param value: Value to substitute %1 with
+/// \remarks Unlike Glib::ustring::compose the text may contain other %-signs
+//-----------------------------------------------------------------------------
+void replacePlaceholder(std::string& text, const std::string& value) {
+    std::string::size_type pos(0);
+    while ((pos = text.find("%1", pos)) != std::string::npos)
+        text.replace(pos, 2, value);
+}
+
+} // namespace
 
 //-----------------------------------------------------------------------------
 /// Destructor
@@ -101,54 +122,46 @@ void CDWriter::showHelp() const {
 /// Checks the validity of the passed option
 /// \param option: Actual option
 /// \returns \c bool: Status; false: Invalid option/option-value Require :
-///     option not '\0´'
+///     option not '\0ï¿½'
 //-----------------------------------------------------------------------------
 bool CDWriter::handleOption(const char option) {
-    Check3(option != '\0');
+    contract_assert(option != '\0');
 
     switch (option) {
-    case 'd': {
-        const char* pDir(getOptionValue());
-        if (pDir)
+    case 'd':
+        if (const char* pDir(getOptionValue()); pDir)
             opt.setDirOutput(pDir);
         else
             std::cerr << name() << _("-warning: No directory specified! Ignoring option `d'\n");
         break;
-    }
 
 #if WITH_FILMS == 1
     case 'm':
-    case 'M': {
-        const char* pFile(getOptionValue());
-        if (pFile)
+    case 'M':
+        if (const char* pFile(getOptionValue()); pFile)
             (option == 'm') ? opt.setMHeader(pFile) : opt.setMFooter(pFile);
-        else {
-            Glib::ustring e(_("-warning: No file specified! Ignoring option `%1'\n"));
-            e.replace(e.find("%1"), 2, 1, option);
-            std::cerr << name() << e;
-        }
+        else
+            std::cerr << name()
+                      << Glib::ustring::compose(_("-warning: No file specified! Ignoring option `%1'\n"),
+                                                Glib::ustring(1, option));
         break;
-    }
 
 #endif
 #if WITH_RECORDS == 1
     case 'R':
-    case 'r': {
-        const char* pFile(getOptionValue());
-        if (pFile)
+    case 'r':
+        if (const char* pFile(getOptionValue()); pFile)
             (option == 'r') ? opt.setRHeader(pFile) : opt.setRFooter(pFile);
-        else {
-            Glib::ustring e(_("-warning: No file specified! Ignoring option `%1'\n"));
-            e.replace(e.find("%1"), 2, 1, option);
-            std::cerr << name() << e;
-        }
+        else
+            std::cerr << name()
+                      << Glib::ustring::compose(_("-warning: No file specified! Ignoring option `%1'\n"),
+                                                Glib::ustring(1, option));
         break;
-    }
 #endif
 
     case 'V':
         std::cout << description() << '\n';
-        exit(0);
+        std::exit(0);
         break;
 
     default:
@@ -179,23 +192,18 @@ bool CDWriter::handleOption(const char option) {
 void CDWriter::writeHeader(const char* lang, const char* format, std::ostream& stream, bool upSorted, const char* lead) {
     TRACE9("CDWriter::writeHeader (2x const char*, std::ostream&, bool, const char*) - " << lang << "; " << format << "; "
                                                                                          << lead);
-    Check3(lang);
-    Check3(format);
-    Check3(lead);
 
-    static const char formats[] = "adnygml-![]=";
-    static const char* docs[] = {"", "", "-Name", "-Year", "-Genre", "-Media", "-Lang", NULL, NULL, NULL, NULL, NULL};
-    static const std::string titles[] = {_("Interpret"), _("Director"),    _("Name"), _("Year"),   _("Genre"),
-                                         _("Media"),     _("Language(s)"), " | ",     "</td><td>", "<div class=\"header\">",
-                                         "</div>",       "&nbsp;"};
-    Check3((sizeof(docs) / sizeof(*docs)) == strlen(formats));
-    Check3((sizeof(titles) / sizeof(*titles)) == strlen(formats));
+    static constexpr std::string_view formats("adnygml-![]=");
+    static constexpr std::array<const char*, formats.size()> docs {"",      "",      "-Name", "-Year", "-Genre", "-Media",
+                                                                   "-Lang", nullptr, nullptr, nullptr, nullptr,  nullptr};
+    static const auto titles = std::to_array<std::string>({_("Interpret"), _("Director"), _("Name"), _("Year"), _("Genre"),
+                                                           _("Media"), _("Language(s)"), " | ", "</td><td>",
+                                                           "<div class=\"header\">", "</div>", "&nbsp;"});
+    static_assert(std::tuple_size_v<decltype(titles)> == formats.size());
 
-    while (*format) {
-        const char* posFormat(strchr(formats, *format));
-        if (posFormat) {
-            unsigned int pos(strchr(formats, *format++) - formats);
-            Check3(titles[pos].size());
+    for (; *format; ++format) {
+        if (auto pos(formats.find(*format)); pos != std::string_view::npos) {
+            contract_assert(titles[pos].size());
 
             if (docs[pos]) {
                 stream << "<a href=\"" << lead << docs[pos];
@@ -209,7 +217,7 @@ void CDWriter::writeHeader(const char* lang, const char* format, std::ostream& s
                 stream << titles[pos];
         }
         else
-            stream << *format++;
+            stream << *format;
     }
     stream << '\n';
 }
@@ -232,24 +240,22 @@ int CDWriter::perform(int argc, const char** argv) {
     Genres filmGenres, recGenres;
 
     try {
-        if (!atoi(argv[1]))
+        if (!std::atoi(argv[1]))
             throw std::invalid_argument(_("Invalid memory-key (0)!"));
 
-        Words::access(atoi(argv[1]));
+        Words::access(std::atoi(argv[1]));
         TRACE9("Words: " << Words::getMemoryKey() << ": " << Words::cArticles() << '/' << Words::cNames());
 
         Genres::loadFromFile(DATADIR "Genres.dat", recGenres, filmGenres, *argv);
     }
     catch (std::invalid_argument& e) {
-        std::string msg(_("-error: Can't access reserved words!\n\nReason: %1"));
-        msg.replace(msg.find("%1"), 2, e.what());
-        std::cerr << name() << msg << '\n';
+        std::cerr << name() << Glib::ustring::compose(_("-error: Can't access reserved words!\n\nReason: %1"), e.what()).raw()
+                  << '\n';
         return -2;
     }
     catch (std::exception& e) {
-        std::string msg(_("Can't read datafile containing the genres!\n\nReason: %1"));
-        msg.replace(msg.find("%1"), 2, e.what());
-        std::cerr << name() << msg << '\n';
+        std::cerr << name() << Glib::ustring::compose(_("Can't read datafile containing the genres!\n\nReason: %1"), e.what()).raw()
+                  << '\n';
         return -3;
     }
 
@@ -261,10 +267,10 @@ int CDWriter::perform(int argc, const char** argv) {
     Glib::ustring transTitleRecord(_("Records (by %1)"));
 #endif
 
-    struct {
+    struct HTMLData {
         std::string name;
         Glib::ustring& source;
-        std::string target;
+        std::string target {};
     } htmlData[] = {
 #if WITH_FILMS == 1
         {opt.getMHeader(), transTitleFilm},
@@ -279,16 +285,15 @@ int CDWriter::perform(int argc, const char** argv) {
 #endif
     };
 
-    for (unsigned int i(0); i < (sizeof(htmlData) / sizeof(*htmlData)); ++i) {
-        if (htmlData[i].name.size() && (htmlData[i].name[0] != YGP::File::DIRSEPARATOR))
-            htmlData[i].name = DATADIR + htmlData[i].name;
-        if (htmlData[i].target.size() && (htmlData[i].target[0] != YGP::File::DIRSEPARATOR))
-            htmlData[i].target = DATADIR + htmlData[i].target;
+    for (auto& [file, source, target] : htmlData) {
+        if (file.size() && (file[0] != YGP::File::DIRSEPARATOR))
+            file = DATADIR + file;
+        if (target.size() && (target[0] != YGP::File::DIRSEPARATOR))
+            target = DATADIR + target;
 
-        if (!readHeaderFile(htmlData[i].name.c_str(), argv[0], htmlData[i].target, htmlData[i].source)) {
-            std::string error((_("Error reading header file `%1'!\n\nReason: %2")));
-            error.replace(error.find("%1"), 2, htmlData[i].name);
-            error.replace(error.find("%2"), 2, strerror(errno));
+        if (!readHeaderFile(file.c_str(), argv[0], target, source)) {
+            std::string error(
+                Glib::ustring::compose(_("Error reading header file `%1'!\n\nReason: %2"), file, strerror(errno)).raw());
 
             TRACE1("CDWriter::perform (int, const char**) - Error reading HTML-header/footer:\n\t" << error);
             std::cerr << name() << ": " << error << '\n';
@@ -296,7 +301,6 @@ int CDWriter::perform(int argc, const char** argv) {
         }
     } // end-for
 
-    size_t pos(0);
 #if WITH_FILMS == 1
     std::ofstream fileFilm;
     if (createFile(opt.getDirOutput() + "Films.html", argv[0], fileFilm))
@@ -304,9 +308,7 @@ int CDWriter::perform(int argc, const char** argv) {
 
     // Writing the title for films
     std::string titleFilm(htmlData[0].target);
-    pos = 0;
-    while ((pos = titleFilm.find("%1", pos)) != std::string::npos)
-        titleFilm.replace(pos, 2, _("Director"));
+    replacePlaceholder(titleFilm, _("Director"));
     fileFilm << titleFilm;
 
     writeHeader(argv[0], "[d-n-y-g-m-l]", fileFilm);
@@ -330,9 +332,7 @@ int CDWriter::perform(int argc, const char** argv) {
 
     // Writing the title for records
     std::string titleRec(htmlData[WITH_FILMS << 1].target);
-    pos = 0;
-    while ((pos = titleRec.find("%1", pos)) != std::string::npos)
-        titleRec.replace(pos, 2, _("Interpret"));
+    replacePlaceholder(titleRec, _("Interpret"));
     fileRec << titleRec;
 
     writeHeader(argv[0], "[a-n-y-g]", fileRec, true, "Records");
@@ -357,15 +357,15 @@ int CDWriter::perform(int argc, const char** argv) {
             switch (type) {
 #if WITH_FILMS == 1
             case 'D':
-                director.reset(new Director);
+                director = std::make_shared<Director>();
                 std::cin >> *director;
                 TRACE9("CDWriter::perform (int, char**) - Director: " << director->getName());
                 directors.push_back(director);
                 break;
 
             case 'M': {
-                Check3(director);
-                film.reset(new Film);
+                contract_assert(director);
+                film = std::make_shared<Film>();
                 std::cin >> *film;
                 TRACE9("CDWriter::perform (int, char**) - Film: " << film->getName());
                 if (!relFilms.isRelated(director))
@@ -375,11 +375,13 @@ int CDWriter::perform(int argc, const char** argv) {
                 filmWriter.writeFilm(film, director, fileFilm);
                 films.push_back(film);
 
-                boost::tokenizer<boost::char_separator<char>> langs(film->getLanguage(), boost::char_separator<char>(","));
-                for (boost::tokenizer<boost::char_separator<char>>::iterator i(langs.begin()); i != langs.end(); ++i) {
-                    if (usedLanguages.find(*i) == std::string::npos) {
+                // Empty parts are skipped, like boost::char_separator did
+                for (auto lang : film->getLanguage() | std::views::split(',') |
+                                     std::views::transform([](auto&& part) { return std::string_view(part); }) |
+                                     std::views::filter([](std::string_view part) { return !part.empty(); })) {
+                    if (usedLanguages.find(lang) == std::string::npos) {
                         usedLanguages += ',';
-                        usedLanguages += *i;
+                        usedLanguages += lang;
                     }
                 }
                 break;
@@ -388,15 +390,15 @@ int CDWriter::perform(int argc, const char** argv) {
 
 #if WITH_RECORDS == 1
             case 'I':
-                artist.reset(new Interpret);
+                artist = std::make_shared<Interpret>();
                 std::cin >> *artist;
                 TRACE9("CDWriter::perform (int, char**) - Artist: " << artist->getName());
                 artists.push_back(artist);
                 break;
 
             case 'R':
-                Check3(artist);
-                record.reset(new Record);
+                contract_assert(artist);
+                record = std::make_shared<Record>();
                 std::cin >> *record;
                 TRACE9("CDWriter::perform (int, char**) - Record: " << record->getName());
                 if (!relRecords.isRelated(artist))
@@ -409,21 +411,18 @@ int CDWriter::perform(int argc, const char** argv) {
 #endif
 
             default:
-                Check3(0);
+                contract_assert(false);
                 return -1;
             }
         }
         catch (std::exception& error) {
-            const char* types("DMIR");
-            const char* what[] = {N_("Director"), N_("Film"), N_("Interpret"), N_("Record")};
-            Check9((sizeof(types) / sizeof(*types)) == (sizeof(what) / sizeof(*what)));
-            const char* i(strchr(types, type));
-            Glib::ustring entity(_(i ? what[i - types] : N_("unknown entity")));
+            static constexpr std::string_view types("DMIR");
+            static constexpr std::array<const char*, types.size()> what {N_("Director"), N_("Film"), N_("Interpret"),
+                                                                         N_("Record")};
+            const auto i(types.find(type));
+            Glib::ustring entity(_((i != std::string_view::npos) ? what[i] : N_("unknown entity")));
 
-            Glib::ustring msg(_("-error: Can't read %1: %2"));
-            msg.replace(msg.find("%1"), 2, entity);
-            msg.replace(msg.find("%2"), 2, error.what());
-            std::cerr << name() << msg << '\n';
+            std::cerr << name() << Glib::ustring::compose(_("-error: Can't read %1: %2"), entity, error.what()) << '\n';
             break;
         }
         catch (...) {
@@ -445,20 +444,18 @@ int CDWriter::perform(int argc, const char** argv) {
     writeHeader(argv[0], "[d-n-y-g-m-l]", fileFilm, false);
 
     filmWriter.printStart(fileFilm, "");
-    for (std::vector<HDirector>::reverse_iterator i(directors.rbegin()); i != directors.rend(); ++i)
-        if (relFilms.isRelated(*i)) {
-            filmWriter.writeDirector(*i, fileFilm);
+    for (const auto& dir : directors | std::views::reverse)
+        if (relFilms.isRelated(dir)) {
+            filmWriter.writeDirector(dir, fileFilm);
 
-            const std::vector<HFilm>& dirFilms(relFilms.getObjects(*i));
-            Check3(dirFilms.size());
-            for (std::vector<HFilm>::const_iterator m(dirFilms.begin()); m != dirFilms.end(); ++m)
-                filmWriter.writeFilm(*m, *i, fileFilm);
+            const std::vector<HFilm>& dirFilms(relFilms.getObjects(dir));
+            contract_assert(dirFilms.size());
+            for (const auto& m : dirFilms)
+                filmWriter.writeFilm(m, dir, fileFilm);
         }
     filmWriter.printEnd(fileFilm);
     fileFilm << htmlData[1].target;
     fileFilm.close();
-
-    typedef bool (*PFNCMPFILM)(const HFilm&, const HFilm&);
 #endif
 
 #if WITH_RECORDS == 1
@@ -474,86 +471,88 @@ int CDWriter::perform(int argc, const char** argv) {
     writeHeader(argv[0], "[a-n-y-g]", fileRec, false, "Records");
 
     recWriter.printStart(fileRec, "");
-    for (std::vector<HInterpret>::reverse_iterator i(artists.rbegin()); i != artists.rend(); ++i)
-        if (relRecords.isRelated(*i)) {
-            recWriter.writeInterpret(*i, fileRec);
+    for (const auto& interpret : artists | std::views::reverse)
+        if (relRecords.isRelated(interpret)) {
+            recWriter.writeInterpret(interpret, fileRec);
 
-            const std::vector<HRecord>& dirRecords(relRecords.getObjects(*i));
-            Check3(dirRecords.size());
-            for (std::vector<HRecord>::const_iterator m(dirRecords.begin()); m != dirRecords.end(); ++m)
-                recWriter.writeRecord(*m, *i, fileRec);
+            const std::vector<HRecord>& dirRecords(relRecords.getObjects(interpret));
+            contract_assert(dirRecords.size());
+            for (const auto& m : dirRecords)
+                recWriter.writeRecord(m, interpret, fileRec);
         }
     recWriter.printEnd(fileRec);
     fileRec << htmlData[(WITH_FILMS << 1) + 1].target;
     fileRec.close();
-
-    typedef bool (*PFNCMPRECORD)(const HRecord&, const HRecord&);
 #endif
 
-    struct {
+    struct Output {
         const char* title;
         const char* file;
         const char* filedown;
         const char* format;
         const char* sorted;
-        void* fnCompare;
+#if WITH_FILMS == 1
+        bool (*cmpFilm)(const HFilm&, const HFilm&) {nullptr};
+#endif
+#if WITH_RECORDS == 1
+        bool (*cmpRecord)(const HRecord&, const HRecord&) {nullptr};
+#endif
         const char* lead;
         unsigned int type;
-    } aOutputs[] = {
+    };
+    const Output aOutputs[] = {
 #if WITH_FILMS == 1
         // Entries for films
-        {"[n]|[d]|[y]|[g]|[m]|[l]", "Films-Name.html", "Films-Namedown.html", "%n|%d|%y|%g|%t|%l", N_("Name"),
-         (void*)&Film::compByName, "Films", 0},
-        {"[y]|[n]|[d]|[g]|[m]|[l]", "Films-Year.html", "Films-Yeardown.html", "%y|%n|%d|%g|%t|%l", N_("Year"),
-         (void*)&Film::compByYear, "Films", 0},
-        {"[g]|[n]|[d]|[y]|[m]|[l]", "Films-Genre.html", "Films-Genredown.html", "%g|%n|%d|%y|%t|%l", N_("Genre"),
-         (void*)&Film::compByGenre, "Films", 0},
-        {"[m]|[n]|[d]|[y]|[g]|[l]", "Films-Media.html", "Films-Mediadown.html", "%t|%n|%d|%y|%g|%l", N_("Media"),
-         (void*)&Film::compByMedia, "Films", 0}
+        {.title = "[n]|[d]|[y]|[g]|[m]|[l]", .file = "Films-Name.html", .filedown = "Films-Namedown.html",
+         .format = "%n|%d|%y|%g|%t|%l", .sorted = N_("Name"), .cmpFilm = &Film::compByName, .lead = "Films", .type = 0},
+        {.title = "[y]|[n]|[d]|[g]|[m]|[l]", .file = "Films-Year.html", .filedown = "Films-Yeardown.html",
+         .format = "%y|%n|%d|%g|%t|%l", .sorted = N_("Year"), .cmpFilm = &Film::compByYear, .lead = "Films", .type = 0},
+        {.title = "[g]|[n]|[d]|[y]|[m]|[l]", .file = "Films-Genre.html", .filedown = "Films-Genredown.html",
+         .format = "%g|%n|%d|%y|%t|%l", .sorted = N_("Genre"), .cmpFilm = &Film::compByGenre, .lead = "Films", .type = 0},
+        {.title = "[m]|[n]|[d]|[y]|[g]|[l]", .file = "Films-Media.html", .filedown = "Films-Mediadown.html",
+         .format = "%t|%n|%d|%y|%g|%l", .sorted = N_("Media"), .cmpFilm = &Film::compByMedia, .lead = "Films", .type = 0}
 #    if WITH_RECORDS == 1
         ,
 #    endif
 #endif
 #if WITH_RECORDS == 1
         // Entries for records
-        {"[n]|[a]|[y]|[g]", "Records-Name.html", "Records-Namedown.html", "%n|%d|%y|%g", N_("Name"), (void*)&Record::compByName,
-         "Records", 1},
-        {"[y]|[n]|[a]|[g]", "Records-Year.html", "Records-Yeardown.html", "%y|%n|%d|%g", N_("Year"), (void*)&Record::compByYear,
-         "Records", 1},
-        {"[g]|[n]|[a]|[y]", "Records-Genre.html", "Records-Genredown.html", "%g|%n|%d|%y", N_("Genre"),
-         (void*)&Record::compByGenre, "Records", 1}
+        {.title = "[n]|[a]|[y]|[g]", .file = "Records-Name.html", .filedown = "Records-Namedown.html",
+         .format = "%n|%d|%y|%g", .sorted = N_("Name"), .cmpRecord = &Record::compByName, .lead = "Records", .type = 1},
+        {.title = "[y]|[n]|[a]|[g]", .file = "Records-Year.html", .filedown = "Records-Yeardown.html",
+         .format = "%y|%n|%d|%g", .sorted = N_("Year"), .cmpRecord = &Record::compByYear, .lead = "Records", .type = 1},
+        {.title = "[g]|[n]|[a]|[y]", .file = "Records-Genre.html", .filedown = "Records-Genredown.html",
+         .format = "%g|%n|%d|%y", .sorted = N_("Genre"), .cmpRecord = &Record::compByGenre, .lead = "Records", .type = 1}
 #endif
     };
 
     std::ofstream fileOut;
     std::string strTitle;
     // This combines writing films and records
-    for (unsigned int i(0); i < (sizeof(aOutputs) / sizeof(*aOutputs)); ++i) {
-        if (createFile(opt.getDirOutput() + aOutputs[i].file, argv[0], fileOut))
+    for (const auto& output : aOutputs) {
+        if (createFile(opt.getDirOutput() + output.file, argv[0], fileOut))
             return -5;
-        strTitle = htmlData[aOutputs[i].type << 1].target;
-        pos = 0;
-        while ((pos = strTitle.find("%1", pos)) != std::string::npos)
-            strTitle.replace(pos, 2, _(aOutputs[i].sorted));
+        strTitle = htmlData[output.type << 1].target;
+        replacePlaceholder(strTitle, _(output.sorted));
 
         fileOut << strTitle;
 
         std::stringstream header;
-        writeHeader(argv[0], aOutputs[i].title, header, true, aOutputs[i].lead);
+        writeHeader(argv[0], output.title, header, true, output.lead);
 
 #if WITH_RECORDS == 1
-        if (aOutputs[i].type) {
-            std::sort(records.begin(), records.end(), (PFNCMPRECORD)aOutputs[i].fnCompare);
+        if (output.type) {
+            std::ranges::sort(records, output.cmpRecord);
 
-            recordFormat = aOutputs[i].format;
+            recordFormat = output.format;
             RecordWriter writer(recordFormat, recGenres);
             writer.printStart(fileOut, header.str());
 
             HInterpret interpret;
-            for (std::vector<HRecord>::const_iterator m(records.begin()); m != records.end(); ++m) {
-                interpret = relRecords.getParent(*m);
-                Check3(interpret);
-                writer.writeRecord(*m, interpret, fileOut);
+            for (const auto& m : records) {
+                interpret = relRecords.getParent(m);
+                contract_assert(interpret);
+                writer.writeRecord(m, interpret, fileOut);
             }
             writer.printEnd(fileOut);
         }
@@ -561,42 +560,41 @@ int CDWriter::perform(int argc, const char** argv) {
 #endif
 #if WITH_FILMS == 1
         {
-            std::sort(films.begin(), films.end(), (PFNCMPFILM)aOutputs[i].fnCompare);
+            std::ranges::sort(films, output.cmpFilm);
 
-            filmFormat = aOutputs[i].format;
+            filmFormat = output.format;
             FilmWriter writer(filmFormat, filmGenres);
             writer.printStart(fileOut, header.str());
 
             HDirector director;
-            for (std::vector<HFilm>::const_iterator m(films.begin()); m != films.end(); ++m) {
-                director = relFilms.getParent(*m);
-                Check3(director);
-                writer.writeFilm(*m, director, fileOut);
+            for (const auto& m : films) {
+                director = relFilms.getParent(m);
+                contract_assert(director);
+                writer.writeFilm(m, director, fileOut);
             }
             writer.printEnd(fileOut);
         }
 #endif
 
-        fileOut << htmlData[(aOutputs[i].type << 1) + 1].target;
+        fileOut << htmlData[(output.type << 1) + 1].target;
         fileOut.close();
 
-        if (createFile(opt.getDirOutput() + aOutputs[i].filedown, argv[0], fileOut))
+        if (createFile(opt.getDirOutput() + output.filedown, argv[0], fileOut))
             return -5;
         fileOut << strTitle;
 
         std::stringstream rheader;
-        writeHeader(argv[0], aOutputs[i].title, rheader, false, aOutputs[i].lead);
+        writeHeader(argv[0], output.title, rheader, false, output.lead);
 
 #if WITH_RECORDS == 1
-        if (aOutputs[i].type) {
+        if (output.type) {
             RecordWriter writer(recordFormat, recGenres);
             writer.printStart(fileOut, rheader.str());
 
-            for (std::vector<HRecord>::reverse_iterator m(records.rbegin()); m != records.rend(); ++m) {
-                HInterpret interpret;
-                interpret = relRecords.getParent(*m);
-                Check3(interpret);
-                writer.writeRecord(*m, interpret, fileOut);
+            for (const auto& m : records | std::views::reverse) {
+                HInterpret interpret(relRecords.getParent(m));
+                contract_assert(interpret);
+                writer.writeRecord(m, interpret, fileOut);
             }
             writer.printEnd(fileOut);
         }
@@ -607,17 +605,16 @@ int CDWriter::perform(int argc, const char** argv) {
             FilmWriter writer(filmFormat, filmGenres);
             writer.printStart(fileOut, rheader.str());
 
-            for (std::vector<HFilm>::reverse_iterator m(films.rbegin()); m != films.rend(); ++m) {
-                HDirector director;
-                director = relFilms.getParent(*m);
-                Check3(director);
-                writer.writeFilm(*m, director, fileOut);
+            for (const auto& m : films | std::views::reverse) {
+                HDirector director(relFilms.getParent(m));
+                contract_assert(director);
+                writer.writeFilm(m, director, fileOut);
             }
             writer.printEnd(fileOut);
         }
 #endif
 
-        fileOut << htmlData[(aOutputs[i].type << 1) + 1].target;
+        fileOut << htmlData[(output.type << 1) + 1].target;
         fileOut.close();
     }
 
@@ -626,42 +623,39 @@ int CDWriter::perform(int argc, const char** argv) {
     if (createFile(opt.getDirOutput() + "Films-Lang.html", argv[0], fileOut))
         return -5;
     titleFilm = htmlData[0].target;
-    pos = 0;
-    while ((pos = titleFilm.find("%1", pos)) != std::string::npos)
-        titleFilm.replace(pos, 2, _("Language"));
+    replacePlaceholder(titleFilm, _("Language"));
     fileOut << titleFilm;
 
     writeHeader(argv[0], "[n-d-y-g-m]", fileOut, false);
 
+    const std::ranges::subrange languages(Language::begin(), Language::end());
     fileOut << "<div class=\"header\">|";
-    for (std::map<std::string, Language>::const_iterator l(Language::begin()); l != Language::end(); ++l)
-        if (usedLanguages.find(l->first) != std::string::npos)
-            fileOut << " <a href=\"#" << l->first << "\"><img src=\"images/" << l->first << ".png\" alt=\"" << l->first
-                    << " \">&nbsp;" << l->second.getInternational() << "</a> |";
+    for (const auto& [id, language] : languages)
+        if (usedLanguages.find(id) != std::string::npos)
+            fileOut << " <a href=\"#" << id << "\"><img src=\"images/" << id << ".png\" alt=\"" << id << " \">&nbsp;"
+                    << language.getInternational() << "</a> |";
     fileOut << "</div>";
 
     filmFormat = "%l|%n|%d||%y|%g|%t";
     FilmWriter langWriter(filmFormat, filmGenres);
-    std::sort(films.begin(), films.end(), &Film::compByName);
+    std::ranges::sort(films, &Film::compByName);
 
     langWriter.printStart(fileOut, "");
 
-    for (std::map<std::string, Language>::const_iterator l(Language::begin()); l != Language::end(); ++l) {
-        if (usedLanguages.find(l->first) != std::string::npos) {
-            fileOut << "<tr><td colspan=\"6\"><div class=\"header\"><a name=\"" << l->first << "\">\n<br></a><h2>"
-                    << l->second.getInternational() << "</h2></div></td></tr>";
+    for (const auto& [id, language] : languages) {
+        if (usedLanguages.find(id) != std::string::npos) {
+            fileOut << "<tr><td colspan=\"6\"><div class=\"header\"><a name=\"" << id << "\">\n<br></a><h2>"
+                    << language.getInternational() << "</h2></div></td></tr>";
 
             fileOut << "<tr><td>";
             writeHeader(argv[0], "[=]![n]![d]![y]![g]![m]", fileOut, false);
             fileOut << "</td></tr>";
 
-            for (std::vector<HFilm>::const_iterator m(films.begin()); m != films.end(); ++m)
-                if (((*m)->getLanguage().find(l->first) != std::string::npos) ||
-                    ((*m)->getTitles().find(l->first) != std::string::npos)) {
-                    HDirector director;
-                    director = relFilms.getParent(*m);
-                    Check3(director);
-                    langWriter.writeFilm(*m, director, fileOut);
+            for (const auto& m : films)
+                if ((m->getLanguage().find(id) != std::string::npos) || (m->getTitles().find(id) != std::string::npos)) {
+                    HDirector director(relFilms.getParent(m));
+                    contract_assert(director);
+                    langWriter.writeFilm(m, director, fileOut);
                 }
         }
     }
@@ -680,12 +674,11 @@ int CDWriter::perform(int argc, const char** argv) {
 /// \returns const char*: Pointer to a short description
 //-----------------------------------------------------------------------------
 const char* CDWriter::description() const {
-    static std::string version =
-        (name() + std::string(" V" VERSION " - ") + std::string(_("Compiled on")) +
-         std::string(" " __DATE__ " - " __TIME__ "\n\n") +
-         std::string(_("Copyright (C) 2005 - 2007, 2009, 2011 Markus Schwab; e-mail: g17m0@users.sourceforge.net"
-                       "\nDistributed under the terms of the GNU General "
-                       "Public License")));
+    static const std::string version(
+        std::format("{} V" VERSION " - {} " __DATE__ " - " __TIME__ "\n\n{}", name(), _("Compiled on"),
+                    _("Copyright (C) 2005 - 2007, 2009, 2011 Markus Schwab; e-mail: g17m0@users.sourceforge.net"
+                      "\nDistributed under the terms of the GNU General "
+                      "Public License")));
     return version.c_str();
 }
 
@@ -698,17 +691,11 @@ const char* CDWriter::description() const {
 //-----------------------------------------------------------------------------
 int CDWriter::createFile(const std::string& filename, const char* lang, std::ofstream& file) {
     TRACE9("CDWriter::createFile (const std::string&, const char*, std::ofstream&) - " << filename);
-    Check1(filename.size());
-    Check1(lang);
 
-    std::string utf8file(filename);
-    utf8file += '.';
-    utf8file += lang;
-    file.open(utf8file.c_str());
+    const std::string utf8file(std::format("{}.{}", filename, lang));
+    file.open(utf8file);
     if (!file) {
-        Glib::ustring msg(_("Can't create file `%1'!\n\nReason: %2."));
-        msg.replace(msg.find("%1"), 2, utf8file);
-        msg.replace(msg.find("%2"), 2, strerror(errno));
+        Glib::ustring msg(Glib::ustring::compose(_("Can't create file `%1'!\n\nReason: %2."), utf8file, strerror(errno)));
         std::cerr << name() << _("-error: ") << msg;
         return errno;
     }
@@ -733,13 +720,9 @@ int CDWriter::createFile(const std::string& filename, const char* lang, std::ofs
 //-----------------------------------------------------------------------------
 bool CDWriter::readHeaderFile(const char* file, const char* lang, std::string& target, const Glib::ustring& title) {
     TRACE9("CDWriter::readHeaderFile (const char*) - " << file << " (" << lang << "): " << title);
-    Check2(file);
-    Check2(lang);
 
-    target = file;
-    target += '.';
-    target += lang;
-    std::ifstream input(target.c_str());
+    target = std::format("{}.{}", file, lang);
+    std::ifstream input(target);
     if (!input) {
         input.clear();
         input.open(file);
@@ -748,12 +731,12 @@ bool CDWriter::readHeaderFile(const char* file, const char* lang, std::string& t
     }
     target.clear();
 
-    size_t i(512);
-    char buffer[i];
+    std::array<char, 512> buffer;
     // Read as long as there is data or an error occurs
-    while (input.read(buffer, i), input.gcount())
-        target.append(buffer, input.gcount());
+    while (input.read(buffer.data(), buffer.size()), input.gcount())
+        target.append(buffer.data(), input.gcount());
 
+    std::string::size_type i;
     while ((i = target.find("@TITLE@")) != std::string::npos)
         target.replace(i, 7, title);
 

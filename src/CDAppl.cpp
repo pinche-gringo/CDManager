@@ -24,6 +24,9 @@
 
 #include <cdmgr-cfg.h>
 
+#include <format>
+#include <print>
+
 #include <glibmm/convert.h>
 
 #include <gtkmm/application.h>
@@ -39,11 +42,6 @@
 
 const YGP::IVIOApplication::longOptions CDAppl::lo[] = {{IVIOAPPL_HELP_OPTION}, {"user", 'u'},    {"password", 'p'},
                                                         {"file", 'f'},          {"version", 'V'}, {nullptr, '\0'}};
-
-//-----------------------------------------------------------------------------
-/// Destructor
-//-----------------------------------------------------------------------------
-CDAppl::~CDAppl() {}
 
 //-----------------------------------------------------------------------------
 /// Displays the help
@@ -77,7 +75,7 @@ void CDAppl::showHelp() const {
 ///     option not '\0´'
 //-----------------------------------------------------------------------------
 bool CDAppl::handleOption(const char option) {
-    Check3(option != '\0');
+    contract_assert(option != '\0');
 
     switch (option) {
     case 'u':
@@ -142,10 +140,7 @@ void CDAppl::readINIFile(const char* pFile) {
     catch (YGP::FileError&) {
     }
     catch (std::exception& error) {
-        std::string err("-warning: Error reading INI-file `%1'! %2\n");
-        err.replace(err.find("%1"), 2, pFile);
-        err.replace(err.find("%2"), 2, error.what());
-        std::cerr << name() << err;
+        std::print(std::cerr, "{}-warning: Error reading INI-file `{}'! {}\n", name(), pFile, error.what());
     }
     options.pINIFile = pFile;
 }
@@ -158,19 +153,19 @@ void CDAppl::readINIFile(const char* pFile) {
 //-----------------------------------------------------------------------------
 int CDAppl::perform(int, const char**) {
     try {
-        if (options.password.size())
+        if (!options.password.empty())
             options.password = Glib::locale_to_utf8(options.password);
     }
-    catch (Glib::ConvertError& e) {
+    catch (Glib::ConvertError&) {
         options.password.clear();
         std::cerr << PACKAGE << _("-warning: Can't convert password to UTF-8! Ignoring ...\n");
     }
 
     try {
-        if (options.user.size())
+        if (!options.user.empty())
             options.user = Glib::locale_to_utf8(options.getUser());
     }
-    catch (Glib::ConvertError& e) {
+    catch (Glib::ConvertError&) {
         options.user.clear();
         std::cerr << PACKAGE << _("-warning: Can't convert username to UTF-8! Ignoring ...\n");
     }
@@ -186,11 +181,11 @@ int CDAppl::perform(int, const char**) {
 /// \returns const char*: Pointer to a short description
 //-----------------------------------------------------------------------------
 const char* CDAppl::description() const {
-    static std::string version =
-        (PACKAGE " V" VERSION " - " + std::string(_("Compiled on")) + std::string(" " __DATE__ " - " __TIME__ "\n\n") +
-         std::string(_("Copyright (C) 2004 - 2011 Markus Schwab; e-mail: g17m0@users.sourceforge.net"
-                       "\nDistributed under the terms of the GNU General "
-                       "Public License")));
+    static const std::string version(std::format("{} V{} - {} {} - {}\n\n{}", PACKAGE, VERSION, _("Compiled on"), __DATE__,
+                                                 __TIME__,
+                                                 _("Copyright (C) 2004 - 2011 Markus Schwab; e-mail: g17m0@users.sourceforge.net"
+                                                   "\nDistributed under the terms of the GNU General "
+                                                   "Public License")));
     return version.c_str();
 }
 

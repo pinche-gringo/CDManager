@@ -27,7 +27,6 @@
 #include <glibmm/convert.h>
 #include <glibmm/fileutils.h>
 
-#include <YGP/Check.h>
 #include <YGP/Trace.h>
 
 #include "Language.h"
@@ -39,24 +38,6 @@
 #endif
 
 std::map<std::string, Language> Language::languages;
-
-//-----------------------------------------------------------------------------
-/// Defaultconstructor
-//-----------------------------------------------------------------------------
-Language::Language() {}
-
-//-----------------------------------------------------------------------------
-/// Copyconstructor
-/// \param other: Object to copy
-//-----------------------------------------------------------------------------
-Language::Language(const Language& other)
-    : nameInternational(other.nameInternational)
-#ifdef USE_LANGUAGEPIXMAPS
-      ,
-      flag(other.flag)
-#endif
-{
-}
 
 //-----------------------------------------------------------------------------
 /// Constructor from values
@@ -78,40 +59,20 @@ Language::Language(const Glib::ustring& internat
 }
 
 //-----------------------------------------------------------------------------
-/// Destructor
-//-----------------------------------------------------------------------------
-Language::~Language() {}
-
-//-----------------------------------------------------------------------------
-/// Assignment operator
-/// \param other: Object to clone
-/// \returns Language&: Self
-//-----------------------------------------------------------------------------
-Language& Language::operator=(const Language& other) {
-    if (this != &other) {
-        nameInternational = other.nameInternational;
-#ifdef USE_LANGUAGEPIXMAPS
-        flag = other.flag;
-#endif
-    }
-    return *this;
-}
-
-//-----------------------------------------------------------------------------
 /// Initializes the articles
 //-----------------------------------------------------------------------------
 void Language::init() {
-    languages.insert(languages.end(), langValue("de", Language(_("German") LOADFLAG(de))));
-    languages.insert(languages.end(), langValue("en", Language(_("English") LOADFLAG(en))));
-    languages.insert(languages.end(), langValue("es", Language(_("Spanish") LOADFLAG(es))));
-    languages.insert(languages.end(), langValue("fi", Language(_("Finnish") LOADFLAG(fi))));
-    languages.insert(languages.end(), langValue("fr", Language(_("French") LOADFLAG(fr))));
-    languages.insert(languages.end(), langValue("it", Language(_("Italian") LOADFLAG(it))));
-    languages.insert(languages.end(), langValue("no", Language(_("Norwegian") LOADFLAG(no))));
-    languages.insert(languages.end(), langValue("pl", Language(_("Polish") LOADFLAG(pl))));
-    languages.insert(languages.end(), langValue("pt", Language(_("Portugese") LOADFLAG(pt))));
-    languages.insert(languages.end(), langValue("rs", Language(_("Serbian") LOADFLAG(rs))));
-    languages.insert(languages.end(), langValue("sv", Language(_("Swedish") LOADFLAG(sv))));
+    languages.emplace_hint(languages.end(), "de", Language(_("German") LOADFLAG(de)));
+    languages.emplace_hint(languages.end(), "en", Language(_("English") LOADFLAG(en)));
+    languages.emplace_hint(languages.end(), "es", Language(_("Spanish") LOADFLAG(es)));
+    languages.emplace_hint(languages.end(), "fi", Language(_("Finnish") LOADFLAG(fi)));
+    languages.emplace_hint(languages.end(), "fr", Language(_("French") LOADFLAG(fr)));
+    languages.emplace_hint(languages.end(), "it", Language(_("Italian") LOADFLAG(it)));
+    languages.emplace_hint(languages.end(), "no", Language(_("Norwegian") LOADFLAG(no)));
+    languages.emplace_hint(languages.end(), "pl", Language(_("Polish") LOADFLAG(pl)));
+    languages.emplace_hint(languages.end(), "pt", Language(_("Portugese") LOADFLAG(pt)));
+    languages.emplace_hint(languages.end(), "rs", Language(_("Serbian") LOADFLAG(rs)));
+    languages.emplace_hint(languages.end(), "sv", Language(_("Swedish") LOADFLAG(sv)));
 }
 
 //-----------------------------------------------------------------------------
@@ -120,8 +81,7 @@ void Language::init() {
 /// \returns Glib::ustring: Language
 //-----------------------------------------------------------------------------
 Glib::ustring Language::findInternational(const std::string& lang) {
-    std::map<std::string, Language>::const_iterator i(languages.find(lang));
-    if (i != languages.end())
+    if (const auto i(languages.find(lang)); i != languages.end())
         return i->second.nameInternational;
     throw std::out_of_range("Language::findInternational (const std::string&)");
 }
@@ -133,8 +93,7 @@ Glib::ustring Language::findInternational(const std::string& lang) {
 /// \returns Glib::ustring: Language
 //-----------------------------------------------------------------------------
 Glib::RefPtr<Gdk::Pixbuf> Language::findFlag(const std::string& lang) {
-    std::map<std::string, Language>::const_iterator i(languages.find(lang));
-    if (i != languages.end())
+    if (const auto i(languages.find(lang)); i != languages.end())
         return i->second.flag;
     throw std::out_of_range("Language::findFlag (const std::string&)");
 }
@@ -146,8 +105,7 @@ Glib::RefPtr<Gdk::Pixbuf> Language::findFlag(const std::string& lang) {
 /// \returns const Language&: Language
 //-----------------------------------------------------------------------------
 const Language& Language::findLanguage(const std::string& lang) {
-    std::map<std::string, Language>::const_iterator i(languages.find(lang));
-    if (i != languages.end())
+    if (const auto i(languages.find(lang)); i != languages.end())
         return i->second;
     throw std::out_of_range("Language::findLanguage (const std::string&)");
 }
@@ -158,14 +116,7 @@ const Language& Language::findLanguage(const std::string& lang) {
 /// \returns bool
 /// \remarks value must exist within the enum
 //-----------------------------------------------------------------------------
-bool Language::exists(const std::string& lang) {
-    if (lang.size() == 2) {
-        std::map<std::string, Language>::const_iterator i(languages.find(lang));
-        if (i != languages.end())
-            return true;
-    }
-    return false;
-}
+bool Language::exists(const std::string& lang) { return (lang.size() == 2) && languages.contains(lang); }
 
 #ifdef USE_LANGUAGEPIXMAPS
 //-----------------------------------------------------------------------------
@@ -175,16 +126,15 @@ bool Language::exists(const std::string& lang) {
 //-----------------------------------------------------------------------------
 Glib::RefPtr<Gdk::Pixbuf> Language::loadFlag(const char* file) {
     TRACE9("Language::loadFlag (const char*) - " << file);
-    Check1(file);
     try {
         return Gdk::Pixbuf::create_from_file(file);
     }
-    catch (Gdk::PixbufError& e) {
+    catch (const Gdk::PixbufError& e) {
         TRACE1("Language::loadFlag (const char*) - " << e.what());
     }
-    catch (Glib::FileError& e) {
+    catch (const Glib::FileError& e) {
         TRACE1("Language::loadFlag (const char*) - " << e.what());
     }
-    return Glib::RefPtr<Gdk::Pixbuf>();
+    return {};
 }
 #endif

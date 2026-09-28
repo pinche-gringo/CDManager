@@ -16,15 +16,17 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include <glibmm/ustring.h>
 
 #include <YGP/AYear.h>
 #include <YGP/Entity.h>
 
+#include "EntityAttributes.h"
+
 class Record;
-typedef boost::shared_ptr<Record> HRecord;
+using HRecord = std::shared_ptr<Record>;
 
 /**Class to hold a record
  */
@@ -32,14 +34,14 @@ class Record : public YGP::Entity {
   public:
     Record();
     Record(const Record& other);
-    virtual ~Record();
+    ~Record() override = default;
 
     Record& operator=(const Record& other);
 
-    unsigned long int getId() const { return id; }
-    const Glib::ustring& getName() const { return name; }
-    const YGP::AYear& getYear() const { return year; }
-    unsigned int getGenre() const { return genre; }
+    [[nodiscard]] unsigned long int getId() const { return id; }
+    [[nodiscard]] const Glib::ustring& getName() const { return name; }
+    [[nodiscard]] const YGP::AYear& getYear() const { return year; }
+    [[nodiscard]] unsigned int getGenre() const { return genre; }
 
     void setId(const unsigned long int value) { id = value; }
     void setName(const Glib::ustring& value) { name = value; }
@@ -47,20 +49,20 @@ class Record : public YGP::Entity {
     void setYear(const std::string& value) { year = value; }
     void setGenre(const unsigned int value) { genre = value; }
 
-    bool needsLoading() const { return loadSongs; }
+    [[nodiscard]] bool needsLoading() const { return loadSongs; }
     void setSongsLoaded() { loadSongs = false; }
 
-    static Glib::ustring removeIgnored(const Glib::ustring& name);
-    static bool compByName(const HRecord& a, const HRecord& b);
-    static bool compByYear(const HRecord& a, const HRecord& b);
-    static bool compByGenre(const HRecord& a, const HRecord& b);
+    [[nodiscard]] static Glib::ustring removeIgnored(const Glib::ustring& name);
+    [[nodiscard]] static bool compByName(const HRecord& a, const HRecord& b) pre(a) pre(b);
+    [[nodiscard]] static bool compByYear(const HRecord& a, const HRecord& b) pre(a) pre(b);
+    [[nodiscard]] static bool compByGenre(const HRecord& a, const HRecord& b) pre(a) pre(b);
 
   private:
-    unsigned long int id; // %attrib%; ; 0
-    Glib::ustring name;   // %attrib%; Name
-    YGP::AYear year;      // %attrib%; Made
-    unsigned int genre;   // %attrib%; Genre; 0
-    bool loadSongs;       // %attrib%; ; true
+    unsigned long int id{};
+    [[=Attrib{"Name"}]] Glib::ustring name;
+    [[=Attrib{"Made"}]] YGP::AYear year;
+    [[=Attrib{"Genre"}]] unsigned int genre{};
+    bool loadSongs{true};
 };
 
 #endif

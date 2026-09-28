@@ -25,18 +25,13 @@
 #include <cdmgr-cfg.h>
 
 #include <cstring>
+#include <memory>
 
 #include <mysql.h>
 
-#include <YGP/Check.h>
 #include <YGP/Trace.h>
 
 #include "DBMySQL.h"
-
-//-----------------------------------------------------------------------------
-/// Defaultconstructor
-//-----------------------------------------------------------------------------
-DBMySQL::DBMySQL() : mysql(NULL) {}
 
 //-----------------------------------------------------------------------------
 /// Destructor
@@ -52,12 +47,12 @@ DBMySQL::~DBMySQL() { close(); }
 //-----------------------------------------------------------------------------
 void DBMySQL::connect(const char* db, const char* user, const char* pwd) {
     TRACE9("DBMySQL::connect (const char* (3x) - " << db << " from " << user);
-    Check2(!mysql);
+    contract_assert(!mysql);
 
-    mysql = mysql_init(NULL);
+    mysql = mysql_init(nullptr);
     if (!mysql)
         throw std::runtime_error("Out of memory initialising MySQL");
-    if (!mysql_real_connect(mysql, NULL, user, pwd, db, 0, NULL, 0)) {
+    if (!mysql_real_connect(mysql, nullptr, user, pwd, db, 0, nullptr, 0)) {
         std::runtime_error error(mysql_error(mysql));
         close();
         throw error;
@@ -71,7 +66,7 @@ void DBMySQL::close() {
     TRACE9("DBMySQL::close ()");
     if (mysql) {
         mysql_close(mysql);
-        mysql = NULL;
+        mysql = nullptr;
     }
 }
 
@@ -79,7 +74,7 @@ void DBMySQL::close() {
 /// Checks if the connection to the database is established
 /// \returns bool True, if connected
 //-----------------------------------------------------------------------------
-bool DBMySQL::connected() const { return mysql != NULL; }
+bool DBMySQL::connected() const { return mysql != nullptr; }
 
 //-----------------------------------------------------------------------------
 /// Executes the passed query
@@ -88,29 +83,26 @@ bool DBMySQL::connected() const { return mysql != NULL; }
 /// \throw std::exception In case of an error
 //-----------------------------------------------------------------------------
 void DBMySQL::query(const char* query, std::vector<Row>& result) {
-    Check2(mysql);
-    if (mysql_real_query(mysql, query, strlen(query)))
+    contract_assert(mysql);
+    if (mysql_real_query(mysql, query, std::strlen(query)))
         throw std::runtime_error(mysql_error(mysql));
 
-    MYSQL_RES* res(mysql_store_result(mysql));
+    std::unique_ptr<MYSQL_RES, void (*)(MYSQL_RES*)> res(mysql_store_result(mysql), mysql_free_result);
     if (!res) {
         if (mysql_field_count(mysql)) // Query should have returned data
             throw std::runtime_error(mysql_error(mysql));
         return;
     }
 
-    unsigned int cColumns(mysql_num_fields(res));
-    result.reserve(mysql_num_rows(res));
-    MYSQL_ROW row;
-    while ((row = mysql_fetch_row(res)) != NULL) {
-        unsigned long* lengths(mysql_fetch_lengths(res));
-        result.push_back(Row());
-        Row& target(result.back());
+    const unsigned int cColumns(mysql_num_fields(res.get()));
+    result.reserve(mysql_num_rows(res.get()));
+    while (MYSQL_ROW row = mysql_fetch_row(res.get())) {
+        const unsigned long* lengths(mysql_fetch_lengths(res.get()));
+        Row& target(result.emplace_back());
         target.reserve(cColumns);
         for (unsigned int i(0); i < cColumns; ++i)
             target.push_back(row[i] ? std::string(row[i], lengths[i]) : std::string());
     }
-    mysql_free_result(res);
 }
 
 //-----------------------------------------------------------------------------
@@ -118,7 +110,7 @@ void DBMySQL::query(const char* query, std::vector<Row>& result) {
 /// \returns long Generated ID
 //-----------------------------------------------------------------------------
 long DBMySQL::getIDOfInsert() {
-    Check2(mysql);
+    contract_assert(mysql);
     return mysql_insert_id(mysql);
 }
 
@@ -128,9 +120,9 @@ long DBMySQL::getIDOfInsert() {
 /// \returns std::string Escaped text
 //-----------------------------------------------------------------------------
 std::string DBMySQL::escapeDBValue(const std::string& value) const {
-    Check2(mysql);
+    contract_assert(mysql);
     std::string conv((value.length() << 1) + 1, '\0');
-    conv.resize(mysql_real_escape_string(mysql, &conv[0], value.data(), value.length()));
+    conv.resize(mysql_real_escape_string(mysql, conv.data(), value.data(), value.length()));
     return conv;
 }
 

@@ -44,7 +44,7 @@ class PopoverMenu;
 class PFilms : public NBPage {
   public:
     PFilms(Gtk::Statusbar& status, Glib::RefPtr<Gio::SimpleAction> menuSave, const Genres& genres);
-    virtual ~PFilms();
+    ~PFilms() override;
 
     void loadData() override;
     void saveData() override;
@@ -60,12 +60,12 @@ class PFilms : public NBPage {
     void addLanguageMenus(Glib::RefPtr<Gio::Menu> menu, Glib::RefPtr<Gtk::ShortcutController> shortcuts = {});
     void editSelection();
 
-    static HFilm findFilm(const std::vector<HDirector>& directors, const YGP::Relation1_N<HDirector, HFilm>& relFilms,
-                          unsigned int id);
+    [[nodiscard]] static HFilm findFilm(const std::vector<HDirector>& directors,
+                                        const YGP::Relation1_N<HDirector, HFilm>& relFilms, unsigned int id);
 
-    const FilmList& getFilmList() const { return films; }
-    const std::vector<HDirector>& getDirectors() const { return directors; }
-    const YGP::Relation1_N<HDirector, HFilm>& getRelFilms() const { return relFilms; }
+    [[nodiscard]] const FilmList& getFilmList() const { return films; }
+    [[nodiscard]] const std::vector<HDirector>& getDirectors() const { return directors; }
+    [[nodiscard]] const YGP::Relation1_N<HDirector, HFilm>& getRelFilms() const { return relFilms; }
 
     PFilms() = delete;
     PFilms(const PFilms& other) = delete;
@@ -76,16 +76,16 @@ class PFilms : public NBPage {
 
     void selectLanguage();
     void setLanguage(const std::string& lang);
-    void changeLanguage(const std::string& lang);
+    void changeLanguage(const std::string& lang) pre(lang.empty() || (lang.size() == 2));
 
     void directorChanged(const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
     void filmChanged(const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue);
 
     void newDirector();
-    Gtk::TreeModel::iterator addDirector(HDirector& hDirector);
+    Gtk::TreeModel::iterator addDirector(HDirector& hDirector) pre(hDirector);
     void newFilm();
-    Gtk::TreeModel::iterator addFilm(HFilm& hFilm, const Gtk::TreeModel::iterator& pos);
-    void deleteFilm(const Gtk::TreeModel::iterator& film);
+    Gtk::TreeModel::iterator addFilm(HFilm& hFilm, const Gtk::TreeModel::iterator& pos) pre(hFilm) pre(pos);
+    void deleteFilm(const Gtk::TreeModel::iterator& film) pre(film->children().empty());
 
     void undoFilm(const Undo& last);
     void undoDirector(const Undo& last);
@@ -94,18 +94,18 @@ class PFilms : public NBPage {
     void importInfoFromIMDb();
 
     void filmSelected();
-    HFilm findFilm(unsigned int id) const { return findFilm(directors, relFilms, id); }
+    [[nodiscard]] HFilm findFilm(unsigned int id) const { return findFilm(directors, relFilms, id); }
 
     bool continousImportFilm(const Glib::ustring& director, const Glib::ustring& film, const Glib::ustring& genre,
                              const Glib::ustring& summary, const std::string& image, ImportFromIMDb* dlg,
-                             std::vector<HFilm>* films);
+                             std::vector<HFilm>* films) pre(!film.empty());
     bool importFilm(const Glib::ustring& director, const Glib::ustring& film, const Glib::ustring& genre,
                     const Glib::ustring& summary, const std::string& image);
     void importNextFilm(ImportFromIMDb* dlg, std::vector<HFilm>* films);
 
     bool onQueryTooltip(int x, int y, bool keyboard, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
 
-    LanguageImg* imgLang;
+    std::unique_ptr<LanguageImg> imgLang;      ///< Image showing the actual language
     std::unique_ptr<Gtk::PopoverMenu> popLang; ///< Popup-menu of imgLang
 
     FilmList films; // GUI-element holding films

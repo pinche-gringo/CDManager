@@ -28,18 +28,18 @@
 
 #include "CDType.h"
 
-CDType* CDType::instance(NULL);
+CDType* CDType::instance(nullptr);
 
 //-----------------------------------------------------------------------------
 /// Constructor
 //-----------------------------------------------------------------------------
 CDType::CDType() {
-    insert(std::make_pair(0, _("Unspecified")));
-    insert(std::make_pair(1, _("1 DVD")));
-    insert(std::make_pair(2, _("2 DVDs")));
-    insert(std::make_pair(3, _("1 CD")));
-    insert(std::make_pair(4, _("2 CDs")));
-    insert(std::make_pair(5, _("3 CDs")));
+    insert({0, _("Unspecified")});
+    insert({1, _("1 DVD")});
+    insert({2, _("2 DVDs")});
+    insert({3, _("1 CD")});
+    insert({4, _("2 CDs")});
+    insert({5, _("3 CDs")});
 }
 
 //-----------------------------------------------------------------------------

@@ -16,6 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <array>
 #include <string>
 
 #include <gtkmm/entry.h>
@@ -29,7 +30,7 @@ class Options;
 
 class Settings : public XGP::XDialog {
   public:
-    virtual ~Settings();
+    ~Settings() override;
 
     static Settings* create(Gtk::Window& parent, Options& options);
 
@@ -38,7 +39,7 @@ class Settings : public XGP::XDialog {
     const Settings& operator=(const Settings& other) = delete;
 
   protected:
-    Settings(Options& options);
+    explicit Settings(Options& options);
 
   private:
     void okEvent() override;
@@ -51,8 +52,9 @@ class Settings : public XGP::XDialog {
 
     Gtk::Widget* wordDialog;
 
-    static XGP::XAttributeEntry<std::string> Settings::* fields[];
-    static Settings* instance;
+    static constexpr std::array fields{&Settings::txtOutput, &Settings::hdrFilm, &Settings::ftrFilm, &Settings::hdrRecord,
+                                       &Settings::ftrRecord};
+    static inline Settings* instance{nullptr};
 };
 
 #endif

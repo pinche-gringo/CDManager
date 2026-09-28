@@ -34,28 +34,28 @@ class Words {
     //@{
     static void create(unsigned int words = 1000);
     static void access(unsigned int key);
-    static bool areAvailable();
-    static void destroy();
+    [[nodiscard]] static bool areAvailable();
+    static void destroy() pre(areAvailable());
     //@}
 
-    static unsigned int cArticles();
-    static unsigned int cNames();
+    [[nodiscard]] static unsigned int cArticles() pre(areAvailable());
+    [[nodiscard]] static unsigned int cNames() pre(areAvailable());
 
     enum { POS_END = -2U, POS_UNKNOWN = -1U };
-    static void addName2Ignore(const Glib::ustring& word, unsigned int pos = POS_UNKNOWN);
-    static void addArticle(const Glib::ustring& word, unsigned int pos = POS_UNKNOWN);
+    static void addName2Ignore(const Glib::ustring& word, unsigned int pos = POS_UNKNOWN) pre(areAvailable());
+    static void addArticle(const Glib::ustring& word, unsigned int pos = POS_UNKNOWN) pre(areAvailable());
 
-    static Glib::ustring removeArticle(const Glib::ustring& name);
-    static Glib::ustring removeNames(const Glib::ustring& name);
+    [[nodiscard]] static Glib::ustring removeArticle(const Glib::ustring& name) pre(areAvailable());
+    [[nodiscard]] static Glib::ustring removeNames(const Glib::ustring& name) pre(areAvailable());
 
     /// Call a callback for each specified name
     static void forEachName(unsigned int start, unsigned int end, void (*cb)(const char*)) {
-        values* shMem(getInfo());
+        const values* shMem(getInfo());
         for (unsigned int i(start); i < end; ++i)
             cb(getValues() + shMem->aOffsets[i]);
     }
     template <class T> static void forEachName(unsigned int start, unsigned int end, T& obj, void (T::*cb)(const char*)) {
-        values* shMem(getInfo());
+        const values* shMem(getInfo());
         for (unsigned int i(start); i < end; ++i)
             (obj.*cb)(getValues() + shMem->aOffsets[i]);
     }
@@ -78,33 +78,35 @@ class Words {
         }
     }
 
-    static int getMemoryKey() { return _key; }
+    [[nodiscard]] static int getMemoryKey() { return _key; }
 
-    typedef struct {
+    struct values {
         int valuesKey;
         unsigned int cNames;
         unsigned int cArticles;
         unsigned int maxEntries;
         unsigned int used;
         unsigned short aOffsets[];
-    } values;
+    };
 
   private:
     // Prohibited manager functions
     ~Words();
-    Words(const Words&);
-    Words& operator=(const Words&);
+    Words(const Words&) = delete("Words has only static members");
+    Words& operator=(const Words&) = delete("Words has only static members");
 
     static int _key;
 
-    static values* getInfo();
-    static const char* getValues();
+    [[nodiscard]] static values* getInfo() pre(areAvailable());
+    [[nodiscard]] static const char* getValues() pre(areAvailable());
 
-    static unsigned int binarySearch(values* values, char* data, unsigned int start, unsigned int end, const char* word);
-    static void moveValues(unsigned int start, unsigned int end, unsigned int target);
+    [[nodiscard]] static unsigned int binarySearch(values* values, char* data, unsigned int start, unsigned int end,
+                                                   const char* word) pre(values) pre(end <= values->maxEntries);
+    static void moveValues(unsigned int start, unsigned int end, unsigned int target) pre(areAvailable()) pre(start <= end);
 
-    static Glib::ustring getWord(const Glib::ustring& text);
-    static bool containsWord(unsigned int start, unsigned int end, const Glib::ustring& word);
+    [[nodiscard]] static Glib::ustring getWord(const Glib::ustring& text);
+    [[nodiscard]] static bool containsWord(unsigned int start, unsigned int end, const Glib::ustring& word)
+        pre(areAvailable()) pre(start < end);
 };
 
 #endif

@@ -24,22 +24,18 @@
 
 #include <cdmgr-cfg.h>
 
+#include <ranges>
+
 #include <gtkmm/box.h>
 #include <gtkmm/grid.h>
 #include <gtkmm/label.h>
 #include <gtkmm/notebook.h>
 
 #include "Options.h"
-#include "Options.meta"
 #include "WordDlg.h"
 #include "Words.h"
 
 #include "Settings.h"
-
-XGP::XAttributeEntry<std::string> Settings::* Settings::fields[] = {&Settings::txtOutput, &Settings::hdrFilm, &Settings::ftrFilm,
-                                                                    &Settings::hdrRecord, &Settings::ftrRecord};
-
-Settings* Settings::instance(nullptr);
 
 //-----------------------------------------------------------------------------
 /// Constructor
@@ -48,7 +44,7 @@ Settings* Settings::instance(nullptr);
 Settings::Settings(Options& options)
     : XGP::XDialog(OKCANCEL), txtOutput(options.dirOutput), hdrFilm(options.mHeader), ftrFilm(options.mFooter),
       hdrRecord(options.rHeader), ftrRecord(options.rFooter), wordDialog(WordDialog::makeDialog()) {
-    Check3(!instance);
+    contract_assert(!instance);
     instance = this;
 
     set_title(_("Preferences"));
@@ -63,17 +59,15 @@ Settings::Settings(Options& options)
     pagExport.set_column_spacing(5);
     pagExport.set_margin(5);
 
-    Glib::ustring lbls[sizeof(fields) / sizeof(*fields)] = {_("Output _directory:"), _("_Header for films:"),
-                                                            _("_Footer for films:"), _("Header for _records:"),
-                                                            _("Foo_ter for records:")};
+    const std::array<Glib::ustring, fields.size()> lbls{_("Output _directory:"), _("_Header for films:"), _("_Footer for films:"),
+                                                        _("Header for _records:"), _("Foo_ter for records:")};
 
-    Gtk::Label* lbl;
-    for (unsigned int i(0); i < (sizeof(fields) / sizeof(*fields)); ++i) {
-        lbl = Gtk::make_managed<Gtk::Label>(lbls[i], true);
-        lbl->set_mnemonic_widget(this->*fields[i]);
+    for (const auto [i, field] : std::views::enumerate(fields)) {
+        Gtk::Label* lbl(Gtk::make_managed<Gtk::Label>(lbls[i], true));
+        lbl->set_mnemonic_widget(this->*field);
         pagExport.attach(*lbl, 0, i);
-        (this->*fields[i]).set_hexpand(true);
-        pagExport.attach(this->*fields[i], 1, i);
+        (this->*field).set_hexpand(true);
+        pagExport.attach(this->*field, 1, i);
     }
 
     nb.append_page(*Gtk::manage(wordDialog), _("Reserved _words"), true);
@@ -93,8 +87,8 @@ Settings::~Settings() { instance = nullptr; }
 //-----------------------------------------------------------------------------
 void Settings::okEvent() {
     ok->grab_focus();
-    for (unsigned int i(0); i < (sizeof(fields) / sizeof(*fields)); ++i)
-        (this->*fields[i]).commit();
+    for (auto field : fields)
+        (this->*field).commit();
 
     WordDialog::commitDialogData(wordDialog);
 }
@@ -108,7 +102,7 @@ void Settings::okEvent() {
 Settings* Settings::create(Gtk::Window& parent, Options& options) {
     if (instance == nullptr) {
         new Settings(options);
-        Check3(instance);
+        contract_assert(instance);
         instance->set_transient_for(parent);
         instance->signal_response().connect(sigc::mem_fun(*instance, &Settings::free));
     }

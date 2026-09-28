@@ -31,18 +31,18 @@ class TextView;
 class FilmDataEditor : public XGP::XDialog {
   public:
     FilmDataEditor();
-    virtual ~FilmDataEditor();
+    ~FilmDataEditor() override = default;
 
     void setIcon(const std::string& bufImage);
-    const std::string getIcon() const;
+    [[nodiscard]] const std::string getIcon() const;
 
     void setSummary(const Glib::ustring& summary);
-    const Glib::ustring getSummary() const;
+    [[nodiscard]] const Glib::ustring getSummary() const;
 
     /// Creates the dialog
     /// \remarks Cares also about freeing the dialog
     static FilmDataEditor* create() {
-        FilmDataEditor* dlg(new FilmDataEditor);
+        auto* dlg(new FilmDataEditor);
         dlg->signal_response().connect(sigc::mem_fun(*dlg, &FilmDataEditor::free));
         return dlg;
     }
@@ -52,14 +52,14 @@ class FilmDataEditor : public XGP::XDialog {
     const FilmDataEditor& operator=(const FilmDataEditor&) = delete;
 
   protected:
-    Gtk::TextView* txtSummary; ///< Field displaying the summary of the plot
-    Gtk::Image* image;         ///< Image showing the poster of the film
+    Gtk::TextView* txtSummary{}; ///< Field displaying the summary of the plot
+    Gtk::Image* image{};         ///< Image showing the poster of the film
 
     void loadIcon();
     void addIcon(const std::string& file);
 
   private:
-    void showPoster(const Glib::RefPtr<Gdk::Pixbuf>& pic);
+    void showPoster(const Glib::RefPtr<Gdk::Pixbuf>& pic) pre(pic);
 
     Glib::RefPtr<Gdk::Pixbuf> poster; ///< Poster of the film (scaled to the displayed size)
 };

@@ -18,7 +18,7 @@
 
 #include <vector>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include <glibmm/refptr.h>
 
@@ -37,7 +37,7 @@ class TreeView;
 class TreeViewColumn;
 } // namespace Gtk
 
-typedef boost::shared_ptr<YGP::Entity> HEntity;
+using HEntity = std::shared_ptr<YGP::Entity>;
 
 /**Dialog to permit connecting films to an actor
  */
@@ -70,7 +70,7 @@ class RelateFilm : public XGP::XDialog {
     };
 
   public:
-    virtual ~RelateFilm();
+    ~RelateFilm() override;
 
     static RelateFilm* create(const HActor& actor, const std::vector<HFilm>& films, const Glib::RefPtr<Gtk::TreeStore> allFilms) {
         RelateFilm* dlg(new RelateFilm(actor, films, allFilms));
@@ -92,13 +92,14 @@ class RelateFilm : public XGP::XDialog {
 
   private:
     RelateFilm(const HActor& actor, const Glib::RefPtr<Gtk::TreeStore> allFilms);
-    RelateFilm(const HActor& actor, const std::vector<HFilm>& films, const Glib::RefPtr<Gtk::TreeStore> allFilms);
+    RelateFilm(const HActor& actor, const std::vector<HFilm>& films, const Glib::RefPtr<Gtk::TreeStore> allFilms)
+        pre(actor);
 
     void init();
 
     void okEvent() override;
 
-    void insertFilm(const HFilm& film);
+    void insertFilm(const HFilm& film) pre(film);
     void addFilm(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*);
     void removeFilm(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*);
 

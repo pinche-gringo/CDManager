@@ -35,7 +35,6 @@
 #include <gtkmm/label.h>
 #include <gtkmm/textview.h>
 
-#include <YGP/Check.h>
 #include <YGP/StatusObj.h>
 #include <YGP/Trace.h>
 
@@ -44,8 +43,8 @@
 
 #include "FilmData.h"
 
-static const unsigned int WIDTH = 87;
-static const unsigned int HEIGHT = 128;
+constexpr unsigned int WIDTH = 87;
+constexpr unsigned int HEIGHT = 128;
 
 //-----------------------------------------------------------------------------
 /// Constructor
@@ -58,10 +57,10 @@ FilmDataEditor::FilmDataEditor()
     txtSummary->set_size_request(350, 150);
     txtSummary->set_expand(true);
 
-    Gtk::Box* hbox(Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 5));
-    Gtk::Box* vbox(Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 5));
+    auto* hbox(Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 5));
+    auto* vbox(Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 5));
 
-    Gtk::Button* img(Gtk::make_managed<Gtk::Button>());
+    auto* img(Gtk::make_managed<Gtk::Button>());
     img->set_size_request(WIDTH, HEIGHT);
     img->set_valign(Gtk::Align::START);
     image->set_from_icon_name("image-missing");
@@ -71,7 +70,7 @@ FilmDataEditor::FilmDataEditor()
 
     img->signal_clicked().connect(sigc::mem_fun(*this, &FilmDataEditor::loadIcon));
 
-    Gtk::Label* lbl(Gtk::make_managed<Gtk::Label>(_("Plot summary:")));
+    auto* lbl(Gtk::make_managed<Gtk::Label>(_("Plot summary:")));
     lbl->set_halign(Gtk::Align::START);
     vbox->append(*lbl);
     vbox->append(*txtSummary);
@@ -85,11 +84,6 @@ FilmDataEditor::FilmDataEditor()
 }
 
 //-----------------------------------------------------------------------------
-/// Destructor
-//-----------------------------------------------------------------------------
-FilmDataEditor::~FilmDataEditor() {}
-
-//-----------------------------------------------------------------------------
 /// Sets the icon of a film
 /// \param bufImage Image description
 //-----------------------------------------------------------------------------
@@ -98,7 +92,7 @@ void FilmDataEditor::setIcon(const std::string& bufImage) {
 
     Glib::RefPtr<Gdk::PixbufLoader> picLoader(Gdk::PixbufLoader::create());
     try {
-        picLoader->write((const guint8*)bufImage.data(), (gsize)bufImage.size());
+        picLoader->write(reinterpret_cast<const guint8*>(bufImage.data()), bufImage.size());
         picLoader->close();
         TRACE9("Size " << picLoader->get_pixbuf()->get_width() << '/' << picLoader->get_pixbuf()->get_height());
         showPoster(picLoader->get_pixbuf()->scale_simple(WIDTH, HEIGHT, Gdk::InterpType::BILINEAR));
@@ -114,8 +108,6 @@ void FilmDataEditor::setIcon(const std::string& bufImage) {
 /// \throw Glib::Error In case of an error
 //-----------------------------------------------------------------------------
 void FilmDataEditor::showPoster(const Glib::RefPtr<Gdk::Pixbuf>& pic) {
-    Check1(pic);
-
     // Convert the poster to a texture (via PNG, as
     // Gdk::Texture::create_for_pixbuf is deprecated)
     gchar* buffer(nullptr);
@@ -134,7 +126,7 @@ void FilmDataEditor::showPoster(const Glib::RefPtr<Gdk::Pixbuf>& pic) {
 //-----------------------------------------------------------------------------
 const std::string FilmDataEditor::getIcon() const {
     if (!poster)
-        return std::string();
+        return {};
 
     gchar* buffer(nullptr);
     gsize bufSize(0);
@@ -187,9 +179,7 @@ void FilmDataEditor::addIcon(const std::string& filename) {
     }
 
     if (!img) {
-        Glib::ustring msg(_("Error loading icon from file '%1'!"));
-        msg.replace(msg.find("%1"), 2, filename);
-        error.generalize(msg);
+        error.generalize(Glib::ustring::compose(_("Error loading icon from file '%1'!"), Glib::ustring(filename)));
         XGP::MessageDlg* dlg(XGP::MessageDlg::create(error));
         dlg->set_title(PACKAGE);
         dlg->set_transient_for(*this);

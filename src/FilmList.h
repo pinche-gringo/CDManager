@@ -85,14 +85,14 @@ class FilmColumns : public OwnerObjectColumns {
 class FilmList : public OwnerObjectList {
   public:
     FilmList(const Genres& genres);
-    virtual ~FilmList();
+    ~FilmList() override;
 
     Gtk::TreeModel::Row append(const HDirector& director) { return OwnerObjectList::append(director); }
-    Gtk::TreeModel::Row append(HFilm& film, Gtk::TreeModel::Row& director);
+    Gtk::TreeModel::Row append(HFilm& film, Gtk::TreeModel::Row& director) pre(film);
 
-    HFilm getFilmAt(const Gtk::TreeModel::ConstRow& row) const;
-    HFilm getFilmAt(const Gtk::TreeModel::const_iterator& iterator) const { return getFilmAt(*iterator); }
-    HDirector getDirectorAt(const Gtk::TreeModel::const_iterator& iterator) const { return getCelebrityAt(iterator); }
+    [[nodiscard]] HFilm getFilmAt(const Gtk::TreeModel::ConstRow& row) const pre(row.parent());
+    [[nodiscard]] HFilm getFilmAt(const Gtk::TreeModel::const_iterator& iterator) const { return getFilmAt(*iterator); }
+    [[nodiscard]] HDirector getDirectorAt(const Gtk::TreeModel::const_iterator& iterator) const { return getCelebrityAt(iterator); }
 
     void update(const std::string& lang);
 
@@ -109,7 +109,7 @@ class FilmList : public OwnerObjectList {
     Glib::ustring getColumnName() const override;
     int sortEntity(const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const override;
 
-    void valueChanged(const Glib::ustring& path, const Glib::ustring& value, unsigned int column);
+    void valueChanged(const Glib::ustring& path, const Glib::ustring& value, unsigned int column) pre(column < 3);
 
     void onButtonPressed(int nPress, double x, double y);
     void editLanguages(const Glib::ustring& path, bool subtitles);

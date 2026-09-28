@@ -22,13 +22,14 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <format>
+
 #include <glibmm/error.h>
 
 #include <gdkmm/texture.h>
 
 #include <gtkmm/gestureclick.h>
 
-#include <YGP/Check.h>
 #include <YGP/File.h>
 #include <YGP/Trace.h>
 
@@ -77,13 +78,12 @@ LanguageImg::~LanguageImg() { TRACE9("LanguageImg::~LanguageImg ()"); }
 //-----------------------------------------------------------------------------
 void LanguageImg::update(const std::string& file) {
     TRACE2("LanguageImg::update (const std::string&) - " << file);
-    Check1(file.size());
 
     std::string path;
-    if (file[0] != YGP::File::DIRSEPARATOR) {
+    if (!file.starts_with(YGP::File::DIRSEPARATOR)) {
         path = DATADIR;
-        Check3(path.size());
-        if (path[path.size() - 1] != YGP::File::DIRSEPARATOR)
+        contract_assert(!path.empty());
+        if (!path.ends_with(YGP::File::DIRSEPARATOR))
             path += YGP::File::DIRSEPARATOR;
     }
     path += file;
@@ -110,9 +110,7 @@ void LanguageImg::update(const std::string& file) {
 void LanguageImg::update(const char* lang) {
     TRACE1("LanguageImg::update (const char*) - " << lang);
 
-    std::string file((lang && *lang) ? lang : "in");
-    file += ".png";
-    update(file);
+    update(std::format("{}.png", (lang && *lang) ? lang : "in"));
 }
 
 //-----------------------------------------------------------------------------

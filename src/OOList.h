@@ -24,7 +24,7 @@
 
 #include "Celebrity.h"
 
-typedef boost::shared_ptr<YGP::Entity> HEntity;
+using HEntity = std::shared_ptr<YGP::Entity>;
 
 /**Class describing the columns in the genre-model
  */
@@ -59,13 +59,13 @@ class OwnerObjectColumns : public Gtk::TreeModel::ColumnRecord {
 class OwnerObjectList : public Gtk::TreeView {
   public:
     OwnerObjectList(const Genres& genres);
-    virtual ~OwnerObjectList();
+    ~OwnerObjectList() override;
 
-    Gtk::TreeModel::Row insert(const HCelebrity& celebrity, const Gtk::TreeModel::iterator& pos);
+    Gtk::TreeModel::Row insert(const HCelebrity& celebrity, const Gtk::TreeModel::iterator& pos) pre(celebrity);
     Gtk::TreeModel::Row append(const HCelebrity& celebrity) { return insert(celebrity, mOwnerObjects->children().end()); }
     Gtk::TreeModel::Row prepend(const HCelebrity& celebrity) { return insert(celebrity, mOwnerObjects->children().begin()); }
 
-    Gtk::TreeModel::Row append(HEntity& object, Gtk::TreeModel::Row& celebrity);
+    Gtk::TreeModel::Row append(HEntity& object, Gtk::TreeModel::Row& celebrity) pre(object);
     void clear() { mOwnerObjects->clear(); }
 
     void updateGenres();
@@ -73,14 +73,16 @@ class OwnerObjectList : public Gtk::TreeView {
     sigc::signal<void(const Gtk::TreeModel::iterator&, unsigned int, Glib::ustring&)> signalOwnerChanged;
     sigc::signal<void(const Gtk::TreeModel::iterator&, unsigned int, Glib::ustring&)> signalObjectChanged;
 
-    Glib::RefPtr<Gtk::TreeStore> getModel() const { return mOwnerObjects; }
-    HEntity getObjectAt(const Gtk::TreeModel::ConstRow& row) const;
-    HEntity getObjectAt(const Gtk::TreeModel::const_iterator& iterator) const { return getObjectAt(*iterator); }
-    HCelebrity getCelebrityAt(const Gtk::TreeModel::ConstRow& row) const;
-    HCelebrity getCelebrityAt(const Gtk::TreeModel::const_iterator& iterator) const { return getCelebrityAt(*iterator); }
+    [[nodiscard]] Glib::RefPtr<Gtk::TreeStore> getModel() const { return mOwnerObjects; }
+    [[nodiscard]] HEntity getObjectAt(const Gtk::TreeModel::ConstRow& row) const pre(row.parent());
+    [[nodiscard]] HEntity getObjectAt(const Gtk::TreeModel::const_iterator& iterator) const { return getObjectAt(*iterator); }
+    [[nodiscard]] HCelebrity getCelebrityAt(const Gtk::TreeModel::ConstRow& row) const pre(!row.parent());
+    [[nodiscard]] HCelebrity getCelebrityAt(const Gtk::TreeModel::const_iterator& iterator) const {
+        return getCelebrityAt(*iterator);
+    }
 
-    Gtk::TreeModel::iterator getOwner(const Glib::ustring& name) const;
-    Gtk::TreeModel::iterator getOwner(const HCelebrity& owner) const;
+    [[nodiscard]] Gtk::TreeModel::iterator getOwner(const Glib::ustring& name) const;
+    [[nodiscard]] Gtk::TreeModel::iterator getOwner(const HCelebrity& owner) const pre(owner);
     Gtk::TreeModel::iterator getObject(const Gtk::TreeModel::iterator& parent, const Glib::ustring& name) const;
     Gtk::TreeModel::iterator getObject(const Gtk::TreeModel::iterator& parent, const HEntity& object) const;
     Gtk::TreeModel::iterator getObject(const HEntity& object) const;
@@ -90,7 +92,7 @@ class OwnerObjectList : public Gtk::TreeView {
     void set(Gtk::TreeModel::Row& row, const HEntity& obj);
     virtual void update(Gtk::TreeModel::Row& row);
 
-    int getGenre(const Glib::ustring& genre) const { return genres.getId(genre); }
+    [[nodiscard]] int getGenre(const Glib::ustring& genre) const { return genres.getId(genre); }
 
     OwnerObjectList(const OwnerObjectList& other) = delete;
     const OwnerObjectList& operator=(const OwnerObjectList& other) = delete;
@@ -98,7 +100,7 @@ class OwnerObjectList : public Gtk::TreeView {
   protected:
     void init(const OwnerObjectColumns& cols);
 
-    void valueChanged(const Glib::ustring& path, const Glib::ustring& value, unsigned int column);
+    void valueChanged(const Glib::ustring& path, const Glib::ustring& value, unsigned int column) pre(column < 3);
 
     virtual void setName(HEntity& object, const Glib::ustring& value);
     virtual void setYear(HEntity& object, const Glib::ustring& value);
@@ -108,14 +110,17 @@ class OwnerObjectList : public Gtk::TreeView {
 
     void changeGenre(Gtk::TreeModel::Row& row, unsigned int value);
 
-    int sortByName(const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const;
-    int sortByYear(const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const;
+    int sortByName(const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const
+        pre(a->parent() == b->parent());
+    int sortByYear(const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const
+        pre(a->parent() == b->parent());
     int sortByGenre(const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const;
     virtual int sortEntity(const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const;
-    int sortOwner(const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const;
+    int sortOwner(const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const
+        pre(!a->parent()) pre(!b->parent());
 
     const Genres& genres;
-    const OwnerObjectColumns* colOwnerObjects;
+    const OwnerObjectColumns* colOwnerObjects{nullptr};
     GenreColumns colGenres;
 
     Glib::RefPtr<Gtk::ListStore> mGenres;

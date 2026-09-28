@@ -29,7 +29,7 @@
 // Forward declarations
 namespace YGP {
 class StatusObject;
-};
+} // namespace YGP
 
 /**Class to access the stored films
  */
@@ -39,21 +39,21 @@ class StorageFilm : public Storage {
         loadCelebrities(target, "Directors", stat);
     }
     static unsigned int loadFilms(std::map<unsigned int, std::vector<HFilm>>& aFilms, YGP::StatusObject& stat);
-    static void saveFilm(const HFilm film, unsigned int idDirector);
+    static void saveFilm(const HFilm& film, unsigned int idDirector);
     static void deleteFilm(unsigned int idFilm);
     static void deleteDirector(unsigned int idDirector);
     static void deleteFilmNames(unsigned int idFilm);
-    static void saveFilmName(const HFilm film, const std::string& lang);
+    static void saveFilmName(const HFilm& film, const std::string& lang);
 
     static void loadNames(const std::vector<HDirector>& directors, const YGP::Relation1_N<HDirector, HFilm>& relFilms,
                           const std::string& lang);
 
   private:
-    StorageFilm();
-    StorageFilm(const StorageFilm& other);
-    virtual ~StorageFilm();
+    StorageFilm() = delete;
+    StorageFilm(const StorageFilm& other) = delete;
+    ~StorageFilm() override;
 
-    const StorageFilm& operator=(const StorageFilm& other);
+    const StorageFilm& operator=(const StorageFilm& other) = delete;
 };
 
 #endif

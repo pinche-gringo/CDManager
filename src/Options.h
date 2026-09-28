@@ -21,22 +21,24 @@
 
 #include <YGP/Entity.h>
 
+#include "EntityAttributes.h"
+
 class Options : public YGP::Entity {
     friend class CDAppl;
     friend class Settings;
 
   public:
-    Options();
-    virtual ~Options();
+    Options() { registerAttributes(*this); }
+    ~Options() override = default;
 
-    const std::string& getMHeader() const { return mHeader; }
-    const std::string& getMFooter() const { return mFooter; }
-    const std::string& getRHeader() const { return rHeader; }
-    const std::string& getRFooter() const { return rFooter; }
-    const std::string& getDirOutput() const { return dirOutput; }
+    [[nodiscard]] const std::string& getMHeader() const { return mHeader; }
+    [[nodiscard]] const std::string& getMFooter() const { return mFooter; }
+    [[nodiscard]] const std::string& getRHeader() const { return rHeader; }
+    [[nodiscard]] const std::string& getRFooter() const { return rFooter; }
+    [[nodiscard]] const std::string& getDirOutput() const { return dirOutput; }
 
-    const std::string& getUser() const { return user; }
-    const std::string& getPassword() const { return password; }
+    [[nodiscard]] const std::string& getUser() const { return user; }
+    [[nodiscard]] const std::string& getPassword() const { return password; }
 
     void setMHeader(const std::string& value) { mHeader = value; }
     void setMFooter(const std::string& value) { mFooter = value; }
@@ -44,17 +46,17 @@ class Options : public YGP::Entity {
     void setRFooter(const std::string& value) { rFooter = value; }
     void setDirOutput(const std::string& value) { dirOutput = value; }
 
-    const char* pINIFile; // %attrib%;; NULL
+    const char* pINIFile{nullptr};
+
+    Options(const Options& other) = delete("Options registers references to its members");
+    Options& operator=(const Options& other) = delete("Options registers references to its members");
 
   private:
-    Options(const Options& other);
-    const Options& operator=(const Options& other);
-
-    std::string mHeader;   // %attrib%; FilmHead;         "Films.head"
-    std::string mFooter;   // %attrib%; FilmFoot;         "Films.foot"
-    std::string rHeader;   // %attrib%; RecordHead;     "Records.head"
-    std::string rFooter;   // %attrib%; RecordFoot;     "Records.foot"
-    std::string dirOutput; // %attrib%; OutputDir;     "/var/www/cds/"
+    [[=Attrib{"FilmHead"}]] std::string mHeader{"Films.head"};
+    [[=Attrib{"FilmFoot"}]] std::string mFooter{"Films.foot"};
+    [[=Attrib{"RecordHead"}]] std::string rHeader{"Records.head"};
+    [[=Attrib{"RecordFoot"}]] std::string rFooter{"Records.foot"};
+    [[=Attrib{"OutputDir"}]] std::string dirOutput{"/var/www/cds/"};
 
     std::string user;
     std::string password;

@@ -38,7 +38,7 @@ class LanguageImg;
 class PRecords : public NBPage {
   public:
     PRecords(Gtk::Statusbar& status, Glib::RefPtr<Gio::SimpleAction> menuSave, const Genres& genres);
-    virtual ~PRecords();
+    ~PRecords() override;
 
     void loadData() override;
     void saveData() override;
@@ -72,22 +72,22 @@ class PRecords : public NBPage {
 
     void songSelected();
     void recordSelected();
-    void deleteRecord(const Gtk::TreeModel::iterator& record);
+    void deleteRecord(const Gtk::TreeModel::iterator& record) pre(record->children().empty());
     void deleteSelectedRecords();
     void deleteSelectedSongs();
-    void deleteSong(const HSong& song, const HRecord& record);
+    void deleteSong(const HSong& song, const HRecord& record) pre(song) pre(record);
 
     void undoSong(const Undo& last);
     void undoRecord(const Undo& last);
     void undoInterpret(const Undo& last);
 
-    void loadSongs(const HRecord& record);
+    void loadSongs(const HRecord& record) pre(record);
 
     //@{
     /// Importing from file-information
     void importFromFileInfo();
     std::string stripString(const std::string& value, unsigned int pos, unsigned int len);
-    void parseFileInfo(const std::string& file);
+    void parseFileInfo(const std::string& file) pre(!file.empty());
     bool parseID3Info(std::istream& stream, Glib::ustring& artist, Glib::ustring& record, Glib::ustring& song,
                       unsigned int& track, Glib::ustring& genre, unsigned int& year);
     bool parseOGGCommentHeader(std::istream& stream, Glib::ustring& artist, Glib::ustring& record, Glib::ustring& song,

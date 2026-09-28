@@ -34,7 +34,6 @@
 #include <gtkmm/shortcuttrigger.h>
 #include <gtkmm/statusbar.h>
 
-#include <YGP/Check.h>
 #include <YGP/Trace.h>
 
 #include <XGP/XDialog.h>
@@ -42,20 +41,15 @@
 #include "NBPage.h"
 
 //-----------------------------------------------------------------------------
-/// Destructor
-//-----------------------------------------------------------------------------
-NBPage::~NBPage() {}
-
-//-----------------------------------------------------------------------------
 /// Enables or disables the edit-menus entries according to the selection
 /// \param selected: Kind of the currently selected entry
 //-----------------------------------------------------------------------------
 void NBPage::enableEdit(SELECTED selected) {
     TRACE9("NBPage::enableEdit (SELECTED) - " << selected);
-    Check2(apMenus[NEW1]);
-    Check2(apMenus[NEW2]);
+    contract_assert(apMenus[NEW1]);
+    contract_assert(apMenus[NEW2]);
 
-    Check2(apMenus[DELETE]);
+    contract_assert(apMenus[DELETE]);
 
     apMenus[DELETE]->set_enabled(selected != NONE_SELECTED);
     apMenus[NEW1]->set_enabled(true);
@@ -80,9 +74,9 @@ void NBPage::showStatus(const Glib::ustring& msgStatus) {
 //-----------------------------------------------------------------------------
 void NBPage::showError(const Glib::ustring& msg, const Glib::ustring& title) {
     Gtk::Window* win(widget ? dynamic_cast<Gtk::Window*>(widget->get_root()) : nullptr);
-    std::unique_ptr<Gtk::MessageDialog> dlg(win ? new Gtk::MessageDialog(*win, msg, false, Gtk::MessageType::ERROR)
-                                                : new Gtk::MessageDialog(msg, false, Gtk::MessageType::ERROR));
-    if (title.size())
+    auto dlg(win ? std::make_unique<Gtk::MessageDialog>(*win, msg, false, Gtk::MessageType::ERROR)
+                 : std::make_unique<Gtk::MessageDialog>(msg, false, Gtk::MessageType::ERROR));
+    if (!title.empty())
         dlg->set_title(title);
     XGP::runModal(*dlg);
 }
@@ -94,7 +88,7 @@ void NBPage::showError(const Glib::ustring& msg, const Glib::ustring& title) {
 //-----------------------------------------------------------------------------
 void NBPage::addStatusWidget(Gtk::Widget& widget) {
     Gtk::Box* box(dynamic_cast<Gtk::Box*>(statusbar.get_parent()));
-    Check3(box);
+    contract_assert(box);
     box->append(widget);
 }
 
@@ -104,7 +98,7 @@ void NBPage::addStatusWidget(Gtk::Widget& widget) {
 //-----------------------------------------------------------------------------
 void NBPage::removeStatusWidget(Gtk::Widget& widget) {
     Gtk::Box* box(dynamic_cast<Gtk::Box*>(statusbar.get_parent()));
-    Check3(box);
+    contract_assert(box);
     box->remove(widget);
 }
 
@@ -121,10 +115,9 @@ void NBPage::removeStatusWidget(Gtk::Widget& widget) {
 void NBPage::addMenuEntry(const Glib::RefPtr<Gio::Menu>& menu, const Glib::ustring& label, const Glib::ustring& action,
                           const Glib::ustring& accel, const Glib::RefPtr<Gtk::ShortcutController>& shortcuts) {
     TRACE9("NBPage::addMenuEntry (...) - " << action << " - " << accel);
-    Check1(menu);
 
     Glib::RefPtr<Gio::MenuItem> item(Gio::MenuItem::create(label, action));
-    if (accel.size() && shortcuts) {
+    if (!accel.empty() && shortcuts) {
         Glib::RefPtr<Gtk::ShortcutTrigger> trigger(Gtk::ShortcutTrigger::parse_string(accel));
         if (trigger) {
             item->set_attribute_value("accel", Glib::Variant<Glib::ustring>::create(accel));
@@ -167,7 +160,7 @@ void NBPage::export2HTML(unsigned int, const std::string&) {}
 //-----------------------------------------------------------------------------
 NBPage::Undo::Undo(CHGSPEC chg, unsigned int what, unsigned int col, HEntity entity, const Gtk::TreePath& row,
                    const Glib::ustring& value)
-    : entity(entity), row(row), value(value) {
+    : entity(std::move(entity)), row(row), value(value) {
     TRACE9("NBPage::Undo::Undo (...)");
     chgSpec.how = chg;
     chgSpec.what = what;

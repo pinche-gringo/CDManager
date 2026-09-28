@@ -22,7 +22,8 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <YGP/Check.h>
+#include <format>
+
 #include <YGP/StatusObj.h>
 #include <YGP/Trace.h>
 
@@ -34,22 +35,21 @@
 /// Loads the actors and its films from the database
 /// \param aActors: Map to map an actor-id to film-IDs
 //-----------------------------------------------------------------------------
-void StorageActor::StorageActor::loadActorsInFilms(std::map<unsigned int, std::vector<unsigned int>>& aActors) {
+void StorageActor::loadActorsInFilms(std::map<unsigned int, std::vector<unsigned int>>& aActors) {
     TRACE7("StorageActor::loadActorsInFilms (std::map<...>&)");
 
     db().execute("SELECT idActor, idFilm FROM ActorsInFilms ORDER BY idActor");
     if (db().resultSize()) {
-        std::map<unsigned int, std::vector<unsigned int>>::iterator iter(aActors.end());
+        auto iter(aActors.end());
         while (db().hasData()) {
             unsigned int idLast(0);
-            unsigned int idAct(db().getResultColumnAsUInt(0));
-            Check3(idAct);
+            const unsigned int idAct(db().getResultColumnAsUInt(0));
+            contract_assert(idAct);
             if (idAct != idLast) {
                 idLast = idAct;
-                iter = aActors.insert(aActors.end(),
-                                      std::pair<unsigned int, std::vector<unsigned int>>(idAct, std::vector<unsigned int>()));
+                iter = aActors.try_emplace(aActors.end(), idAct);
             }
-            Check3(iter != aActors.end());
+            contract_assert(iter != aActors.end());
             iter->second.push_back(db().getResultColumnAsUInt(1));
 
             db().getNextResultRow();
@@ -63,15 +63,9 @@ void StorageActor::StorageActor::loadActorsInFilms(std::map<unsigned int, std::v
 //-----------------------------------------------------------------------------
 void StorageActor::deleteActor(unsigned int idActor) {
     TRACE9("StorageActor::deleteActor (unsigned int)");
-    Check3(idActor);
 
-    std::stringstream query;
-    query << "DELETE FROM Actors WHERE id=" << idActor;
-    db().execute(query.str());
-
-    std::stringstream query2;
-    query2 << "DELETE FROM ActorsInFilms WHERE idActor=" << idActor;
-    db().execute(query2.str());
+    db().execute(std::format("DELETE FROM Actors WHERE id={}", idActor));
+    db().execute(std::format("DELETE FROM ActorsInFilms WHERE idActor={}", idActor));
 }
 
 //-----------------------------------------------------------------------------
@@ -80,11 +74,8 @@ void StorageActor::deleteActor(unsigned int idActor) {
 //-----------------------------------------------------------------------------
 void StorageActor::deleteActorFilms(unsigned int idActor) {
     TRACE9("StorageActor::deleteActorFilms (unsigned int)");
-    Check3(idActor);
 
-    std::stringstream del;
-    del << "DELETE FROM ActorsInFilms WHERE idActor=" << idActor;
-    db().execute(del.str());
+    db().execute(std::format("DELETE FROM ActorsInFilms WHERE idActor={}", idActor));
 }
 
 //-----------------------------------------------------------------------------
@@ -93,7 +84,5 @@ void StorageActor::deleteActorFilms(unsigned int idActor) {
 /// \param idFilm: ID of film the actors plays in
 //-----------------------------------------------------------------------------
 void StorageActor::saveActorFilm(unsigned int idActor, unsigned int idFilm) {
-    std::stringstream query;
-    query << "INSERT INTO ActorsInFilms (idActor, idFilm) VALUES (" << idActor << ", " << idFilm << ')';
-    db().execute(query.str());
+    db().execute(std::format("INSERT INTO ActorsInFilms (idActor, idFilm) VALUES ({}, {})", idActor, idFilm));
 }

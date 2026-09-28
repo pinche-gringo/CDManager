@@ -27,31 +27,32 @@
 class CDWriter : public YGP::IVIOApplication {
   public:
     CDWriter(const int argc, const char* argv[]) : IVIOApplication(argc, argv, lo) {}
-    ~CDWriter();
+    ~CDWriter() override;
 
   protected:
-    virtual bool handleOption(const char option);
+    bool handleOption(const char option) override;
 
     // Program-handling
-    virtual bool shallShowInfo() const { return false; }
-    virtual int perform(int argc, const char* argv[]);
-    virtual const char* name() const { return "CDWriter"; }
-    virtual const char* description() const;
+    bool shallShowInfo() const override { return false; }
+    int perform(int argc, const char* argv[]) override;
+    const char* name() const override { return "CDWriter"; }
+    const char* description() const override;
 
     // Help-handling
-    virtual void showHelp() const;
+    void showHelp() const override;
 
   private:
     // Prohobited manager functions
-    CDWriter();
-    CDWriter(const CDWriter&);
-    const CDWriter& operator=(const CDWriter&);
+    CDWriter() = delete;
+    CDWriter(const CDWriter&) = delete;
+    const CDWriter& operator=(const CDWriter&) = delete;
 
-    int createFile(const std::string& name, const char* lang, std::ofstream& file);
-    static bool readHeaderFile(const char* file, const char* lang, std::string& target, const Glib::ustring& title);
+    int createFile(const std::string& name, const char* lang, std::ofstream& file) pre(!name.empty()) pre(lang != nullptr);
+    static bool readHeaderFile(const char* file, const char* lang, std::string& target, const Glib::ustring& title)
+        pre(file != nullptr) pre(lang != nullptr);
 
     static void writeHeader(const char* lang, const char* format, std::ostream& stream, bool upSorted = true,
-                            const char* lead = "Films");
+                            const char* lead = "Films") pre(lang != nullptr) pre(format != nullptr) pre(lead != nullptr);
 
     static const longOptions lo[];
 

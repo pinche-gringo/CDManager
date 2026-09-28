@@ -24,13 +24,13 @@
 
 #include <sys/stat.h>
 
+#include <algorithm>
+#include <ranges>
 #include <string>
-
-#include <boost/tokenizer.hpp>
+#include <string_view>
 
 #include <glibmm/convert.h>
 
-#include <YGP/Check.h>
 #include <YGP/INIFile.h>
 #include <YGP/Trace.h>
 
@@ -47,17 +47,13 @@
 /// \param languages: Colon-separated list of languages
 //-----------------------------------------------------------------------------
 void Genres::loadFromFile(const char* file, Genres& records, Genres& films, const char* languages) {
-    Check1(file);
-    Check1(languages);
     std::string name(file);
 
-    // Check every language-entry (while removing trailing specifiers)
-    std::string langs(languages);
-    boost::tokenizer<boost::char_separator<char>> ext(langs, boost::char_separator<char>(":"));
-    std::string extension;
+    // Check every (non-empty) language-entry (while removing trailing specifiers)
     struct stat sfile;
-    for (boost::tokenizer<boost::char_separator<char>>::iterator i(ext.begin()); i != ext.end(); ++i) {
-        extension = *i;
+    for (auto&& lang : std::string_view(languages) | std::views::split(':') |
+                           std::views::filter([](auto&& part) { return !std::ranges::empty(part); })) {
+        std::string extension(std::from_range, lang);
         std::string search;
         do {
             search = name + std::string(1, '.') + extension;
@@ -95,6 +91,6 @@ void Genres::loadFromFile(const char* file, Genres& records, Genres& films, cons
 /// \returns int ID of genre or -1
 //-----------------------------------------------------------------------------
 int Genres::getId(const Glib::ustring& genre) const {
-    std::vector<Glib::ustring>::const_iterator g(std::find(genres.begin(), genres.end(), genre));
+    const auto g(std::ranges::find(genres, genre));
     return (g != genres.end()) ? (g - genres.begin()) : -1;
 }

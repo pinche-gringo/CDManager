@@ -24,9 +24,9 @@
 
 #include <cdmgr-cfg.h>
 
-#include <sstream>
+#include <format>
+#include <memory>
 
-#include <YGP/Check.h>
 #include <YGP/StatusObj.h>
 #include <YGP/Trace.h>
 
@@ -51,7 +51,7 @@ unsigned int StorageRecord::loadRecords(std::map<unsigned int, std::vector<HReco
             // Fill and store record entry from DB-values
             TRACE8("StorageRecords::loadRecords (...) - Adding record " << db().getResultColumnAsUInt(0) << '/'
                                                                         << db().getResultColumnAsString(1));
-            newRec.reset(new Record);
+            newRec = std::make_shared<Record>();
 
             try {
                 newRec->setId(db().getResultColumnAsUInt(0));
@@ -62,11 +62,9 @@ unsigned int StorageRecord::loadRecords(std::map<unsigned int, std::vector<HReco
 
                 aRecords[db().getResultColumnAsUInt(2)].push_back(newRec);
             }
-            catch (std::exception& e) {
-                Glib::ustring msg(_("Warning loading record `%1': %2"));
-                msg.replace(msg.find("%1"), 2, newRec->getName());
-                msg.replace(msg.find("%2"), 2, e.what());
-                stat.setMessage(YGP::StatusObject::WARNING, msg);
+            catch (const std::exception& e) {
+                stat.setMessage(YGP::StatusObject::WARNING,
+                                Glib::ustring::compose(_("Warning loading record `%1': %2"), newRec->getName(), e.what()));
             }
 
             db().getNextResultRow();
@@ -86,21 +84,17 @@ unsigned int StorageRecord::loadRecords(std::map<unsigned int, std::vector<HReco
 void StorageRecord::loadSongs(unsigned int idRecord, std::vector<HSong>& songs) {
     TRACE9("StorageRecord::loadSongs (unsigned int, std::vector<HSong>&) - " << idRecord);
 
-    std::stringstream query;
-    query << "SELECT id, name, duration, genre, track FROM Songs WHERE idRecord=" << idRecord;
-    db().execute(query.str());
+    db().execute(std::format("SELECT id, name, duration, genre, track FROM Songs WHERE idRecord={}", idRecord));
 
     HSong song;
     while (db().hasData()) {
-        song.reset(new Song);
+        song = std::make_shared<Song>();
         song->setId(db().getResultColumnAsUInt(0));
         song->setName(db().getResultColumnAsString(1));
-        std::string time(db().getResultColumnAsString(2));
-        if (time != "00:00:00")
+        if (const std::string time(db().getResultColumnAsString(2)); time != "00:00:00")
             song->setDuration(time);
         song->setGenre(db().getResultColumnAsUInt(3));
-        unsigned int track(db().getResultColumnAsUInt(4));
-        if (track)
+        if (const unsigned int track(db().getResultColumnAsUInt(4)); track)
             song->setTrack(track);
 
         songs.push_back(song);
@@ -115,16 +109,12 @@ void StorageRecord::loadSongs(unsigned int idRecord, std::vector<HSong>& songs) 
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
 void StorageRecord::saveRecord(const HRecord record, unsigned int idInterpret) {
-    Check3(idInterpret);
-
     Database::Values values;
     values("name", db().quote(record->getName()))("interpret", idInterpret)("genre", record->getGenre())(
-        "year", record->getYear().isDefined() ? (unsigned int)record->getYear() : 0);
+        "year", record->getYear().isDefined() ? static_cast<unsigned int>(record->getYear()) : 0);
 
     if (record->getId()) {
-        std::stringstream where;
-        where << "id=" << record->getId();
-        db().update("Records", values, where.str());
+        db().update("Records", values, std::format("id={}", record->getId()));
     }
     else {
         db().insert("Records", values);
@@ -139,17 +129,13 @@ void StorageRecord::saveRecord(const HRecord record, unsigned int idInterpret) {
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
 void StorageRecord::saveSong(const HSong song, unsigned int idRecord) {
-    Check3(idRecord);
-
     Database::Values values;
     values("name", db().quote(song->getName()))("idRecord", idRecord)("duration",
                                                                       db().quote(song->getDuration().toUnformattedString()))(
         "genre", song->getGenre())("track", song->getTrack().isDefined() ? song->getTrack() : YGP::ANumeric(0));
 
     if (song->getId()) {
-        std::stringstream where;
-        where << "id=" << song->getId();
-        db().update("Songs", values, where.str());
+        db().update("Songs", values, std::format("id={}", song->getId()));
     }
     else {
         db().insert("Songs", values);
@@ -163,9 +149,7 @@ void StorageRecord::saveSong(const HSong song, unsigned int idRecord) {
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
 void StorageRecord::deleteSong(unsigned int idSong) {
-    std::stringstream query;
-    query << "DELETE FROM Songs WHERE id=" << idSong;
-    db().execute(query.str());
+    db().execute(std::format("DELETE FROM Songs WHERE id={}", idSong));
 }
 
 //-----------------------------------------------------------------------------
@@ -175,9 +159,7 @@ void StorageRecord::deleteSong(unsigned int idSong) {
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
 void StorageRecord::deleteRecord(unsigned int idRecord) {
-    std::stringstream query;
-    query << "DELETE FROM Records WHERE id=" << idRecord;
-    db().execute(query.str());
+    db().execute(std::format("DELETE FROM Records WHERE id={}", idRecord));
 }
 
 //-----------------------------------------------------------------------------
@@ -187,7 +169,5 @@ void StorageRecord::deleteRecord(unsigned int idRecord) {
 /// \throw std::exception: In case of error
 //-----------------------------------------------------------------------------
 void StorageRecord::deleteInterpret(unsigned int idInterpret) {
-    std::stringstream query;
-    query << "DELETE FROM Interprets WHERE id=" << idInterpret;
-    db().execute(query.str());
+    db().execute(std::format("DELETE FROM Interprets WHERE id={}", idInterpret));
 }

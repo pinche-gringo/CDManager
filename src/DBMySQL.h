@@ -18,29 +18,29 @@
 
 #include "DB.h"
 
-typedef struct st_mysql MYSQL;
+using MYSQL = struct st_mysql;
 
 /**Access to a MySQL (or MariaDB) database via the MySQL C API
  */
 class DBMySQL : public Database {
   public:
-    DBMySQL();
-    virtual ~DBMySQL();
+    DBMySQL() = default;
+    ~DBMySQL() override;
 
-    virtual void connect(const char* db, const char* user, const char* pwd);
-    virtual void close();
-    virtual bool connected() const;
+    void connect(const char* db, const char* user, const char* pwd) override;
+    void close() override;
+    [[nodiscard]] bool connected() const override;
 
-    virtual long getIDOfInsert();
+    long getIDOfInsert() override;
 
-    virtual std::string escapeDBValue(const std::string& value) const;
-    virtual std::string quoteBlob(const std::string& value) const;
+    [[nodiscard]] std::string escapeDBValue(const std::string& value) const override;
+    [[nodiscard]] std::string quoteBlob(const std::string& value) const override;
 
   protected:
-    virtual void query(const char* query, std::vector<Row>& result);
+    void query(const char* query, std::vector<Row>& result) override;
 
   private:
-    MYSQL* mysql;
+    MYSQL* mysql{nullptr};
 };
 
 #endif

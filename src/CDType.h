@@ -29,11 +29,11 @@ class CDType : public YGP::MetaEnum {
     }
     ~CDType();
 
+    CDType(const CDType&) = delete("CDType is a singleton");
+    CDType& operator=(const CDType& other) = delete("CDType is a singleton");
+
   private:
-    // Prohibited manager functions
     CDType();
-    CDType(const CDType&);
-    const CDType& operator=(const CDType& other);
 
     static CDType* instance;
 };

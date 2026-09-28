@@ -24,9 +24,8 @@
 
 #include <cdmgr-cfg.h>
 
-#include <sstream>
+#include <format>
 
-#include <YGP/Check.h>
 #include <YGP/Trace.h>
 
 #include "DB.h"
@@ -129,10 +128,7 @@ void Storage::loadCelebrities(std::vector<HCelebrity>& target, const std::string
     TRACE9("Storage::loadCelebrities (std::vector<HCelebrity>&, const std::string&,\n\tYGP::StatusObject&) - " << table);
 
     // Load data from Celebrities table
-    std::string cmd("SELECT c.id, c.name, c.born, c.died FROM Celebrities c, ");
-    cmd += table;
-    cmd += " x WHERE c.id = x.id";
-    db().execute(cmd.c_str());
+    db().execute(std::format("SELECT c.id, c.name, c.born, c.died FROM Celebrities c, {} x WHERE c.id = x.id", table));
     fillCelebrities(target, stat);
 }
 
@@ -149,22 +145,18 @@ void Storage::fillCelebrities(std::vector<HCelebrity>& target, YGP::StatusObject
 
         // Fill and store entry from DB-values
         try {
-            hCeleb.reset(new Celebrity);
+            hCeleb = std::make_shared<Celebrity>();
             hCeleb->setId(db().getResultColumnAsUInt(0));
             hCeleb->setName(db().getResultColumnAsString(1));
 
-            unsigned int tmp(db().getResultColumnAsUInt(2));
-            if (tmp != 0)
-                hCeleb->setBorn(tmp);
-            tmp = db().getResultColumnAsUInt(3);
-            if (tmp != 0)
-                hCeleb->setDied(tmp);
+            if (unsigned int born(db().getResultColumnAsUInt(2)); born != 0)
+                hCeleb->setBorn(born);
+            if (unsigned int died(db().getResultColumnAsUInt(3)); died != 0)
+                hCeleb->setDied(died);
         }
-        catch (std::exception& e) {
-            Glib::ustring msg(_("Warning loading celebrity `%1': %2"));
-            msg.replace(msg.find("%1"), 2, hCeleb->getName());
-            msg.replace(msg.find("%2"), 2, e.what());
-            stat.setMessage(YGP::StatusObject::WARNING, msg);
+        catch (const std::exception& e) {
+            stat.setMessage(YGP::StatusObject::WARNING,
+                            Glib::ustring::compose(_("Warning loading celebrity `%1': %2"), hCeleb->getName(), e.what()));
         }
         target.push_back(hCeleb);
 
@@ -205,9 +197,7 @@ Database::Values Storage::celebrityValues(const HCelebrity celeb) {
 /// \returns bool True, if entry was created, false if updated
 //-----------------------------------------------------------------------------
 void Storage::insertCelebrity(const HCelebrity celeb, const char* role) {
-    Check1(celeb);
     TRACE8("Storage::insertCelebrity (const HCelebrity, const char*) - " << role << ": " << celeb->getName());
-    Check1(!celeb->getId());
 
     db().insert("Celebrities", celebrityValues(celeb));
     celeb->setId(db().getIDOfInsert());
@@ -220,13 +210,9 @@ void Storage::insertCelebrity(const HCelebrity celeb, const char* role) {
 /// \returns bool True, if entry was created, false if updated
 //-----------------------------------------------------------------------------
 void Storage::updateCelebrity(const HCelebrity celeb) {
-    Check1(celeb);
     TRACE8("Storage::updateCelebrity (const HCelebrity) - " << celeb->getName());
-    Check1(celeb->getId());
 
-    std::stringstream where;
-    where << "id=" << celeb->getId();
-    db().update("Celebrities", celebrityValues(celeb), where.str());
+    db().update("Celebrities", celebrityValues(celeb), std::format("id={}", celeb->getId()));
 }
 
 //-----------------------------------------------------------------------------
@@ -237,9 +223,7 @@ void Storage::updateCelebrity(const HCelebrity celeb) {
 //-----------------------------------------------------------------------------
 void Storage::getCelebrities(const std::string& name, std::vector<HCelebrity>& target) {
     YGP::StatusObject stat;
-    std::stringstream query;
-    query << "SELECT id, name, born, died FROM Celebrities WHERE name=" << db().quote(name);
-    db().execute(query.str());
+    db().execute("SELECT id, name, born, died FROM Celebrities WHERE name=" + db().quote(name));
     fillCelebrities(target, stat);
 }
 
@@ -251,9 +235,7 @@ void Storage::getCelebrities(const std::string& name, std::vector<HCelebrity>& t
 /// \remarks The roles are the name of the DB-tables
 //-----------------------------------------------------------------------------
 bool Storage::hasRole(unsigned int idCeleb, const char* role) {
-    std::stringstream query;
-    query << "SELECT id FROM " << role << " WHERE id=" << idCeleb;
-    db().execute(query.str());
+    db().execute(std::format("SELECT id FROM {} WHERE id={}", role, idCeleb));
     return db().hasData();
 }
 
@@ -264,9 +246,7 @@ bool Storage::hasRole(unsigned int idCeleb, const char* role) {
 /// \remarks The roles are the name of the DB-tables
 //-----------------------------------------------------------------------------
 void Storage::setRole(unsigned int idCeleb, const char* role) {
-    std::stringstream query;
-    query << "INSERT INTO " << role << " (id) VALUES (" << idCeleb << ')';
-    db().execute(query.str());
+    db().execute(std::format("INSERT INTO {} (id) VALUES ({})", role, idCeleb));
 }
 
 //-----------------------------------------------------------------------------

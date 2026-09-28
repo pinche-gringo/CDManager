@@ -32,20 +32,20 @@ struct Language {
   public:
     static void init();
 
-    static Glib::ustring findInternational(const std::string& lang);
-    static const Language& findLanguage(const std::string& lang);
-    static bool exists(const std::string& lang);
+    [[nodiscard]] static Glib::ustring findInternational(const std::string& lang);
+    [[nodiscard]] static const Language& findLanguage(const std::string& lang);
+    [[nodiscard]] static bool exists(const std::string& lang);
 #ifdef USE_LANGUAGEPIXMAPS
-    static Glib::RefPtr<Gdk::Pixbuf> findFlag(const std::string& lang);
+    [[nodiscard]] static Glib::RefPtr<Gdk::Pixbuf> findFlag(const std::string& lang);
 #endif
 
-    Glib::ustring getInternational() const { return nameInternational; }
+    [[nodiscard]] Glib::ustring getInternational() const { return nameInternational; }
 #ifdef USE_LANGUAGEPIXMAPS
-    const Glib::RefPtr<Gdk::Pixbuf> getFlag() const { return flag; }
+    [[nodiscard]] const Glib::RefPtr<Gdk::Pixbuf> getFlag() const { return flag; }
 #endif
 
-    Language();
-    Language(const Language& other);
+    Language() = default;
+    Language(const Language& other) = default;
     Language(const Glib::ustring& internat
 #ifdef USE_LANGUAGEPIXMAPS
              ,
@@ -53,15 +53,15 @@ struct Language {
 #endif
     );
 
-    Language& operator=(const Language& other);
-    ~Language();
+    Language& operator=(const Language& other) = default;
+    ~Language() = default;
 
-    static std::map<std::string, Language>::const_iterator begin() { return languages.begin(); }
-    static std::map<std::string, Language>::const_iterator end() { return languages.end(); }
+    [[nodiscard]] static std::map<std::string, Language>::const_iterator begin() { return languages.begin(); }
+    [[nodiscard]] static std::map<std::string, Language>::const_iterator end() { return languages.end(); }
 
   protected:
 #ifdef USE_LANGUAGEPIXMAPS
-    static Glib::RefPtr<Gdk::Pixbuf> loadFlag(const char* file);
+    static Glib::RefPtr<Gdk::Pixbuf> loadFlag(const char* file) pre(file);
 #endif
 
   private:
@@ -70,7 +70,6 @@ struct Language {
     Glib::RefPtr<Gdk::Pixbuf> flag;
 #endif
 
-    typedef std::pair<std::string, Language> langValue;
     static std::map<std::string, Language> languages;
 };
 

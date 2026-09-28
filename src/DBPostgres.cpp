@@ -24,25 +24,23 @@
 
 #include <cdmgr-cfg.h>
 
+#include <array>
 #include <cstdlib>
+#include <format>
 #include <memory>
+#include <ranges>
+#include <vector>
 
 #include <libpq-fe.h>
 
-#include <YGP/Check.h>
 #include <YGP/Trace.h>
 
 #include "DBPostgres.h"
 
-static const Oid BYTEAOID(17); ///< Type-ID of bytea (from pg_type.h)
+constexpr Oid BYTEAOID(17); ///< Type-ID of bytea (from pg_type.h)
 
 /// Frees a PGresult, when going out of scope
-typedef std::unique_ptr<PGresult, void (*)(PGresult*)> PResult;
-
-//-----------------------------------------------------------------------------
-/// Defaultconstructor
-//-----------------------------------------------------------------------------
-DBPostgres::DBPostgres() : conn(NULL) {}
+using PResult = std::unique_ptr<PGresult, void (*)(PGresult*)>;
 
 //-----------------------------------------------------------------------------
 /// Destructor
@@ -59,11 +57,11 @@ DBPostgres::~DBPostgres() { close(); }
 //-----------------------------------------------------------------------------
 void DBPostgres::connect(const char* db, const char* user, const char* pwd) {
     TRACE9("DBPostgres::connect (const char* (3x) - " << db << " from " << user);
-    Check2(!conn);
+    contract_assert(!conn);
 
-    const char* keys[] = {"hostaddr", "dbname", "user", "password", "client_encoding", NULL};
-    const char* values[] = {"127.0.0.1", db, user, pwd, "UTF8", NULL};
-    conn = PQconnectdbParams(keys, values, 0);
+    const std::array<const char*, 6> keys{"hostaddr", "dbname", "user", "password", "client_encoding", nullptr};
+    const std::array<const char*, 6> values{"127.0.0.1", db, user, pwd, "UTF8", nullptr};
+    conn = PQconnectdbParams(keys.data(), values.data(), 0);
     if (!conn)
         throw std::runtime_error("Out of memory initialising PostgreSQL");
     if (PQstatus(conn) != CONNECTION_OK) {
@@ -80,7 +78,7 @@ void DBPostgres::close() {
     TRACE9("DBPostgres::close ()");
     if (conn) {
         PQfinish(conn);
-        conn = NULL;
+        conn = nullptr;
     }
 }
 
@@ -88,7 +86,7 @@ void DBPostgres::close() {
 /// Checks if the connection to the database is established
 /// \returns bool True, if connected
 //-----------------------------------------------------------------------------
-bool DBPostgres::connected() const { return conn != NULL; }
+bool DBPostgres::connected() const { return conn != nullptr; }
 
 //-----------------------------------------------------------------------------
 /// Executes the passed query. Columns of type bytea are returned unescaped.
@@ -97,7 +95,7 @@ bool DBPostgres::connected() const { return conn != NULL; }
 /// \throw std::exception In case of an error
 //-----------------------------------------------------------------------------
 void DBPostgres::query(const char* query, std::vector<Row>& result) {
-    Check2(conn);
+    contract_assert(conn);
     PResult res(PQexec(conn, query), PQclear);
     switch (PQresultStatus(res.get())) {
     case PGRES_COMMAND_OK:
@@ -110,31 +108,30 @@ void DBPostgres::query(const char* query, std::vector<Row>& result) {
         throw std::runtime_error(res ? PQresultErrorMessage(res.get()) : PQerrorMessage(conn));
     }
 
-    int cRows(PQntuples(res.get()));
-    int cColumns(PQnfields(res.get()));
-    std::vector<bool> binary(cColumns);
-    for (int i(0); i < cColumns; ++i)
-        binary[i] = PQftype(res.get(), i) == BYTEAOID;
+    const int cRows(PQntuples(res.get()));
+    const int cColumns(PQnfields(res.get()));
+    const auto binary(std::views::iota(0, cColumns) |
+                      std::views::transform([&res](int c) { return PQftype(res.get(), c) == BYTEAOID; }) |
+                      std::ranges::to<std::vector<bool>>());
 
     result.reserve(cRows);
     for (int r(0); r < cRows; ++r) {
-        result.push_back(Row());
-        Row& target(result.back());
+        Row& target(result.emplace_back());
         target.reserve(cColumns);
         for (int c(0); c < cColumns; ++c) {
             const char* value(PQgetvalue(res.get(), r, c));
             if (PQgetisnull(res.get(), r, c))
-                target.push_back(std::string());
+                target.emplace_back();
             else if (binary[c]) {
                 size_t len(0);
-                unsigned char* data(PQunescapeBytea(reinterpret_cast<const unsigned char*>(value), &len));
+                std::unique_ptr<unsigned char, void (*)(void*)> data(
+                    PQunescapeBytea(reinterpret_cast<const unsigned char*>(value), &len), PQfreemem);
                 if (!data)
                     throw std::runtime_error("Out of memory decoding binary data");
-                target.push_back(std::string(reinterpret_cast<char*>(data), len));
-                PQfreemem(data);
+                target.emplace_back(reinterpret_cast<const char*>(data.get()), len);
             }
             else
-                target.push_back(std::string(value, PQgetlength(res.get(), r, c)));
+                target.emplace_back(value, PQgetlength(res.get(), r, c));
         }
     }
 }
@@ -146,11 +143,11 @@ void DBPostgres::query(const char* query, std::vector<Row>& result) {
 /// \throw std::exception In case of an error
 //-----------------------------------------------------------------------------
 long DBPostgres::getIDOfInsert() {
-    Check2(conn);
+    contract_assert(conn);
     PResult res(PQexec(conn, "SELECT lastval()"), PQclear);
     if ((PQresultStatus(res.get()) != PGRES_TUPLES_OK) || (PQntuples(res.get()) != 1))
         throw std::runtime_error(res ? PQresultErrorMessage(res.get()) : PQerrorMessage(conn));
-    return strtol(PQgetvalue(res.get(), 0, 0), NULL, 10);
+    return std::strtol(PQgetvalue(res.get(), 0, 0), nullptr, 10);
 }
 
 //-----------------------------------------------------------------------------
@@ -160,10 +157,10 @@ long DBPostgres::getIDOfInsert() {
 /// \throw std::exception In case of an error (e.g. invalid encoding)
 //-----------------------------------------------------------------------------
 std::string DBPostgres::escapeDBValue(const std::string& value) const {
-    Check2(conn);
+    contract_assert(conn);
     std::string conv((value.length() << 1) + 1, '\0');
     int error(0);
-    conv.resize(PQescapeStringConn(conn, &conv[0], value.data(), value.length(), &error));
+    conv.resize(PQescapeStringConn(conn, conv.data(), value.data(), value.length(), &error));
     if (error)
         throw std::runtime_error(PQerrorMessage(conn));
     return conv;
@@ -176,12 +173,11 @@ std::string DBPostgres::escapeDBValue(const std::string& value) const {
 /// \throw std::exception In case of an error
 //-----------------------------------------------------------------------------
 std::string DBPostgres::quoteBlob(const std::string& value) const {
-    Check2(conn);
+    contract_assert(conn);
     size_t len(0);
-    unsigned char* data(PQescapeByteaConn(conn, reinterpret_cast<const unsigned char*>(value.data()), value.length(), &len));
+    std::unique_ptr<unsigned char, void (*)(void*)> data(
+        PQescapeByteaConn(conn, reinterpret_cast<const unsigned char*>(value.data()), value.length(), &len), PQfreemem);
     if (!data)
         throw std::runtime_error(PQerrorMessage(conn));
-    std::string conv('\'' + std::string(reinterpret_cast<char*>(data)) + '\'');
-    PQfreemem(data);
-    return conv;
+    return std::format("'{}'", reinterpret_cast<const char*>(data.get()));
 }

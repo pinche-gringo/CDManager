@@ -25,8 +25,10 @@
 #include <cdmgr-cfg.h>
 
 #include <cstdlib>
+#include <format>
+#include <ranges>
+#include <string_view>
 
-#include <YGP/Check.h>
 #include <YGP/Trace.h>
 
 #include "DB.h"
@@ -38,6 +40,8 @@
 #else
 #    error No supported database detected!
 #endif
+
+using namespace std::string_view_literals;
 
 //-----------------------------------------------------------------------------
 /// Creates the database-object for the database configured at compile-time
@@ -52,24 +56,12 @@ Database* Database::create() {
 }
 
 //-----------------------------------------------------------------------------
-/// Defaultconstructor
-//-----------------------------------------------------------------------------
-Database::Database() : current(0) {}
-
-//-----------------------------------------------------------------------------
-/// Destructor
-//-----------------------------------------------------------------------------
-Database::~Database() {}
-
-//-----------------------------------------------------------------------------
 /// Executes the passed query; its result can be accessed afterwards
 /// \param query Query to execute
 /// \throw std::exception In case of an error
 //-----------------------------------------------------------------------------
 void Database::execute(const char* query) {
     TRACE1("Database::execute (const char*) - " << query);
-    Check1(query);
-    Check2(connected());
 
     rows.clear();
     current = 0;
@@ -83,19 +75,9 @@ void Database::execute(const char* query) {
 /// \throw std::exception In case of an error
 //-----------------------------------------------------------------------------
 void Database::insert(const char* table, const Values& values) {
-    Check1(table);
-    Check1(!values.empty());
-
-    std::string columns, data;
-    for (Values::const_iterator i(values.begin()); i != values.end(); ++i) {
-        if (i != values.begin()) {
-            columns += ", ";
-            data += ", ";
-        }
-        columns += i->first;
-        data += i->second;
-    }
-    execute(std::string("INSERT INTO ") + table + " (" + columns + ") VALUES (" + data + ')');
+    auto columns(values | std::views::keys | std::views::join_with(", "sv) | std::ranges::to<std::string>());
+    auto data(values | std::views::values | std::views::join_with(", "sv) | std::ranges::to<std::string>());
+    execute(std::format("INSERT INTO {} ({}) VALUES ({})", table, columns, data));
 }
 
 //-----------------------------------------------------------------------------
@@ -106,17 +88,9 @@ void Database::insert(const char* table, const Values& values) {
 /// \throw std::exception In case of an error
 //-----------------------------------------------------------------------------
 void Database::update(const char* table, const Values& values, const std::string& where) {
-    Check1(table);
-    Check1(!values.empty());
-    Check1(where.size());
-
-    std::string cmd(std::string("UPDATE ") + table + " SET ");
-    for (Values::const_iterator i(values.begin()); i != values.end(); ++i) {
-        if (i != values.begin())
-            cmd += ", ";
-        cmd += i->first + '=' + i->second;
-    }
-    execute(cmd + " WHERE " + where);
+    auto assignments(values | std::views::transform([](const auto& entry) { return entry.first + '=' + entry.second; }) |
+                     std::views::join_with(", "sv) | std::ranges::to<std::string>());
+    execute(std::format("UPDATE {} SET {} WHERE {}", table, assignments, where));
 }
 
 //-----------------------------------------------------------------------------
@@ -131,11 +105,7 @@ std::string Database::quote(const std::string& value) const { return '\'' + esca
 /// \param column Index of column
 /// \returns const std::string& Value of column
 //-----------------------------------------------------------------------------
-const std::string& Database::column(unsigned int column) const {
-    Check2(hasData());
-    Check1(column < rows[current].size());
-    return rows[current][column];
-}
+const std::string& Database::column(unsigned int column) const { return rows[current][column]; }
 
 const std::string& Database::getResultColumnAsBlob(unsigned int column) const {
     TRACE9("Database::getResultColumnAsBlob (unsigned int) - " << column);
@@ -149,10 +119,10 @@ const std::string& Database::getResultColumnAsString(unsigned int column) const 
 
 unsigned int Database::getResultColumnAsUInt(unsigned int column) const {
     TRACE9("Database::getResultColumnAsUInt (unsigned int) - " << column);
-    return strtoul(this->column(column).c_str(), NULL, 10);
+    return std::strtoul(this->column(column).c_str(), nullptr, 10);
 }
 
 int Database::getResultColumnAsInt(unsigned int column) const {
     TRACE9("Database::getResultColumnAsInt (unsigned int) - " << column);
-    return strtol(this->column(column).c_str(), NULL, 10);
+    return std::strtol(this->column(column).c_str(), nullptr, 10);
 }

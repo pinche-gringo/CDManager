@@ -24,7 +24,7 @@
 
 #include <cdmgr-cfg.h>
 
-#include <cstring>
+#include <array>
 
 #include <gtkmm/grid.h>
 #include <gtkmm/label.h>
@@ -36,8 +36,6 @@
 #include "Storage.h"
 
 #include "Statistics.h"
-
-Statistics* Statistics::instance(nullptr);
 
 //-----------------------------------------------------------------------------
 /// (Default-)Constructor
@@ -53,15 +51,13 @@ Statistics::Statistics() : XGP::XDialog(CANCEL), pClient(Gtk::make_managed<Gtk::
     lbl->set_margin_bottom(5);
     pClient->attach(*lbl, 0, 0, 4, 1);
 
-    int stats[7];
+    std::array<int, 7> stats{};
     try {
-        memset(stats, '\0', sizeof(stats));
-        Storage::getStatistics(stats);
+        Storage::getStatistics(stats.data());
     }
     catch (std::exception& err) {
-        Glib::ustring msg(_("Can't query the statistical information!\n\nReason: %1"));
-        msg.replace(msg.find("%1"), 2, err.what());
-        Gtk::MessageDialog dlg(msg, false, Gtk::MessageType::ERROR);
+        Gtk::MessageDialog dlg(Glib::ustring::compose(_("Can't query the statistical information!\n\nReason: %1"), err.what()),
+                               false, Gtk::MessageType::ERROR);
         XGP::runModal(dlg);
     }
 
@@ -106,7 +102,7 @@ Statistics::Statistics() : XGP::XDialog(CANCEL), pClient(Gtk::make_managed<Gtk::
 void Statistics::addLine(unsigned int line, const Glib::ustring& title1, int value1, const Glib::ustring& title2, int value2) {
     pClient->attach(*Gtk::make_managed<Gtk::Label>(title1), 0, line);
     pClient->attach(*Gtk::make_managed<Gtk::Label>(YGP::ANumeric(value1).toString()), 1, line);
-    if (title2.size()) {
+    if (!title2.empty()) {
         pClient->attach(*Gtk::make_managed<Gtk::Label>(title2), 2, line);
         pClient->attach(*Gtk::make_managed<Gtk::Label>(YGP::ANumeric(value2).toString()), 3, line);
     }

@@ -30,9 +30,9 @@ class LanguageImg : public Gtk::Box {
   public:
     LanguageImg(const std::string& file);
     LanguageImg(const char* lang = nullptr);
-    ~LanguageImg();
+    ~LanguageImg() override;
 
-    void update(const std::string& file);
+    void update(const std::string& file) pre(!file.empty());
     void update(const char* lang = nullptr);
 
     sigc::signal<void()> signal_clicked() { return clicked_; }

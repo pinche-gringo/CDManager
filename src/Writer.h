@@ -40,25 +40,25 @@
 class FilmWriter : public YGP::TableWriter {
   public:
     FilmWriter(const std::string& format, Genres& genres)
-        : YGP::TableWriter(format, TBLW_HTML_PARAMS), oddLine(true), genres(genres) {}
-    virtual ~FilmWriter();
+        : YGP::TableWriter(format, TBLW_HTML_PARAMS), genres(genres) {}
+    ~FilmWriter() override = default;
 
     void writeFilm(const HFilm& film, const HDirector& director, std::ostream& out);
     void writeDirector(const HDirector& director, std::ostream& out);
 
   protected:
-    virtual std::string getSubstitute(const char ctrl, bool extend = false) const;
+    std::string getSubstitute(const char ctrl, bool extend = false) const override;
 
   private:
-    FilmWriter(const FilmWriter& other);
-    const FilmWriter& operator=(const FilmWriter& other);
+    FilmWriter(const FilmWriter& other) = delete;
+    const FilmWriter& operator=(const FilmWriter& other) = delete;
 
     static std::string addLanguageLinks(const std::string& languages);
 
     HFilm hFilm;
     HDirector hDirector;
 
-    bool oddLine;
+    bool oddLine{true};
     Genres& genres;
 };
 #endif
@@ -69,23 +69,23 @@ class FilmWriter : public YGP::TableWriter {
 class RecordWriter : public YGP::TableWriter {
   public:
     RecordWriter(const std::string& format, Genres& genres)
-        : YGP::TableWriter(format, TBLW_HTML_PARAMS), oddLine(true), genres(genres) {}
-    virtual ~RecordWriter();
+        : YGP::TableWriter(format, TBLW_HTML_PARAMS), genres(genres) {}
+    ~RecordWriter() override = default;
 
     void writeRecord(const HRecord& record, const HInterpret& interpret, std::ostream& out);
     void writeInterpret(const HInterpret& interpret, std::ostream& out);
 
   protected:
-    virtual std::string getSubstitute(const char ctrl, bool extend = false) const;
+    std::string getSubstitute(const char ctrl, bool extend = false) const override;
 
   private:
-    RecordWriter(const RecordWriter& other);
-    const RecordWriter& operator=(const RecordWriter& other);
+    RecordWriter(const RecordWriter& other) = delete;
+    const RecordWriter& operator=(const RecordWriter& other) = delete;
 
     HRecord hRecord;
     HInterpret hInterpret;
 
-    bool oddLine;
+    bool oddLine{true};
     Genres& genres;
 };
 #endif

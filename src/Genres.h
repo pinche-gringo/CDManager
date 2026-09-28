@@ -26,24 +26,25 @@
  */
 class Genres {
   public:
-    Genres() {}
-    virtual ~Genres() {}
+    Genres() = default;
+    virtual ~Genres() = default;
 
-    static void loadFromFile(const char* file, Genres& records, Genres& films, const char* languages);
+    static void loadFromFile(const char* file, Genres& records, Genres& films, const char* languages) pre(file) pre(languages);
 
-    int getId(const Glib::ustring& genre) const;
+    [[nodiscard]] int getId(const Glib::ustring& genre) const;
 
     /// Returns the number of genres
     /// \returns std::vector::size_type Number of genres
-    size_t size() const { return genres.size(); }
+    [[nodiscard]] size_t size() const { return genres.size(); }
 
     /// Returns the nth genre
     /// \param genre Number of genre to return
-    Glib::ustring getGenre(unsigned int genre) const { return genres[genre]; }
+    [[nodiscard]] Glib::ustring getGenre(unsigned int genre) const { return genres[genre]; }
+
+    Genres(const Genres& other) = delete("Genres are not copyable");
+    Genres& operator=(const Genres& other) = delete("Genres are not copyable");
 
   private:
-    Genres(const Genres& other);
-    const Genres& operator=(const Genres& other);
 
     std::vector<Glib::ustring> genres;
 };

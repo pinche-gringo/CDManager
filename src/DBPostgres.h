@@ -18,29 +18,29 @@
 
 #include "DB.h"
 
-typedef struct pg_conn PGconn;
+using PGconn = struct pg_conn;
 
 /**Access to a PostgreSQL database via libpq
  */
 class DBPostgres : public Database {
   public:
-    DBPostgres();
-    virtual ~DBPostgres();
+    DBPostgres() = default;
+    ~DBPostgres() override;
 
-    virtual void connect(const char* db, const char* user, const char* pwd);
-    virtual void close();
-    virtual bool connected() const;
+    void connect(const char* db, const char* user, const char* pwd) override;
+    void close() override;
+    [[nodiscard]] bool connected() const override;
 
-    virtual long getIDOfInsert();
+    long getIDOfInsert() override;
 
-    virtual std::string escapeDBValue(const std::string& value) const;
-    virtual std::string quoteBlob(const std::string& value) const;
+    [[nodiscard]] std::string escapeDBValue(const std::string& value) const override;
+    [[nodiscard]] std::string quoteBlob(const std::string& value) const override;
 
   protected:
-    virtual void query(const char* query, std::vector<Row>& result);
+    void query(const char* query, std::vector<Row>& result) override;
 
   private:
-    PGconn* conn;
+    PGconn* conn{nullptr};
 };
 
 #endif

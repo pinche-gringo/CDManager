@@ -36,28 +36,29 @@ class SaveCelebrity : public Gtk::MessageDialog {
     class DlgCanceled : public std::runtime_error {
       public:
         DlgCanceled() : std::runtime_error("By user") {}
-        virtual ~DlgCanceled() noexcept {}
+        ~DlgCanceled() noexcept override = default;
     };
 
-    virtual ~SaveCelebrity();
+    ~SaveCelebrity() override;
 
-    static void store(const HCelebrity celeb, const char* role, Gtk::Widget& parent);
+    static void store(const HCelebrity celeb, const char* role, Gtk::Widget& parent) pre(celeb);
     static SaveCelebrity* create(Gtk::Window& parent, const HCelebrity celeb, const std::vector<HCelebrity>& celebs);
 
     int run();
-    unsigned long getIdOfSelection();
+    [[nodiscard]] unsigned long getIdOfSelection() pre(lstCelebs != nullptr);
 
     // Prohibited manager functions
     SaveCelebrity(const SaveCelebrity& other) = delete;
     const SaveCelebrity& operator=(const SaveCelebrity& other) = delete;
 
   protected:
-    SaveCelebrity(Gtk::Window& parent, const HCelebrity celeb, const std::vector<HCelebrity>& celebs);
+    SaveCelebrity(Gtk::Window& parent, const HCelebrity celeb, const std::vector<HCelebrity>& celebs) pre(celeb)
+        pre(!celebs.empty());
 
   private:
     void rowSelected();
 
-    Gtk::TreeView* lstCelebs;
+    Gtk::TreeView* lstCelebs{nullptr};
 
     /**Columns of the celebrity-list
      */

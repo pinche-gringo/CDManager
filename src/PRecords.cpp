@@ -32,8 +32,11 @@
 #    include <iconv.h>
 #endif
 
+#include <algorithm>
 #include <fstream>
+#include <memory>
 #include <sstream>
+#include <string_view>
 
 #include <giomm/file.h>
 
@@ -42,7 +45,6 @@
 #include <gtkmm/statusbar.h>
 
 #include <YGP/ANumeric.h>
-#include <YGP/Check.h>
 #include <YGP/StatusObj.h>
 #include <YGP/Trace.h>
 
@@ -69,9 +71,9 @@ PRecords::PRecords(Gtk::Statusbar& status, Glib::RefPtr<Gio::SimpleAction> menuS
     : NBPage(status, menuSave), records(genres), songs(genres), relRecords("records"), relSongs("songs") {
     TRACE9("PRecords::PRecords (Gtk::Statusbar&, Glib::RefPtr<Gio::SimpleAction>, const Genres&)");
 
-    Gtk::Paned* cds(new Gtk::Paned(Gtk::Orientation::HORIZONTAL));
-    Gtk::ScrolledWindow* scrlRecords(Gtk::make_managed<Gtk::ScrolledWindow>());
-    Gtk::ScrolledWindow* scrlSongs(Gtk::make_managed<Gtk::ScrolledWindow>());
+    auto* cds(new Gtk::Paned(Gtk::Orientation::HORIZONTAL));
+    auto* scrlRecords(Gtk::make_managed<Gtk::ScrolledWindow>());
+    auto* scrlSongs(Gtk::make_managed<Gtk::ScrolledWindow>());
 
     scrlRecords->set_has_frame(true);
     scrlSongs->set_has_frame(true);
@@ -115,20 +117,19 @@ void PRecords::loadData() {
     try {
         YGP::StatusObject status;
         StorageRecord::loadInterprets(interprets, status);
-        std::sort(interprets.begin(), interprets.end(), &Interpret::compByName);
+        std::ranges::sort(interprets, &Interpret::compByName);
 
         std::map<unsigned int, std::vector<HRecord>> aRecords;
-        unsigned int cRecords(StorageRecord::loadRecords(aRecords, status));
+        const unsigned int cRecords(StorageRecord::loadRecords(aRecords, status));
         TRACE8("PRecords::loadData () - Found " << aRecords.size() << " records");
 
-        for (std::vector<HInterpret>::const_iterator i(interprets.begin()); i != interprets.end(); ++i) {
-            Gtk::TreeModel::Row interpret(records.append(*i));
+        for (const auto& artist : interprets) {
+            Gtk::TreeModel::Row interpret(records.append(artist));
 
-            std::map<unsigned int, std::vector<HRecord>>::iterator iRec(aRecords.find((*i)->getId()));
-            if (iRec != aRecords.end()) {
-                for (std::vector<HRecord>::iterator r(iRec->second.begin()); r != iRec->second.end(); ++r) {
-                    records.append(*r, interpret);
-                    relRecords.relate(*i, *r);
+            if (auto iRec(aRecords.find(artist->getId())); iRec != aRecords.end()) {
+                for (auto& record : iRec->second) {
+                    records.append(record, interpret);
+                    relRecords.relate(artist, record);
                 }
                 aRecords.erase(iRec);
             } // end-if artist has record
@@ -137,12 +138,10 @@ void PRecords::loadData() {
 
         loaded = true;
 
-        Glib::ustring msg(Glib::locale_to_utf8(ngettext("Loaded %1 record", "Loaded %1 records", cRecords)));
-        msg.replace(msg.find("%1"), 2, YGP::ANumeric::toString(cRecords));
-
-        Glib::ustring tmp(Glib::locale_to_utf8(ngettext(" from %1 artist", " from %1 artists", interprets.size())));
-        tmp.replace(tmp.find("%1"), 2, YGP::ANumeric::toString(interprets.size()));
-        msg += tmp;
+        Glib::ustring msg(Glib::ustring::compose(Glib::locale_to_utf8(ngettext("Loaded %1 record", "Loaded %1 records", cRecords)),
+                                                 Glib::ustring(YGP::ANumeric::toString(cRecords))));
+        msg += Glib::ustring::compose(Glib::locale_to_utf8(ngettext(" from %1 artist", " from %1 artists", interprets.size())),
+                                      Glib::ustring(YGP::ANumeric::toString(interprets.size())));
         showStatus(msg);
 
         if (status.getType() > YGP::StatusObject::UNDEFINED) {
@@ -150,10 +149,8 @@ void PRecords::loadData() {
             XGP::MessageDlg::create(status);
         }
     }
-    catch (std::exception& err) {
-        Glib::ustring msg(_("Can't query available records!\n\nReason: %1"));
-        msg.replace(msg.find("%1"), 2, err.what());
-        showError(msg);
+    catch (const std::exception& err) {
+        showError(Glib::ustring::compose(_("Can't query available records!\n\nReason: %1"), err.what()));
     }
 }
 
@@ -163,22 +160,18 @@ void PRecords::loadData() {
 //-----------------------------------------------------------------------------
 void PRecords::loadSongs(const HRecord& record) {
     TRACE9("PRecords::loadSongs (const HRecord& record) - " << (record ? record->getName().c_str() : "Undefined"));
-    Check1(record);
 
     try {
         std::vector<HSong> songs_;
         StorageRecord::loadSongs(record->getId(), songs_);
         TRACE5("PRecords::loadSongs (const HRecord& record) - Found songs: " << songs_.size());
 
-        if (songs_.size())
+        if (!songs_.empty())
             relSongs.relate(record, songs_);
         record->setSongsLoaded();
     }
-    catch (std::exception& err) {
-        Glib::ustring msg(_("Can't query the songs for record %1!\n\nReason: %2"));
-        msg.replace(msg.find("%1"), 2, record->getName());
-        msg.replace(msg.find("%2"), 2, err.what());
-        showError(msg);
+    catch (const std::exception& err) {
+        showError(Glib::ustring::compose(_("Can't query the songs for record %1!\n\nReason: %2"), record->getName(), err.what()));
     }
 }
 
@@ -186,8 +179,7 @@ void PRecords::loadSongs(const HRecord& record) {
 /// Adds a new interpret to the list
 //-----------------------------------------------------------------------------
 void PRecords::newInterpret() {
-    HInterpret interpret(new Interpret);
-    addInterpret(interpret);
+    addInterpret(std::make_shared<Interpret>());
 }
 
 //-----------------------------------------------------------------------------
@@ -195,15 +187,15 @@ void PRecords::newInterpret() {
 //-----------------------------------------------------------------------------
 void PRecords::newRecord() {
     Glib::RefPtr<Gtk::TreeSelection> recordSel(records.get_selection());
-    std::vector<Gtk::TreePath> list(recordSel->get_selected_rows());
-    Check3(list.size());
+    const std::vector<Gtk::TreePath> list(recordSel->get_selected_rows());
+    contract_assert(!list.empty());
     Glib::RefPtr<Gtk::TreeStore> model(records.getModel());
-    Gtk::TreeModel::iterator p(model->get_iter(*list.begin()));
-    Check3(p);
+    Gtk::TreeModel::iterator p(model->get_iter(list.front()));
+    contract_assert(p);
     if (p->parent())
         p = p->parent();
 
-    HRecord record(new Record);
+    auto record(std::make_shared<Record>());
     record->setSongsLoaded();
     addRecord(p, record);
 }
@@ -212,7 +204,7 @@ void PRecords::newRecord() {
 /// Adds a new song to the first selected record
 //-----------------------------------------------------------------------------
 void PRecords::newSong() {
-    HSong song(new Song);
+    auto song(std::make_shared<Song>());
     addSong(song);
 }
 
@@ -223,26 +215,24 @@ void PRecords::newSong() {
 void PRecords::recordSelected() {
     TRACE9("PRecords::recordSelected ()");
     songs.clear();
-    Check3(records.get_selection());
-    std::vector<Gtk::TreePath> list(records.get_selection()->get_selected_rows());
+    contract_assert(records.get_selection());
+    const std::vector<Gtk::TreePath> list(records.get_selection()->get_selected_rows());
     TRACE9("PRecords::recordSelected () - Size: " << list.size());
-    if (list.size()) {
-        Gtk::TreeModel::iterator i(records.get_model()->get_iter(*list.begin()));
-        Check3(i);
+    if (!list.empty()) {
+        Gtk::TreeModel::iterator i(records.get_model()->get_iter(list.front()));
+        contract_assert(i);
 
         if (i->parent()) {
             HRecord hRecord(records.getRecordAt(i));
-            Check3(hRecord);
+            contract_assert(hRecord);
             if (hRecord->needsLoading() && hRecord->getId())
                 loadSongs(hRecord);
-            Check3(!hRecord->needsLoading());
+            contract_assert(!hRecord->needsLoading());
 
             // Add related songs to the listbox
-            if (relSongs.isRelated(hRecord)) {
-                const std::vector<HSong>& as(relSongs.getObjects(hRecord));
-                for (std::vector<HSong>::const_iterator s(as.begin()); s != as.end(); ++s)
-                    songs.append((HSong&)(*s));
-            }
+            if (relSongs.isRelated(hRecord))
+                for (HSong song : relSongs.getObjects(hRecord))
+                    songs.append(song);
 
             enableEdit(OBJECT_SELECTED);
         }
@@ -259,8 +249,8 @@ void PRecords::recordSelected() {
 //-----------------------------------------------------------------------------
 void PRecords::songSelected() {
     TRACE9("PRecords::songSelected ()");
-    Check3(songs.get_selection());
-    std::vector<Gtk::TreePath> list(songs.get_selection()->get_selected_rows());
+    contract_assert(songs.get_selection());
+    const std::vector<Gtk::TreePath> list(songs.get_selection()->get_selected_rows());
     TRACE9("PRecords::songSelected () - Size: " << list.size());
     apMenus[DELETE]->set_enabled(!list.empty());
 }
@@ -274,10 +264,9 @@ void PRecords::songSelected() {
 void PRecords::songChanged(const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue) {
     TRACE4("PRecords::songChanged (const Gtk::TreeModel::iterator&, unsigned int, Glib::ustring&) - " << column);
 
-    std::vector<Gtk::TreePath> list(records.get_selection()->get_selected_rows());
+    const std::vector<Gtk::TreePath> list(records.get_selection()->get_selected_rows());
     TRACE9("PRecords::songChanged (const Gtk::TreeModel::iterator&, unsigned int, Glib::ustring&) - Selected: " << list.size());
-    Gtk::TreePath path(*list.begin());
-    aUndo.push(Undo(Undo::CHANGED, SONG, column, songs.getEntryAt(row), path, oldValue));
+    aUndo.push(Undo(Undo::CHANGED, SONG, column, songs.getEntryAt(row), list.front(), oldValue));
 
     apMenus[UNDO]->set_enabled();
     enableSave();
@@ -292,8 +281,7 @@ void PRecords::songChanged(const Gtk::TreeModel::iterator& row, unsigned int col
 void PRecords::interpretChanged(const Gtk::TreeModel::iterator& row, unsigned int column, Glib::ustring& oldValue) {
     TRACE9("PRecords::interpretChanged (const Gtk::TreeModel::iterator&, unsigned int, Glib::ustring&) - " << column);
 
-    Gtk::TreePath path(records.getModel()->get_path(row));
-    aUndo.push(Undo(Undo::CHANGED, INTERPRET, column, records.getCelebrityAt(row), path, oldValue));
+    aUndo.push(Undo(Undo::CHANGED, INTERPRET, column, records.getCelebrityAt(row), records.getModel()->get_path(row), oldValue));
 
     apMenus[UNDO]->set_enabled();
     enableSave();
@@ -315,21 +303,20 @@ void PRecords::recordChanged(const Gtk::TreeModel::iterator& row, unsigned int c
         HRecord rec(records.getRecordAt(row));
         TRACE9("PRecords::recordChanged (const HEntity& record) - " << (rec ? rec->getId() : -1UL) << '/'
                                                                     << (rec ? rec->getName().c_str() : "Undefined"));
-        Check3(oldValue.size() == 1);
+        contract_assert(oldValue.size() == 1);
 
         if (relSongs.isRelated(rec)) {
-            unsigned int genre(rec->getGenre());
+            const unsigned int genre(rec->getGenre());
 
             Glib::RefPtr<Gtk::TreeModel> model(songs.get_model());
-            std::vector<Gtk::TreePath> list(songs.get_selection()->get_selected_rows());
-            if (list.size()) {
-                for (std::vector<Gtk::TreePath>::iterator i(list.begin()); i != list.end(); ++i)
-                    songs.setGenre(model->get_iter(*i), genre);
+            if (const std::vector<Gtk::TreePath> list(songs.get_selection()->get_selected_rows()); !list.empty()) {
+                for (const auto& selected : list)
+                    songs.setGenre(model->get_iter(selected), genre);
             }
             else {
-                Gtk::TreeModel::Children list(model->children());
-                Check3(list.size());
-                for (Gtk::TreeModel::iterator i(list.begin()); i != list.end(); ++i)
+                Gtk::TreeModel::Children children(model->children());
+                contract_assert(!children.empty());
+                for (auto i(children.begin()); i != children.end(); ++i)
                     songs.setGenre(i, genre);
             }
         }
@@ -394,20 +381,16 @@ void PRecords::importFromFileInfo() {
 //-----------------------------------------------------------------------------
 void PRecords::parseFileInfo(const std::string& file) {
     TRACE8("PRecords::parseFileInfo (const std::string&) - " << file);
-    Check2(file.size());
 
-    std::ifstream stream(file.c_str());
+    std::ifstream stream(file);
     Glib::ustring artist, record, song, genre;
     unsigned int track(0), year(0);
     if (!stream) {
-        Glib::ustring err(_("Can't open file `%1'!\n\nReason: %2"));
-        err.replace(err.find("%1"), 2, file);
-        err.replace(err.find("%2"), 2, strerror(errno));
-        showError(err);
+        showError(Glib::ustring::compose(_("Can't open file `%1'!\n\nReason: %2"), Glib::ustring(file), Glib::ustring(strerror(errno))));
         return;
     }
 
-    std::string extension(file.substr(file.size() - 4));
+    const std::string extension(file.substr(file.size() - 4));
     TRACE1("PRecords::parseFileInfo (const std::string&) - Type: " << extension);
     if (((extension == ".mp3") && parseID3Info(stream, artist, record, song, track, genre, year)) ||
         ((extension == ".ogg") && parseOGGCommentHeader(stream, artist, record, song, track, genre, year))) {
@@ -433,7 +416,7 @@ bool PRecords::parseID3Info(std::istream& stream, Glib::ustring& artist, Glib::u
     stream.read(buffer, 4);
 
     // Check if an ID3v2 tag is present
-    if (memcmp(buffer, "ID3", 3)) {
+    if (std::string_view(buffer, 3) != "ID3") {
         stream.seekg(-0x80, std::ios::end);
         std::string value;
 
@@ -441,7 +424,7 @@ bool PRecords::parseID3Info(std::istream& stream, Glib::ustring& artist, Glib::u
         std::getline(stream, value, '\xff');
         TRACE8("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Found: " << value
                                                                                                 << "; Length: " << value.size());
-        if ((value.size() > 3) && (value[0] == 'T') && (value[1] == 'A') && (value[2] == 'G')) {
+        if ((value.size() > 3) && value.starts_with("TAG")) {
             song = Glib::locale_to_utf8(stripString(value, 3, 29));
             artist = Glib::locale_to_utf8(stripString(value, 33, 29));
             record = Glib::locale_to_utf8(stripString(value, 63, 29));
@@ -474,40 +457,32 @@ bool PRecords::parseID3Info(std::istream& stream, Glib::ustring& artist, Glib::u
                 return false;
             size -= 10 + frameSize;
 
-            if (memcmp(buffer, "\0\0\0\0", 4)) {
-                TRACE8("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - ID3-frame "
-                       << std::string(buffer, 4) << '/' << frameSize);
+            const std::string_view frameID(buffer, 4);
+            if (frameID == std::string_view("\0\0\0\0", 4))
+                break;
 
-                if (memcmp(buffer, "TIT2", 4))
-                    if (memcmp(buffer, "TALB", 4))
-                        if (memcmp(buffer, "TPE1", 4))
-                            if (memcmp(buffer, "TCON", 4)) {
-                                value = nullptr;
-                                if (memcmp(buffer, "TDRC", 4))
-                                    if (memcmp(buffer, "TRCK", 4))
-                                        stream.seekg(frameSize, std::ios::cur);
-                                    else {
-                                        Check2(frameSize < sizeof(buffer));
-                                        stream.read(buffer, frameSize);
-                                        track = strtoul(buffer + 1, nullptr, 10);
-                                    }
-                                else {
-                                    Check2(frameSize < sizeof(buffer));
-                                    stream.read(buffer, frameSize);
-                                    year = strtoul(buffer + 1, nullptr, 10);
-                                }
-                            }
-                            else
-                                value = &genre;
-                        else
-                            value = &artist;
-                    else
-                        value = &record;
-                else
-                    value = &song;
+            TRACE8("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - ID3-frame " << frameID << '/'
+                                                                                                      << frameSize);
+            if (frameID == "TIT2")
+                value = &song;
+            else if (frameID == "TALB")
+                value = &record;
+            else if (frameID == "TPE1")
+                value = &artist;
+            else if (frameID == "TCON")
+                value = &genre;
+            else if (frameID == "TDRC") {
+                contract_assert(frameSize < sizeof(buffer));
+                stream.read(buffer, frameSize);
+                year = strtoul(buffer + 1, nullptr, 10);
+            }
+            else if (frameID == "TRCK") {
+                contract_assert(frameSize < sizeof(buffer));
+                stream.read(buffer, frameSize);
+                track = strtoul(buffer + 1, nullptr, 10);
             }
             else
-                break;
+                stream.seekg(frameSize, std::ios::cur);
 
             if (value) {
                 unsigned int read(0);
@@ -522,6 +497,7 @@ bool PRecords::parseID3Info(std::istream& stream, Glib::ustring& artist, Glib::u
                 switch (type) {
                 case 0: // ISO-8859-1
                     encoding = "ISO-8859-1";
+                    [[fallthrough]];
 
                 case 1: // UTF-16
                 case 2:
@@ -543,17 +519,16 @@ bool PRecords::parseID3Info(std::istream& stream, Glib::ustring& artist, Glib::u
 
 #ifdef HAVE_ICONV
                     if (cd != (iconv_t)(-1)) {
-                        char* converted(new char[read]);
+                        const auto converted(std::make_unique_for_overwrite<char[]>(read));
                         size_t inLeft(size);
                         while (inLeft) {
                             size_t outLeft(read);
-                            char* curPos(converted);
+                            char* curPos(converted.get());
                             size_t conv(iconv(cd, (char**)&buffer, &inLeft, &curPos, &outLeft));
                             TRACE8("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Converted " << conv);
                             if (conv)
-                                value->append(converted, conv);
+                                value->append(converted.get(), conv);
                         }
-                        delete[] converted;
                     }
                     else
                         value->append(std::string(buffer, read));
@@ -586,20 +561,21 @@ bool PRecords::parseID3Info(std::istream& stream, Glib::ustring& artist, Glib::u
 /// \returns bool: True, if comment header has been found
 //-----------------------------------------------------------------------------
 bool PRecords::parseOGGCommentHeader(std::istream& stream, Glib::ustring& artist, Glib::ustring& record, Glib::ustring& song,
-                                     unsigned int& track, Glib::ustring& genre, unsigned int& year) {
+                                     unsigned int& track, [[maybe_unused]] Glib::ustring& genre,
+                                     [[maybe_unused]] unsigned int& year) {
     char buffer[512];
     stream.read(buffer, 4);
-    if (memcmp(buffer, "OggS", 4))
+    if (std::string_view(buffer, 4) != "OggS")
         return false;
 
     stream.seekg(0x69, std::ios::cur);
     unsigned int len(0);
-    stream.read((char*)&len, 4); // Read the vendorstring-length
+    stream.read(reinterpret_cast<char*>(&len), 4); // Read the vendorstring-length
     TRACE8("PRecords::parseOGGCommentHeader (std::istream&, 3x Glib::ustring&, unsigned&) - Length: " << len);
     stream.seekg(len, std::ios::cur);
 
     unsigned int cComments(0);
-    stream.read((char*)&cComments, 4); // Read number of comments
+    stream.read(reinterpret_cast<char*>(&cComments), 4); // Read number of comments
     TRACE8("PRecords::parseOGGCommentHeader (std::istream&, 3x Glib::ustring&, unsigned&) - Comments: " << cComments);
     if (!cComments)
         return false;
@@ -607,7 +583,7 @@ bool PRecords::parseOGGCommentHeader(std::istream& stream, Glib::ustring& artist
     std::string key;
     Glib::ustring* value(nullptr);
     do {
-        stream.read((char*)&len, 4); // Read the comment-length
+        stream.read(reinterpret_cast<char*>(&len), 4); // Read the comment-length
 
         std::getline(stream, key, '=');
         len -= key.size() + 1;
@@ -620,7 +596,7 @@ bool PRecords::parseOGGCommentHeader(std::istream& stream, Glib::ustring& artist
         else if (key == "ARTIST")
             value = &artist;
         else if (key == "TRACKNUMBER") {
-            Check2(len < sizeof(buffer));
+            contract_assert(len < sizeof(buffer));
             stream.read(buffer, len);
             track = strtoul(buffer, nullptr, 10);
             value = nullptr;
@@ -694,9 +670,7 @@ Gtk::TreeModel::iterator PRecords::addRecord(const Gtk::TreeModel::iterator& par
     Gtk::TreePath path(records.getModel()->get_path(i));
     records.set_cursor(path, *records.get_column(0), true);
 
-    HInterpret interpret;
-    interpret = records.getInterpretAt(parent);
-    relRecords.relate(interpret, record);
+    relRecords.relate(records.getInterpretAt(parent), record);
 
     aUndo.push(Undo(Undo::INSERT, RECORD, 0, record, path, ""));
     apMenus[UNDO]->set_enabled();
@@ -711,20 +685,19 @@ Gtk::TreeModel::iterator PRecords::addRecord(const Gtk::TreeModel::iterator& par
 //-----------------------------------------------------------------------------
 Gtk::TreeModel::iterator PRecords::addSong(HSong& song) {
     Glib::RefPtr<Gtk::TreeSelection> recordSel(records.get_selection());
-    std::vector<Gtk::TreePath> list(recordSel->get_selected_rows());
-    Check3(list.size());
-    Gtk::TreeModel::iterator p(records.getModel()->get_iter(*list.begin()));
-    Check3(p);
+    const std::vector<Gtk::TreePath> list(recordSel->get_selected_rows());
+    contract_assert(!list.empty());
+    Gtk::TreeModel::iterator p(records.getModel()->get_iter(list.front()));
+    contract_assert(p);
 
     HRecord record(records.getRecordAt(p));
-    Check3(record);
+    contract_assert(record);
     relSongs.relate(record, song);
     Gtk::TreeModel::iterator iterSong(songs.append(song));
     Gtk::TreePath pathSong(songs.getModel()->get_path(iterSong));
     songs.set_cursor(pathSong, *songs.get_column(0), true);
 
-    Gtk::TreePath path(*list.begin());
-    aUndo.push(Undo(Undo::INSERT, SONG, 0, song, path, ""));
+    aUndo.push(Undo(Undo::INSERT, SONG, 0, song, list.front(), ""));
 
     apMenus[UNDO]->set_enabled();
     enableSave();
@@ -739,46 +712,46 @@ void PRecords::saveData() {
     TRACE5("PRecords::saveData () - " << aUndo.size());
 
     std::vector<HEntity> aSaved;
-    std::vector<HEntity>::iterator posSaved(aSaved.end());
+    auto posSaved(aSaved.end());
 
-    while (aUndo.size()) {
+    while (!aUndo.empty()) {
         Undo last(aUndo.top());
         TRACE7("PRecords::saveData () - What: " << last.what() << '/' << last.how());
 
-        posSaved = lower_bound(aSaved.begin(), aSaved.end(), last.getEntity());
+        posSaved = std::ranges::lower_bound(aSaved, last.getEntity());
         if ((posSaved == aSaved.end()) || (*posSaved != last.getEntity())) {
             switch (last.what()) {
             case SONG: {
-                HSong song(boost::dynamic_pointer_cast<Song>(last.getEntity()));
-                Check3(song);
+                HSong song(std::dynamic_pointer_cast<Song>(last.getEntity()));
+                contract_assert(song);
                 if (last.how() == Undo::DELETE) {
                     if (song->getId()) {
-                        Check3(song->getId() == last.column());
+                        contract_assert(song->getId() == last.column());
                         StorageRecord::deleteSong(song->getId());
                     }
 
-                    std::map<HEntity, HEntity>::iterator delRel(delRelation.find(last.getEntity()));
-                    Check3(delRel != delRelation.end());
-                    Check3(typeid(*delRel->second) == typeid(Record));
+                    auto delRel(delRelation.find(last.getEntity()));
+                    contract_assert(delRel != delRelation.end());
+                    contract_assert(typeid(*delRel->second) == typeid(Record));
                     delRelation.erase(delRel);
                 }
                 else {
                     HRecord hRec(relSongs.getParent(song));
                     if (!hRec->getId()) {
-                        Check3(std::find(aSaved.begin(), aSaved.end(), hRec) == aSaved.end());
-                        Check3(delRelation.find(hRec) == delRelation.end());
+                        contract_assert(std::ranges::find(aSaved, hRec) == aSaved.end());
+                        contract_assert(!delRelation.contains(hRec));
 
                         HInterpret interpret(relRecords.getParent(hRec));
                         if (!interpret->getId()) {
-                            Check3(std::find(aSaved.begin(), aSaved.end(), interpret) == aSaved.end());
-                            Check3(delRelation.find(interpret) == delRelation.end());
+                            contract_assert(std::ranges::find(aSaved, interpret) == aSaved.end());
+                            contract_assert(!delRelation.contains(interpret));
 
                             SaveCelebrity::store(interpret, "Interprets", *getWindow());
-                            aSaved.insert(lower_bound(aSaved.begin(), aSaved.end(), interpret), interpret);
+                            aSaved.insert(std::ranges::lower_bound(aSaved, interpret), interpret);
                         }
                         StorageRecord::saveRecord(hRec, relRecords.getParent(hRec)->getId());
-                        aSaved.insert(lower_bound(aSaved.begin(), aSaved.end(), hRec), hRec);
-                        posSaved = lower_bound(aSaved.begin(), aSaved.end(), last.getEntity());
+                        aSaved.insert(std::ranges::lower_bound(aSaved, hRec), hRec);
+                        posSaved = std::ranges::lower_bound(aSaved, last.getEntity());
                     }
                     StorageRecord::saveSong(song, hRec->getId());
                 }
@@ -786,28 +759,28 @@ void PRecords::saveData() {
             }
 
             case RECORD: {
-                Check3(typeid(*last.getEntity()) == typeid(Record));
-                HRecord rec(boost::dynamic_pointer_cast<Record>(last.getEntity()));
+                contract_assert(typeid(*last.getEntity()) == typeid(Record));
+                HRecord rec(std::dynamic_pointer_cast<Record>(last.getEntity()));
                 if (last.how() == Undo::DELETE) {
                     if (rec->getId()) {
-                        Check3(rec->getId() == last.column());
+                        contract_assert(rec->getId() == last.column());
                         StorageRecord::deleteRecord(rec->getId());
                     }
 
-                    std::map<HEntity, HEntity>::iterator delRel(delRelation.find(last.getEntity()));
-                    Check3(delRel != delRelation.end());
-                    Check3(typeid(*delRel->second) == typeid(Interpret));
+                    auto delRel(delRelation.find(last.getEntity()));
+                    contract_assert(delRel != delRelation.end());
+                    contract_assert(typeid(*delRel->second) == typeid(Interpret));
                     delRelation.erase(delRel);
                 }
                 else {
                     HInterpret interpret(relRecords.getParent(rec));
                     if (!interpret->getId()) {
-                        Check3(std::find(aSaved.begin(), aSaved.end(), interpret) == aSaved.end());
-                        Check3(delRelation.find(interpret) == delRelation.end());
+                        contract_assert(std::ranges::find(aSaved, interpret) == aSaved.end());
+                        contract_assert(!delRelation.contains(interpret));
 
                         SaveCelebrity::store(interpret, "Interprets", *getWindow());
-                        aSaved.insert(lower_bound(aSaved.begin(), aSaved.end(), interpret), interpret);
-                        posSaved = lower_bound(aSaved.begin(), aSaved.end(), last.getEntity());
+                        aSaved.insert(std::ranges::lower_bound(aSaved, interpret), interpret);
+                        posSaved = std::ranges::lower_bound(aSaved, last.getEntity());
                     }
                     StorageRecord::saveRecord(rec, interpret->getId());
                 }
@@ -815,11 +788,11 @@ void PRecords::saveData() {
             }
 
             case INTERPRET: {
-                Check3(typeid(*last.getEntity()) == typeid(Interpret));
-                HInterpret interpret(boost::dynamic_pointer_cast<Interpret>(last.getEntity()));
+                contract_assert(typeid(*last.getEntity()) == typeid(Interpret));
+                HInterpret interpret(std::dynamic_pointer_cast<Interpret>(last.getEntity()));
                 if (last.how() == Undo::DELETE) {
                     if (interpret->getId()) {
-                        Check3(interpret->getId() == last.column());
+                        contract_assert(interpret->getId() == last.column());
                         StorageRecord::deleteInterpret(interpret->getId());
                     }
                 }
@@ -829,17 +802,17 @@ void PRecords::saveData() {
             }
 
             default:
-                Check1(0);
+                contract_assert(false);
             } // end-switch
 
             aSaved.insert(posSaved, last.getEntity());
         }
         aUndo.pop();
     } // end-while
-    Check3(apMenus[UNDO]);
+    contract_assert(apMenus[UNDO]);
     apMenus[UNDO]->set_enabled(false);
 
-    Check3(delRelation.empty());
+    contract_assert(delRelation.empty());
 }
 
 //-----------------------------------------------------------------------------
@@ -864,20 +837,19 @@ void PRecords::deleteSelectedRecords() {
     TRACE9("PRecords::deleteSelectedRecords ()");
 
     Glib::RefPtr<Gtk::TreeSelection> selection(records.get_selection());
-    while (selection->get_selected_rows().size()) {
-        std::vector<Gtk::TreePath> list(selection->get_selected_rows());
-        Check3(list.size());
-        std::vector<Gtk::TreePath>::iterator i(list.begin());
+    while (!selection->get_selected_rows().empty()) {
+        const std::vector<Gtk::TreePath> list(selection->get_selected_rows());
+        contract_assert(!list.empty());
 
-        Gtk::TreeModel::iterator iter(records.get_model()->get_iter(*i));
-        Check3(iter);
+        Gtk::TreeModel::iterator iter(records.get_model()->get_iter(list.front()));
+        contract_assert(iter);
         if (iter->parent()) // A record is going to be deleted
             deleteRecord(iter);
         else { // An interpret is going to be deleted
             TRACE9("PRecords::deleteSelectedRecords () - Deleting " << iter->children().size() << " children");
             HInterpret interpret(records.getInterpretAt(iter));
-            Check3(interpret);
-            while (iter->children().size()) {
+            contract_assert(interpret);
+            while (!iter->children().empty()) {
                 Gtk::TreeModel::iterator child(iter->children().begin());
                 HRecord hRecord(records.getRecordAt(child));
                 if (hRecord->needsLoading() && hRecord->getId())
@@ -896,24 +868,21 @@ void PRecords::deleteSelectedRecords() {
 /// \param record Iterator to record to delete
 //-----------------------------------------------------------------------------
 void PRecords::deleteRecord(const Gtk::TreeModel::iterator& record) {
-    Check2(record->children().empty());
-
     HRecord hRec(records.getRecordAt(record));
     TRACE9("PRecords::deleteRecord (const Gtk::TreeModel::iterator&) - Deleting record " << hRec->getName());
-    Check3(relRecords.isRelated(hRec));
+    contract_assert(relRecords.isRelated(hRec));
     HInterpret hInterpret(relRecords.getParent(hRec));
-    Check3(hInterpret);
+    contract_assert(hInterpret);
 
     // Remove related songs
     TRACE3("PRecords::deleteRecord (const Gtk::TreeModel::iterator&) - Remove Songs");
     if (relSongs.isRelated(hRec)) {
-        const std::vector<HSong>& as(relSongs.getObjects(hRec));
-        for (std::vector<HSong>::const_iterator s(as.begin()); s != as.end(); ++s)
-            deleteSong((HSong&)(*s), hRec);
+        for (const auto& song : relSongs.getObjects(hRec))
+            deleteSong(song, hRec);
         relSongs.unrelateAll(hRec);
     }
 
-    Check3(delRelation.find(hRec) == delRelation.end());
+    contract_assert(!delRelation.contains(hRec));
 
     Gtk::TreePath path(records.getModel()->get_path(records.getOwner(hInterpret)));
     aUndo.push(Undo(Undo::DELETE, RECORD, hRec->getId(), hRec, path, ""));
@@ -930,9 +899,7 @@ void PRecords::deleteRecord(const Gtk::TreeModel::iterator& record) {
 //-----------------------------------------------------------------------------
 void PRecords::deleteSong(const HSong& song, const HRecord& record) {
     TRACE9("PRecords::deleteSong (const HSong& song, const HRecord& record)");
-    Check1(song);
-    Check1(record);
-    Check3(delRelation.find(song) == delRelation.end());
+    contract_assert(!delRelation.contains(song));
 
     Gtk::TreePath path(records.getModel()->get_path(records.getObject(record)));
     aUndo.push(Undo(Undo::DELETE, SONG, song->getId(), song, path, ""));
@@ -946,18 +913,17 @@ void PRecords::deleteSelectedSongs() {
     TRACE9("PRecords::deleteSelectedSongs ()");
 
     Glib::RefPtr<Gtk::TreeSelection> selection(songs.get_selection());
-    while (selection->get_selected_rows().size()) {
-        std::vector<Gtk::TreePath> list(selection->get_selected_rows());
-        Check3(list.size());
-        std::vector<Gtk::TreePath>::iterator i(list.begin());
+    while (!selection->get_selected_rows().empty()) {
+        const std::vector<Gtk::TreePath> list(selection->get_selected_rows());
+        contract_assert(!list.empty());
 
-        Gtk::TreeModel::iterator iter(songs.get_model()->get_iter(*i));
-        Check3(iter);
+        Gtk::TreeModel::iterator iter(songs.get_model()->get_iter(list.front()));
+        contract_assert(iter);
         HSong song(songs.getSongAt(iter));
-        Check3(song);
-        Check3(relSongs.isRelated(song));
+        contract_assert(song);
+        contract_assert(relSongs.isRelated(song));
         HRecord record(relSongs.getParent(song));
-        Check3(record);
+        contract_assert(record);
         deleteSong(song, record);
 
         relSongs.unrelate(record, song);
@@ -970,24 +936,23 @@ void PRecords::deleteSelectedSongs() {
 /// \param fd File-descriptor for exporting
 //-----------------------------------------------------------------------------
 void PRecords::export2HTML(unsigned int fd, const std::string&) {
-    std::sort(interprets.begin(), interprets.end(), &Interpret::compByName);
+    std::ranges::sort(interprets, &Interpret::compByName);
 
     // Write record-information
-    for (std::vector<HInterpret>::const_iterator i(interprets.begin()); i != interprets.end(); ++i)
-        if (relRecords.isRelated(*i)) {
+    for (const auto& interpret : interprets)
+        if (relRecords.isRelated(interpret)) {
             std::stringstream output;
-            output << 'I' << **i;
+            output << 'I' << *interpret;
 
-            const std::vector<HRecord>& records(relRecords.getObjects(*i));
-            Check3(records.size());
-            for (std::vector<HRecord>::const_iterator r(records.begin()); r != records.end(); ++r)
-                output << 'R' << **r;
+            const std::vector<HRecord>& aRecords(relRecords.getObjects(interpret));
+            contract_assert(!aRecords.empty());
+            for (const auto& record : aRecords)
+                output << 'R' << *record;
 
             TRACE9("PRecorsd::export2HTML (unsigned int) - Writing: " << output.str());
-            if (::write(fd, output.str().data(), output.str().size()) != (ssize_t)output.str().size()) {
-                Glib::ustring msg(_("Couldn't write data!\n\nReason: %1"));
-                msg.replace(msg.find("%1"), 2, strerror(errno));
-                showError(msg, _("Error exporting records to HTML!"));
+            if (::write(fd, output.str().data(), output.str().size()) != static_cast<ssize_t>(output.str().size())) {
+                showError(Glib::ustring::compose(_("Couldn't write data!\n\nReason: %1"), Glib::ustring(strerror(errno))),
+                          _("Error exporting records to HTML!"));
                 break;
             }
         }
@@ -1003,13 +968,13 @@ void PRecords::export2HTML(unsigned int fd, const std::string&) {
 /// \param year Year of record
 //-----------------------------------------------------------------------------
 void PRecords::addEntry(const Glib::ustring& artist, const Glib::ustring& record, const Glib::ustring& song, unsigned int track,
-                        Glib::ustring& genre, unsigned int year) {
+                        Glib::ustring& genre, [[maybe_unused]] unsigned int year) {
     HInterpret interpret;
     Gtk::TreeModel::iterator i(records.getOwner(artist));
     if (i == records.getModel()->children().end()) {
         TRACE9("PRecords::addEntry (3x const Glib::ustring&, unsigned int) - Adding band " << artist);
 
-        interpret.reset(new Interpret);
+        interpret = std::make_shared<Interpret>();
         interpret->setName(artist);
         i = addInterpret(interpret);
     }
@@ -1020,7 +985,7 @@ void PRecords::addEntry(const Glib::ustring& artist, const Glib::ustring& record
     Gtk::TreeModel::iterator r(records.getObject(i, record));
     if (r == i->children().end()) {
         TRACE9("PRecords::addEntry (3x const Glib::ustring&, unsigned int) - Adding record " << record);
-        rec.reset(new Record);
+        rec = std::make_shared<Record>();
         rec->setSongsLoaded();
         rec->setName(record);
         addRecord(i, rec);
@@ -1030,12 +995,12 @@ void PRecords::addEntry(const Glib::ustring& artist, const Glib::ustring& record
         records.selectRow(r);
     }
 
-    int idGenre(songs.getGenre(genre));
+    const int idGenre(songs.getGenre(genre));
     HSong hSong;
     Gtk::TreeModel::iterator s(songs.getSong(song));
     if (s == songs.getModel()->children().end()) {
         TRACE9("PRecords::addEntry (3x const Glib::ustring&, unsigned int) - Adding song " << hSong);
-        hSong.reset(new Song);
+        hSong = std::make_shared<Song>();
         hSong->setName(song);
         if (track)
             hSong->setTrack(track);
@@ -1065,7 +1030,7 @@ void PRecords::addEntry(const Glib::ustring& artist, const Glib::ustring& record
 //-----------------------------------------------------------------------------
 void PRecords::undo() {
     TRACE1("PRecords::undo ()");
-    Check3(aUndo.size());
+    contract_assert(!aUndo.empty());
 
     Undo last(aUndo.top());
     switch (last.what()) {
@@ -1082,7 +1047,7 @@ void PRecords::undo() {
         break;
 
     default:
-        Check2(0);
+        contract_assert(false);
     } // end-switch
 
     aUndo.pop();
@@ -1101,10 +1066,10 @@ void PRecords::undoRecord(const Undo& last) {
 
     Gtk::TreePath path(last.getPath());
     Gtk::TreeModel::iterator iter(records.getModel()->get_iter(path));
-    Check3(iter->parent());
+    contract_assert(iter->parent());
 
-    Check3(typeid(*last.getEntity()) == typeid(Record));
-    HRecord record(boost::dynamic_pointer_cast<Record>(last.getEntity()));
+    contract_assert(typeid(*last.getEntity()) == typeid(Record));
+    HRecord record(std::dynamic_pointer_cast<Record>(last.getEntity()));
     TRACE9("PRecords::undoRecord (const Undo&) - " << last.how() << ": " << record->getName());
 
     switch (last.how()) {
@@ -1119,26 +1084,26 @@ void PRecords::undoRecord(const Undo& last) {
             break;
 
         case 2:
-            record->setGenre((unsigned int)last.getValue()[0]);
+            record->setGenre(static_cast<unsigned int>(last.getValue()[0]));
             break;
 
         default:
-            Check1(0);
+            contract_assert(false);
         } // end-switch
         break;
 
     case Undo::INSERT:
-        Check3(iter->parent());
-        Check3(relRecords.isRelated(record));
+        contract_assert(iter->parent());
+        contract_assert(relRecords.isRelated(record));
         relRecords.unrelate(records.getInterpretAt(iter->parent()), record);
         records.getModel()->erase(iter);
         iter = records.getModel()->children().end();
         break;
 
     case Undo::DELETE: {
-        std::map<HEntity, HEntity>::iterator delRel(delRelation.find(last.getEntity()));
-        Check3(typeid(*delRel->second) == typeid(Interpret));
-        HInterpret interpret(boost::dynamic_pointer_cast<Interpret>(delRel->second));
+        auto delRel(delRelation.find(last.getEntity()));
+        contract_assert(typeid(*delRel->second) == typeid(Interpret));
+        HInterpret interpret(std::dynamic_pointer_cast<Interpret>(delRel->second));
         Gtk::TreeRow rowInterpret(*records.getOwner(interpret));
 
         iter = records.append(record, rowInterpret).get_iter();
@@ -1150,7 +1115,7 @@ void PRecords::undoRecord(const Undo& last) {
     }
 
     default:
-        Check1(0);
+        contract_assert(false);
     } // end-switch
 
     if (iter) {
@@ -1171,14 +1136,14 @@ void PRecords::undoInterpret(const Undo& last) {
     Gtk::TreePath path(last.getPath());
     Gtk::TreeModel::iterator iter(records.getModel()->get_iter(path));
 
-    HInterpret interpret(boost::dynamic_pointer_cast<Interpret>(last.getEntity()));
-    Check3(interpret);
+    HInterpret interpret(std::dynamic_pointer_cast<Interpret>(last.getEntity()));
+    contract_assert(interpret);
     TRACE9("PRecords::undoInterpret (const Undo&) - " << last.how() << ": " << interpret->getName());
 
-    switch (last.how())
-    case Undo::CHANGED: {
-        Check3(iter);
-        Check3(!iter->parent());
+    switch (last.how()) {
+    case Undo::CHANGED:
+        contract_assert(iter);
+        contract_assert(!iter->parent());
 
         switch (last.column()) {
         case 0:
@@ -1190,21 +1155,21 @@ void PRecords::undoInterpret(const Undo& last) {
             break;
 
         default:
-            Check1(0);
+            contract_assert(false);
         } // end-switch
         break;
 
     case Undo::INSERT:
-        Check3(iter);
-        Check3(!iter->parent());
-        Check3(!relRecords.isRelated(interpret));
+        contract_assert(iter);
+        contract_assert(!iter->parent());
+        contract_assert(!relRecords.isRelated(interpret));
         records.getModel()->erase(iter);
         iter = records.getModel()->children().end();
         break;
 
     case Undo::DELETE:
         if (iter)
-            Check3(!iter->parent());
+            contract_assert(!iter->parent());
         else
             iter = records.getModel()->children().end();
         iter = records.insert(interpret, iter).get_iter();
@@ -1212,13 +1177,13 @@ void PRecords::undoInterpret(const Undo& last) {
         break;
 
     default:
-        Check1(0);
+        contract_assert(false);
     } // end-switch
 
-        if (iter) {
-            Gtk::TreeRow row(*iter);
-            records.update(row);
-        }
+    if (iter) {
+        Gtk::TreeRow row(*iter);
+        records.update(row);
+    }
     records.set_cursor(path);
     records.scroll_to_row(path, 0.8);
 }
@@ -1236,11 +1201,11 @@ void PRecords::undoSong(const Undo& last) {
     sel->unselect_all();
     sel->select(iter);
 
-    Check3(typeid(*last.getEntity()) == typeid(Song));
-    HSong song(boost::dynamic_pointer_cast<Song>(last.getEntity()));
+    contract_assert(typeid(*last.getEntity()) == typeid(Song));
+    HSong song(std::dynamic_pointer_cast<Song>(last.getEntity()));
     TRACE9("PRecords::undoSong (const Undo&) - " << last.how() << ": " << song->getName());
     iter = songs.getSong(song);
-    Check3(iter);
+    contract_assert(iter);
 
     switch (last.how()) {
     case Undo::CHANGED: {
@@ -1258,12 +1223,12 @@ void PRecords::undoSong(const Undo& last) {
             break;
 
         case 3:
-            Check3(last.getValue().size() == 1);
-            song->setGenre((unsigned int)last.getValue()[0]);
+            contract_assert(last.getValue().size() == 1);
+            song->setGenre(static_cast<unsigned int>(last.getValue()[0]));
             break;
 
         default:
-            Check1(0);
+            contract_assert(false);
         } // end-switch
         break;
     }
@@ -1277,16 +1242,16 @@ void PRecords::undoSong(const Undo& last) {
     case Undo::DELETE: {
         iter = songs.insert(song, iter);
 
-        std::map<HEntity, HEntity>::iterator delRel(delRelation.find(last.getEntity()));
-        Check3(typeid(*delRel->second) == typeid(Record));
-        relSongs.relate(boost::dynamic_pointer_cast<Record>(delRel->second), song);
+        auto delRel(delRelation.find(last.getEntity()));
+        contract_assert(typeid(*delRel->second) == typeid(Record));
+        relSongs.relate(std::dynamic_pointer_cast<Record>(delRel->second), song);
 
         delRelation.erase(delRel);
         break;
     }
 
     default:
-        Check1(0);
+        contract_assert(false);
     } // end-switch
 
     if (iter) {

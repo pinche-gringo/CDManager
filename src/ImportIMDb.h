@@ -40,7 +40,7 @@ class ScrolledWindow;
 class ImportFromIMDb : public FilmDataEditor {
   public:
     ImportFromIMDb();
-    virtual ~ImportFromIMDb();
+    ~ImportFromIMDb() override;
 
     /// Creates the dialog
     /// \remarks Cares also about freeing the dialog
@@ -70,23 +70,24 @@ class ImportFromIMDb : public FilmDataEditor {
     void okEvent() override;
 
   private:
-    volatile enum { QUERY, LOADING, CHOOSING, CONFIRM, IMGLOAD } status;
+    volatile enum { QUERY, LOADING, CHOOSING, CONFIRM, IMGLOAD } status {QUERY};
 
-    static void removeProgressBar(Gtk::Grid* client, IMDbProgress* progress);
-    static void stopLoading(IMDbProgress* progress);
+    static void removeProgressBar(Gtk::Grid* client, IMDbProgress* progress) pre(client != nullptr) pre(progress != nullptr);
+    static void stopLoading(IMDbProgress* progress) pre(progress != nullptr);
     void continueLoading(Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress);
     void loadSelection(Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress);
     void rowActivated(const Gtk::TreePath& path, Gtk::TreeViewColumn* column, Gtk::ScrolledWindow* scrl, Gtk::TreeView* list,
-                      IMDbProgress* progress);
-    void rowSelected(Gtk::TreeView* list);
-    void loadRow(Gtk::TreeRow& row, Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress);
+                      IMDbProgress* progress) pre(list != nullptr);
+    void rowSelected(Gtk::TreeView* list) pre(list != nullptr);
+    void loadRow(Gtk::TreeRow& row, Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress)
+        pre(scrl != nullptr) pre(list != nullptr) pre(progress != nullptr);
 
     void inputChanged();
     void showError(const Glib::ustring& msg, IMDbProgress* progress);
-    void showSearchResults(const IMDbProgress::IMDbMatchData& results, IMDbProgress* progress);
-    void showData(const IMDbProgress::IMDbEntry& entry, IMDbProgress* progress);
+    void showSearchResults(const IMDbProgress::IMDbMatchData& results, IMDbProgress* progress) pre(progress != nullptr);
+    void showData(const IMDbProgress::IMDbEntry& entry, IMDbProgress* progress) pre(progress != nullptr);
     void addIcon(const std::string& bufImage, IMDbProgress* progress);
-    void loadIcon(const std::string& image, IMDbProgress* progress);
+    void loadIcon(const std::string& image, IMDbProgress* progress) pre(progress != nullptr) pre(!image.empty());
     bool saveIMDbInfo();
 
     sigc::connection connOK;

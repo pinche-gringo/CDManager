@@ -29,8 +29,13 @@
 #include <cstring>
 #include <unistd.h>
 
+#include <algorithm>
+#include <array>
+#include <format>
 #include <fstream>
-#include <sstream>
+#include <ranges>
+#include <span>
+#include <string_view>
 
 #include <glibmm/main.h>
 
@@ -44,7 +49,6 @@
 #include <gtkmm/scrolledwindow.h>
 
 // TRACELEVEL 1 shows shared-memory key; TRACELEVEL 9 shows password
-#include <YGP/Check.h>
 #include <YGP/File.h>
 #include <YGP/INIFile.h>
 #include <YGP/Trace.h>
@@ -67,7 +71,6 @@
 #endif
 #if WITH_FILMS == 1
 #    include "PFilms.h"
-#    include <boost/tokenizer.hpp>
 #endif
 #if WITH_RECORDS == 1
 #    include "PRecords.h"
@@ -75,15 +78,9 @@
 
 #if (WITH_RECORDS == 1) || (WITH_FILMS == 1)
 #    include <YGP/Process.h>
-#    include <boost/tokenizer.hpp>
 #endif
 
 #include "CDManager.h"
-
-const unsigned int CDManager::WIDTH(800);
-const unsigned int CDManager::HEIGHT(600);
-
-const char* const CDManager::DBNAME("CDMedia");
 
 #include "IconAuthor.h"
 #include "IconProgram.h"
@@ -94,7 +91,7 @@ const char* const CDManager::DBNAME("CDMedia");
 /// \param user: User for database
 /// \param pwd: Password for DB
 //-----------------------------------------------------------------------------
-CDManager::CDManager(Options& options) : XApplication(PACKAGE " V" PRG_RELEASE), pageMenusOn(false), opt(options) {
+CDManager::CDManager(Options& options) : XApplication(PACKAGE " V" PRG_RELEASE), opt(options) {
     TRACE8("CDManager::CDManager (Options&)");
 
     Language::init();
@@ -168,9 +165,7 @@ CDManager::CDManager(Options& options) : XApplication(PACKAGE " V" PRG_RELEASE),
         TRACE8("Genres: " << recGenres.size() << '/' << filmGenres.size());
     }
     catch (std::exception& e) {
-        Glib::ustring msg(_("Can't read datafile containing the genres!\n\nReason: %1"));
-        msg.replace(msg.find("%1"), 2, e.what());
-        showError(msg);
+        showError(Glib::ustring::compose(_("Can't read datafile containing the genres!\n\nReason: %1"), e.what()));
     }
 
     if (opt.getUser().empty() || !login(opt.getUser(), opt.getPassword()))
@@ -226,7 +221,7 @@ Glib::RefPtr<Gio::SimpleAction> CDManager::addMenuEntry(const Glib::RefPtr<Gio::
 //-----------------------------------------------------------------------------
 void CDManager::showError(const Glib::ustring& msg, const Glib::ustring& title) {
     Gtk::MessageDialog dlg(*this, msg, false, Gtk::MessageType::ERROR);
-    if (title.size())
+    if (!title.empty())
         dlg.set_title(title);
     XGP::runModal(dlg);
 }
@@ -236,8 +231,8 @@ void CDManager::showError(const Glib::ustring& msg, const Glib::ustring& title) 
 //-----------------------------------------------------------------------------
 CDManager::~CDManager() {
     TRACE8("CDManager::~CDManager ()");
-    for (unsigned int i(0); i < (sizeof(pages) / sizeof(*pages)); ++i)
-        pages[i]->clear();
+    for (NBPage* page : pages)
+        page->clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -246,19 +241,17 @@ CDManager::~CDManager() {
 void CDManager::save() {
     TRACE9("CDManager::save ()");
     try {
-        for (unsigned int i(0); i < (sizeof(pages) / sizeof(*pages)); ++i)
-            if (pages[i]->isChanged())
-                pages[i]->saveData();
+        for (NBPage* page : pages)
+            if (page->isChanged())
+                page->saveData();
 
-        Check3(apMenus[SAVE]);
+        contract_assert(apMenus[SAVE]);
         apMenus[SAVE]->set_enabled(false);
     }
     catch (SaveCelebrity::DlgCanceled&) {
     }
     catch (std::exception& err) {
-        Glib::ustring msg(_("Error saving data!\n\nReason: %1"));
-        msg.replace(msg.find("%1"), 2, err.what());
-        showError(msg);
+        showError(Glib::ustring::compose(_("Error saving data!\n\nReason: %1"), err.what()));
     }
 }
 
@@ -276,10 +269,9 @@ void CDManager::editPreferences() { Settings::create(*this, opt); }
 /// Shows the about box for the program
 //-----------------------------------------------------------------------------
 void CDManager::showAboutbox() {
-    std::string ver(_("Copyright (C) 2004 - 2011 Markus Schwab"
-                      "\ne-mail: <g17m0@lusers.sourceforge.net>\n\nCompiled on %1 at %2"));
-    ver.replace(ver.find("%1"), 2, __DATE__);
-    ver.replace(ver.find("%2"), 2, __TIME__);
+    const Glib::ustring ver(Glib::ustring::compose(_("Copyright (C) 2004 - 2011 Markus Schwab"
+                                                     "\ne-mail: <g17m0@lusers.sourceforge.net>\n\nCompiled on %1 at %2"),
+                                                   __DATE__, __TIME__));
 
     XGP::XAbout* about(XGP::XAbout::create(ver, PACKAGE " V" VERSION));
     about->setIconProgram(picProgram, sizeof(picProgram));
@@ -302,7 +294,7 @@ void CDManager::showLogin() {
     dlg->set_transient_for(*this);
     dlg->sigLogin.connect(sigc::mem_fun(*this, &CDManager::login));
 
-    if (opt.getUser().size())
+    if (!opt.getUser().empty())
         dlg->setUser(opt.getUser());
     else
         dlg->setCurrentUser();
@@ -314,8 +306,8 @@ void CDManager::showLogin() {
 /// \param enable: Flag, if menus should be enabled
 //-----------------------------------------------------------------------------
 void CDManager::enableMenus(bool enable) {
-    for (unsigned int i(0); i < LAST; ++i)
-        Check3(apMenus[i]);
+    for (const auto& action : apMenus)
+        contract_assert(action);
 
     apMenus[LOGOUT]->set_enabled(enable);
     enablePageMenus(enable);
@@ -353,14 +345,15 @@ void CDManager::enablePageMenus(bool enable) {
 void CDManager::loadDatabase() {
     TRACE8("CDManager::loadDatabase () - " << nb.get_current_page());
     // Check if page is valid (at init the current page can be -1)
-    if ((unsigned int)nb.get_current_page() < (sizeof(pages) / sizeof(*pages))) {
+    if (const auto iPage(static_cast<unsigned int>(nb.get_current_page())); iPage < pages.size()) {
         status.pop();
         status.push(_("Reading database ..."));
 
-        Check3(pages[nb.get_current_page()]);
-        Check3(!pages[nb.get_current_page()]->isLoaded());
-        pages[nb.get_current_page()]->loadData();
-        pages[nb.get_current_page()]->getFocus();
+        NBPage* page(pages[iPage]);
+        contract_assert(page);
+        contract_assert(!page->isLoaded());
+        page->loadData();
+        page->getFocus();
     }
 }
 
@@ -370,10 +363,9 @@ void CDManager::loadDatabase() {
 //-----------------------------------------------------------------------------
 void CDManager::pageSwitched(Gtk::Widget*, guint iPage) {
     TRACE6("CDManager::pageSwitched (Gtk::Widget*, guint) - " << iPage);
-    Check1(iPage < 3);
 
     if (nb.get_current_page() != -1) {
-        Check3(pages[nb.get_current_page()]);
+        contract_assert(pages[nb.get_current_page()]);
         pages[nb.get_current_page()]->removeMenu();
     }
     menuEdit->remove_all();
@@ -381,7 +373,7 @@ void CDManager::pageSwitched(Gtk::Widget*, guint iPage) {
     if (ctrlPage)
         remove_controller(ctrlPage);
 
-    Check3(pages[iPage]);
+    contract_assert(pages[iPage]);
     if (!pages[iPage]->isLoaded() && Storage::connected())
         pages[iPage]->loadData();
 
@@ -404,15 +396,13 @@ void CDManager::exit() { close(); }
 /// Checks if the DB has been changed and asks if it should be saved
 //-----------------------------------------------------------------------------
 void CDManager::querySave() {
-    for (unsigned int i(0); i < (sizeof(pages) / sizeof(*pages)); ++i)
-        if (pages[i]->isChanged()) {
-            Gtk::MessageDialog dlg(*this, _("The data has been modified! Save those changes?"), false, Gtk::MessageType::QUESTION,
-                                   Gtk::ButtonsType::YES_NO);
-            dlg.set_title(PACKAGE);
-            if (XGP::runModal(dlg) == Gtk::ResponseType::YES)
-                save();
-            break;
-        }
+    if (std::ranges::any_of(pages, &NBPage::isChanged)) {
+        Gtk::MessageDialog dlg(*this, _("The data has been modified! Save those changes?"), false, Gtk::MessageType::QUESTION,
+                               Gtk::ButtonsType::YES_NO);
+        dlg.set_title(PACKAGE);
+        if (XGP::runModal(dlg) == Gtk::ResponseType::YES)
+            save();
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -438,9 +428,7 @@ bool CDManager::login(const Glib::ustring& user, const Glib::ustring& pwd) {
         Storage::login(DBNAME, user.c_str(), pwd.c_str());
     }
     catch (std::exception& err) {
-        Glib::ustring msg(_("Can't connect to database!\n\nReason: %1"));
-        msg.replace(msg.find("%1"), 2, err.what());
-        showError(msg, _("Login error"));
+        showError(Glib::ustring::compose(_("Can't connect to database!\n\nReason: %1"), err.what()), _("Login error"));
         return false;
     }
 
@@ -449,9 +437,7 @@ bool CDManager::login(const Glib::ustring& user, const Glib::ustring& pwd) {
         TRACE1("CDManager::login () - Key: " << Words::getMemoryKey());
     }
     catch (std::exception& err) {
-        Glib::ustring msg(_("Can't query needed information!\n\nReason: %1"));
-        msg.replace(msg.find("%1"), 2, err.what());
-        showError(msg);
+        showError(Glib::ustring::compose(_("Can't query needed information!\n\nReason: %1"), err.what()));
     }
 
     enableMenus(true);
@@ -466,8 +452,8 @@ void CDManager::logout() {
     TRACE8("CDManager::logout ()");
     querySave();
 
-    for (unsigned int i(0); i < (sizeof(pages) / sizeof(*pages)); ++i)
-        pages[i]->clear();
+    for (NBPage* page : pages)
+        page->clear();
 
     Words::destroy();
     Storage::logout();
@@ -495,10 +481,7 @@ void CDManager::savePreferences() {
 #endif
         }
         else {
-            Glib::ustring msg(_("Can't create file `%1'!\n\nReason: %2."));
-            msg.replace(msg.find("%1"), 2, opt.pINIFile);
-            msg.replace(msg.find("%2"), 2, strerror(errno));
-            showError(msg);
+            showError(Glib::ustring::compose(_("Can't create file `%1'!\n\nReason: %2."), opt.pINIFile, strerror(errno)));
         }
     }
 
@@ -516,9 +499,7 @@ void CDManager::savePreferences() {
     }
     catch (std::exception& e) {
         Storage::abortTransaction();
-        Glib::ustring msg(_("Can't store special names!\n\nReason: %1."));
-        msg.replace(msg.find("%1"), 2, e.what());
-        showError(msg);
+        showError(Glib::ustring::compose(_("Can't store special names!\n\nReason: %1."), e.what()));
     }
 }
 
@@ -528,27 +509,27 @@ void CDManager::savePreferences() {
 //-----------------------------------------------------------------------------
 void CDManager::export2HTML() {
     std::string dir(opt.getDirOutput());
-    if (dir.size() && (dir[dir.size() - 1] != YGP::File::DIRSEPARATOR)) {
+    if (!dir.empty() && !dir.ends_with(YGP::File::DIRSEPARATOR)) {
         dir += YGP::File::DIRSEPARATOR;
         opt.setDirOutput(dir);
     }
 
-    // Load data
-    for (unsigned int i(0); i < (WITH_RECORDS + WITH_FILMS); ++i)
-        if (!pages[i]->isLoaded())
-            pages[i]->loadData();
+    // Pages which can be exported (records and films)
+    const auto exportPages = std::span(pages).first<WITH_RECORDS + WITH_FILMS>();
 
-    // Get the key for the shared memory holding the special words
-    std::ostringstream memKey;
-    memKey << Words::getMemoryKey() << std::ends;
+    // Load data
+    for (NBPage* page : exportPages)
+        if (!page->isLoaded())
+            page->loadData();
 
     const char* envLang(getenv("LANGUAGE"));
     std::string oldLang;
     if (envLang)
         oldLang = envLang;
 
-    std::string key(memKey.str());
-    const char* args[] = {"CDWriter",
+    // Get the key for the shared memory holding the special words
+    const std::string key(std::format("{}", Words::getMemoryKey()));
+    auto args(std::to_array<const char*>({"CDWriter",
                           "--outputDir",
                           opt.getDirOutput().c_str(),
 #    if WITH_RECORDS == 1
@@ -565,19 +546,17 @@ void CDManager::export2HTML() {
 #    endif
                           nullptr,
                           key.c_str(),
-                          nullptr};
-    const unsigned int POS_LANG((sizeof(args) / sizeof(*args)) - 3);
-    Check2(!args[POS_LANG]);
+                          nullptr}));
+    const std::size_t POS_LANG(args.size() - 3);
+    contract_assert(!args[POS_LANG]);
 
     // Export to every language supported
-    Glib::ustring statMsg(_("Exporting (language %1) ..."));
-    std::string allLangs(LANGUAGES, sizeof(LANGUAGES) - 1);
-    boost::tokenizer<> langs(allLangs);
-    for (boost::tokenizer<>::iterator l(langs.begin()); l != langs.end(); ++l) {
-        TRACE6("CDManager::export2HTML() - Lang: " << *l);
-        Glib::ustring stat(statMsg);
-        stat.replace(stat.find("%1"), 2, Language::findInternational(*l));
-        status.push(stat);
+    const Glib::ustring statMsg(_("Exporting (language %1) ..."));
+    constexpr std::string_view allLangs(LANGUAGES);
+    for (const std::string lang : allLangs | std::views::split(' ') | std::views::filter([](auto&& part) { return !part.empty(); })
+                                      | std::views::transform([](auto&& part) { return std::ranges::to<std::string>(part); })) {
+        TRACE6("CDManager::export2HTML() - Lang: " << lang);
+        status.push(Glib::ustring::compose(statMsg, Language::findInternational(lang)));
 
         Glib::RefPtr<Glib::MainContext> ctx(Glib::MainContext::get_default());
         while (ctx->iteration(false))
@@ -586,27 +565,27 @@ void CDManager::export2HTML() {
         pid_t pid(-1);
         int pipes[2];
         try {
-            setenv("LANGUAGE", l->c_str(), true);
-            args[POS_LANG] = l->c_str();
+            setenv("LANGUAGE", lang.c_str(), true);
+            args[POS_LANG] = lang.c_str();
             TRACE3("CDManager::export2HTML() - Parms: " << args[POS_LANG] << ' ' << args[POS_LANG + 1]);
 
             if (pipe(pipes) < 0)
                 throw std::runtime_error(strerror(errno));
-            pid = YGP::Process::execIOConnected("CDWriter", args, pipes);
+            pid = YGP::Process::execIOConnected("CDWriter", args.data(), pipes);
 
-            for (unsigned int i(0); i < (WITH_RECORDS + WITH_FILMS); ++i)
-                pages[i]->export2HTML(pipes[1], *l);
+            for (NBPage* page : exportPages)
+                page->export2HTML(pipes[1], lang);
             ::close(pipes[1]);
 
-            char output[128] = "";
+            std::array<char, 128> output{};
             std::string allOut;
-            int cRead;
-            while ((cRead = ::read(pipes[0], output, sizeof(output))) != -1) {
-                allOut.append(output, cRead);
+            ssize_t cRead;
+            while ((cRead = ::read(pipes[0], output.data(), output.size())) != -1) {
+                allOut.append(output.data(), cRead);
                 if (!cRead)
                     break;
             }
-            Check3(pid != -1);
+            contract_assert(pid != -1);
             YGP::Process::waitForProcess(pid);
             if (allOut.size()) {
                 Gtk::MessageDialog dlg(*this, Glib::locale_to_utf8(allOut), false, Gtk::MessageType::INFO);
@@ -619,7 +598,7 @@ void CDManager::export2HTML() {
         }
         ::close(pipes[0]);
         status.pop();
-    } // end-while
+    } // end-for
     setenv("LANGUAGE", oldLang.c_str(), true);
 }
 #endif

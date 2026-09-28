@@ -22,6 +22,7 @@
 #    error Need WITH_ACTORS, WITH_RECORDS and WITH_FILMS defined
 #endif
 
+#include <array>
 #include <map>
 #include <vector>
 
@@ -53,8 +54,8 @@ class StatusObject;
 class CDManager : public XGP::XApplication {
   public:
     // Manager functions
-    CDManager(Options& options);
-    ~CDManager();
+    explicit CDManager(Options& options);
+    ~CDManager() override;
 
     CDManager(const CDManager&) = delete;
     const CDManager& operator=(const CDManager&) = delete;
@@ -74,7 +75,7 @@ class CDManager : public XGP::XApplication {
 
     void showAboutbox() override;
     const char* getHelpfile() override;
-    void pageSwitched(Gtk::Widget* page, guint iPage);
+    void pageSwitched(Gtk::Widget* page, guint iPage) pre(iPage < 3);
     void enablePageMenus(bool enable);
 
     bool login(const Glib::ustring& user, const Glib::ustring& pwd);
@@ -89,13 +90,10 @@ class CDManager : public XGP::XApplication {
                                                  const char* action, const sigc::slot<void()>& callback,
                                                  const Glib::ustring& accel = Glib::ustring());
 
-    static const char* xpmProgram[];
-    static const char* xpmAuthor[];
+    static constexpr unsigned int WIDTH{800};
+    static constexpr unsigned int HEIGHT{600};
 
-    static const unsigned int WIDTH;
-    static const unsigned int HEIGHT;
-
-    static const char* const DBNAME;
+    static constexpr const char* DBNAME{"CDMedia"};
 
     Genres recGenres;
     Genres filmGenres;
@@ -114,17 +112,17 @@ class CDManager : public XGP::XApplication {
 #endif
         LAST
     };
-    Glib::RefPtr<Gio::SimpleAction> apMenus[LAST];
+    std::array<Glib::RefPtr<Gio::SimpleAction>, LAST> apMenus;
 
     Glib::RefPtr<Gio::Menu> menuEdit;               ///< Edit-menu; filled by the pages
     Glib::RefPtr<Gio::Menu> menuOther;              ///< Additional top-level menus of the pages
     Glib::RefPtr<Gio::SimpleActionGroup> grpPage;   ///< Actions ("page.*") of the current page
     Glib::RefPtr<Gtk::ShortcutController> ctrlPage; ///< Shortcuts of the current page
     Glib::RefPtr<Gtk::ShortcutController> ctrlMain; ///< Shortcuts of the main menu
-    bool pageMenusOn;                               ///< Flag, if the page-menus are enabled
+    bool pageMenusOn{false};                        ///< Flag, if the page-menus are enabled
     Options& opt;
 
-    NBPage* pages[WITH_ACTORS + WITH_FILMS + WITH_RECORDS];
+    std::array<NBPage*, WITH_ACTORS + WITH_FILMS + WITH_RECORDS> pages{};
 };
 
 #endif

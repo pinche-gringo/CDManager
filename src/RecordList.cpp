@@ -24,10 +24,6 @@
 
 #include <cdmgr-cfg.h>
 
-#include <cerrno>
-#include <cstdlib>
-
-#include <YGP/Check.h>
 #include <YGP/Trace.h>
 
 #include <XGP/XValue.h>
@@ -59,7 +55,6 @@ RecordList::~RecordList() { TRACE9("RecordList::~RecordList ()"); }
 //-----------------------------------------------------------------------------
 Gtk::TreeModel::Row RecordList::append(HRecord& record, Gtk::TreeModel::Row& artist) {
     TRACE3("RecordList::append (HRecord&, Gtk::TreeModel::Row&) - " << (record ? record->getName().c_str() : "None"));
-    Check1(record);
 
     HEntity obj(record);
     Gtk::TreeModel::Row newRecord(OwnerObjectList::append(obj, artist));
@@ -73,9 +68,8 @@ Gtk::TreeModel::Row RecordList::append(HRecord& record, Gtk::TreeModel::Row& art
 /// \returns HRecord: Handle of the selected line
 //-----------------------------------------------------------------------------
 HRecord RecordList::getRecordAt(const Gtk::TreeModel::ConstRow& row) const {
-    Check2(row.parent());
-    HRecord record(boost::dynamic_pointer_cast<Record>(getObjectAt(row)));
-    Check3(record);
+    HRecord record(std::dynamic_pointer_cast<Record>(getObjectAt(row)));
+    contract_assert(record);
     TRACE7("RecordList::getRecordAt (const Gtk::TreeModel::ConstRow&) - Selected record: " << record->getId() << '/'
                                                                                            << record->getName());
     return record;
@@ -88,7 +82,7 @@ HRecord RecordList::getRecordAt(const Gtk::TreeModel::ConstRow& row) const {
 /// \remarks To be implemented
 //-----------------------------------------------------------------------------
 void RecordList::setName(HEntity& object, const Glib::ustring& value) {
-    (boost::dynamic_pointer_cast<Record>(object))->setName(value);
+    (std::dynamic_pointer_cast<Record>(object))->setName(value);
 }
 
 //-----------------------------------------------------------------------------
@@ -99,7 +93,7 @@ void RecordList::setName(HEntity& object, const Glib::ustring& value) {
 /// \remarks To be implemented
 //-----------------------------------------------------------------------------
 void RecordList::setYear(HEntity& object, const Glib::ustring& value) {
-    (boost::dynamic_pointer_cast<Record>(object))->setYear(value);
+    (std::dynamic_pointer_cast<Record>(object))->setYear(value);
 }
 
 //-----------------------------------------------------------------------------
@@ -108,7 +102,7 @@ void RecordList::setYear(HEntity& object, const Glib::ustring& value) {
 /// \param value: Value to set
 /// \remarks To be implemented
 //-----------------------------------------------------------------------------
-void RecordList::setGenre(HEntity& object, unsigned int value) { (boost::dynamic_pointer_cast<Record>(object))->setGenre(value); }
+void RecordList::setGenre(HEntity& object, unsigned int value) { (std::dynamic_pointer_cast<Record>(object))->setGenre(value); }
 
 //-----------------------------------------------------------------------------
 /// Returns the name of the first column
@@ -123,10 +117,10 @@ Glib::ustring RecordList::getColumnName() const { return _("Interpret/Record"); 
 /// \returns int: Value as strcmp
 //-----------------------------------------------------------------------------
 int RecordList::sortEntity(const Gtk::TreeModel::const_iterator& a, const Gtk::TreeModel::const_iterator& b) const {
-    HRecord ha(getRecordAt(a));
-    HRecord hb(getRecordAt(b));
-    Glib::ustring aname(Record::removeIgnored(ha->getName()));
-    Glib::ustring bname(Record::removeIgnored(hb->getName()));
+    const HRecord ha(getRecordAt(a));
+    const HRecord hb(getRecordAt(b));
+    const Glib::ustring aname(Record::removeIgnored(ha->getName()));
+    const Glib::ustring bname(Record::removeIgnored(hb->getName()));
 
     return ((aname < bname) ? -1 : (bname < aname) ? 1 : ha->getName().compare(hb->getName()));
 }

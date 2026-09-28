@@ -24,19 +24,22 @@
 
 #include <cdmgr-cfg.h>
 
-#include <cctype>
+#include <stdexcept>
 
 #include <glibmm/ustring.h>
 
 #include <YGP/ADate.h>
-#include <YGP/Check.h>
 #include <YGP/Trace.h>
 
 #include <XGP/XAttribute.h> // Needed for specialization of YGP::Attribute for Glib::ustring
 
 #include "Celebrity.h"
-#include "Celebrity.meta"
 #include "Words.h"
+
+//-----------------------------------------------------------------------------
+/// Default constructor
+//-----------------------------------------------------------------------------
+Celebrity::Celebrity() { registerAttributes(*this); }
 
 //-----------------------------------------------------------------------------
 /// Copy constructor
@@ -68,10 +71,7 @@ Celebrity& Celebrity::operator=(const Celebrity& other) {
 Glib::ustring Celebrity::removeIgnored(const Glib::ustring& name) {
     TRACE9("Celebrity::removeIgnored (const Glib::ustring&) - " << name);
 
-    Glib::ustring result(name);
-    result = Words::removeArticle(name);
-    result = Words::removeNames(result);
-    return result;
+    return Words::removeNames(Words::removeArticle(name));
 }
 
 //-----------------------------------------------------------------------------
@@ -82,9 +82,7 @@ Glib::ustring Celebrity::removeIgnored(const Glib::ustring& name) {
 /// \returns bool: True, if a->name < b->name
 //-----------------------------------------------------------------------------
 bool Celebrity::compByName(const HCelebrity& a, const HCelebrity& b) {
-    Check1(a);
-    Check1(b);
-    int rc(removeIgnored(a->name).compare(removeIgnored(b->name)));
+    const int rc(removeIgnored(a->name).compare(removeIgnored(b->name)));
     return rc ? (rc < 0) : (a->name < b->name);
 }
 
@@ -95,8 +93,6 @@ bool Celebrity::compByName(const HCelebrity& a, const HCelebrity& b) {
 /// \returns bool: True, if a->name < b->name
 //-----------------------------------------------------------------------------
 bool Celebrity::compById(const HCelebrity& a, const HCelebrity& b) {
-    Check1(a);
-    Check1(b);
     return a->getId() < b->getId();
 }
 
@@ -105,10 +101,11 @@ bool Celebrity::compById(const HCelebrity& a, const HCelebrity& b) {
 /// \param value: Year the celebrity was born/died in format [born][-died]
 //-----------------------------------------------------------------------------
 void Celebrity::setLifespan(const Glib::ustring& value) {
-    size_t pos(value.find("- "));
+    const auto pos(value.find("- "));
     if ((pos == std::string::npos) || ((pos > 0) && (value[pos - 1] == ' '))) {
         YGP::AYear tmp(value.substr(0, pos - 1));
-        if (((unsigned int)tmp < 1850U) || (unsigned int)tmp > (unsigned int)YGP::ADate::today().getYear())
+        if ((static_cast<unsigned int>(tmp) < 1850U) ||
+            (static_cast<unsigned int>(tmp) > static_cast<unsigned int>(YGP::ADate::today().getYear())))
             throw std::invalid_argument(_("Invalid birth date!"));
 
         setBorn(tmp);
@@ -118,7 +115,7 @@ void Celebrity::setLifespan(const Glib::ustring& value) {
 
     if (pos != std::string::npos) {
         YGP::AYear tmp(value.substr(pos + 2));
-        if ((tmp < born) || (unsigned int)tmp > (unsigned int)YGP::ADate::today().getYear())
+        if ((tmp < born) || (static_cast<unsigned int>(tmp) > static_cast<unsigned int>(YGP::ADate::today().getYear())))
             throw std::invalid_argument(_("Invalid death date!"));
 
         setDied(tmp);
@@ -136,7 +133,7 @@ Glib::ustring Celebrity::getLifespan() const {
 
     Glib::ustring tmp(born.toString());
     if (died.isDefined()) {
-        if (tmp.size())
+        if (!tmp.empty())
             tmp.append(1, ' ');
         tmp.append("- ");
         tmp.append(died.toString());

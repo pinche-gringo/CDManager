@@ -36,11 +36,13 @@ endif
 
 lib_LTLIBRARIES=libCDMgr.la
 
+AM_CXXFLAGS = -std=c++26 -freflection -fcontracts -fcontract-evaluation-semantic=@CONTRACT_SEMANTIC@
+
 bin_PROGRAMS=CDManager CDWriter
 
 AM_CPPFLAGS = @INCLUDES@ -I../Common @DEPS_CFLAGS@ -Wall
 
-libCDMgr_la_SOURCES=Options.h Celebrity.cpp Celebrity.h CDType.cpp	\
+libCDMgr_la_SOURCES=Options.h EntityAttributes.h Celebrity.cpp Celebrity.h CDType.cpp	\
 CDType.h Words.cpp Words.h Genres.cpp Genres.h $(USE_GENFILM)		\
 $(USE_GENREC) $(USE_GENACTOR)
 
@@ -54,26 +56,12 @@ Statistics.h $(USE_FILM) $(USE_RECORD) $(USE_ACTOR) CDManager.h	\
 CDManager.cpp CDAppl.cpp CDAppl.h IconAuthor.h IconProgram.h
 
 CDManager_CPPFLAGS=@INCLUDES@ -I../Common @DEPS_CFLAGS@ @XGP_CFLAGS@ -DUSE_LANGUAGEPIXMAPS -Wall
-CDManager_LDFLAGS=-lCDMgr @DEPS_LIBS@ @XGP_LIBS@ @LTLIBINTL@ @DBLIBS@
+CDManager_LDADD=libCDMgr.la @DEPS_LIBS@ @XGP_LIBS@ @LTLIBINTL@ @DBLIBS@
 
 CDWriter_SOURCES=CDWriter.cpp CDWriter.h Writer.cpp Writer.h \
 		 Language.cpp Language.h
-CDWriter_LDFLAGS=-lCDMgr @DEPS_LIBS@ @LTLIBINTL@
+CDWriter_LDADD=libCDMgr.la @DEPS_LIBS@ @LTLIBINTL@
 
-AllMetaInfo: Options.meta Celebrity.meta Film.meta Record.meta
-
-Options.meta: Options.h
-	mgeni.pl Options.h > Options.meta
-
-Celebrity.meta: Celebrity.h
-	mgeni.pl Celebrity.h > Celebrity.meta
-
-Film.meta: Film.h
-	mgeni.pl Film.h > Film.meta
-
-Record.meta: Record.h
-	mgeni.pl Record.h > Record.meta
-
-EXTRA_DIST=Options.meta Celebrity.meta Film.meta Record.meta $(SRC_FILM) \
+EXTRA_DIST=IconAuthor.gdkp IconProgram.gdkp $(SRC_FILM) \
 $(SRC_GENFILM) $(SRC_RECORD) $(SRC_GENREC) $(SRC_ACTOR) $(SRC_GENACTOR) \
 $(SRC_MYSQL) $(SRC_POSTGRES)

@@ -30,7 +30,7 @@ class Genres;
 class RecordList : public OwnerObjectList {
   public:
     RecordList(const Genres& genres);
-    virtual ~RecordList();
+    ~RecordList() override;
 
     Gtk::TreeModel::Row insert(const HInterpret& artist, const Gtk::TreeModel::iterator& pos) {
         return OwnerObjectList::insert(artist, pos);
@@ -38,11 +38,11 @@ class RecordList : public OwnerObjectList {
     Gtk::TreeModel::Row append(const HInterpret& artist) { return insert(artist, mOwnerObjects->children().end()); }
     Gtk::TreeModel::Row prepend(const HInterpret& artist) { return insert(artist, mOwnerObjects->children().begin()); }
 
-    Gtk::TreeModel::Row append(HRecord& record, Gtk::TreeModel::Row& artist);
+    Gtk::TreeModel::Row append(HRecord& record, Gtk::TreeModel::Row& artist) pre(record);
 
-    HRecord getRecordAt(const Gtk::TreeModel::ConstRow& row) const;
-    HRecord getRecordAt(const Gtk::TreeModel::const_iterator& iterator) const { return getRecordAt(*iterator); }
-    HInterpret getInterpretAt(const Gtk::TreeModel::const_iterator& iterator) const { return getCelebrityAt(iterator); }
+    [[nodiscard]] HRecord getRecordAt(const Gtk::TreeModel::ConstRow& row) const pre(row.parent());
+    [[nodiscard]] HRecord getRecordAt(const Gtk::TreeModel::const_iterator& iterator) const { return getRecordAt(*iterator); }
+    [[nodiscard]] HInterpret getInterpretAt(const Gtk::TreeModel::const_iterator& iterator) const { return getCelebrityAt(iterator); }
 
     void update(Gtk::TreeModel::Row& row) override;
 

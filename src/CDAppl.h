@@ -26,20 +26,20 @@
 class CDAppl : public YGP::IVIOApplication {
   public:
     CDAppl(const int argc, const char* argv[]) : IVIOApplication(argc, argv, lo) {}
-    ~CDAppl();
+    ~CDAppl() override = default;
 
   protected:
-    virtual void readINIFile(const char* pFile);
-    virtual bool handleOption(const char option);
+    void readINIFile(const char* pFile) override;
+    bool handleOption(const char option) override;
 
     // Program-handling
-    virtual bool shallShowInfo() const { return false; }
-    virtual int perform(int argc, const char* argv[]);
-    virtual const char* name() const { return PACKAGE_NAME; }
-    virtual const char* description() const;
+    [[nodiscard]] bool shallShowInfo() const override { return false; }
+    int perform(int argc, const char* argv[]) override;
+    [[nodiscard]] const char* name() const override { return PACKAGE_NAME; }
+    [[nodiscard]] const char* description() const override;
 
     // Help-handling
-    virtual void showHelp() const;
+    void showHelp() const override;
 
     // Prohobited manager functions
     CDAppl() = delete;

@@ -23,18 +23,18 @@
 namespace Gtk {
 class Entry;
 class Button;
-}; // namespace Gtk
+} // namespace Gtk
 
 /**Table permitting to manipulate the words.
  */
 class WordDialog : public Gtk::Grid {
   public:
     static Gtk::Widget* makeDialog() { return new WordDialog(); }
-    static void commitDialogData(Gtk::Widget* dialog);
+    static void commitDialogData(Gtk::Widget* dialog) pre(dialog);
 
   protected:
     WordDialog();
-    virtual ~WordDialog();
+    ~WordDialog() override = default;
 
     void commit();
 
@@ -48,10 +48,10 @@ class WordDialog : public Gtk::Grid {
     void appendWord(const char* value);
     void appendArticle(const char* value);
     Gtk::TreeModel::Row append(Glib::RefPtr<Gtk::ListStore>& list, const Glib::ustring& value);
-    void entryChanged(unsigned int which);
-    void entrySelected(unsigned int which);
-    void onAdd(unsigned int which);
-    void onDelete(unsigned int which);
+    void entryChanged(unsigned int which) pre(which < 2);
+    void entrySelected(unsigned int which) pre(which < 2);
+    void onAdd(unsigned int which) pre(which < 2);
+    void onDelete(unsigned int which) pre(which < 2);
 
   private:
     WordColumns colWords;

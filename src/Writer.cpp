@@ -22,13 +22,10 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <locale.h>
+#include <format>
+#include <ranges>
+#include <string_view>
 
-#include <sstream>
-
-#include <boost/tokenizer.hpp>
-
-#include <YGP/Check.h>
 #include <YGP/Trace.h>
 
 #include "CDType.h"
@@ -37,30 +34,23 @@
 
 #if WITH_FILMS == 1
 //-----------------------------------------------------------------------------
-/// Destructor
-//-----------------------------------------------------------------------------
-FilmWriter::~FilmWriter() {}
-
-//-----------------------------------------------------------------------------
 /// Substitution of column values
 /// \param ctrl: Control character to subsitute
-/// \param extend: Flag, if extended substitution is wanted
 /// \returns std::string: Substituted string
 //-----------------------------------------------------------------------------
-std::string FilmWriter::getSubstitute(const char ctrl, bool extend) const {
+std::string FilmWriter::getSubstitute(const char ctrl, bool) const {
     if (hFilm) {
-        Check2(hDirector);
+        contract_assert(hDirector);
 
         switch (ctrl) {
         case 'n':
             return YGP::TableWriter::changeHTMLSpecialChars(hFilm->getName());
-            break;
 
         case 'y':
             return hFilm->getYear().toString();
 
         case 'g':
-            Check3(hFilm->getGenre() < genres.size());
+            contract_assert(hFilm->getGenre() < genres.size());
             return YGP::TableWriter::changeHTMLSpecialChars(genres.getGenre(hFilm->getGenre()));
 
         case 'd':
@@ -80,8 +70,8 @@ std::string FilmWriter::getSubstitute(const char ctrl, bool extend) const {
         } // endswitch
     }
     else {
-        Check2(hDirector);
-        Check3(!hFilm);
+        contract_assert(hDirector);
+        contract_assert(!hFilm);
 
         if (ctrl == 'n')
             return YGP::TableWriter::changeHTMLSpecialChars(hDirector->getName());
@@ -96,16 +86,15 @@ std::string FilmWriter::getSubstitute(const char ctrl, bool extend) const {
 /// \param out: Stream to write to
 //-----------------------------------------------------------------------------
 void FilmWriter::writeFilm(const HFilm& film, const HDirector& director, std::ostream& out) {
-    Check2(!hFilm);
-    Check2(!hDirector);
+    contract_assert(!hFilm);
+    contract_assert(!hDirector);
     hFilm = film;
     hDirector = director;
 
-    std::string value;
     out << "<tr class=\"" << (oddLine ? "odd" : "even") << "\" title=\""
         << YGP::TableWriter::changeHTMLSpecialChars(hFilm->getDescription()) << "\">";
     oddLine = !oddLine;
-    while ((value = getNextNode()).size())
+    for (std::string value; (value = getNextNode()).size();)
         out << "<td>" << value << "</td>";
     out << "</tr>\n";
 
@@ -119,8 +108,8 @@ void FilmWriter::writeFilm(const HFilm& film, const HDirector& director, std::os
 /// \param out: Stream to write to
 //-----------------------------------------------------------------------------
 void FilmWriter::writeDirector(const HDirector& director, std::ostream& out) {
-    Check2(!hFilm);
-    Check2(!hDirector);
+    contract_assert(!hFilm);
+    contract_assert(!hDirector);
     hDirector = director;
     out << "<tr><td>&nbsp;" << rowEnd << "\n"
         << "<tr><td colspan=\"5\" class=\"owner\">" << hDirector->getName() << rowEnd;
@@ -137,44 +126,34 @@ void FilmWriter::writeDirector(const HDirector& director, std::ostream& out) {
 std::string FilmWriter::addLanguageLinks(const std::string& languages) {
     std::string output;
 
-    boost::tokenizer<boost::char_separator<char>> langs(languages, boost::char_separator<char>(","));
-    for (boost::tokenizer<boost::char_separator<char>>::iterator i(langs.begin()); i != langs.end(); ++i) {
-        output += "<img src=\"images/";
-        output += *i;
-        output += ".png\" alt=\"";
-        output += *i;
-        output += " \">";
-    } // endwhile
+    // Empty parts (e.g. from ",,") are skipped, like boost::char_separator did
+    for (auto lang : languages | std::views::split(',') | std::views::transform([](auto&& part) {
+                         return std::string_view(part);
+                     }) | std::views::filter([](std::string_view part) { return !part.empty(); }))
+        output += std::format("<img src=\"images/{0}.png\" alt=\"{0} \">", lang);
     return output;
 }
 #endif
 
 #if WITH_RECORDS == 1
 //-----------------------------------------------------------------------------
-/// Destructor
-//-----------------------------------------------------------------------------
-RecordWriter::~RecordWriter() {}
-
-//-----------------------------------------------------------------------------
 /// Substitution of column values
 /// \param ctrl: Control character to subsitute
-/// \param extend: Flag, if extended substitution is wanted
 /// \returns std::string: Substituted string
 //-----------------------------------------------------------------------------
-std::string RecordWriter::getSubstitute(const char ctrl, bool extend) const {
+std::string RecordWriter::getSubstitute(const char ctrl, bool) const {
     if (hRecord) {
-        Check2(hInterpret);
+        contract_assert(hInterpret);
 
         switch (ctrl) {
         case 'n':
             return YGP::TableWriter::changeHTMLSpecialChars(hRecord->getName());
-            break;
 
         case 'y':
             return hRecord->getYear().toString();
 
         case 'g':
-            Check3(hRecord->getGenre() < genres.size());
+            contract_assert(hRecord->getGenre() < genres.size());
             return YGP::TableWriter::changeHTMLSpecialChars(genres.getGenre(hRecord->getGenre()));
 
         case 'd':
@@ -182,8 +161,8 @@ std::string RecordWriter::getSubstitute(const char ctrl, bool extend) const {
         } // endswitch
     }
     else {
-        Check2(hInterpret);
-        Check3(!hRecord);
+        contract_assert(hInterpret);
+        contract_assert(!hRecord);
 
         if (ctrl == 'n')
             return YGP::TableWriter::changeHTMLSpecialChars(hInterpret->getName());
@@ -199,15 +178,14 @@ std::string RecordWriter::getSubstitute(const char ctrl, bool extend) const {
 /// \param out: Stream to write to
 //-----------------------------------------------------------------------------
 void RecordWriter::writeRecord(const HRecord& record, const HInterpret& interpret, std::ostream& out) {
-    Check2(!hRecord);
-    Check2(!hInterpret);
+    contract_assert(!hRecord);
+    contract_assert(!hInterpret);
     hRecord = record;
     hInterpret = interpret;
 
-    std::string value;
     out << "<tr class=\"" << (oddLine ? "odd" : "even") << "\">";
     oddLine = !oddLine;
-    while ((value = getNextNode()).size())
+    for (std::string value; (value = getNextNode()).size();)
         out << "<td>" << value << "</td>";
     out << "</tr>\n";
 
@@ -221,8 +199,8 @@ void RecordWriter::writeRecord(const HRecord& record, const HInterpret& interpre
 /// \param out: Stream to write to
 //-----------------------------------------------------------------------------
 void RecordWriter::writeInterpret(const HInterpret& interpret, std::ostream& out) {
-    Check2(!hRecord);
-    Check2(!hInterpret);
+    contract_assert(!hRecord);
+    contract_assert(!hInterpret);
     hInterpret = interpret;
     out << "<tr><td>&nbsp;" << rowEnd << "\n"
         << "<tr><td colspan=\"3\" class=\"owner\">" << hInterpret->getName() << rowEnd;

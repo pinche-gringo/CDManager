@@ -37,7 +37,7 @@ class PFilms;
 class PActors : public NBPage {
   public:
     PActors(Gtk::Statusbar& status, Glib::RefPtr<Gio::SimpleAction> menuSave, const Genres& genres, PFilms& films);
-    virtual ~PActors();
+    ~PActors() override;
 
     void loadData() override;
     void saveData() override;
@@ -48,7 +48,7 @@ class PActors : public NBPage {
     void undo() override;
     void clear() override;
 
-    HFilm findFilm(unsigned int id) const;
+    [[nodiscard]] HFilm findFilm(unsigned int id) const;
 
     PActors() = delete;
     PActors(const PActors& other) = delete;
@@ -63,14 +63,14 @@ class PActors : public NBPage {
     void undoActor(const Undo& last);
 
     void actorPlaysInFilm();
-    void relateFilms(const HActor& actor, const std::vector<HFilm>& films);
+    void relateFilms(const HActor& actor, const std::vector<HFilm>& films) pre(actor);
     void showFilms(const HActor& actor, const std::vector<HFilm>& newFilms);
 
     void changeView(const Glib::ustring& view);
     void viewByActor();
     void viewByFilm();
 
-    void changeAllEntries(const HEntity& entry, Gtk::TreeModel::iterator begin, Gtk::TreeModel::iterator end);
+    void changeAllEntries(const HEntity& entry, Gtk::TreeModel::iterator begin, Gtk::TreeModel::iterator end) pre(entry);
     void saveRelatedFilms(const HActor& actor);
 
     ActorList actors; // GUI-element holding actors
@@ -85,23 +85,23 @@ class PActors : public NBPage {
     PFilms& films;
 
     // Menu (radio-action) for switching view
-    unsigned int actView;
+    unsigned int actView{0};
     Glib::RefPtr<Gio::SimpleAction> menuView;
 
     // Info for undoing relating actors and films
     class RelUndo : public YGP::Entity {
       public:
-        RelUndo() {}
+        RelUndo() = default;
         RelUndo(const std::vector<HFilm>& aFilms) : films(aFilms) {}
-        ~RelUndo() {}
+        ~RelUndo() override = default;
+
+        RelUndo(const RelUndo&) = delete;
+        RelUndo& operator=(const RelUndo&) = delete;
 
         void setRelatedFilms(const std::vector<HFilm>& aFilms) { films = aFilms; }
-        const std::vector<HFilm>& getRelatedFilms() const { return films; }
+        [[nodiscard]] const std::vector<HFilm>& getRelatedFilms() const { return films; }
 
       private:
-        RelUndo(const RelUndo&);
-        RelUndo& operator=(const RelUndo&);
-
         std::vector<HFilm> films;
     };
 };

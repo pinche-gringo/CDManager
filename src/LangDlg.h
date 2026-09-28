@@ -54,7 +54,7 @@ class LanguageColumns : public Gtk::TreeModel::ColumnRecord {
 class LanguageDialog : public XGP::XDialog {
   public:
     LanguageDialog(std::string& languages, unsigned int maxLangs, bool mainLang = true);
-    virtual ~LanguageDialog();
+    ~LanguageDialog() override;
 
     /// Method to display the dialog; cares about freeing it afterwards.
     /// This is the method of choice, when the dialog is created on the heap;
@@ -77,12 +77,12 @@ class LanguageDialog : public XGP::XDialog {
 
     void selectLanguage();
 
-    Gtk::Box* pClient;
+    Gtk::Box* pClient{nullptr};
     std::string& languages;
     unsigned int maxLangs;
 
-    Gtk::ComboBox* mainLang;
-    Gtk::TreeView* listLang;
+    Gtk::ComboBox* mainLang{nullptr};
+    Gtk::TreeView* listLang{nullptr};
 
     std::string main;
 

@@ -35,6 +35,7 @@
 #endif
 
 #include <algorithm>
+#include <charconv>
 #include <fstream>
 #include <memory>
 #include <sstream>
@@ -70,12 +71,76 @@ static unsigned int getID3Size(const char* buffer) {
 }
 
 //-----------------------------------------------------------------------------
-/// Reads a 32-bit little-endian value (as used in OGG vorbis comments)
+/// Reads a 32-bit big-endian value (as used for ID3v2.3 sizes)
 //-----------------------------------------------------------------------------
-static unsigned int readLE32(std::istream& stream) {
-    unsigned char bytes[4] {};
-    stream.read(reinterpret_cast<char*>(bytes), sizeof(bytes));
-    return bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (static_cast<std::uint32_t>(bytes[3]) << 24);
+static unsigned int getBE32(const char* buffer) {
+    const auto* bytes(reinterpret_cast<const unsigned char*>(buffer));
+    return (static_cast<std::uint32_t>(bytes[0]) << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
+}
+
+//-----------------------------------------------------------------------------
+/// Removes a 32-bit little-endian value (as used in OGG vorbis comments) from
+/// the start of the passed data
+/// \param data Data to read from
+/// \param value Read value
+/// \returns bool True, if data contained enough bytes
+//-----------------------------------------------------------------------------
+static bool takeLE32(std::string_view& data, unsigned int& value) {
+    if (data.size() < 4)
+        return false;
+
+    const auto* bytes(reinterpret_cast<const unsigned char*>(data.data()));
+    value = bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (static_cast<std::uint32_t>(bytes[3]) << 24);
+    data.remove_prefix(4);
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+/// Reads a packet of the first logical bitstream of an OGG file
+/// \param stream OGG-file to read from (positioned at the start of a page)
+/// \param number Number of the packet to read (starting with 0)
+/// \param packet Read packet
+/// \returns bool True, if the packet has been read completely
+//-----------------------------------------------------------------------------
+static bool readOGGPacket(std::istream& stream, unsigned int number, std::string& packet) {
+    unsigned int serial(0);
+    unsigned int current(0);
+    bool first(true);
+    char header[27];
+    unsigned char segments[255];
+
+    packet.clear();
+    while (stream.read(header, sizeof(header))) {
+        if (std::string_view(header, 4) != "OggS")
+            return false;
+
+        const unsigned int cSegments(static_cast<unsigned char>(header[26]));
+        if (!stream.read(reinterpret_cast<char*>(segments), cSegments))
+            return false;
+
+        std::string_view pageSerial(header + 14, 4);
+        unsigned int idPage(0);
+        takeLE32(pageSerial, idPage);
+        if (first) {
+            serial = idPage;
+            first = false;
+        }
+
+        for (unsigned int i(0); i < cSegments; ++i) {
+            if ((idPage == serial) && (current == number)) {
+                const auto pos(packet.size());
+                packet.resize(pos + segments[i]);
+                if (!stream.read(packet.data() + pos, segments[i]))
+                    return false;
+            }
+            else
+                stream.seekg(segments[i], std::ios::cur);
+
+            if ((idPage == serial) && (segments[i] < 255) && (current++ == number)) // Segment < 255 terminates a packet
+                return true;
+        }
+    }
+    return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -435,7 +500,8 @@ bool PRecords::parseID3Info(std::istream& stream, Glib::ustring& artist, Glib::u
     stream.read(buffer, 4);
 
     // Check if an ID3v2 tag is present
-    if (std::string_view(buffer, 3) != "ID3") {
+    if ((stream.gcount() != 4) || (std::string_view(buffer, 3) != "ID3")) {
+        stream.clear();
         stream.seekg(-0x80, std::ios::end);
         std::string value;
 
@@ -449,36 +515,51 @@ bool PRecords::parseID3Info(std::istream& stream, Glib::ustring& artist, Glib::u
             song = Glib::locale_to_utf8(stripString(value, 3, 29));
             artist = Glib::locale_to_utf8(stripString(value, 33, 29));
             record = Glib::locale_to_utf8(stripString(value, 63, 29));
+            std::from_chars(value.data() + 93, value.data() + 97, year);
             track = (value[0x7d] == '\0') ? static_cast<unsigned char>(value[0x7e]) : 0; // ID3v1.1
             return true;
         }
+        return false;
     }
     else {
+        const unsigned int version(static_cast<unsigned char>(buffer[3]));
         stream.read(buffer, 6);
+        if ((stream.gcount() != 6) || (version < 3) || (version > 4)) // Only ID3v2.3 and ID3v2.4 are supported
+            return false;
+
         unsigned int size(getID3Size(buffer + 2));
         TRACE7("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - ID3-tag " << size);
 
         // Skip extended header, if present
         if (buffer[1] & 0x40) {
             stream.read(buffer, 4);
-            unsigned int extSize(getID3Size(buffer));
+            if (stream.gcount() != 4)
+                return false;
+
+            // ID3v2.3: Size excludes the size-field itself; ID3v2.4: Synchsafe size of the whole extended header
+            const unsigned int extSize((version == 3) ? (getBE32(buffer) + 4) : getID3Size(buffer));
             TRACE9("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Extended header " << extSize);
-            if (size < (extSize + 4))
+            if ((extSize < 4) || (size < extSize))
                 return false;
 
             stream.seekg(extSize - 4, std::ios::cur);
+            size -= extSize;
         }
 
-        do {
+        while (size >= 10) {
             Glib::ustring* value(nullptr);
+            Glib::ustring number; // The numeric frames (year, track) are text frames too
             // Read all frames
             stream.read(buffer, 10);
-            unsigned int frameSize(getID3Size(buffer + 4));
+            if (stream.gcount() != 10)
+                return false;
+
+            unsigned int frameSize((version == 3) ? getBE32(buffer + 4) : getID3Size(buffer + 4));
             const std::string frameID(buffer, 4); // Copy; buffer is reused for the frame data
             if (frameID == std::string_view("\0\0\0\0", 4))
                 break;
 
-            if (size < (10 + frameSize))
+            if ((size - 10) < frameSize)
                 return false;
             size -= 10 + frameSize;
 
@@ -492,11 +573,8 @@ bool PRecords::parseID3Info(std::istream& stream, Glib::ustring& artist, Glib::u
                 value = &artist;
             else if (frameID == "TCON")
                 value = &genre;
-            else if (((frameID == "TDRC") || (frameID == "TRCK")) && frameSize && (frameSize < sizeof(buffer))) {
-                stream.read(buffer, frameSize);
-                buffer[frameSize] = '\0';
-                (frameID == "TDRC" ? year : track) = strtoul(buffer + 1, nullptr, 10);
-            }
+            else if ((frameID == "TDRC") || (frameID == "TYER") || (frameID == "TRCK"))
+                value = &number;
             else
                 stream.seekg(frameSize, std::ios::cur);
 
@@ -519,18 +597,20 @@ bool PRecords::parseID3Info(std::istream& stream, Glib::ustring& artist, Glib::u
                     encoding = "ISO-8859-1";
                     [[fallthrough]];
 
-                case 1: // UTF-16
-                case 2:
+                case 1: // UTF-16 (with BOM)
                     cd = iconv_open("UTF8", encoding);
+                    break;
+
+                case 2: // UTF-16BE (without BOM)
+                    cd = iconv_open("UTF8", "UTF-16BE");
                     break;
 
                 default: // type == 3 is already UTF-8; ignore all other values
                     break;
                 }
-#endif
 
-#ifdef HAVE_ICONV
                 if (cd != (iconv_t)(-1)) {
+                    std::string converted;
                     char* inPos(text.data());
                     size_t inLeft(text.size());
                     while (inLeft) {
@@ -539,21 +619,24 @@ bool PRecords::parseID3Info(std::istream& stream, Glib::ustring& artist, Glib::u
                         size_t conv(iconv(cd, &inPos, &inLeft, &curPos, &outLeft));
                         TRACE8("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Converted "
                                << (curPos - buffer));
-                        value->append(std::string(buffer, curPos));
+                        converted.append(buffer, curPos);
                         if ((conv == size_t(-1)) && (errno != E2BIG))
                             break; // Invalid or incomplete input: Keep what has been converted so far
                     }
                     iconv_close(cd);
+                    text = std::move(converted);
                 }
-                else
-                    value->append(text);
-#else
-                value->append(text);
 #endif
+
+                while (text.ends_with('\0')) // Remove the terminating NUL(s)
+                    text.pop_back();
+                value->append(text);
             }
+
+            if (value == &number)
+                (frameID == "TRCK" ? track : year) = strtoul(number.c_str(), nullptr, 10);
             TRACE8("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - ID3 left " << size);
         }
-        while (size);
     }
     return true;
 }
@@ -570,64 +653,56 @@ bool PRecords::parseID3Info(std::istream& stream, Glib::ustring& artist, Glib::u
 /// \returns bool: True, if comment header has been found
 //-----------------------------------------------------------------------------
 bool PRecords::parseOGGCommentHeader(std::istream& stream, Glib::ustring& artist, Glib::ustring& record, Glib::ustring& song,
-                                     unsigned int& track, [[maybe_unused]] Glib::ustring& genre,
-                                     [[maybe_unused]] unsigned int& year) {
-    char buffer[512];
-    stream.read(buffer, 4);
-    if (std::string_view(buffer, 4) != "OggS")
+                                     unsigned int& track, Glib::ustring& genre, unsigned int& year) {
+    // The comment header is the second packet of the vorbis stream
+    std::string packet;
+    if (!readOGGPacket(stream, 1, packet) || !packet.starts_with(std::string_view("\x03" "vorbis")))
         return false;
 
-    stream.seekg(0x69, std::ios::cur);
-    unsigned int len(readLE32(stream)); // Read the vendorstring-length
-    TRACE8("PRecords::parseOGGCommentHeader (std::istream&, 3x Glib::ustring&, unsigned&) - Length: " << len);
-    stream.seekg(len, std::ios::cur);
+    std::string_view data(packet);
+    data.remove_prefix(7);
 
-    unsigned int cComments(readLE32(stream)); // Read number of comments
+    unsigned int len(0);
+    if (!takeLE32(data, len) || (len > data.size())) // Read the vendorstring-length
+        return false;
+    TRACE8("PRecords::parseOGGCommentHeader (std::istream&, 3x Glib::ustring&, unsigned&) - Length: " << len);
+    data.remove_prefix(len);
+
+    unsigned int cComments(0);
+    if (!takeLE32(data, cComments)) // Read number of comments
+        return false;
     TRACE8("PRecords::parseOGGCommentHeader (std::istream&, 3x Glib::ustring&, unsigned&) - Comments: " << cComments);
     if (!cComments)
         return false;
 
-    std::string key;
-    Glib::ustring* value(nullptr);
-    do {
-        len = readLE32(stream); // Read the comment-length
-        if (!stream)
-            break;
+    while (cComments-- && takeLE32(data, len) && (len <= data.size())) {
+        const std::string_view comment(data.substr(0, len));
+        data.remove_prefix(len);
 
-        std::getline(stream, key, '=');
-        len -= key.size() + 1;
+        const auto pos(comment.find('='));
+        if (pos == std::string_view::npos)
+            continue;
+
+        std::string key(comment.substr(0, pos));
+        for (auto& c : key) // Keys are case-insensitive ASCII
+            if ((c >= 'a') && (c <= 'z'))
+                c -= 'a' - 'A';
+        const std::string_view value(comment.substr(pos + 1));
         TRACE8("PRecords::parseOGGCommentHeader (std::stream&, 3x Glib::ustring&, unsigned&) - Key: " << key);
 
         if (key == "TITLE")
-            value = &song;
+            song.append(std::string(value));
         else if (key == "ALBUM")
-            value = &record;
+            record.append(std::string(value));
         else if (key == "ARTIST")
-            value = &artist;
-        else if ((key == "TRACKNUMBER") && (len < sizeof(buffer))) {
-            stream.read(buffer, len);
-            buffer[len] = '\0';
-            track = strtoul(buffer, nullptr, 10);
-            value = nullptr;
-            len = 0;
-        }
-        else
-            value = nullptr;
-
-        if (value) {
-            while (len) {
-                stream.read(buffer, std::min<std::size_t>(len, sizeof(buffer)));
-                const auto read(static_cast<unsigned int>(stream.gcount()));
-                if (!read)
-                    break;
-                len -= read;
-                value->append(std::string(buffer, read));
-            }
-        }
-        else
-            stream.seekg(len, std::ios::cur);
-    }
-    while (--cComments); // end-do while comments
+            artist.append(std::string(value));
+        else if (key == "GENRE")
+            genre.append(std::string(value));
+        else if (key == "TRACKNUMBER")
+            std::from_chars(value.data(), value.data() + value.size(), track);
+        else if (key == "DATE")
+            std::from_chars(value.data(), value.data() + value.size(), year);
+    } // end-while comments
     return true;
 }
 
@@ -645,7 +720,7 @@ std::string PRecords::stripString(const std::string& value, unsigned int pos, un
             break;
         --len;
     }
-    return (pos == len) ? " " : value.substr(pos, len - pos + 1);
+    return ((pos == len) && ((value[pos] == ' ') || !value[pos])) ? " " : value.substr(pos, len - pos + 1);
 }
 
 //-----------------------------------------------------------------------------

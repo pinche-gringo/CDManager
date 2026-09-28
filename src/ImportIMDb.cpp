@@ -211,6 +211,7 @@ void ImportFromIMDb::addIcon(const std::string& bufImage, IMDbProgress* progress
     FilmDataEditor::setIcon(bufImage);
 
     status = CONFIRM;
+    ok->set_sensitive();
     progress->hide();
     Glib::signal_idle().connect_once([client = client, progress] { removeProgressBar(client, progress); });
 }
@@ -251,8 +252,9 @@ void ImportFromIMDb::showData(const IMDbProgress::IMDbEntry& entry, IMDbProgress
     lblGenre->set_text(entry.genre);
     setSummary(entry.summary);
 
+    // While the poster is loading OK stays disabled; addIcon() or showError() enable it
     ok->set_label(_("_OK"));
-    ok->set_sensitive();
+    ok->set_sensitive(status == CONFIRM);
 }
 
 //-----------------------------------------------------------------------------
@@ -261,12 +263,19 @@ void ImportFromIMDb::showData(const IMDbProgress::IMDbEntry& entry, IMDbProgress
 /// \param progress Progress bar used for displaying the status; will be removed
 //-----------------------------------------------------------------------------
 void ImportFromIMDb::showError(const Glib::ustring& msg, IMDbProgress* progress) {
-    if (status != IMGLOAD) {
-        TRACE9("ImportFromIMDb::showError (const Glib::ustring&, IMDbProgress*) - " << msg);
-        Gtk::MessageDialog dlg(*this, msg, false, Gtk::MessageType::ERROR);
-        XGP::runModal(dlg);
-        Glib::signal_idle().connect_once([client = client, progress] { removeProgressBar(client, progress); });
+    TRACE9("ImportFromIMDb::showError (const Glib::ustring&, IMDbProgress*) - " << msg);
+    Gtk::MessageDialog dlg(*this, msg, false, Gtk::MessageType::ERROR);
+    XGP::runModal(dlg);
+    Glib::signal_idle().connect_once([client = client, progress] { removeProgressBar(client, progress); });
 
+    if (status == IMGLOAD) {
+        // Only the poster failed; the film data is still usable, so continue without it
+        status = CONFIRM;
+        progress->hide();
+        ok->set_label(_("_OK"));
+        ok->set_sensitive();
+    }
+    else {
         status = QUERY;
         inputChanged();
         txtID->set_sensitive();

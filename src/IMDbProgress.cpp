@@ -142,19 +142,12 @@ bool IMDbProgress::ConnectInfo::isNumber(const Glib::ustring& nr) {
 std::string IMDbProgress::ConnectInfo::percentEncode(const Glib::ustring& data) {
     constexpr std::string_view convTable("0123456789ABCDEF");
 
+    // Work on the UTF-8 bytes: in UTF-8 every byte of a non-ASCII character is >= 0x80
     std::string result;
-    for (const gunichar ch : data)
+    for (const unsigned char ch : data.raw())
         if ((ch < 0x80) && (g_ascii_isalnum(ch) || std::string_view(".-_~").contains(static_cast<char>(ch))))
-            result += ch;
+            result += static_cast<char>(ch);
         else {
-            for (unsigned int c(sizeof(ch)); c > 1;) {
-                char part(ch >> (--c << 3));
-                if (part) {
-                    result += '%';
-                    result += convTable[(part & 0xF0) >> 4];
-                    result += convTable[part & 0x0F];
-                }
-            }
             result += '%';
             result += convTable[(ch & 0xF0) >> 4];
             result += convTable[ch & 0x0F];

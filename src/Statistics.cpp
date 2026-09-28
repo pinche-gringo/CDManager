@@ -63,22 +63,22 @@ Statistics::Statistics() : XGP::XDialog(CANCEL), pClient(Gtk::make_managed<Gtk::
 
     unsigned int line(1);
     // Add record information
-#ifdef WITH_RECORDS
+#if WITH_RECORDS
     addLine(line++, _("Interprets:"), stats[2], _("Records:"), stats[3]);
 #endif
 
-#ifdef WITH_FILMS
+#if WITH_FILMS
     // Add film information
     addLine(line++, _("Directors:"), stats[4], _("Films:"), stats[5]);
 #endif
 
-#ifdef WITH_ACTORS
+#if WITH_ACTORS
     // Add film information
     addLine(line++, _("Actors:"), stats[6]);
 #endif
 
     // Add names and articles
-#if defined WITH_RECORDS or defined WITH_FILMS or defined WITH_ACTORS
+#if WITH_RECORDS || WITH_FILMS || WITH_ACTORS
     Gtk::Separator* sep(Gtk::make_managed<Gtk::Separator>(Gtk::Orientation::HORIZONTAL));
     sep->set_margin_top(5);
     sep->set_margin_bottom(5);

@@ -27,6 +27,7 @@
 #include <array>
 #include <ranges>
 
+#include <glibmm/convert.h>
 #include <glibmm/main.h>
 
 #include <gtkmm/button.h>

@@ -31,6 +31,7 @@
 
 #include <unistd.h>
 
+#include <glibmm/convert.h>
 #include <glibmm/bytes.h>
 #include <glibmm/main.h>
 

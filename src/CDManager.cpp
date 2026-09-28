@@ -37,6 +37,7 @@
 #include <span>
 #include <string_view>
 
+#include <glibmm/convert.h>
 #include <glibmm/main.h>
 
 #include <gdkmm/pixbuf.h>
@@ -476,7 +477,7 @@ void CDManager::savePreferences() {
 
             YGP::INIFile::write(inifile, "Export", opt);
 
-#ifdef WITH_FILMS
+#if WITH_FILMS
             inifile << "\n[Films]\nLanguage=" << Film::currLang << '\n';
 #endif
         }

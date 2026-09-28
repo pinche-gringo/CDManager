@@ -258,19 +258,19 @@ void Storage::setRole(unsigned int idCeleb, const char* role) {
 //-----------------------------------------------------------------------------
 void Storage::getStatistics(int counts[7]) {
     const char* query("SELECT count(*) FROM Words UNION ALL SELECT count(*) FROM Articles UNION ALL "
-#ifdef WITH_RECORDS
+#if WITH_RECORDS
                       "SELECT count(*) FROM Interprets UNION ALL SELECT count(*) FROM Records"
 #else
                       "SELECT -1 UNION ALL SELECT -1"
 #endif
                       " UNION ALL "
-#ifdef WITH_FILMS
+#if WITH_FILMS
                       "SELECT count(*) FROM Directors UNION ALL SELECT count(*) FROM Films"
 #else
                       "SELECT -1 UNION ALL SELECT -1"
 #endif
                       " UNION ALL "
-#ifdef WITH_ACTORS
+#if WITH_ACTORS
                       "SELECT count(*) FROM Actors"
 #else
                       "SELECT -1"

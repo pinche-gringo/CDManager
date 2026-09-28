@@ -1,0 +1,13 @@
+option('database', type: 'combo', choices: ['auto', 'mysql', 'postgresql'], value: 'auto',
+       description: 'Database backend to use (auto: tries MySQL first, then PostgreSQL)')
+
+option('actors', type: 'boolean', value: true, description: 'Handling of actors (requires films)')
+option('films', type: 'boolean', value: true, description: 'Handling of films')
+option('records', type: 'boolean', value: true, description: 'Handling of records')
+
+option('trace', type: 'integer', min: -1, max: 9, value: -1,
+       description: 'Level of additional traces (-1: disabled)')
+option('checks', type: 'integer', min: -1, max: 9, value: -1,
+       description: 'Level of additional internal checks; >= 0 also enforces the C++26 contracts (-1: disabled)')
+
+option('nls', type: 'feature', value: 'auto', description: 'Native language support (gettext)')

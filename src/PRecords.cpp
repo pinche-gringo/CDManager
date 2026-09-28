@@ -40,6 +40,8 @@
 
 #include <giomm/file.h>
 
+#include <glibmm/convert.h>
+
 #include <gtkmm/paned.h>
 #include <gtkmm/scrolledwindow.h>
 #include <gtkmm/statusbar.h>

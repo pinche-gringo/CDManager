@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <memory>
 
+#include <glibmm/convert.h>
 #include <glibmm/bytes.h>
 
 #include <gdkmm/texture.h>

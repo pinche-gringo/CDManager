@@ -29,3 +29,5 @@ src/SaveCeleb.cpp
 src/ImportIMDb.cpp
 src/IMDbProgress.cpp
 src/Statistics.cpp
+src/Celebrity.cpp
+src/FilmData.cpp

@@ -26,6 +26,8 @@
 
 #include <unistd.h>
 
+#include <cerrno>
+#include <cstdint>
 #include <cstring>
 
 #ifdef HAVE_ICONV
@@ -41,6 +43,7 @@
 #include <giomm/file.h>
 
 #include <glibmm/convert.h>
+#include <glibmm/miscutils.h>
 
 #include <gtkmm/paned.h>
 #include <gtkmm/scrolledwindow.h>
@@ -61,7 +64,19 @@
 //-----------------------------------------------------------------------------
 /// Reads an IDv3 size object (4 bytes; only 7 bits used)
 //-----------------------------------------------------------------------------
-static unsigned int getID3Size(const char* buffer) { return (*buffer << 21) + (buffer[1] << 14) + (buffer[2] << 7) + buffer[3]; }
+static unsigned int getID3Size(const char* buffer) {
+    const auto* bytes(reinterpret_cast<const unsigned char*>(buffer));
+    return (bytes[0] << 21) + (bytes[1] << 14) + (bytes[2] << 7) + bytes[3];
+}
+
+//-----------------------------------------------------------------------------
+/// Reads a 32-bit little-endian value (as used in OGG vorbis comments)
+//-----------------------------------------------------------------------------
+static unsigned int readLE32(std::istream& stream) {
+    unsigned char bytes[4] {};
+    stream.read(reinterpret_cast<char*>(bytes), sizeof(bytes));
+    return bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (static_cast<std::uint32_t>(bytes[3]) << 24);
+}
 
 //-----------------------------------------------------------------------------
 /// Constructor: Creates a widget handling records/songs
@@ -268,6 +283,7 @@ void PRecords::songChanged(const Gtk::TreeModel::iterator& row, unsigned int col
 
     const std::vector<Gtk::TreePath> list(records.get_selection()->get_selected_rows());
     TRACE9("PRecords::songChanged (const Gtk::TreeModel::iterator&, unsigned int, Glib::ustring&) - Selected: " << list.size());
+    contract_assert(!list.empty()); // Songs are only displayed (and editable) while a record is selected
     aUndo.push(Undo(Undo::CHANGED, SONG, column, songs.getEntryAt(row), list.front(), oldValue));
 
     apMenus[UNDO]->set_enabled();
@@ -373,7 +389,8 @@ void PRecords::addMenu(Glib::RefPtr<Gio::Menu> menuEdit, Glib::RefPtr<Gio::Menu>
 void PRecords::importFromFileInfo() {
     XGP::FileDialog* dlg(XGP::FileDialog::create(_("Select file(s) to import"), Gtk::FileChooser::Action::OPEN,
                                                  XGP::FileDialog::MUST_EXIST | XGP::FileDialog::MULTIPLE));
-    dlg->set_current_folder(Gio::File::create_for_path("/usr/local/Music/K/Käthecore/EKH-Sampler"));
+    if (const std::string music(Glib::get_user_special_dir(Glib::UserDirectory::MUSIC)); !music.empty())
+        dlg->set_current_folder(Gio::File::create_for_path(music));
     dlg->sigSelected.connect(sigc::mem_fun(*this, &PRecords::parseFileInfo));
 }
 
@@ -423,14 +440,16 @@ bool PRecords::parseID3Info(std::istream& stream, Glib::ustring& artist, Glib::u
         std::string value;
 
         // If not: Check for ID3v1
-        std::getline(stream, value, '\xff');
+        value.resize(0x80);
+        stream.read(value.data(), value.size());
+        value.resize(stream.gcount());
         TRACE8("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Found: " << value
                                                                                                 << "; Length: " << value.size());
-        if ((value.size() > 3) && value.starts_with("TAG")) {
+        if ((value.size() == 0x80) && value.starts_with("TAG")) {
             song = Glib::locale_to_utf8(stripString(value, 3, 29));
             artist = Glib::locale_to_utf8(stripString(value, 33, 29));
             record = Glib::locale_to_utf8(stripString(value, 63, 29));
-            track = (value[0x7d] != 0x20) ? value[0x7e] : 0;
+            track = (value[0x7d] == '\0') ? static_cast<unsigned char>(value[0x7e]) : 0; // ID3v1.1
             return true;
         }
     }
@@ -455,13 +474,13 @@ bool PRecords::parseID3Info(std::istream& stream, Glib::ustring& artist, Glib::u
             // Read all frames
             stream.read(buffer, 10);
             unsigned int frameSize(getID3Size(buffer + 4));
-            if ((size - frameSize) < 4)
-                return false;
-            size -= 10 + frameSize;
-
-            const std::string_view frameID(buffer, 4);
+            const std::string frameID(buffer, 4); // Copy; buffer is reused for the frame data
             if (frameID == std::string_view("\0\0\0\0", 4))
                 break;
+
+            if (size < (10 + frameSize))
+                return false;
+            size -= 10 + frameSize;
 
             TRACE8("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - ID3-frame " << frameID << '/'
                                                                                                       << frameSize);
@@ -473,23 +492,22 @@ bool PRecords::parseID3Info(std::istream& stream, Glib::ustring& artist, Glib::u
                 value = &artist;
             else if (frameID == "TCON")
                 value = &genre;
-            else if (frameID == "TDRC") {
-                contract_assert(frameSize < sizeof(buffer));
+            else if (((frameID == "TDRC") || (frameID == "TRCK")) && frameSize && (frameSize < sizeof(buffer))) {
                 stream.read(buffer, frameSize);
-                year = strtoul(buffer + 1, nullptr, 10);
-            }
-            else if (frameID == "TRCK") {
-                contract_assert(frameSize < sizeof(buffer));
-                stream.read(buffer, frameSize);
-                track = strtoul(buffer + 1, nullptr, 10);
+                buffer[frameSize] = '\0';
+                (frameID == "TDRC" ? year : track) = strtoul(buffer + 1, nullptr, 10);
             }
             else
                 stream.seekg(frameSize, std::ios::cur);
 
-            if (value) {
-                unsigned int read(0);
+            if (value && frameSize) {
                 char type(stream.get());
                 --frameSize;
+
+                std::string text(frameSize, '\0');
+                stream.read(text.data(), text.size());
+                text.resize(stream.gcount());
+                TRACE8("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Read " << text);
 
 #ifdef HAVE_ICONV
                 // Encode to UTF-8
@@ -511,37 +529,26 @@ bool PRecords::parseID3Info(std::istream& stream, Glib::ustring& artist, Glib::u
                 }
 #endif
 
-                do {
-                    read = stream.readsome(buffer, (frameSize > sizeof(buffer)) ? sizeof(buffer) - 1 : frameSize);
-                    TRACE8("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Read " << read);
-                    TRACE8("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Read "
-                           << std::string(buffer, read));
-                    frameSize -= read;
-                    TRACE8("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Left " << frameSize);
-
 #ifdef HAVE_ICONV
-                    if (cd != (iconv_t)(-1)) {
-                        const auto converted(std::make_unique_for_overwrite<char[]>(read));
-                        size_t inLeft(size);
-                        while (inLeft) {
-                            size_t outLeft(read);
-                            char* curPos(converted.get());
-                            size_t conv(iconv(cd, (char**)&buffer, &inLeft, &curPos, &outLeft));
-                            TRACE8("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Converted " << conv);
-                            if (conv)
-                                value->append(converted.get(), conv);
-                        }
+                if (cd != (iconv_t)(-1)) {
+                    char* inPos(text.data());
+                    size_t inLeft(text.size());
+                    while (inLeft) {
+                        char* curPos(buffer);
+                        size_t outLeft(sizeof(buffer));
+                        size_t conv(iconv(cd, &inPos, &inLeft, &curPos, &outLeft));
+                        TRACE8("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - Converted "
+                               << (curPos - buffer));
+                        value->append(std::string(buffer, curPos));
+                        if ((conv == size_t(-1)) && (errno != E2BIG))
+                            break; // Invalid or incomplete input: Keep what has been converted so far
                     }
-                    else
-                        value->append(std::string(buffer, read));
-#else
-                    value->append(buffer, read);
-#endif
+                    iconv_close(cd);
                 }
-                while (frameSize);
-
-#ifdef HAVE_ICONV
-                iconv_close(cd);
+                else
+                    value->append(text);
+#else
+                value->append(text);
 #endif
             }
             TRACE8("PRecords::parseID3Info (std::istream&, 3x Glib::ustring&, unsigned&) - ID3 left " << size);
@@ -571,13 +578,11 @@ bool PRecords::parseOGGCommentHeader(std::istream& stream, Glib::ustring& artist
         return false;
 
     stream.seekg(0x69, std::ios::cur);
-    unsigned int len(0);
-    stream.read(reinterpret_cast<char*>(&len), 4); // Read the vendorstring-length
+    unsigned int len(readLE32(stream)); // Read the vendorstring-length
     TRACE8("PRecords::parseOGGCommentHeader (std::istream&, 3x Glib::ustring&, unsigned&) - Length: " << len);
     stream.seekg(len, std::ios::cur);
 
-    unsigned int cComments(0);
-    stream.read(reinterpret_cast<char*>(&cComments), 4); // Read number of comments
+    unsigned int cComments(readLE32(stream)); // Read number of comments
     TRACE8("PRecords::parseOGGCommentHeader (std::istream&, 3x Glib::ustring&, unsigned&) - Comments: " << cComments);
     if (!cComments)
         return false;
@@ -585,7 +590,9 @@ bool PRecords::parseOGGCommentHeader(std::istream& stream, Glib::ustring& artist
     std::string key;
     Glib::ustring* value(nullptr);
     do {
-        stream.read(reinterpret_cast<char*>(&len), 4); // Read the comment-length
+        len = readLE32(stream); // Read the comment-length
+        if (!stream)
+            break;
 
         std::getline(stream, key, '=');
         len -= key.size() + 1;
@@ -597,9 +604,9 @@ bool PRecords::parseOGGCommentHeader(std::istream& stream, Glib::ustring& artist
             value = &record;
         else if (key == "ARTIST")
             value = &artist;
-        else if (key == "TRACKNUMBER") {
-            contract_assert(len < sizeof(buffer));
+        else if ((key == "TRACKNUMBER") && (len < sizeof(buffer))) {
             stream.read(buffer, len);
+            buffer[len] = '\0';
             track = strtoul(buffer, nullptr, 10);
             value = nullptr;
             len = 0;
@@ -608,14 +615,14 @@ bool PRecords::parseOGGCommentHeader(std::istream& stream, Glib::ustring& artist
             value = nullptr;
 
         if (value) {
-            unsigned int read(0);
-            do {
-                read = stream.readsome(buffer, (len > sizeof(buffer)) ? sizeof(buffer) - 1 : len);
+            while (len) {
+                stream.read(buffer, std::min<std::size_t>(len, sizeof(buffer)));
+                const auto read(static_cast<unsigned int>(stream.gcount()));
+                if (!read)
+                    break;
                 len -= read;
-                buffer[read] = '\0';
-                value->append(buffer);
+                value->append(std::string(buffer, read));
             }
-            while (len);
         }
         else
             stream.seekg(len, std::ios::cur);
@@ -970,7 +977,7 @@ void PRecords::export2HTML(unsigned int fd, const std::string&) {
 /// \param year Year of record
 //-----------------------------------------------------------------------------
 void PRecords::addEntry(const Glib::ustring& artist, const Glib::ustring& record, const Glib::ustring& song, unsigned int track,
-                        Glib::ustring& genre, [[maybe_unused]] unsigned int year) {
+                        Glib::ustring& genre, unsigned int year) {
     HInterpret interpret;
     Gtk::TreeModel::iterator i(records.getOwner(artist));
     if (i == records.getModel()->children().end()) {
@@ -990,6 +997,8 @@ void PRecords::addEntry(const Glib::ustring& artist, const Glib::ustring& record
         rec = std::make_shared<Record>();
         rec->setSongsLoaded();
         rec->setName(record);
+        if (year)
+            rec->setYear(year);
         addRecord(i, rec);
     }
     else {
@@ -1068,7 +1077,7 @@ void PRecords::undoRecord(const Undo& last) {
 
     Gtk::TreePath path(last.getPath());
     Gtk::TreeModel::iterator iter(records.getModel()->get_iter(path));
-    contract_assert(iter->parent());
+    contract_assert(iter->parent() || (last.how() == Undo::DELETE)); // Deletions store the path of the interpret
 
     contract_assert(typeid(*last.getEntity()) == typeid(Record));
     HRecord record(std::dynamic_pointer_cast<Record>(last.getEntity()));
@@ -1104,6 +1113,7 @@ void PRecords::undoRecord(const Undo& last) {
 
     case Undo::DELETE: {
         auto delRel(delRelation.find(last.getEntity()));
+        contract_assert(delRel != delRelation.end());
         contract_assert(typeid(*delRel->second) == typeid(Interpret));
         HInterpret interpret(std::dynamic_pointer_cast<Interpret>(delRel->second));
         Gtk::TreeRow rowInterpret(*records.getOwner(interpret));
@@ -1207,7 +1217,7 @@ void PRecords::undoSong(const Undo& last) {
     HSong song(std::dynamic_pointer_cast<Song>(last.getEntity()));
     TRACE9("PRecords::undoSong (const Undo&) - " << last.how() << ": " << song->getName());
     iter = songs.getSong(song);
-    contract_assert(iter);
+    contract_assert(iter || (last.how() == Undo::DELETE)); // Deleted songs are not in the list
 
     switch (last.how()) {
     case Undo::CHANGED: {
@@ -1245,6 +1255,7 @@ void PRecords::undoSong(const Undo& last) {
         iter = songs.insert(song, iter);
 
         auto delRel(delRelation.find(last.getEntity()));
+        contract_assert(delRel != delRelation.end());
         contract_assert(typeid(*delRel->second) == typeid(Record));
         relSongs.relate(std::dynamic_pointer_cast<Record>(delRel->second), song);
 

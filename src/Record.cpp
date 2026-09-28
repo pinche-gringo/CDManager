@@ -41,7 +41,9 @@ Record::Record() { registerAttributes(*this); }
 /// \param other: Object to copy
 //-----------------------------------------------------------------------------
 Record::Record(const Record& other)
-    : id(other.id), name(other.name), year(other.year), genre(other.genre), loadSongs(other.loadSongs) {}
+    : id(other.id), name(other.name), year(other.year), genre(other.genre), loadSongs(other.loadSongs) {
+    registerAttributes(*this);
+}
 
 //-----------------------------------------------------------------------------
 /// Assignment operator

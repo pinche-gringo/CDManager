@@ -35,6 +35,8 @@
 #include <glibmm/bytes.h>
 #include <glibmm/main.h>
 
+#include <sigc++/adaptors/track_obj.h>
+
 #include <gdkmm/texture.h>
 
 #include <gtkmm/messagedialog.h>
@@ -704,6 +706,7 @@ void PFilms::undoFilm(const Undo& last) {
 
     case Undo::DELETE: {
         auto delRel(delRelation.find(last.getEntity()));
+        contract_assert(delRel != delRelation.end());
         contract_assert(typeid(*delRel->second) == typeid(Director));
         HDirector director(std::dynamic_pointer_cast<Director>(delRel->second));
         Gtk::TreeRow rowDirector(*films.getOwner(director));
@@ -818,33 +821,34 @@ void PFilms::importFromIMDb() {
 //-----------------------------------------------------------------------------
 void PFilms::importInfoFromIMDb() {
     TRACE9("PFilms::importDescriptionFromIMDb ()");
-    // Ownership is passed along the import-chain; importNextFilm frees the list at the end
-    auto* iFilms(new std::vector<HFilm>);
+    auto iFilms(std::make_shared<std::vector<HFilm>>());
     for (const auto& director : directors)
         for (const auto& film : relFilms.getObjects(director))
             if (film->getDescription().empty() || film->getImage().empty())
                 iFilms->push_back(film);
     TRACE5("PFilms::importDescriptionFromIMDb () - To process: " << iFilms->size());
 
+    // The list is owned by the slot, so it lives as long as the (self-freeing) dialog
     ImportFromIMDb* dlg(ImportFromIMDb::create());
-    // dlg->sigLoaded.connect (bind (mem_fun (*this, &PFilms::continousImportFilm), dlg, iFilms));
-    importNextFilm(dlg, iFilms);
+    dlg->sigLoaded.connect([this, dlg, iFilms](const Glib::ustring& director, const Glib::ustring& film,
+                                               const Glib::ustring& genre, const Glib::ustring& summary, std::string& image) {
+        return continousImportFilm(director, film, genre, summary, image, dlg, iFilms.get());
+    });
+    importNextFilm(dlg, iFilms.get());
 }
 
 //-----------------------------------------------------------------------------
 /// Imports the last entry of the passed list of films
 /// \param dlg Dialog displaying the import-information
-/// \param films Pointer to list of all films to import
+/// \param films Pointer to list of all films to import (owned by the dialog's sigLoaded-slot)
 //-----------------------------------------------------------------------------
 void PFilms::importNextFilm(ImportFromIMDb* dlg, std::vector<HFilm>* films) {
     if (!films->empty()) {
         TRACE5("PFilms::importNextFilm (ImportFromIMDb*, std::vector<HFilm>*) - " << films->back()->getName());
         dlg->searchFor(films->back()->getName(""));
     }
-    else {
-        delete films;
-        delete dlg;
-    }
+    else
+        dlg->response(Gtk::ResponseType::CANCEL); // Frees the dialog (and so the list of films)
 }
 
 //-----------------------------------------------------------------------------
@@ -891,12 +895,17 @@ bool PFilms::continousImportFilm(const Glib::ustring& director, [[maybe_unused]]
             Glib::ustring::compose(_("Not setting data from IMDb for '%1' as the directors differ (found %2, should be %3)!"),
                                    (*last)->getName(), director, relFilms.getParent(*last)->getName()));
         Gtk::MessageDialog dlgMsg(*dlg, msg, false, Gtk::MessageType::INFO, Gtk::ButtonsType::OK_CANCEL);
-        if (XGP::runModal(dlgMsg) == Gtk::ResponseType::OK)
-            return false;
+        if (XGP::runModal(dlgMsg) != Gtk::ResponseType::OK) {
+            // Abort the import; importNextFilm closes the dialog for an empty list
+            filmlist->clear();
+            last = filmlist->end();
+        }
     }
 
-    filmlist->erase(last);
-    Glib::signal_idle().connect_once([this, dlg, filmlist]() { importNextFilm(dlg, filmlist); });
+    if (last != filmlist->end())
+        filmlist->erase(last);
+    Glib::signal_idle().connect_once(
+        sigc::track_object([this, dlg, filmlist]() { importNextFilm(dlg, filmlist); }, *dlg));
     return false;
 }
 
@@ -925,7 +934,7 @@ bool PFilms::importFilm(const Glib::ustring& director, const Glib::ustring& film
 
     // Check if the film has the year in parenthesis appended
     std::string::size_type pos(nameFilm.rfind(" (", nameFilm.size() - 2));
-    if ((nameFilm[nameFilm.size() - 1] == ')') && (pos != std::string::npos)) {
+    if (!nameFilm.empty() && (nameFilm[nameFilm.size() - 1] == ')') && (pos != std::string::npos)) {
         try {
             year = nameFilm.substr(pos + 2, nameFilm.size() - pos - 3);
             nameFilm = nameFilm.substr(0, pos);

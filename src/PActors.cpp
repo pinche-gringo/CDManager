@@ -405,10 +405,10 @@ void PActors::deleteSelection() {
     Glib::RefPtr<Gtk::TreeSelection> selection(actors.get_selection());
     Gtk::TreeModel::iterator selRow(selection->get_selected());
     Glib::RefPtr<Gtk::TreeStore> model(actors.getModel());
-    Gtk::TreePath path(model->get_path(selRow));
 
     if (selRow) {
         contract_assert(!selRow->parent());
+        Gtk::TreePath path(model->get_path(selRow));
         HActor actor(std::dynamic_pointer_cast<Actor>(actors.getEntityAt(selRow)));
         contract_assert(actor);
         TRACE9("PActors::deleteSelectedActor () - Deleting " << actor->getName());
@@ -424,8 +424,6 @@ void PActors::deleteSelection() {
 
         delRelation[hOldRel] = actor;
         aUndo.push(Undo(Undo::DELETE, FILMS, actor->getId(), hOldRel, path, ""));
-
-        Gtk::TreePath path(model->get_path(selRow));
         aUndo.push(Undo(Undo::DELETE, ACTOR, actor->getId(), actor, path, ""));
         model->erase(selRow);
     }
@@ -558,8 +556,14 @@ void PActors::saveData() {
             switch (last.what()) {
             case FILMS:
             case ACTOR: {
-                HActor actor(std::dynamic_pointer_cast<Actor>((last.what() == ACTOR) ? last.getEntity()
-                                                                                       : delRelation[last.getEntity()]));
+                HEntity entity(last.getEntity());
+                if (last.what() == FILMS) {
+                    auto rel(delRelation.find(entity));
+                    if (rel == delRelation.end())
+                        break; // Films have already been saved together with their actor
+                    entity = rel->second;
+                }
+                HActor actor(std::dynamic_pointer_cast<Actor>(entity));
                 if (last.how() == Undo::DELETE) {
                     if (actor->getId()) {
                         contract_assert(actor->getId() == last.column());
@@ -571,11 +575,13 @@ void PActors::saveData() {
 
                     // Check if the related films have been changed
                     HEntity entityActor(actor);
-                    for (auto i(delRelation.begin()); i != delRelation.end(); ++i)
+                    for (auto i(delRelation.begin()); i != delRelation.end();)
                         if (i->second == entityActor) {
                             saveRelatedFilms(actor);
-                            delRelation.erase(i);
+                            i = delRelation.erase(i);
                         }
+                        else
+                            ++i;
                 }
                 break;
             }

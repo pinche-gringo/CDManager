@@ -41,8 +41,8 @@ void StorageActor::loadActorsInFilms(std::map<unsigned int, std::vector<unsigned
     db().execute("SELECT idActor, idFilm FROM ActorsInFilms ORDER BY idActor");
     if (db().resultSize()) {
         auto iter(aActors.end());
+        unsigned int idLast(0);
         while (db().hasData()) {
-            unsigned int idLast(0);
             const unsigned int idAct(db().getResultColumnAsUInt(0));
             contract_assert(idAct);
             if (idAct != idLast) {

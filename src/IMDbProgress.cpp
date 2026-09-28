@@ -29,7 +29,6 @@
 
 #include <algorithm>
 #include <array>
-#include <fstream>
 #include <istream>
 #include <ostream>
 #include <ranges>
@@ -114,7 +113,7 @@ IMDbProgress::ConnectInfo::ConnectInfo(const Glib::ustring& id) {
         if ((id.length() == 9) && !id.compare(0, 2, "tt") && isNumber(id.substr(2)))
             path = "title/" + id + '/';
         else if (isNumber(id) > 0)
-            path = "title/tt" + std::string(7 - id.length(), '0') + id + '/';
+            path = "title/tt" + std::string((id.length() < 7) ? (7 - id.length()) : 0, '0') + id + '/';
         else {
             path = percentEncode(id);
             std::ranges::replace(path, ' ', '+');
@@ -131,7 +130,7 @@ IMDbProgress::ConnectInfo::ConnectInfo(const Glib::ustring& id) {
 /// \returns bool True, if the passed text is a number
 //-----------------------------------------------------------------------------
 bool IMDbProgress::ConnectInfo::isNumber(const Glib::ustring& nr) {
-    return std::ranges::all_of(nr, [](gunichar ch) { return isdigit(ch); });
+    return std::ranges::all_of(nr, [](gunichar ch) { return (ch >= '0') && (ch <= '9'); });
 }
 
 //-----------------------------------------------------------------------------
@@ -145,7 +144,7 @@ std::string IMDbProgress::ConnectInfo::percentEncode(const Glib::ustring& data) 
 
     std::string result;
     for (const gunichar ch : data)
-        if ((ch <= 0xff) && (isalnum(ch) || strchr(".-_~", ch)))
+        if ((ch < 0x80) && (g_ascii_isalnum(ch) || std::string_view(".-_~").contains(static_cast<char>(ch))))
             result += ch;
         else {
             for (unsigned int c(sizeof(ch)); c > 1;) {
@@ -276,7 +275,7 @@ void IMDbProgress::connect() {
     data->resolver.async_resolve(
         data->host, PORT,
         [this](const boost::system::error_code& err, const boost::asio::ip::tcp::resolver::results_type& results) {
-            resolved(err, results.begin());
+            resolved(err, results.empty() ? boost::asio::ip::tcp::resolver::results_type::iterator() : results.begin());
         });
     data->svcIO.poll();
 }
@@ -291,7 +290,9 @@ void IMDbProgress::resolved(const boost::system::error_code& err,
     TRACE7("IMDbProgress::resolved (boost::system::error_code&, iterator)");
     contract_assert(data);
 
-    if (!err) {
+    if (!err && (iEndpoints == boost::asio::ip::tcp::resolver::results_type::iterator()))
+        error(boost::system::error_code(boost::asio::error::host_not_found).message());
+    else if (!err) {
         // Attempt a connection to the first endpoint in the list. Each endpoint
         // will be tried until we successfully establish a connection.
         data->sockIO.async_connect(*iEndpoints, [this, iEndpoints](const boost::system::error_code& errConnect) {
@@ -334,10 +335,10 @@ void IMDbProgress::connected(const boost::system::error_code& err,
     else {
         // The connection failed. Try the next endpoint in the list.
         data->sockIO.close();
-        if (iEndpoints != boost::asio::ip::tcp::resolver::results_type::iterator())
-            resolved(err, ++iEndpoints);
+        if (++iEndpoints != boost::asio::ip::tcp::resolver::results_type::iterator())
+            resolved(boost::system::error_code(), iEndpoints);
         else
-            resolved(boost::asio::error::host_not_found, iEndpoints);
+            resolved(err, iEndpoints); // No endpoints left: report the last error
     }
 }
 
@@ -411,14 +412,14 @@ void IMDbProgress::readStatus(const boost::system::error_code& err) {
                 TRACE8("IMDbProgress::readStatus (boost::system::error_code&) - Location: " << url << '/' << url.length());
             }
             while (response && !loc.starts_with("Location:"));
+            // Strip trailing whitespaces
+            while (url.length() && isspace(static_cast<unsigned char>(url.back()))) {
+                TRACE1("Removing " << url.back());
+                url.pop_back();
+            }
             if (response && url.length()) {
-                // Strip trailing whitespaces
-                std::string::size_type end(url.length());
-                while (isspace(url[--end]))
-                    TRACE1("Removing " << url[end]);
-                url.erase(end + 1);
                 contract_assert(url[url.length() - 1]);
-                TRACE1("Size " << end << '/' << url.length());
+                TRACE1("Size " << url.length());
                 Glib::signal_idle().connect_once(sigc::bind(sigc::mem_fun(*this, &IMDbProgress::reStart), url));
             }
             else
@@ -523,9 +524,6 @@ void IMDbProgress::readFilm(Glib::ustring& msg) {
     msg.clear();
     std::string name(extract("<head>", nullptr, "<title>", "</title>"));
     TRACE4("IMDbProgress::readFilm (boost::system::error_code&) - Final: " << name << ": " << data->response.size());
-    std::ofstream dbg("/tmp/imdb.html", std::ios::out);
-    dbg << data->response;
-    dbg.close();
 
     if (name == "Find - IMDb") { // IMDb's search page found
         IMDbMatchData films;
@@ -553,7 +551,8 @@ void IMDbProgress::readFilm(Glib::ustring& msg) {
         }
     }
     else {
-        name.erase(name.length() - 7);
+        if (name.length() >= 7) // Strip " - IMDb"
+            name.erase(name.length() - 7);
         std::string director(extract("Director:", " href=\"/name/nm", "name\">", "</span>"));
         std::string genre(extract("<a href=\"/genre/", nullptr, "<span class=\"itemprop\" itemprop=\"genre\">", "</span>"));
         std::string summary(extract("<h2>Storyline</h2>", nullptr, "<p>", "<em class="));
@@ -570,7 +569,7 @@ void IMDbProgress::readFilm(Glib::ustring& msg) {
         TRACE1("IMDbProgress::readFilm (boost::system::error_code&) - Icon: " << image);
 
         if (director.size() || name.size()) {
-            if (image.length() && !image.compare(image.length() - NOPOSTER.size(), NOPOSTER.size(), NOPOSTER))
+            if (image.ends_with(NOPOSTER))
                 image.clear();
             IMDbEntry entry(director, name, genre, summary, image);
             disconnect();

@@ -144,8 +144,8 @@ void Storage::fillCelebrities(std::vector<HCelebrity>& target, YGP::StatusObject
                << db().getResultColumnAsUInt(0) << '/' << db().getResultColumnAsString(1));
 
         // Fill and store entry from DB-values
+        hCeleb = std::make_shared<Celebrity>();
         try {
-            hCeleb = std::make_shared<Celebrity>();
             hCeleb->setId(db().getResultColumnAsUInt(0));
             hCeleb->setName(db().getResultColumnAsString(1));
 
@@ -277,8 +277,8 @@ void Storage::getStatistics(int counts[7]) {
 #endif
     );
     db().execute(query);
-    while (db().hasData()) {
-        *counts++ = db().getResultColumnAsInt(0);
+    for (unsigned int i(0); (i < 7) && db().hasData(); ++i) {
+        counts[i] = db().getResultColumnAsInt(0);
         db().getNextResultRow();
     }
 }

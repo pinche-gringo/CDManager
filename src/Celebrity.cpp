@@ -45,7 +45,9 @@ Celebrity::Celebrity() { registerAttributes(*this); }
 /// Copy constructor
 /// \param other: Object to clone
 //-----------------------------------------------------------------------------
-Celebrity::Celebrity(const Celebrity& other) : id(other.id), name(other.name), born(other.born), died(other.died) {}
+Celebrity::Celebrity(const Celebrity& other) : id(other.id), name(other.name), born(other.born), died(other.died) {
+    registerAttributes(*this);
+}
 
 //-----------------------------------------------------------------------------
 /// Assignment operator

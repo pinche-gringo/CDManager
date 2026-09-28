@@ -156,8 +156,8 @@ void ImportFromIMDb::okEvent() {
         break;
 
     case CONFIRM:
-        if (saveIMDbInfo())
-            response(Gtk::ResponseType::OK);
+        // Called while handling the OK-response; so the dialog is freed after returning
+        finished = saveIMDbInfo();
         break;
 
     default:
@@ -223,8 +223,8 @@ void ImportFromIMDb::addIcon(const std::string& bufImage, IMDbProgress* progress
 void ImportFromIMDb::loadIcon(const std::string& image, IMDbProgress* progress) {
     TRACE1("ImportFromIMDb::loadIcon (const std::string&, IMDbProgress*) - " << image);
     status = IMGLOAD;
+    progress->sigIcon.connect(sigc::bind(sigc::mem_fun(*this, &ImportFromIMDb::addIcon), progress));
     progress->start(image, true);
-    // progress->sigIcon.connect (bind (mem_fun (*this, &ImportFromIMDb::addIcon), progress));
 }
 
 //-----------------------------------------------------------------------------

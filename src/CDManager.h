@@ -24,6 +24,7 @@
 
 #include <array>
 #include <map>
+#include <memory>
 #include <vector>
 
 #include <giomm/menu.h>
@@ -98,7 +99,11 @@ class CDManager : public XGP::XApplication {
     Genres recGenres;
     Genres filmGenres;
 
+    // Declared before nb/status, so the pages outlive the (managed) page widgets in the notebook
+    std::array<std::unique_ptr<NBPage>, WITH_ACTORS + WITH_FILMS + WITH_RECORDS> pages;
+
     Gtk::Notebook nb;
+    sigc::connection connPageSwitched;
     Gtk::Statusbar status;
 
     enum {
@@ -121,8 +126,6 @@ class CDManager : public XGP::XApplication {
     Glib::RefPtr<Gtk::ShortcutController> ctrlMain; ///< Shortcuts of the main menu
     bool pageMenusOn{false};                        ///< Flag, if the page-menus are enabled
     Options& opt;
-
-    std::array<NBPage*, WITH_ACTORS + WITH_FILMS + WITH_RECORDS> pages{};
 };
 
 #endif

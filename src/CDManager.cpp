@@ -33,6 +33,7 @@
 #include <array>
 #include <format>
 #include <fstream>
+#include <optional>
 #include <ranges>
 #include <span>
 #include <string_view>
@@ -174,23 +175,22 @@ CDManager::CDManager(Options& options) : XApplication(PACKAGE " V" PRG_RELEASE),
 
     TRACE8("CDManager::CDManager (Options&) - Add NB");
 #if WITH_RECORDS == 1
-    NBPage* pgRecords = (new PRecords(status, apMenus[SAVE], recGenres));
-    pages[0] = pgRecords;
-    nb.append_page(*Gtk::manage(pgRecords->getWindow()), _("_Records"), true);
+    pages[0] = std::make_unique<PRecords>(status, apMenus[SAVE], recGenres);
+    nb.append_page(*Gtk::manage(pages[0]->getWindow()), _("_Records"), true);
 #endif
 
 #if WITH_FILMS == 1
-    PFilms* pgFilms = (new PFilms(status, apMenus[SAVE], filmGenres));
-    pages[WITH_RECORDS] = pgFilms;
+    auto ownFilms(std::make_unique<PFilms>(status, apMenus[SAVE], filmGenres));
+    PFilms* pgFilms(ownFilms.get());
+    pages[WITH_RECORDS] = std::move(ownFilms);
     nb.append_page(*Gtk::manage(pgFilms->getWindow()), _("_Films"), true);
 #endif
 
 #if WITH_ACTORS == 1
-    NBPage* pgActor = (new PActors(status, apMenus[SAVE], filmGenres, *pgFilms));
-    pages[WITH_RECORDS + WITH_FILMS] = pgActor;
-    nb.append_page(*Gtk::manage(pgActor->getWindow()), _("_Actors"), true);
+    pages[WITH_RECORDS + WITH_FILMS] = std::make_unique<PActors>(status, apMenus[SAVE], filmGenres, *pgFilms);
+    nb.append_page(*Gtk::manage(pages[WITH_RECORDS + WITH_FILMS]->getWindow()), _("_Actors"), true);
 #endif
-    nb.signal_switch_page().connect(sigc::mem_fun(*this, &CDManager::pageSwitched), false);
+    connPageSwitched = nb.signal_switch_page().connect(sigc::mem_fun(*this, &CDManager::pageSwitched), false);
     status.push(_("Connect to a database ..."));
     apMenus[SAVE]->set_enabled(false);
 
@@ -232,7 +232,12 @@ void CDManager::showError(const Glib::ustring& msg, const Glib::ustring& title) 
 //-----------------------------------------------------------------------------
 CDManager::~CDManager() {
     TRACE8("CDManager::~CDManager ()");
-    for (NBPage* page : pages)
+    // The notebook is destroyed before the pages; don't switch (and so re-add menus) while it removes them
+    connPageSwitched.disconnect();
+    if (const int iPage(nb.get_current_page()); iPage != -1)
+        pages[iPage]->removeMenu();
+
+    for (const auto& page : pages)
         page->clear();
 }
 
@@ -242,7 +247,7 @@ CDManager::~CDManager() {
 void CDManager::save() {
     TRACE9("CDManager::save ()");
     try {
-        for (NBPage* page : pages)
+        for (const auto& page : pages)
             if (page->isChanged())
                 page->saveData();
 
@@ -350,7 +355,7 @@ void CDManager::loadDatabase() {
         status.pop();
         status.push(_("Reading database ..."));
 
-        NBPage* page(pages[iPage]);
+        NBPage* page(pages[iPage].get());
         contract_assert(page);
         contract_assert(!page->isLoaded());
         page->loadData();
@@ -453,7 +458,7 @@ void CDManager::logout() {
     TRACE8("CDManager::logout ()");
     querySave();
 
-    for (NBPage* page : pages)
+    for (const auto& page : pages)
         page->clear();
 
     Words::destroy();
@@ -519,12 +524,12 @@ void CDManager::export2HTML() {
     const auto exportPages = std::span(pages).first<WITH_RECORDS + WITH_FILMS>();
 
     // Load data
-    for (NBPage* page : exportPages)
+    for (const auto& page : exportPages)
         if (!page->isLoaded())
             page->loadData();
 
     const char* envLang(getenv("LANGUAGE"));
-    std::string oldLang;
+    std::optional<std::string> oldLang;
     if (envLang)
         oldLang = envLang;
 
@@ -564,7 +569,7 @@ void CDManager::export2HTML() {
             ; // Update statusbar
 
         pid_t pid(-1);
-        int pipes[2];
+        int pipes[2]{-1, -1};
         try {
             setenv("LANGUAGE", lang.c_str(), true);
             args[POS_LANG] = lang.c_str();
@@ -574,9 +579,10 @@ void CDManager::export2HTML() {
                 throw std::runtime_error(strerror(errno));
             pid = YGP::Process::execIOConnected("CDWriter", args.data(), pipes);
 
-            for (NBPage* page : exportPages)
+            for (const auto& page : exportPages)
                 page->export2HTML(pipes[1], lang);
             ::close(pipes[1]);
+            pipes[1] = -1;
 
             std::array<char, 128> output{};
             std::string allOut;
@@ -597,9 +603,14 @@ void CDManager::export2HTML() {
         catch (std::exception& err) {
             showError(err.what());
         }
-        ::close(pipes[0]);
+        for (int fd : pipes)
+            if (fd != -1)
+                ::close(fd);
         status.pop();
     } // end-for
-    setenv("LANGUAGE", oldLang.c_str(), true);
+    if (oldLang)
+        setenv("LANGUAGE", oldLang->c_str(), true);
+    else
+        unsetenv("LANGUAGE");
 }
 #endif

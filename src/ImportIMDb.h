@@ -43,10 +43,14 @@ class ImportFromIMDb : public FilmDataEditor {
     ~ImportFromIMDb() override;
 
     /// Creates the dialog
-    /// \remarks Cares also about freeing the dialog
+    /// \remarks Cares also about freeing the dialog. As the OK-button also advances through the
+    ///          steps (query, choose, confirm), OK frees the dialog only after the data was confirmed.
     static ImportFromIMDb* create() {
         ImportFromIMDb* dlg(new ImportFromIMDb);
-        dlg->signal_response().connect(sigc::mem_fun(*dlg, &ImportFromIMDb::free));
+        dlg->signal_response().connect([dlg](int response) {
+            if ((response != static_cast<int>(Gtk::ResponseType::OK)) || dlg->finished)
+                dlg->free(response);
+        });
         return dlg;
     }
 
@@ -71,11 +75,11 @@ class ImportFromIMDb : public FilmDataEditor {
 
   private:
     volatile enum { QUERY, LOADING, CHOOSING, CONFIRM, IMGLOAD } status {QUERY};
+    bool finished {false}; ///< Set, when the confirmed data was handled by all listeners
 
     static void removeProgressBar(Gtk::Grid* client, IMDbProgress* progress) pre(client != nullptr) pre(progress != nullptr);
     static void stopLoading(IMDbProgress* progress) pre(progress != nullptr);
     void continueLoading(Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress);
-    void loadSelection(Gtk::ScrolledWindow* scrl, Gtk::TreeView* list, IMDbProgress* progress);
     void rowActivated(const Gtk::TreePath& path, Gtk::TreeViewColumn* column, Gtk::ScrolledWindow* scrl, Gtk::TreeView* list,
                       IMDbProgress* progress) pre(list != nullptr);
     void rowSelected(Gtk::TreeView* list) pre(list != nullptr);

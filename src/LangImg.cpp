@@ -110,7 +110,7 @@ void LanguageImg::update(const std::string& file) {
 ///    an international icon
 //-----------------------------------------------------------------------------
 void LanguageImg::update(const char* lang) {
-    TRACE1("LanguageImg::update (const char*) - " << lang);
+    TRACE1("LanguageImg::update (const char*) - " << (lang ? lang : "(null)"));
 
     update(std::format("{}.png", (lang && *lang) ? lang : "in"));
 }

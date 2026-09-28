@@ -27,11 +27,14 @@
 #include <sys/shm.h>
 
 #include <algorithm>
-#include <cctype>
 #include <cerrno>
 #include <cstring>
+#include <limits>
 #include <map>
 #include <memory>
+#include <type_traits>
+
+#include <glibmm/unicode.h>
 
 #include <YGP/Process.h>
 #include <YGP/Trace.h>
@@ -49,6 +52,7 @@ namespace {
 struct WordPtrs {
     Words::values* info{nullptr};
     char* values{nullptr};
+    std::size_t cbValues{0}; ///< Size of the segment holding the values
 };
 std::map<pid_t, std::unique_ptr<WordPtrs>> ptrs;
 
@@ -57,6 +61,18 @@ void* const SHM_FAILED(reinterpret_cast<void*>(-1));
 
 /// Returns the shared memory pointers of the actual process
 WordPtrs* currentPtrs() { return ptrs[YGP::Process::getPID()].get(); }
+
+/// Type of the offsets of the words within the values
+using Offset = std::remove_extent_t<decltype(Words::values::aOffsets)>;
+
+/// Throws if a word of the passed length can't be stored (no free entry, the
+/// values are full or its offset doesn't fit into an Offset)
+void checkSpace(const WordPtrs& shMem, std::size_t bytes) {
+    const Words::values& info(*shMem.info);
+    if (((info.cNames + info.cArticles) >= info.maxEntries) || ((info.used + bytes + 1) > shMem.cbValues) ||
+        (info.used > std::numeric_limits<Offset>::max()))
+        throw std::length_error(strerror(ENOSPC));
+}
 
 } // namespace
 
@@ -74,8 +90,8 @@ void Words::create(unsigned int words) {
     WordPtrs* shMem((ptrs[YGP::Process::getPID()] = std::make_unique<WordPtrs>()).get());
 
     unsigned int size(PAGE_SIZE);
-    if ((sizeof(values) + (sizeof(char*) * words)) > size)
-        size = ((sizeof(char*) * words) + PAGE_SIZE + sizeof(values)) & ~(PAGE_SIZE - 1);
+    if ((sizeof(values) + (sizeof(Offset) * words)) > size)
+        size = ((sizeof(Offset) * words) + PAGE_SIZE + sizeof(values)) & ~(PAGE_SIZE - 1);
 
     if (((_key = shmget(IPC_PRIVATE, size, IPC_CREAT | IPC_EXCL | 0600)) == -1) ||
         ((shMem->info = static_cast<values*>(shmat(_key, nullptr, 0))) == SHM_FAILED) ||
@@ -85,9 +101,10 @@ void Words::create(unsigned int words) {
         throw(std::invalid_argument(strerror(errno)));
     }
 
+    shMem->cbValues = size << 1;
     shMem->info->cNames = shMem->info->cArticles = 0;
     shMem->info->used = 0;
-    shMem->info->maxEntries = (size - sizeof(values)) / sizeof(char*);
+    shMem->info->maxEntries = (size - sizeof(values)) / sizeof(Offset);
     TRACE1("Words::create (unsigned int) - Key: " << _key << '/' << shMem->info->maxEntries);
 }
 
@@ -108,6 +125,13 @@ void Words::access(unsigned int key) {
         destroy();
         throw(std::invalid_argument(strerror(errno)));
     }
+
+    shmid_ds stat;
+    if (shmctl(shMem->info->valuesKey, IPC_STAT, &stat) == -1) {
+        destroy();
+        throw(std::invalid_argument(strerror(errno)));
+    }
+    shMem->cbValues = stat.shm_segsz;
     TRACE1("Words::access (unsigned int) - Articles: " << shMem->info->cArticles << "; Names: " << shMem->info->cNames << ": "
                                                        << *shMem->values);
 }
@@ -144,9 +168,9 @@ void Words::destroy() {
 //-----------------------------------------------------------------------------
 void Words::moveValues(unsigned int start, unsigned int end, unsigned int target) {
     TRACE1("Words::moveValues (3x unsigned int start) - [" << start << '-' << end << "] -> " << target
-                                                           << "; Bytes: " << (end - start + 1) * sizeof(char*));
+                                                           << "; Bytes: " << (end - start + 1) * sizeof(Offset));
     Words::values* shMem(currentPtrs()->info);
-    memcpy(shMem->aOffsets + target, shMem->aOffsets + start, (end - start + 1) * sizeof(char*));
+    memmove(shMem->aOffsets + target, shMem->aOffsets + start, (end - start + 1) * sizeof(Offset));
 }
 
 //-----------------------------------------------------------------------------
@@ -170,7 +194,7 @@ unsigned int Words::binarySearch(values* values, char* data, unsigned int start,
         else
             start = middle + 1;
     }
-    TRACE9("Words::binarySearch (values*, char*, 2x unsigned int, const char*) - " << data + values->aOffsets[start]);
+    TRACE9("Words::binarySearch (values*, char*, 2x unsigned int, const char*) - " << start);
     return start;
 }
 
@@ -182,6 +206,7 @@ unsigned int Words::binarySearch(values* values, char* data, unsigned int start,
 void Words::addName2Ignore(const Glib::ustring& word, unsigned int pos) {
     WordPtrs* shMem(currentPtrs());
     TRACE2("Words::addName2Ignore (const Glib::ustring&, unsigned int) - " << word << " to " << shMem->info->cNames);
+    checkSpace(*shMem, word.bytes());
 
     // Try to respect the hint
     if (pos != POS_UNKNOWN) {
@@ -190,9 +215,7 @@ void Words::addName2Ignore(const Glib::ustring& word, unsigned int pos) {
 
         TRACE9("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Checking pos " << pos);
         if (shMem->info->cNames) {
-            TRACE9("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Comp: "
-                   << strcmp(shMem->values + shMem->info->aOffsets[pos - 1], word.c_str()));
-            if (strcmp(shMem->values + shMem->info->aOffsets[pos - 1], word.c_str()) < 0) {
+            if (!pos || (strcmp(shMem->values + shMem->info->aOffsets[pos - 1], word.c_str()) < 0)) {
                 if (pos < shMem->info->cNames) {
                     if (strcmp(shMem->values + shMem->info->aOffsets[pos], word.c_str()) <= 0)
                         pos = POS_UNKNOWN;
@@ -214,7 +237,7 @@ void Words::addName2Ignore(const Glib::ustring& word, unsigned int pos) {
     }
 
     if (pos < shMem->info->cNames)
-        moveValues(pos, shMem->info->cNames, pos + 1);
+        moveValues(pos, shMem->info->cNames - 1, pos + 1);
 
     TRACE1("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Insert into " << pos);
     shMem->info->aOffsets[pos] = shMem->info->used;
@@ -231,10 +254,11 @@ void Words::addName2Ignore(const Glib::ustring& word, unsigned int pos) {
 void Words::addArticle(const Glib::ustring& word, unsigned int pos) {
     WordPtrs* shMem(currentPtrs());
     TRACE1("Words::addArticle (const Glib::ustring&, unsigned int) - " << word << " to " << shMem->info->cArticles);
+    checkSpace(*shMem, word.bytes());
 
     // Try to respect the hint
     if (pos != POS_UNKNOWN) {
-        pos = ((pos > shMem->info->cArticles) ? shMem->info->maxEntries - 1
+        pos = ((pos >= shMem->info->cArticles) ? shMem->info->maxEntries - 1
                                               : shMem->info->maxEntries - shMem->info->cArticles + pos);
 
         TRACE1("Words::addArticle (const Glib::ustring&, unsigned int) - Checking pos " << pos);
@@ -256,8 +280,9 @@ void Words::addArticle(const Glib::ustring& word, unsigned int pos) {
     if (pos == POS_UNKNOWN) {
         if (shMem->info->cArticles) {
             TRACE1("Words::addArticles (const Glib::ustring&, unsigned int) - Search: " << word);
+            // The word is inserted after pos (see below), so use the position before the found one
             pos = binarySearch(shMem->info, shMem->values, shMem->info->maxEntries - shMem->info->cArticles,
-                               shMem->info->maxEntries, word.c_str());
+                               shMem->info->maxEntries, word.c_str()) - 1;
         }
         else
             pos = shMem->info->maxEntries - 1;
@@ -288,7 +313,7 @@ Glib::ustring Words::removeArticle(const Glib::ustring& name) {
     if (word.size() != name.size() &&
         containsWord(shMem->info->maxEntries - shMem->info->cArticles, shMem->info->maxEntries, word)) {
         unsigned int pos(word.size());
-        while (!isalnum(name[pos]))
+        while ((pos < name.size()) && !Glib::Unicode::isalnum(name[pos]))
             ++pos;
 
         TRACE3("Words::removeArticles (const Glib::ustring&) - " << name << "->" << name.substr(pos));
@@ -310,7 +335,7 @@ Glib::ustring Words::removeNames(const Glib::ustring& name) {
     while ((word.size() != work.size()) &&
            (((word.size() == 2) && (word[1] == '.')) || containsWord(0, shMem->info->cNames, word))) {
         unsigned int pos(word.size());
-        while (!isalnum(name[pos]))
+        while ((pos < work.size()) && !Glib::Unicode::isalnum(work[pos]))
             ++pos;
 
         work = work.substr(pos);
@@ -328,7 +353,7 @@ Glib::ustring Words::removeNames(const Glib::ustring& name) {
 Glib::ustring Words::getWord(const Glib::ustring& text) {
     unsigned int i(-1U);
     while (++i < text.size())
-        if (isspace(text[i]) || (text[i] == '-'))
+        if (Glib::Unicode::isspace(text[i]) || (text[i] == '-'))
             break;
 
     TRACE9("Words::getWord (const Glib::ustring&) - '" << text.substr(0, i) << '\'');
@@ -347,7 +372,7 @@ bool Words::containsWord(unsigned int start, unsigned int end, const Glib::ustri
     const WordPtrs* shMem(currentPtrs());
     contract_assert(end <= shMem->info->maxEntries);
     TRACE9("Words::containsWord (2x unsigned int, const Glib::ustring& word) - " << shMem->values + shMem->info->aOffsets[start]);
-    TRACE9("Words::containsWord (2x unsigned int, const Glib::ustring& word) - " << shMem->values + shMem->info->aOffsets[end]);
+    TRACE9("Words::containsWord (2x unsigned int, const Glib::ustring& word) - " << shMem->values + shMem->info->aOffsets[end - 1]);
     if (start < end) {
         unsigned int pos(binarySearch(shMem->info, shMem->values, start, end, word.c_str()));
         return ((pos != start) && (word == (shMem->values + shMem->info->aOffsets[pos - 1])));

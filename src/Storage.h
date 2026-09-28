@@ -19,6 +19,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <YGP/StatusObj.h>
@@ -56,8 +57,8 @@ class Storage {
     static void getCelebrities(const std::string& name, std::vector<HCelebrity>& target);
     static void loadCelebrities(std::vector<HCelebrity>& target, const std::string& table, YGP::StatusObject& stat);
 
-    static void setRole(unsigned int idCeleb, const char* role);
-    [[nodiscard]] static bool hasRole(unsigned int idCeleb, const char* role);
+    static void setRole(unsigned int idCeleb, const char* role) pre(isRole(role));
+    [[nodiscard]] static bool hasRole(unsigned int idCeleb, const char* role) pre(isRole(role));
     //}
 
     static void getStatistics(int counts[7]);
@@ -71,6 +72,12 @@ class Storage {
 
     Storage(const Storage& other) = delete("Storage has only static members");
     Storage& operator=(const Storage& other) = delete("Storage has only static members");
+
+    /// Checks if the passed role is one of the (DB-tables of the) known roles
+    [[nodiscard]] static constexpr bool isRole(const char* role) {
+        return role && ((std::string_view(role) == "Actors") || (std::string_view(role) == "Directors") ||
+                        (std::string_view(role) == "Interprets"));
+    }
 
     static void fillCelebrities(std::vector<HCelebrity>& target, YGP::StatusObject& stat);
     static Database::Values celebrityValues(const HCelebrity celeb);

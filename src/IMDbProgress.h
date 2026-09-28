@@ -95,7 +95,6 @@ class IMDbProgress : public Gtk::ProgressBar {
     static void extractSearch(IMDbSearchEntries& target, const std::string& src, std::string_view section);
     Glib::ustring extract(const char* section, const char* subpart, const char* before, const char* after) const
         pre(section != nullptr) pre(before != nullptr) pre(after != nullptr);
-    static void convert(Glib::ustring& string);
 
     void connect();
     void resolved(const boost::system::error_code& err, boost::asio::ip::tcp::resolver::results_type::iterator iEndpoints);

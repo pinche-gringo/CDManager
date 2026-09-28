@@ -288,8 +288,6 @@ int CDWriter::perform(int argc, const char** argv) {
     for (auto& [file, source, target] : htmlData) {
         if (file.size() && (file[0] != YGP::File::DIRSEPARATOR))
             file = DATADIR + file;
-        if (target.size() && (target[0] != YGP::File::DIRSEPARATOR))
-            target = DATADIR + target;
 
         if (!readHeaderFile(file.c_str(), argv[0], target, source)) {
             std::string error(
@@ -695,9 +693,10 @@ int CDWriter::createFile(const std::string& filename, const char* lang, std::ofs
     const std::string utf8file(std::format("{}.{}", filename, lang));
     file.open(utf8file);
     if (!file) {
-        Glib::ustring msg(Glib::ustring::compose(_("Can't create file `%1'!\n\nReason: %2."), utf8file, strerror(errno)));
+        const int error(errno);
+        Glib::ustring msg(Glib::ustring::compose(_("Can't create file `%1'!\n\nReason: %2."), utf8file, strerror(error)));
         std::cerr << name() << _("-error: ") << msg;
-        return errno;
+        return error;
     }
     return 0;
 }

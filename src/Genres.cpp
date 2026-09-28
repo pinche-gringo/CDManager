@@ -59,7 +59,7 @@ void Genres::loadFromFile(const char* file, Genres& records, Genres& films, cons
             search = name + std::string(1, '.') + extension;
 
             TRACE9("Genres::loadFromFile (...) - Trying " << search);
-            if (!::stat(search.c_str(), &sfile) && (sfile.st_mode & S_IFREG))
+            if (!::stat(search.c_str(), &sfile) && S_ISREG(sfile.st_mode))
                 break;
 
             size_t pos(extension.rfind('_'));

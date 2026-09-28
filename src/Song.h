@@ -66,7 +66,7 @@ class Song : public YGP::Entity {
     Glib::ustring name;
     YGP::ANumeric track;
     YGP::ATime duration;
-    unsigned long int genre{};
+    unsigned int genre{};
 };
 using HSong = std::shared_ptr<Song>;
 

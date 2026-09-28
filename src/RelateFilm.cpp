@@ -24,6 +24,8 @@
 
 #include <cdmgr-cfg.h>
 
+#include <ranges>
+
 #include <gtkmm/box.h>
 #include <gtkmm/button.h>
 #include <gtkmm/liststore.h>
@@ -158,7 +160,8 @@ void RelateFilm::addSelected() {
 void RelateFilm::removeSelected() {
     TRACE9("RelateFilm::removeSelected ()");
 
-    for (const auto& path : lstFilms.get_selection()->get_selected_rows())
+    // Erase from the end, so the paths of the remaining selected rows stay valid
+    for (const auto& path : lstFilms.get_selection()->get_selected_rows() | std::views::reverse)
         removeFilm(path, nullptr);
 }
 

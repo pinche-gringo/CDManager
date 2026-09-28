@@ -56,7 +56,9 @@ Film::Film() { registerAttributes(*this); }
 //-----------------------------------------------------------------------------
 Film::Film(const Film& other)
     : id(other.id), name(other.name), year(other.year), genre(other.genre), type(other.type), lang(other.lang),
-      titles(other.titles) {}
+      titles(other.titles), summary(other.summary), icon(other.icon) {
+    registerAttributes(*this);
+}
 
 //-----------------------------------------------------------------------------
 /// Assignment operator
@@ -74,6 +76,8 @@ Film& Film::operator=(const Film& other) {
         type = other.type;
         lang = other.lang;
         titles = other.titles;
+        summary = other.summary;
+        icon = other.icon;
     }
     return *this;
 }
@@ -95,10 +99,8 @@ Glib::ustring Film::removeIgnored(const Glib::ustring& name) { return Words::rem
 bool Film::compByName(const HFilm& a, const HFilm& b) {
     Glib::ustring aname(removeIgnored(a->getName()));
     Glib::ustring bname(removeIgnored(b->getName()));
-    int rc(aname.compare(bname));
-    if (!rc)
-        rc = a->year < b->year;
-    return rc < 0;
+    const int rc(aname.compare(bname));
+    return rc ? (rc < 0) : (a->year < b->year);
 }
 
 //-----------------------------------------------------------------------------
@@ -168,7 +170,7 @@ void Film::setName(const Glib::ustring& value) { setName(value, name.contains(""
 //-----------------------------------------------------------------------------
 void Film::setName(const Glib::ustring& value, const std::string& lang) {
     if (value.empty()) {
-        if (const auto i(name.find(currLang)); i != name.end()) {
+        if (const auto i(name.find(lang)); i != name.end()) {
             name.erase(i);
             return;
         }

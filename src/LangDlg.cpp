@@ -50,13 +50,25 @@ class LanguageModel : public Gtk::ListStore {
     }
     ~LanguageModel() override = default;
 
-    /// Returns the line of the passed language
-    Gtk::TreeModel::iterator getLine(const std::string& lang) { return children()[lines[lang]].get_iter(); }
+    /// Returns the line of the passed language (or end (), if not found)
+    Gtk::TreeModel::iterator getLine(const std::string& lang) {
+        const auto line(lines.find(lang));
+        return (line == lines.end()) ? children().end() : children()[line->second].get_iter();
+    }
 
     // Deletes the line with the passed language
     void eraseLanguage(const std::string& lang) {
-        TRACE9("LanguageModel::eraseLanguage (const std::string&) - " << lang << '=' << lines[lang]);
-        erase(getLine(lang));
+        const auto line(lines.find(lang));
+        if (line == lines.end())
+            return;
+
+        const unsigned int pos(line->second);
+        TRACE9("LanguageModel::eraseLanguage (const std::string&) - " << lang << '=' << pos);
+        erase(children()[pos].get_iter());
+        lines.erase(line);
+        for (auto& [_, index] : lines)
+            if (index > pos)
+                --index;
     }
     void insertLanguage(const std::string& lang, const LanguageColumns& cols) {
         insertLanguage(lang, Language::findLanguage(lang), cols);
@@ -83,6 +95,7 @@ class LanguageModel : public Gtk::ListStore {
 LanguageModel::LanguageModel(const LanguageColumns& cols, bool withUndefined) : Gtk::ListStore(cols) {
     // Add language values
     if (withUndefined) {
+        lines[""] = 0;
         Gtk::TreeModel::Row lang(*append());
         lang[cols.id] = "";
         lang[cols.name] = _("None");
@@ -99,15 +112,23 @@ LanguageModel::LanguageModel(const LanguageColumns& cols, bool withUndefined) : 
 /// \param cols: Columns of the model
 //-----------------------------------------------------------------------------
 void LanguageModel::insertLanguage(const std::string& id, const Language& lang, const LanguageColumns& cols) {
-    TRACE9("LanguageModel::insertLanguage (const std::string&, const Language&, const Columns&) - "
-           << id << '=' << (!lines.contains(id) ? children().size() : lines[id]));
     Gtk::TreeModel::iterator iRow;
-    if (!lines.contains(id)) {
-        lines[id] = children().size();
-        iRow = append();
+    if (const auto line(lines.find(id)); line != lines.end())
+        iRow = children()[line->second].get_iter();
+    else {
+        // Keep the lines sorted by ID: Insert before the next bigger ID (if any)
+        const auto next(lines.upper_bound(id));
+        const bool atEnd(next == lines.end());
+        const unsigned int pos(atEnd ? children().size() : next->second);
+        iRow = atEnd ? append() : insert(children()[pos].get_iter());
+
+        for (auto& [_, index] : lines)
+            if (index >= pos)
+                ++index;
+        lines[id] = pos;
     }
-    else
-        iRow = insert(getLine(id));
+    TRACE9("LanguageModel::insertLanguage (const std::string&, const Language&, const Columns&) - " << id << '='
+                                                                                                    << lines[id]);
 
     Gtk::TreeModel::Row row(*iRow);
     row[cols.id] = id;
@@ -161,21 +182,24 @@ LanguageDialog::LanguageDialog(std::string& languages, unsigned int maxLangs, bo
         auto langs(languages | std::views::split(',') | std::views::filter([](auto&& part) { return !part.empty(); })
                    | std::views::transform([](auto&& part) { return std::ranges::to<std::string>(part); }));
         auto i(langs.begin());
-        if (showMainLang) {
+        if (showMainLang && (i != langs.end())) {
             tmp = *i;
             ++i;
-            TRACE9("LanguageDialog::LanguageDialog (std::string&, unsigned int) - Main: " << main);
+            TRACE9("LanguageDialog::LanguageDialog (std::string&, unsigned int) - Main: " << tmp);
         }
 
         Glib::RefPtr<Gtk::TreeSelection> sel(listLang->get_selection());
         for (; i != langs.end(); ++i)
-            sel->select(modelList->getLine(*i));
+            if (const auto line(modelList->getLine(*i)); line)
+                sel->select(line);
     }
     else if (showMainLang)
         listLang->set_sensitive(false);
 
     if (showMainLang) {
-        mainLang->set_active(modelMain->getLine(tmp));
+        // Unknown languages are shown as undefined
+        const auto line(modelMain->getLine(tmp));
+        mainLang->set_active(line ? line : modelMain->getLine(""));
         main = tmp;
     }
 

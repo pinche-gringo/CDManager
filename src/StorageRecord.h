@@ -49,9 +49,6 @@ class StorageRecord : public Storage {
     static void deleteRecord(unsigned int idRecord);
     static void deleteInterpret(unsigned int idInterpret);
 
-    static void loadNames(const std::vector<HInterpret>& interprets, const YGP::Relation1_N<HInterpret, HRecord>& relRecords,
-                          const std::string& lang);
-
     StorageRecord() = delete("Only static members");
     StorageRecord(const StorageRecord& other) = delete;
     const StorageRecord& operator=(const StorageRecord& other) = delete;

@@ -366,7 +366,7 @@ int OwnerObjectList::sortOwner(const Gtk::TreeModel::const_iterator& a, const Gt
 
     TRACE9("OwnerObjectList::sortOwner (2x const Gtk::TreeModel::const_iterator&) - " << ha->getName() << "<->" << hb->getName());
     const int rc(Celebrity::removeIgnored(ha->getName()).compare(Celebrity::removeIgnored(hb->getName())));
-    return rc ? rc : (ha->getName() < hb->getName());
+    return rc ? rc : ha->getName().compare(hb->getName());
 }
 
 //-----------------------------------------------------------------------------

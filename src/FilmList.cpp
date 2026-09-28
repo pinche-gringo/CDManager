@@ -200,7 +200,7 @@ int FilmList::sortEntity(const Gtk::TreeModel::const_iterator& a, const Gtk::Tre
     HFilm ha(getFilmAt(a));
     HFilm hb(getFilmAt(b));
     int rc(Film::removeIgnored(ha->getName()).compare(Film::removeIgnored(hb->getName())));
-    return rc ? rc : (ha->getName() < hb->getName());
+    return rc ? rc : ha->getName().compare(hb->getName());
 }
 
 //-----------------------------------------------------------------------------

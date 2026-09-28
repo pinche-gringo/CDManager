@@ -25,6 +25,7 @@
 #include <cdmgr-cfg.h>
 
 #include <array>
+#include <stdexcept>
 #include <ranges>
 #include <tuple>
 
@@ -34,9 +35,12 @@
 #include <gtkmm/button.h>
 #include <gtkmm/entry.h>
 #include <gtkmm/label.h>
+#include <gtkmm/messagedialog.h>
 #include <gtkmm/scrolledwindow.h>
 
 #include <YGP/Trace.h>
+
+#include <XGP/XDialog.h>
 
 #include "Words.h"
 
@@ -251,10 +255,17 @@ void WordDialog::commit() {
         Words::values* shMem(Words::getInfo());
         contract_assert(shMem);
         shMem->cArticles = shMem->cNames = 0;
+        shMem->used = 0;
 
-        for (const auto& [model, insert] : std::views::zip(models, fnInsert))
-            for (const auto& row : model->children())
-                insert(row.get_value(colWords.word), Words::POS_END);
+        try {
+            for (const auto& [model, insert] : std::views::zip(models, fnInsert))
+                for (const auto& row : model->children())
+                    insert(row.get_value(colWords.word), Words::POS_END);
+        }
+        catch (const std::length_error& err) { // The storage for the words is full
+            Gtk::MessageDialog dlg(err.what(), false, Gtk::MessageType::ERROR);
+            XGP::runModal(dlg);
+        }
     }
 }
 

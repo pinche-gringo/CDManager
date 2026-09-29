@@ -73,6 +73,16 @@ void appendRemaining(std::istream& input, std::string& target) {
     while (input);
 }
 
+//-----------------------------------------------------------------------------
+/// Checks if the passed HTTP status code redirects to another location
+/// \param nrStatus HTTP status code
+/// \returns bool True, if the status code is a redirect
+//-----------------------------------------------------------------------------
+bool isRedirect(unsigned int nrStatus) {
+    // Moved permanently, found, see other, temporary and permanent redirect
+    return std::ranges::contains(std::array {301U, 302U, 303U, 307U, 308U}, nrStatus);
+}
+
 } // namespace
 
 struct IMDbProgress::ConnectInfo {
@@ -84,6 +94,7 @@ struct IMDbProgress::ConnectInfo {
     std::string host {HOST};
     std::string path;
     std::string response;
+    unsigned int httpStatus {0};
 
     /// Constructor
     ConnectInfo(const Glib::ustring& url);
@@ -390,43 +401,14 @@ void IMDbProgress::readStatus(const boost::system::error_code& err) {
         }
 
         TRACE1("Status " << nrStatus);
-        switch (nrStatus) {
-        case 200: // HTTP OK
-            break;
-
-        case 302: { // HTTP Moved temporarily
-            std::string url, loc;
-            char ch;
-
-            do {
-                response >> loc >> ch;
-                response.putback(ch);
-                std::getline(response, url);
-                TRACE8("IMDbProgress::readStatus (boost::system::error_code&) - Location: " << url << '/' << url.length());
-            }
-            while (response && !loc.starts_with("Location:"));
-            // Strip trailing whitespaces
-            while (url.length() && isspace(static_cast<unsigned char>(url.back()))) {
-                TRACE1("Removing " << url.back());
-                url.pop_back();
-            }
-            if (response && url.length()) {
-                contract_assert(url[url.length() - 1]);
-                TRACE1("Size " << url.length());
-                Glib::signal_idle().connect_once(sigc::bind(sigc::mem_fun(*this, &IMDbProgress::reStart), url));
-            }
-            else
-                error(_("HTTP status code 302 does not contain a location"));
-            return;
-        }
-
-        default: // Other error
+        if ((nrStatus != 200) && !isRedirect(nrStatus)) {
             error(Glib::ustring::compose(_("IMDb.com returned status code %1 %2"),
                                          Glib::ustring(YGP::ANumeric(nrStatus).toString()), Glib::ustring(msgStatus)));
             return;
         }
+        data->httpStatus = nrStatus;
 
-        // Read the response headers, which are terminated by a blank line.
+        // Read the response headers (also containing the location of redirects), which are terminated by a blank line.
         boost::asio::async_read_until(data->sockIO, data->buffer, "\r\n\r\n",
                                       [this](const boost::system::error_code& errRead, std::size_t) { readHeaders(errRead); });
     }
@@ -443,11 +425,36 @@ void IMDbProgress::readHeaders(const boost::system::error_code& err) {
     contract_assert(data);
 
     if (!err) {
-        // Skip the response headers.
+        // Skip the response headers; except the location of a redirect
         std::istream response(&data->buffer);
         std::string line;
+        std::string location;
+        constexpr std::string_view LOCATION("location:");
         while (std::getline(response, line) && (line != "\r"))
-            ;
+            if ((line.size() > LOCATION.size())
+                && std::ranges::equal(std::string_view(line).substr(0, LOCATION.size()), LOCATION,
+                                      [](char a, char b) { return g_ascii_tolower(a) == b; })) {
+                const auto start(line.find_first_not_of(" \t", LOCATION.size()));
+                const auto end(line.find_last_not_of(" \t\r"));
+                if ((start != std::string::npos) && (end >= start))
+                    location = line.substr(start, end - start + 1);
+            }
+
+        if (isRedirect(data->httpStatus)) {
+            TRACE1("IMDbProgress::readHeaders (boost::system::error_code&) - Redirect to: " << location);
+            if (location.empty())
+                error(Glib::ustring::compose(_("HTTP status code %1 does not contain a location"),
+                                             Glib::ustring(YGP::ANumeric(data->httpStatus).toString())));
+            else if (location.starts_with("https://"))
+                error(Glib::ustring::compose(_("IMDb.com redirected to a secure connection, which is not supported: %1"),
+                                             Glib::ustring(location)));
+            else {
+                if (location.starts_with('/')) // Relative location: Keep the host
+                    location = std::string(HTTP) + data->host + location;
+                Glib::signal_idle().connect_once(sigc::bind(sigc::mem_fun(*this, &IMDbProgress::reStart), location));
+            }
+            return;
+        }
 
         // Read the remaining content
         appendRemaining(response, data->response);

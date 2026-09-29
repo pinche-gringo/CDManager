@@ -187,8 +187,7 @@ bool ImportFromIMDb::saveIMDbInfo() {
 void ImportFromIMDb::removeProgressBar(Gtk::Grid* client, IMDbProgress* progress) {
     TRACE9("ImportFromIMDb::removeProgressBar (Gtk::Grid*, IMDbProgress*)");
     stopLoading(progress);
-    client->remove(*progress);
-    delete progress;
+    client->remove(*progress); // Frees the (managed) progressbar
 }
 
 //-----------------------------------------------------------------------------

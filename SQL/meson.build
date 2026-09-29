@@ -8,6 +8,9 @@ if db_backend == 'postgresql'
     run_target('populateDB',
                command: ['sh', '-c', 'echo Populating database ... && sed "/^USE /d" "$0" | PGCLIENTENCODING=LATIN1 psql -U cdmgr -d cdmedia',
                          sql_dir / 'populateDB.sql'])
+    run_target('syncSequences',
+               command: ['sh', '-c', 'echo Adapting sequences ... && psql -U cdmgr -d cdmedia -f "$0"',
+                         sql_dir / 'syncSequences-pg.sql'])
 else
     run_target('createDB',
                command: ['sh', '-c', 'echo Creating database ... && mysql -u root -p -f < "$0"', sql_dir / 'createDB.sql'])

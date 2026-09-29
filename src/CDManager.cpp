@@ -170,8 +170,8 @@ CDManager::CDManager(Options& options) : XApplication(PACKAGE " V" PRG_RELEASE),
         showError(Glib::ustring::compose(_("Can't read datafile containing the genres!\n\nReason: %1"), e.what()));
     }
 
-    if (opt.getUser().empty() || !login(opt.getUser(), opt.getPassword()))
-        Glib::signal_idle().connect_once(sigc::mem_fun(*this, &CDManager::showLogin));
+    // Connect before adding the pages, as appending the first page selects it (initialising its menus)
+    connPageSwitched = nb.signal_switch_page().connect(sigc::mem_fun(*this, &CDManager::pageSwitched), false);
 
     TRACE8("CDManager::CDManager (Options&) - Add NB");
 #if WITH_RECORDS == 1
@@ -190,9 +190,12 @@ CDManager::CDManager(Options& options) : XApplication(PACKAGE " V" PRG_RELEASE),
     pages[WITH_RECORDS + WITH_FILMS] = std::make_unique<PActors>(status, apMenus[SAVE], filmGenres, *pgFilms);
     nb.append_page(*Gtk::manage(pages[WITH_RECORDS + WITH_FILMS]->getWindow()), _("_Actors"), true);
 #endif
-    connPageSwitched = nb.signal_switch_page().connect(sigc::mem_fun(*this, &CDManager::pageSwitched), false);
     status.push(_("Connect to a database ..."));
     apMenus[SAVE]->set_enabled(false);
+
+    // Login after creating the pages, so the current page can be loaded
+    if (opt.getUser().empty() || !login(opt.getUser(), opt.getPassword()))
+        Glib::signal_idle().connect_once(sigc::mem_fun(*this, &CDManager::showLogin));
 
     TRACE8("CDManager::CDManager (Options&) - Show");
     show();

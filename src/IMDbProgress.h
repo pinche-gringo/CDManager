@@ -21,29 +21,37 @@
 #include <memory>
 #include <string>
 #include <string_view>
-
-#include <boost/asio/ip/tcp.hpp>
+#include <vector>
 
 #include <glibmm/ustring.h>
 
 #include <gtkmm/progressbar.h>
 
+namespace boost::json {
+class value;
+}
+
 /**Class reading data from IMDb while showing its status in itself (a
  * progress bar)
+ *
+ * The data is queried (via HTTPS) from the GraphQL-API of IMDb.com, the
+ * poster is loaded from the URL passed in the result.
  *
  * Available signals:
  *   - sigError: Emitted if an error occurs; the error-message is passed
  *   - sigAmbigous: Emitted if a search finds more than one film;
                     Passes a list of matching entries
  *   - sigSuccess: Emitted if a (single) film was found; Passes the
-                   director, the film (with year in parenthesises) and the genre
+                   director, the film (with year in parenthesises), the genre,
+                   the summary, the URL of the poster and the actors
+ *   - sigIcon: Emitted after loading a poster; Passes the (JPEG) image
  * \remarks Don't destroy the object within the signal-callbacks
  */
 class IMDbProgress : public Gtk::ProgressBar {
   public:
     enum match { POPULAR, EXACT, PARTIAL };
     struct IMDbSearchEntry {
-        Glib::ustring url;
+        Glib::ustring url; ///< IMDb ID of the film (tt...)
         Glib::ustring title;
 
         IMDbSearchEntry(const Glib::ustring& url, const Glib::ustring& title) : url(url), title(title) {}
@@ -57,10 +65,7 @@ class IMDbProgress : public Gtk::ProgressBar {
         Glib::ustring genre;
         Glib::ustring summary;
         std::string image;
-
-        IMDbEntry(const Glib::ustring& director, const Glib::ustring& title, const Glib::ustring& genre,
-                  const Glib::ustring& summary, const std::string& icon)
-            : director(director), title(title), genre(genre), summary(summary), image(icon) {}
+        std::vector<Glib::ustring> actors;
     };
 
     IMDbProgress();
@@ -79,8 +84,10 @@ class IMDbProgress : public Gtk::ProgressBar {
     IMDbProgress(const IMDbProgress& other) = delete;
     const IMDbProgress& operator=(const IMDbProgress& other) = delete;
 
+    static std::string getIMDbID(const Glib::ustring& identifier);
+    static std::string getSmallPoster(const std::string& url);
+
   protected:
-    sigc::connection conPoll;
     sigc::connection conProgress;
 
   private:
@@ -88,28 +95,18 @@ class IMDbProgress : public Gtk::ProgressBar {
 
     void reStart(const std::string& idFilm);
 
-    bool poll();
     bool indicateWait();
     void error(const Glib::ustring& msg);
 
-    static void extractSearch(IMDbSearchEntries& target, const std::string& src, std::string_view section);
-    Glib::ustring extract(const char* section, const char* subpart, const char* before, const char* after) const
-        pre(section != nullptr) pre(before != nullptr) pre(after != nullptr);
-
-    void connect();
-    void resolved(const boost::system::error_code& err, boost::asio::ip::tcp::resolver::results_type::iterator iEndpoints);
-    void connected(const boost::system::error_code& err, boost::asio::ip::tcp::resolver::results_type::iterator iEndpoints);
+    void sendQuery(std::string_view query, std::string_view variable, const Glib::ustring& value);
     void sendRequest();
-    void requestWritten(const boost::system::error_code& err);
-    void readStatus(const boost::system::error_code& err);
-    void readHeaders(const boost::system::error_code& err);
-    void readContent(const boost::system::error_code& err);
-    void readFilm(Glib::ustring& msg);
-    void readImage();
+    void received(const std::string& response);
+    void readSearch(const boost::json::value& response);
+    void readFilm(const boost::json::value& response);
 
     std::unique_ptr<ConnectInfo> data;
 
-    enum { NONE, TITLE, IMAGE } status {NONE};
+    enum { NONE, SEARCH, TITLE, IMAGE } status {NONE};
 };
 
 #endif

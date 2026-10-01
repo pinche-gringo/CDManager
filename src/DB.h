@@ -16,6 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <locale>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -45,6 +46,7 @@ class Database {
         /// \returns Values& Reference to this, to allow chaining
         template <typename T> Values& operator()(const char* column, const T& value) {
             std::ostringstream str;
+            str.imbue(std::locale::classic()); // SQL needs numbers without thousands separators (like 2,026)
             str << value;
             entries.emplace_back(column, str.str());
             return *this;

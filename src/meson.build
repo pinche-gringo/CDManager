@@ -42,7 +42,7 @@ icons = files('IconAuthor.gdkp', 'IconProgram.gdkp')
 executable('CDManager', cdmanager_sources,
            cpp_args: '-DUSE_LANGUAGEPIXMAPS',
            extra_files: icons,
-           dependencies: [libcdmgr_dep, gtkmm_dep, gthread_dep, xgp_dep, boost_dep, db_dep],
+           dependencies: [libcdmgr_dep, gtkmm_dep, gthread_dep, xgp_dep, boost_dep, soup_dep, db_dep],
            install_rpath: prefix / get_option('libdir'),
            install: true)
 

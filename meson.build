@@ -47,10 +47,8 @@ ygp_dep = dependency('YGP', version: '>= 0.9.42')
 gtkmm_dep = dependency('gtkmm-4.0', version: '>= 4.0.0')
 gthread_dep = dependency('gthread-2.0', version: '> 2.2.0')
 xgp_dep = dependency('XGP', version: '>= 0.9.50')
-boost_dep = dependency('boost')
-if not cxx.has_header('boost/asio.hpp', dependencies: boost_dep)
-    error('Required header boost/asio.hpp not found')
-endif
+boost_dep = dependency('boost', modules: ['json'])
+soup_dep = dependency('libsoup-3.0', version: '>= 3.0.0')
 if not cxx.has_header('sys/shm.h')
     error('Needed header sys/shm.h not found!')
 endif

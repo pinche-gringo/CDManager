@@ -27,7 +27,6 @@
 #include <array>
 #include <ranges>
 
-#include <glibmm/convert.h>
 #include <glibmm/main.h>
 
 #include <gtkmm/button.h>
@@ -70,7 +69,7 @@ class FilmColumns : public Gtk::TreeModel::ColumnRecord {
 ImportFromIMDb::ImportFromIMDb()
     : FilmDataEditor(), client(Gtk::make_managed<Gtk::Grid>()), txtID(Gtk::make_managed<Gtk::Entry>()),
       lblDirector(Gtk::make_managed<Gtk::Label>(Glib::ustring())), lblFilm(Gtk::make_managed<Gtk::Label>(Glib::ustring())),
-      lblGenre(Gtk::make_managed<Gtk::Label>(Glib::ustring())) {
+      lblGenre(Gtk::make_managed<Gtk::Label>(Glib::ustring())), lblActors(Gtk::make_managed<Gtk::Label>(Glib::ustring())) {
     set_title(_("Import from IMDb.com"));
 
     client->set_row_spacing(5);
@@ -90,15 +89,19 @@ ImportFromIMDb::ImportFromIMDb()
     ok->set_label(_("_Next"));
     inputChanged();
 
-    const std::array values {lblDirector, lblFilm, lblGenre};
-    constexpr std::array titles {N_("Director:"), N_("Film:"), N_("Genre:")};
+    const std::array values {lblDirector, lblFilm, lblGenre, lblActors};
+    constexpr std::array titles {N_("Director:"), N_("Film:"), N_("Genre:"), N_("Actors:")};
     for (const auto [row, value, title] : std::views::zip(std::views::iota(2), values, titles)) {
         lbl = Gtk::make_managed<Gtk::Label>(_(title));
         lbl->set_halign(Gtk::Align::START);
+        lbl->set_valign(Gtk::Align::START);
         client->attach(*lbl, 0, row);
         value->set_halign(Gtk::Align::START);
+        value->set_xalign(0.0);
         client->attach(*value, 1, row);
     }
+    lblActors->set_wrap();
+    lblActors->set_max_width_chars(60);
 
     show();
 }
@@ -142,9 +145,9 @@ void ImportFromIMDb::okEvent() {
         txtID->set_sensitive(false);
         ok->set_sensitive(false);
 
-        auto* progress(Gtk::make_managed<IMDbProgress>(Glib::locale_from_utf8(txtID->get_text())));
+        auto* progress(Gtk::make_managed<IMDbProgress>(txtID->get_text()));
         progress->sigError.connect(sigc::bind(sigc::mem_fun(*this, &ImportFromIMDb::showError), progress));
-        // progress->sigAmbiguous.connect (sigc::bind (sigc::mem_fun (*this, &ImportFromIMDb::showSearchResults), progress));
+        progress->sigAmbiguous.connect(sigc::bind(sigc::mem_fun(*this, &ImportFromIMDb::showSearchResults), progress));
         progress->sigSuccess.connect(sigc::bind(sigc::mem_fun(*this, &ImportFromIMDb::showData), progress));
         progress->set_hexpand(true);
         client->attach(*progress, 0, 1, 2, 1);
@@ -249,6 +252,10 @@ void ImportFromIMDb::showData(const IMDbProgress::IMDbEntry& entry, IMDbProgress
     lblDirector->set_text(entry.director);
     lblFilm->set_text(entry.title);
     lblGenre->set_text(entry.genre);
+    Glib::ustring actors;
+    for (const auto& actor : entry.actors)
+        actors += (actors.empty() ? "" : ", ") + actor;
+    lblActors->set_text(actors);
     setSummary(entry.summary);
 
     // While the poster is loading OK stays disabled; addIcon() or showError() enable it
@@ -312,8 +319,7 @@ void ImportFromIMDb::showSearchResults(const IMDbProgress::IMDbMatchData& result
                 row[colFilms.name] = Glib::ustring(film.title);
             }
 
-            if (i != std::ssize(matches) - 1)
-                list.expand_row(model->get_path(match.get_iter()), false);
+            list.expand_row(model->get_path(match.get_iter()), false);
         }
     }
 
@@ -362,13 +368,22 @@ void ImportFromIMDb::loadRow(Gtk::TreeRow& row, Gtk::ScrolledWindow* scrl, [[may
                              IMDbProgress* progress) {
     contract_assert(client);
 
+    // Get the ID before removing the list, as this frees the model (and so the row)
+    const Glib::ustring id(row.get_value(FilmColumns().id));
+    if (id.empty()) // Heading of the matches
+        return;
+
     contract_assert(connOK.connected());
     connOK.disconnect();
     scrl->hide();
-    client->remove(*scrl);
+    // Remove the list only when idle, as this might be called from one of its signal handlers
+    Glib::signal_idle().connect_once([client = client, scrl] { client->remove(*scrl); });
+    image->show();
 
+    status = LOADING;
+    ok->set_sensitive(false);
     progress->show();
-    progress->start(row.get_value(FilmColumns().id));
+    progress->start(id);
 }
 
 //-----------------------------------------------------------------------------
@@ -396,6 +411,7 @@ void ImportFromIMDb::searchFor(const Glib::ustring& film) {
     lblDirector->set_text(empty);
     lblFilm->set_text(empty);
     lblGenre->set_text(empty);
+    lblActors->set_text(empty);
     setSummary(empty);
     image->clear();
 

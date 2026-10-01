@@ -33,9 +33,10 @@ class ScrolledWindow;
 
 /**Dialog allowing to import information from a film from IMDb.com
  *
- * After entering an film identification (a number or the URL to
- * IMDb.com) the matching page on IMDb.com is read and the relevant
- * information is filtered out and displayed for confirmation.
+ * After entering an film identification (a name, a number or the URL to
+ * IMDb.com) the matching film is queried from IMDb.com and the relevant
+ * information is displayed for confirmation. If a name matches more than
+ * one film, the matches are displayed for selection.
  */
 class ImportFromIMDb : public FilmDataEditor {
   public:
@@ -70,6 +71,7 @@ class ImportFromIMDb : public FilmDataEditor {
     Gtk::Label* lblDirector; ///< Label displaying the director
     Gtk::Label* lblFilm;     ///< Label displaying the film (with year)
     Gtk::Label* lblGenre;    ///< Label displaying the genre of the film
+    Gtk::Label* lblActors;   ///< Label displaying the (main) actors of the film
 
     void okEvent() override;
 

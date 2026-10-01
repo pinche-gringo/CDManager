@@ -60,7 +60,8 @@ constexpr std::string_view QUERY_TITLE(
     " } }");
 constexpr std::string_view QUERY_SEARCH(
     "query Search($term: String!) { mainSearch(first: 50, options: {searchTerm: $term, type: TITLE}) {"
-    " edges { node { entity { ... on Title { id titleText { text } releaseYear { year } titleType { id text } } } } }"
+    " edges { node { entity { ... on Title { id titleText { text } originalTitleText { text } releaseYear { year }"
+    " titleType { id text } } } } }"
     " } }");
 /// Types of titles, which are no films (on a disk) and therefore skipped in search results
 constexpr std::array SKIPPED_TYPES {"podcastEpisode", "podcastSeries", "tvEpisode", "videoGame", "musicVideo"};
@@ -142,6 +143,9 @@ struct IMDbProgress::ConnectInfo {
     SoupSession* session {soup_session_new_with_options("user-agent", PACKAGE "/" VERSION, "timeout", 30U, nullptr)};
     SoupMessage* message {nullptr};
     GCancellable* cancel {g_cancellable_new()};
+
+    Glib::ustring searchTitle; ///< Searched title (case-folded), to detect exact matches
+    long searchYear {0};       ///< Searched year (or 0, if not specified)
 
     ConnectInfo() = default;
     ~ConnectInfo() {
@@ -259,6 +263,13 @@ void IMDbProgress::start(const Glib::ustring& identifier, bool isImage) {
         Glib::ustring term(identifier);
         if ((term.size() > 2) && term.raw().starts_with('"') && term.raw().ends_with('"'))
             term = term.substr(1, term.size() - 2);
+        else if (const std::string& raw(term.raw()); (raw.size() > 7) && raw.ends_with(')') && raw.substr(raw.size() - 7, 2) == " ("
+                 && std::ranges::all_of(raw.substr(raw.size() - 5, 4), isDigit)) {
+            // Search only for the title (without the year "(2026)"); the year is used to find an exact match
+            data->searchYear = std::stol(raw.substr(raw.size() - 5, 4));
+            term = raw.substr(0, raw.size() - 7);
+        }
+        data->searchTitle = term.casefold();
         status = SEARCH;
         sendQuery(QUERY_SEARCH, "term", term);
     }
@@ -409,13 +420,31 @@ void IMDbProgress::received(const std::string& response) {
 }
 
 //-----------------------------------------------------------------------------
-/// Extracts the results of a search; if it contains only one film, this is
-/// loaded, else the listeners are informed about the found entries
+/// Checks if the passed film matches the searched title (and year) exactly
+/// \param film JSON object describing the film
+/// \returns bool True, if the (localised or original) title matches (ignoring the case)
+//-----------------------------------------------------------------------------
+bool IMDbProgress::isExactMatch(const boost::json::value& film) const {
+    if (data->searchYear) {
+        const boost::json::value* year(find(film, "/releaseYear/year"));
+        if (!year || !year->is_int64() || (year->get_int64() != data->searchYear))
+            return false;
+    }
+    return (getText(film, "/titleText/text").casefold() == data->searchTitle)
+           || (getText(film, "/originalTitleText/text").casefold() == data->searchTitle);
+}
+
+//-----------------------------------------------------------------------------
+/// Extracts the results of a search; if it contains only one film or only one
+/// film matches exactly, this is loaded, else the listeners are informed about
+/// the found entries
 /// \param response Response of IMDb.com
 //-----------------------------------------------------------------------------
 void IMDbProgress::readSearch(const boost::json::value& response) {
     IMDbMatchData films;
     IMDbSearchEntries& entries(films[POPULAR]);
+    std::vector<Glib::ustring> exactMatches;
+    std::vector<Glib::ustring> exactMovies; ///< Exact matches, which are feature films (no shorts, videos, ...)
 
     if (const boost::json::array* edges = getArray(response, "/data/mainSearch/edges"))
         for (const auto& edge : *edges)
@@ -433,13 +462,29 @@ void IMDbProgress::readSearch(const boost::json::value& response) {
                     name += " - " + getText(*film, "/titleType/text");
                 TRACE8("IMDbProgress::readSearch (const boost::json::value&) - " << id << ": " << name);
                 entries.emplace_back(id, name);
+                if (isExactMatch(*film)) {
+                    exactMatches.push_back(id);
+                    if (type == "movie")
+                        exactMovies.push_back(id);
+                }
             }
-    TRACE5("IMDbProgress::readSearch (const boost::json::value&) - Films: " << entries.size());
+    TRACE5("IMDbProgress::readSearch (const boost::json::value&) - Films: " << entries.size() << "; exact: "
+           << exactMatches.size() << '/' << exactMovies.size());
+
+    // Load the film directly, if it is the only one found or the only one matching exactly
+    // (with preference to feature films, as there are often shorts or videos with the same title)
+    std::string id;
+    if (entries.size() == 1)
+        id = entries.front().url;
+    else if (exactMatches.size() == 1)
+        id = exactMatches.front();
+    else if (exactMovies.size() == 1)
+        id = exactMovies.front();
 
     if (entries.empty())
         error(_("IMDb didn't find any matching films!"));
-    else if (entries.size() == 1)
-        Glib::signal_idle().connect_once(sigc::bind(sigc::mem_fun(*this, &IMDbProgress::reStart), entries.front().url.raw()));
+    else if (!id.empty())
+        Glib::signal_idle().connect_once(sigc::bind(sigc::mem_fun(*this, &IMDbProgress::reStart), id));
     else {
         disconnect();
         sigAmbiguous.emit(films);

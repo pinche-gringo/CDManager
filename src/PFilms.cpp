@@ -848,7 +848,11 @@ void PFilms::importInfoFromIMDb() {
 void PFilms::importNextFilm(ImportFromIMDb* dlg, std::vector<HFilm>* films) {
     if (!films->empty()) {
         TRACE5("PFilms::importNextFilm (ImportFromIMDb*, std::vector<HFilm>*) - " << films->back()->getName());
-        dlg->searchFor(films->back()->getName(""));
+        // Append the year (like "Name (2026)") to find an exact match
+        const HFilm& film(films->back());
+        const YGP::AYear& year(film->getYear());
+        dlg->searchFor(year.isDefined() ? film->getName("") + " (" + std::to_string(static_cast<int>(year)) + ')'
+                                        : film->getName(""));
     }
     else
         dlg->response(Gtk::ResponseType::CANCEL); // Frees the dialog (and so the list of films)

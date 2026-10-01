@@ -102,6 +102,7 @@ class IMDbProgress : public Gtk::ProgressBar {
     void sendRequest();
     void received(const std::string& response);
     void readSearch(const boost::json::value& response);
+    [[nodiscard]] bool isExactMatch(const boost::json::value& film) const pre(data);
     void readFilm(const boost::json::value& response);
 
     std::unique_ptr<ConnectInfo> data;

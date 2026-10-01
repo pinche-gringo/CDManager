@@ -241,7 +241,7 @@ void Words::addName2Ignore(const Glib::ustring& word, unsigned int pos) {
 
     TRACE1("Words::addName2Ignore (const Glib::ustring&, unsigned int) - Insert into " << pos);
     shMem->info->aOffsets[pos] = shMem->info->used;
-    memcpy(shMem->values + shMem->info->used, word.c_str(), word.bytes());
+    memcpy(shMem->values + shMem->info->used, word.c_str(), word.bytes() + 1); // Including the terminating 0
     shMem->info->used += word.bytes() + 1;
     shMem->info->cNames++;
 }
@@ -293,7 +293,7 @@ void Words::addArticle(const Glib::ustring& word, unsigned int pos) {
 
     TRACE1("Words::addArticle (const Glib::ustring&, unsigned int) - Insert into " << pos);
     shMem->info->aOffsets[pos] = shMem->info->used;
-    memcpy(shMem->values + shMem->info->used, word.c_str(), word.bytes());
+    memcpy(shMem->values + shMem->info->used, word.c_str(), word.bytes() + 1); // Including the terminating 0
     shMem->info->used += word.bytes() + 1;
     shMem->info->cArticles++;
     TRACE1("Words::addArticle (const Glib::ustring&, unsigned int) - Counts " << shMem->info->cArticles << '/'

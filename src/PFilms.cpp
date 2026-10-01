@@ -39,7 +39,10 @@
 
 #include <gdkmm/texture.h>
 
+#include <gtkmm/box.h>
+#include <gtkmm/label.h>
 #include <gtkmm/messagedialog.h>
+#include <gtkmm/picture.h>
 #include <gtkmm/popovermenu.h>
 #include <gtkmm/scrolledwindow.h>
 #include <gtkmm/statusbar.h>
@@ -1009,20 +1012,41 @@ bool PFilms::onQueryTooltip(int x, int y, bool keyboard, const Glib::RefPtr<Gtk:
     if (films.get_tooltip_context_iter(x, y, keyboard, iter)) {
         if (iter->parent()) {
             HFilm film(films.getFilmAt(iter));
-            Glib::ustring summary(film->getDescription());
-            if (!summary.empty())
-                tooltip->set_text(summary);
+            const Glib::ustring summary(film->getDescription());
+            const std::string image(film->getImage());
 
-            std::string image(film->getImage());
+            Glib::RefPtr<Gdk::Texture> poster;
             if (!image.empty()) {
                 try {
-                    tooltip->set_icon(Gdk::Texture::create_from_bytes(Glib::Bytes::create(image.data(), image.size())));
+                    poster = Gdk::Texture::create_from_bytes(Glib::Bytes::create(image.data(), image.size()));
                 }
                 catch (const Glib::Error&) {
-                    image.clear();
                 }
             }
-            return !summary.empty() || !image.empty();
+
+            if (!poster) {
+                if (summary.empty())
+                    return false;
+                tooltip->set_text(summary);
+                return true;
+            }
+
+            // Gtk::Tooltip::set_icon () shows only a small icon, so display the poster in its stored size
+            auto* box(Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6));
+            auto* picture(Gtk::make_managed<Gtk::Picture>(poster));
+            picture->set_can_shrink(false);
+            picture->set_valign(Gtk::Align::START);
+            box->append(*picture);
+            if (!summary.empty()) {
+                auto* text(Gtk::make_managed<Gtk::Label>(summary));
+                text->set_wrap();
+                text->set_max_width_chars(50);
+                text->set_xalign(0.0);
+                text->set_valign(Gtk::Align::START);
+                box->append(*text);
+            }
+            tooltip->set_custom(*box);
+            return true;
         }
     }
     return false;

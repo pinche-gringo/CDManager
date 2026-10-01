@@ -111,7 +111,7 @@ CDManager::CDManager(Options& options) : XApplication(PACKAGE " V" PRG_RELEASE),
     Glib::RefPtr<Gio::Menu> menuCD(Gio::Menu::create());
     Glib::RefPtr<Gio::Menu> sec(Gio::Menu::create());
     apMenus[LOGIN] = addMenuEntry(sec, _("_Login"), "Login", sigc::mem_fun(*this, &CDManager::showLogin), _("<ctl>L"));
-    apMenus[SAVE] = addMenuEntry(sec, _("_Save"), "SaveDB", sigc::mem_fun(*this, &CDManager::save));
+    apMenus[SAVE] = addMenuEntry(sec, _("_Save"), "SaveDB", sigc::mem_fun(*this, &CDManager::save), _("<ctl>S"));
     apMenus[LOGOUT] = addMenuEntry(sec, _("Log_out"), "Logout", sigc::mem_fun(*this, &CDManager::logout), _("<ctl>O"));
     menuCD->append_section(sec);
 
@@ -124,7 +124,7 @@ CDManager::CDManager(Options& options) : XApplication(PACKAGE " V" PRG_RELEASE),
         addMenuEntry(sec, _("_Information"), "Stats", sigc::mem_fun(*this, &CDManager::showStatistics), _("F12"));
     menuCD->append_section(sec);
 
-    addMenuEntry(menuCD, _("_Quit"), "FQuit", sigc::mem_fun(*this, &CDManager::exit));
+    addMenuEntry(menuCD, _("_Quit"), "FQuit", sigc::mem_fun(*this, &CDManager::exit), _("<ctl>Q"));
     menu->append_submenu(_("_CD"), menuCD);
 
     menuEdit = Gio::Menu::create();

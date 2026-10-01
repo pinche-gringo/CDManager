@@ -49,6 +49,7 @@
 #include <gtkmm/paned.h>
 #include <gtkmm/scrolledwindow.h>
 #include <gtkmm/statusbar.h>
+#include <gtkmm/treerowreference.h>
 
 #include <YGP/ANumeric.h>
 #include <YGP/StatusObj.h>
@@ -920,12 +921,17 @@ void PRecords::deleteSelection() {
 void PRecords::deleteSelectedRecords() {
     TRACE9("PRecords::deleteSelectedRecords ()");
 
-    Glib::RefPtr<Gtk::TreeSelection> selection(records.get_selection());
-    while (!selection->get_selected_rows().empty()) {
-        const std::vector<Gtk::TreePath> list(selection->get_selected_rows());
-        contract_assert(!list.empty());
+    // Delete only the rows selected now (deleting the cursor row makes the list select the next one).
+    // References stay valid while deleting other rows; those of records of deleted interprets become invalid.
+    std::vector<Gtk::TreeRowReference> selected;
+    for (const auto& path : records.get_selection()->get_selected_rows())
+        selected.emplace_back(records.get_model(), path);
 
-        Gtk::TreeModel::iterator iter(records.get_model()->get_iter(list.front()));
+    for (const auto& ref : selected) {
+        if (!ref.is_valid())
+            continue;
+
+        Gtk::TreeModel::iterator iter(records.get_model()->get_iter(ref.get_path()));
         contract_assert(iter);
         if (iter->parent()) // A record is going to be deleted
             deleteRecord(iter);
@@ -996,12 +1002,10 @@ void PRecords::deleteSong(const HSong& song, const HRecord& record) {
 void PRecords::deleteSelectedSongs() {
     TRACE9("PRecords::deleteSelectedSongs ()");
 
-    Glib::RefPtr<Gtk::TreeSelection> selection(songs.get_selection());
-    while (!selection->get_selected_rows().empty()) {
-        const std::vector<Gtk::TreePath> list(selection->get_selected_rows());
-        contract_assert(!list.empty());
-
-        Gtk::TreeModel::iterator iter(songs.get_model()->get_iter(list.front()));
+    // Delete only the rows selected now (deleting the cursor row makes the list select the next one).
+    // Erasing from the end keeps the paths of the remaining selected rows valid.
+    for (const auto& path : songs.get_selection()->get_selected_rows() | std::views::reverse) {
+        Gtk::TreeModel::iterator iter(songs.get_model()->get_iter(path));
         contract_assert(iter);
         HSong song(songs.getSongAt(iter));
         contract_assert(song);

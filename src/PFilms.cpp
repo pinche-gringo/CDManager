@@ -46,6 +46,7 @@
 #include <gtkmm/popovermenu.h>
 #include <gtkmm/scrolledwindow.h>
 #include <gtkmm/statusbar.h>
+#include <gtkmm/treerowreference.h>
 #include <gtkmm/window.h>
 
 #include <YGP/ANumeric.h>
@@ -529,12 +530,17 @@ void PFilms::saveData() {
 void PFilms::deleteSelection() {
     TRACE9("PFilms::deleteSelection()");
 
-    Glib::RefPtr<Gtk::TreeSelection> selection(films.get_selection());
-    while (!selection->get_selected_rows().empty()) {
-        std::vector<Gtk::TreePath> list(selection->get_selected_rows());
-        contract_assert(!list.empty());
+    // Delete only the rows selected now (deleting the cursor row makes the list select the next one).
+    // References stay valid while deleting other rows; those of films of deleted directors become invalid.
+    std::vector<Gtk::TreeRowReference> selected;
+    for (const auto& path : films.get_selection()->get_selected_rows())
+        selected.emplace_back(films.get_model(), path);
 
-        Gtk::TreeModel::iterator iter(films.get_model()->get_iter(list.front()));
+    for (const auto& ref : selected) {
+        if (!ref.is_valid())
+            continue;
+
+        Gtk::TreeModel::iterator iter(films.get_model()->get_iter(ref.get_path()));
         contract_assert(iter);
         if (iter->parent()) // A film is going to be deleted
             deleteFilm(iter);

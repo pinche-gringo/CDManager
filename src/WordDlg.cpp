@@ -231,10 +231,10 @@ void WordDialog::onDelete(unsigned int which) {
     const std::array<Gtk::TreeView*, 2> lists{&lstNames, &lstArticles};
     const std::array models{names, articles};
 
-    Glib::RefPtr<Gtk::TreeSelection> selection(lists[which]->get_selection());
-    for (std::vector<Gtk::TreeModel::Path> list(selection->get_selected_rows()); !list.empty();
-         list = selection->get_selected_rows()) {
-        Gtk::TreeModel::iterator iter(models[which]->get_iter(list.front()));
+    // Erase only the rows selected now: Deleting the cursor row makes the list select the next one.
+    // Erasing from the end keeps the paths of the remaining selected rows valid.
+    for (const auto& path : lists[which]->get_selection()->get_selected_rows() | std::views::reverse) {
+        Gtk::TreeModel::iterator iter(models[which]->get_iter(path));
         contract_assert(iter);
         models[which]->erase(iter);
     }

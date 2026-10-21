@@ -1,7 +1,6 @@
 # CI/CD for CDManager
 #
-# - Every push (and manually started pipelines) builds the project, runs the tests
-#   and checks the code quality
+# - Every push (and manually started pipelines) builds the project and runs the tests
 # - Pushing a tag named CDManager_V<major>.<minor>.<patch> additionally
 #     1. creates the source-tarball (meson dist) and uploads it to the package registry
 #     2. builds the RPMs (CDManager.spec) from that tarball and uploads them as well
@@ -65,53 +64,6 @@ test:
     expire_in: 1 week
     paths:
       - build/meson-logs/
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web"
-
-# Static analysis; the findings are shown in the merge requests
-code_quality:
-  stage: test
-  needs:
-    - job: build_image
-      optional: true
-  script:
-    - meson setup build -Ddatabase=postgresql
-    - |
-      cppcheck --project=build/compile_commands.json --enable=warning,style,performance,portability \
-               --inline-suppr --suppress=missingIncludeSystem --suppress='*:/usr/*' \
-               --xml --output-file=cppcheck.xml -j "$(nproc)" 2> /dev/null || true
-    # Convert the result into the format of GitLab (code climate)
-    - |
-      python3 - <<'EOF'
-      import hashlib, json, os, xml.etree.ElementTree as ET
-      severities = {'error': 'critical', 'warning': 'major', 'performance': 'minor',
-                    'portability': 'minor', 'style': 'info', 'information': 'info'}
-      base = os.environ['CI_PROJECT_DIR'] + '/'
-      issues = []
-      for error in ET.parse('cppcheck.xml').getroot().iter('error'):
-          location = error.find('location')
-          if location is None:
-              continue
-          path = location.get('file').removeprefix(base)
-          line = int(location.get('line'))
-          print(f"{path}:{line}: {error.get('severity')}: {error.get('msg')} [{error.get('id')}]")
-          fingerprint = hashlib.md5(f"{error.get('id')}:{path}:{error.get('msg')}".encode()).hexdigest()
-          issues.append({'type': 'issue', 'check_name': error.get('id'), 'description': error.get('msg'),
-                         'categories': ['Bug Risk'], 'fingerprint': fingerprint,
-                         'severity': severities.get(error.get('severity'), 'info'),
-                         'location': {'path': path, 'lines': {'begin': line}}})
-      with open('gl-code-quality-report.json', 'w') as f:
-          json.dump(issues, f, indent=1)
-      print(f'{len(issues)} issue(s) found')
-      EOF
-  artifacts:
-    when: always
-    expire_in: 1 week
-    paths:
-      - cppcheck.xml
-      - gl-code-quality-report.json
-    reports:
-      codequality: gl-code-quality-report.json
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web"
 

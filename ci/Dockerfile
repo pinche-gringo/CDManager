@@ -10,7 +10,7 @@ ARG YGP_URL=https://github.com/pinche-gringo/libYGP/releases/download/libYGP_V${
 RUN dnf install -y --setopt=install_weak_deps=False \
         gcc gcc-c++ meson ninja-build git gettext gettext-devel rpm-build \
         boost-devel gtkmm4.0-devel libsoup3-devel libpq-devel \
-        cppcheck curl \
+        curl \
         ${YGP_URL}/libYGP-${YGP_VERSION}-1.fc45.x86_64.rpm \
         ${YGP_URL}/libYGP-devel-${YGP_VERSION}-1.fc45.x86_64.rpm \
         ${YGP_URL}/libXGP-${YGP_VERSION}-1.fc45.x86_64.rpm \

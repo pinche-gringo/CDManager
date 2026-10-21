@@ -1,5 +1,5 @@
 project('CDManager', 'cpp',
-        version: '1.3.00',
+        version: '1.3.1',
         license: 'GPL-3.0-or-later',
         meson_version: '>= 1.4.0',
         default_options: ['cpp_std=c++26', 'warning_level=1', 'buildtype=debugoptimized'])

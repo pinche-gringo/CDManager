@@ -43,6 +43,7 @@ Common options
   -Ddatabase=<db>               # mysql, postgresql or auto (default)
   -Dchecks=<level>              # Adds Checks and enforces the C++26 contracts
   -Dtrace=<level>               # Sets the tracelevel
+  -Dtests=disabled              # Don't build the unit tests (they need Boost.Test)
 
 If the database isn't found in a standard location, point pkg-config to it
 (e.g. PKG_CONFIG_PATH=/opt/pgsql/lib/pkgconfig meson setup build) or put its
@@ -52,6 +53,7 @@ pg_config into the PATH.
 Common targets
 --------------
 
+  meson test -C build                         # Runs the unit tests
   meson compile -C build CDManager-pot        # Updates po/CDManager.pot
   meson compile -C build CDManager-update-po  # Merges the .pot into the .po-files
   meson compile -C build createDB             # Creates the database

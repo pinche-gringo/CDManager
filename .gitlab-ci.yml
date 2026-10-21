@@ -64,6 +64,8 @@ test:
     expire_in: 1 week
     paths:
       - build/meson-logs/
+    reports:
+      junit: build/meson-logs/testlog.junit.xml
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web"
 

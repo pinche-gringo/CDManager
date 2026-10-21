@@ -110,7 +110,7 @@ bool Film::compByName(const HFilm& a, const HFilm& b) {
 /// \returns bool True, if a->year < b->year
 //-----------------------------------------------------------------------------
 bool Film::compByYear(const HFilm& a, const HFilm& b) {
-    int rc(a->year - b->year);
+    long rc(a->year.compare(b->year));
     if (!rc) {
         Glib::ustring aname(removeIgnored(a->getName()));
         Glib::ustring bname(removeIgnored(b->getName()));
@@ -169,11 +169,8 @@ void Film::setName(const Glib::ustring& value) { setName(value, name.contains(""
 /// \param lang Specification of language
 //-----------------------------------------------------------------------------
 void Film::setName(const Glib::ustring& value, const std::string& lang) {
-    if (value.empty()) {
-        if (const auto i(name.find(lang)); i != name.end()) {
-            name.erase(i);
-            return;
-        }
-    }
-    name[lang] = value;
+    if (value.empty())
+        name.erase(lang);
+    else
+        name[lang] = value;
 }

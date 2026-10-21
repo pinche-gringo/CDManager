@@ -3,6 +3,7 @@ Overview of changes in version 1.3.00:
   - Compiles with GTK+-4
   - Updated to C++-26
   - Handles both Postgres and MySQL/MariaDB
+  - Use meson as build system
   - Re-Enable scraping from IMDb (via HTTPs)
   - Added unit tests
 

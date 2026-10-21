@@ -371,9 +371,9 @@ bool Words::containsWord(unsigned int start, unsigned int end, const Glib::ustri
     TRACE9("Words::containsWord (2x unsigned int, const Glib::ustring& word) - [" << start << '-' << end << ']');
     const WordPtrs* shMem(currentPtrs());
     contract_assert(end <= shMem->info->maxEntries);
-    TRACE9("Words::containsWord (2x unsigned int, const Glib::ustring& word) - " << shMem->values + shMem->info->aOffsets[start]);
-    TRACE9("Words::containsWord (2x unsigned int, const Glib::ustring& word) - " << shMem->values + shMem->info->aOffsets[end - 1]);
     if (start < end) {
+        TRACE9("Words::containsWord (2x unsigned int, const Glib::ustring& word) - " << shMem->values + shMem->info->aOffsets[start]);
+        TRACE9("Words::containsWord (2x unsigned int, const Glib::ustring& word) - " << shMem->values + shMem->info->aOffsets[end - 1]);
         unsigned int pos(binarySearch(shMem->info, shMem->values, start, end, word.c_str()));
         return ((pos != start) && (word == (shMem->values + shMem->info->aOffsets[pos - 1])));
     }

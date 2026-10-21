@@ -106,7 +106,7 @@ class Words {
 
     [[nodiscard]] static Glib::ustring getWord(const Glib::ustring& text);
     [[nodiscard]] static bool containsWord(unsigned int start, unsigned int end, const Glib::ustring& word)
-        pre(areAvailable()) pre(start < end);
+        pre(areAvailable()) pre(start <= end);
 };
 
 #endif

@@ -112,7 +112,8 @@ void FilmWriter::writeDirector(const HDirector& director, std::ostream& out) {
     contract_assert(!hDirector);
     hDirector = director;
     out << "<tr><td>&nbsp;" << rowEnd << "\n"
-        << "<tr><td colspan=\"5\" class=\"owner\">" << hDirector->getName() << rowEnd;
+        << "<tr><td colspan=\"5\" class=\"owner\">" << YGP::TableWriter::changeHTMLSpecialChars(hDirector->getName())
+        << rowEnd;
     hDirector.reset();
 
     oddLine = true;
@@ -203,7 +204,8 @@ void RecordWriter::writeInterpret(const HInterpret& interpret, std::ostream& out
     contract_assert(!hInterpret);
     hInterpret = interpret;
     out << "<tr><td>&nbsp;" << rowEnd << "\n"
-        << "<tr><td colspan=\"3\" class=\"owner\">" << hInterpret->getName() << rowEnd;
+        << "<tr><td colspan=\"3\" class=\"owner\">" << YGP::TableWriter::changeHTMLSpecialChars(hInterpret->getName())
+        << rowEnd;
     hInterpret.reset();
 
     oddLine = true;

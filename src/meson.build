@@ -26,8 +26,8 @@ cdmanager_sources = files('NBPage.cpp', 'Storage.cpp', 'SaveCeleb.cpp', 'Setting
                           'CDAppl.cpp')
 cdmanager_sources += db_backend == 'mysql' ? files('DBMySQL.cpp') : files('DBPostgres.cpp')
 if with_films
-    cdmanager_sources += files('FilmList.cpp', 'StorageFilm.cpp', 'IMDbProgress.cpp', 'ImportIMDb.cpp', 'PFilms.cpp',
-                               'FilmData.cpp')
+    cdmanager_sources += files('FilmList.cpp', 'StorageFilm.cpp', 'IMDbProgress.cpp', 'IMDbParser.cpp', 'ImportIMDb.cpp',
+                               'PFilms.cpp', 'FilmData.cpp')
 endif
 if with_records
     cdmanager_sources += files('RecordList.cpp', 'SongList.cpp', 'StorageRecord.cpp', 'PRecords.cpp')

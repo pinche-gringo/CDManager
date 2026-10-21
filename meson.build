@@ -152,6 +152,7 @@ subdir('po')
 subdir('data')
 subdir('doc')
 subdir('SQL')
+subdir('tests')
 
 summary({'Database backend': db_backend,
          'Films': with_films,

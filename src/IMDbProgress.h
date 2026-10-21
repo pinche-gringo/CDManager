@@ -16,20 +16,15 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <list>
-#include <map>
 #include <memory>
 #include <string>
 #include <string_view>
-#include <vector>
 
 #include <glibmm/ustring.h>
 
 #include <gtkmm/progressbar.h>
 
-namespace boost::json {
-class value;
-}
+#include "IMDbParser.h"
 
 /**Class reading data from IMDb while showing its status in itself (a
  * progress bar)
@@ -49,24 +44,11 @@ class value;
  */
 class IMDbProgress : public Gtk::ProgressBar {
   public:
-    enum match { POPULAR, EXACT, PARTIAL };
-    struct IMDbSearchEntry {
-        Glib::ustring url; ///< IMDb ID of the film (tt...)
-        Glib::ustring title;
-
-        IMDbSearchEntry(const Glib::ustring& url, const Glib::ustring& title) : url(url), title(title) {}
-    };
-    using IMDbSearchEntries = std::list<IMDbSearchEntry>;
-    using IMDbMatchData = std::map<match, IMDbSearchEntries>;
-
-    struct IMDbEntry {
-        Glib::ustring director;
-        Glib::ustring title;
-        Glib::ustring genre;
-        Glib::ustring summary;
-        std::string image;
-        std::vector<Glib::ustring> actors;
-    };
+    using match = IMDbParser::match;
+    using IMDbSearchEntry = IMDbParser::IMDbSearchEntry;
+    using IMDbSearchEntries = IMDbParser::IMDbSearchEntries;
+    using IMDbMatchData = IMDbParser::IMDbMatchData;
+    using IMDbEntry = IMDbParser::IMDbEntry;
 
     IMDbProgress();
     IMDbProgress(const Glib::ustring& film);
@@ -84,9 +66,6 @@ class IMDbProgress : public Gtk::ProgressBar {
     IMDbProgress(const IMDbProgress& other) = delete;
     const IMDbProgress& operator=(const IMDbProgress& other) = delete;
 
-    static std::string getIMDbID(const Glib::ustring& identifier);
-    static std::string getSmallPoster(const std::string& url);
-
   protected:
     sigc::connection conProgress;
 
@@ -102,7 +81,6 @@ class IMDbProgress : public Gtk::ProgressBar {
     void sendRequest();
     void received(const std::string& response);
     void readSearch(const boost::json::value& response);
-    [[nodiscard]] bool isExactMatch(const boost::json::value& film) const pre(data);
     void readFilm(const boost::json::value& response);
 
     std::unique_ptr<ConnectInfo> data;

@@ -10,6 +10,8 @@
 # container registry of the project. It's (re)built only if ci/Dockerfile changes
 # or the pipeline is started manually (Build -> Pipelines -> Run pipeline); do the
 # latter once to create the image initially.
+# libYGP/libXGP aren't part of the image; every job building the project installs
+# the release with the needed version (ygp_version in meson.build).
 
 stages:
   - image
@@ -28,6 +30,27 @@ default:
   - |
     VERSION=$(sed -n "s/^ *version: *'\([0-9][0-9.]*\)'.*/\1/p" meson.build | head -n 1)
   - echo "Project version $VERSION"
+
+.get_ygp_version: &get_ygp_version
+  - |
+    YGP_VERSION=$(sed -n "s/^ *ygp_version *= *'\([0-9][0-9.]*\)'.*/\1/p" meson.build | head -n 1)
+  - |
+    if [ -z "$YGP_VERSION" ]; then
+      echo "ygp_version not found in meson.build"
+      exit 1
+    fi
+  - echo "Needed libYGP version $YGP_VERSION"
+
+# Installs the RPMs of libYGP/libXGP from the GitHub release
+.install_ygp: &install_ygp
+  - *get_ygp_version
+  - YGP_URL="https://github.com/pinche-gringo/libYGP/releases/download/libYGP_V${YGP_VERSION}"
+  - |
+    dnf install -y --setopt=install_weak_deps=False \
+        "${YGP_URL}/libYGP-${YGP_VERSION}-1.fc45.x86_64.rpm" \
+        "${YGP_URL}/libYGP-devel-${YGP_VERSION}-1.fc45.x86_64.rpm" \
+        "${YGP_URL}/libXGP-${YGP_VERSION}-1.fc45.x86_64.rpm" \
+        "${YGP_URL}/libXGP-devel-${YGP_VERSION}-1.fc45.x86_64.rpm"
 
 # Builds the base image with the dependencies (with buildah, so no privileged
 # runner or docker-daemon is needed)
@@ -55,6 +78,7 @@ test:
   needs:
     - job: build_image
       optional: true
+  before_script: *install_ygp
   script:
     - meson setup build -Ddatabase=postgresql -Dchecks=0
     - meson compile -C build
@@ -74,6 +98,7 @@ test:
 dist:
   stage: release
   needs: [test]
+  before_script: *install_ygp
   script:
     - *get_version
     - |
@@ -115,11 +140,14 @@ rpm:
   needs:
     - job: dist
       artifacts: true
+  before_script: *install_ygp
   script:
     - TOPDIR="$CI_PROJECT_DIR/rpmbuild"
     - mkdir -p "$TOPDIR/SOURCES"
     - cp "build/meson-dist/$TARBALL" "$TOPDIR/SOURCES/"
-    - rpmbuild -ba --define "_topdir $TOPDIR" --define "cdmgr_version $VERSION" CDManager.spec
+    - |
+      rpmbuild -ba --define "_topdir $TOPDIR" --define "cdmgr_version $VERSION" \
+               --define "ygp_version $YGP_VERSION" CDManager.spec
     # Upload all packages; remember the names of the (non-debug) ones for the release
     - |
       : > rpm.env

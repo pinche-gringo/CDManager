@@ -2,6 +2,8 @@
 #
 # The version is passed from outside (it's maintained in meson.build only):
 #   rpmbuild -ba --define "cdmgr_version 1.2.00" CDManager.spec
+# Optionally the needed version of libYGP/libXGP (ygp_version in meson.build)
+# can be passed as well with --define "ygp_version 0.9.70".
 # with CDManager-<version>.tar.xz (from "meson dist") in the SOURCES directory.
 
 %{!?cdmgr_version: %{error:Define cdmgr_version (e.g. rpmbuild --define "cdmgr_version 1.2.00")}}
@@ -23,8 +25,8 @@ BuildRequires:  boost-devel
 BuildRequires:  gtkmm4.0-devel
 BuildRequires:  libsoup3-devel
 BuildRequires:  libpq-devel
-BuildRequires:  libYGP-devel >= 0.9.42
-BuildRequires:  libXGP-devel >= 0.9.50
+BuildRequires:  libYGP-devel%{?ygp_version: >= %{ygp_version}}
+BuildRequires:  libXGP-devel%{?ygp_version: >= %{ygp_version}}
 
 %description
 CDManager is a GTK 4 application to manage a collection of records

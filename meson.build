@@ -42,11 +42,15 @@ endif
 #
 # Dependencies
 #
+# The needed version of libYGP/libXGP; the CI-jobs (.gitlab-ci.yml,
+# .github/workflows/release.yml) install the release with this version
+ygp_version = '0.9.70'
+
 glibmm_dep = dependency('glibmm-2.68', version: '>= 2.68.0')
-ygp_dep = dependency('YGP', version: '>= 0.9.42')
+ygp_dep = dependency('YGP', version: '>= ' + ygp_version)
 gtkmm_dep = dependency('gtkmm-4.0', version: '>= 4.0.0')
 gthread_dep = dependency('gthread-2.0', version: '> 2.2.0')
-xgp_dep = dependency('XGP', version: '>= 0.9.50')
+xgp_dep = dependency('XGP', version: '>= ' + ygp_version)
 boost_dep = dependency('boost', modules: ['json'])
 soup_dep = dependency('libsoup-3.0', version: '>= 3.0.0')
 if not cxx.has_header('sys/shm.h')

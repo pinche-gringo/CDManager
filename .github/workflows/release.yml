@@ -19,8 +19,6 @@ permissions:
 
 env:
   PACKAGE_NAME: CDManager
-  # The version of libYGP/libXGP; its RPMs are taken from the GitHub release
-  YGP_VERSION: 0.9.62
 
 jobs:
   release:
@@ -33,16 +31,29 @@ jobs:
       # git must be available before the checkout, else no repository is created
       - name: Install dependencies
         run: |
-          YGP_URL="https://github.com/pinche-gringo/libYGP/releases/download/libYGP_V${YGP_VERSION}"
           dnf install -y --setopt=install_weak_deps=False \
               gcc gcc-c++ meson ninja-build git gettext gettext-devel rpm-build \
-              boost-devel gtkmm4.0-devel libsoup3-devel libpq-devel gh \
+              boost-devel gtkmm4.0-devel libsoup3-devel libpq-devel gh
+
+      - uses: actions/checkout@v5
+
+      # The needed version of libYGP/libXGP is ygp_version in meson.build; its
+      # RPMs are taken from the GitHub release
+      - name: Install libYGP
+        run: |
+          YGP_VERSION=$(sed -n "s/^ *ygp_version *= *'\([0-9][0-9.]*\)'.*/\1/p" meson.build | head -n 1)
+          if [ -z "$YGP_VERSION" ]; then
+            echo "ygp_version not found in meson.build"
+            exit 1
+          fi
+          echo "Needed libYGP version $YGP_VERSION"
+          echo "YGP_VERSION=$YGP_VERSION" >> "$GITHUB_ENV"
+          YGP_URL="https://github.com/pinche-gringo/libYGP/releases/download/libYGP_V${YGP_VERSION}"
+          dnf install -y --setopt=install_weak_deps=False \
               "${YGP_URL}/libYGP-${YGP_VERSION}-1.fc45.x86_64.rpm" \
               "${YGP_URL}/libYGP-devel-${YGP_VERSION}-1.fc45.x86_64.rpm" \
               "${YGP_URL}/libXGP-${YGP_VERSION}-1.fc45.x86_64.rpm" \
               "${YGP_URL}/libXGP-devel-${YGP_VERSION}-1.fc45.x86_64.rpm"
-
-      - uses: actions/checkout@v5
 
       - name: Check version
         run: |
@@ -73,7 +84,8 @@ jobs:
           TOPDIR="$GITHUB_WORKSPACE/rpmbuild"
           mkdir -p "$TOPDIR/SOURCES"
           cp "build/meson-dist/$TARBALL" "$TOPDIR/SOURCES/"
-          rpmbuild -ba --define "_topdir $TOPDIR" --define "cdmgr_version $VERSION" CDManager.spec
+          rpmbuild -ba --define "_topdir $TOPDIR" --define "cdmgr_version $VERSION" \
+                   --define "ygp_version $YGP_VERSION" CDManager.spec
 
       # Release notes: The section of this version in NEWS; else the tag message
       - name: Create release notes

@@ -4,7 +4,7 @@
 FROM fedora:45
 
 # The version of libYGP/libXGP; its RPMs are taken from the GitHub release
-ARG YGP_VERSION=0.9.62
+ARG YGP_VERSION=0.9.70
 ARG YGP_URL=https://github.com/pinche-gringo/libYGP/releases/download/libYGP_V${YGP_VERSION}
 
 RUN dnf install -y --setopt=install_weak_deps=False \

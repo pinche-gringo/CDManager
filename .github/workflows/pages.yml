@@ -1,0 +1,69 @@
+# Publishes the documentation (doc/CDManager.html.*) to GitHub Pages
+#
+# The pages are available as
+#   https://pinche-gringo.github.io/CDManager/        (english)
+#   https://pinche-gringo.github.io/CDManager/de.html (german)
+#   https://pinche-gringo.github.io/CDManager/es.html (spanish)
+#
+# Note: In the repository settings (Settings → Pages) "GitHub Actions" must be
+# selected as source.
+
+name: Documentation
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'doc/CDManager.html.*'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one deployment at a time; don't cancel a running one
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # The documentation is ISO-8859-1 encoded without charset-declaration,
+      # while GitHub Pages serves it as UTF-8: Convert and declare the charset
+      - name: Create pages
+        run: |
+          mkdir -p site
+          for lang in en de es; do
+            case "$lang" in
+              en) target=index.html ;;
+              *)  target="$lang.html" ;;
+            esac
+            iconv -f ISO-8859-1 -t UTF-8 "doc/CDManager.html.$lang" \
+              | sed '0,/<head>/s//<head>\n    <meta charset="utf-8">/' > "site/$target"
+          done
+          touch site/.nojekyll
+          ls -l site
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

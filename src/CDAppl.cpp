@@ -181,11 +181,10 @@ int CDAppl::perform(int, const char**) {
 /// \returns const char*: Pointer to a short description
 //-----------------------------------------------------------------------------
 const char* CDAppl::description() const {
-    static const std::string version(std::format("{} V{} - {} {} - {}\n\n{}", PACKAGE, VERSION, _("Compiled on"), __DATE__,
-                                                 __TIME__,
-                                                 _("Copyright (C) 2004 - 2011 Markus Schwab; e-mail: g17m0@users.sourceforge.net"
-                                                   "\nDistributed under the terms of the GNU General "
-                                                   "Public License")));
+    static const std::string version(std::format("{} V{} - {} {} - {}\n\n{}; e-mail: {}\n{}", PACKAGE, VERSION, _("Compiled on"),
+                                                 __DATE__, __TIME__, _("Copyright (C) 2004 - 2026 Markus Schwab"),
+                                                 PACKAGE_BUGREPORT,
+                                                 _("Distributed under the terms of the GNU General Public License")));
     return version.c_str();
 }
 

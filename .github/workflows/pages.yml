@@ -12,8 +12,6 @@ name: Documentation
 
 on:
   push:
-    branches:
-      - master
     paths:
       - 'doc/CDManager.html.*'
       - 'meson.build'

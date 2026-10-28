@@ -1,6 +1,6 @@
 <!-- -*-HTML-*- -->
 <!--
-   Copyright (C) 2004 - 2006, 2010, 2011 Markus Schwab (g17m0@users.sourceforge.net)
+   Copyright (C) 2004 - 2026 Markus Schwab (@EMAIL@)
 
    This file is part of CDManager.
 
@@ -23,6 +23,7 @@
 
 <html>
   <head>
+    <meta charset="utf-8">
     <title>CDManager - utilidad para administrar discos y pel&iacute;culas</title>
     <meta name="description" content="Documentaci&oacute;n del CD-Manager">
     <meta name="keywords" content="documentacion, documentaci&oacute;n, docu, CD, film,
@@ -30,7 +31,7 @@
 
     <meta name="DC.Creator" content="Markus Schwab">
     <meta name="DC.Date" content="2004-12-05">
-    <meta name="DC.Rights" content="Copyright (C) 2004 - 2006, 2010; distributed under the GNU Free Documentation License">
+    <meta name="DC.Rights" content="Copyright (C) 2004 - 2026; distributed under the GNU Free Documentation License">
   </head>
 
   <body>
@@ -180,7 +181,7 @@
       Schwab.</p>
 
     <h2>Modo de empleo</h2>
-    <p>Principalmente se ejecuta el programa sin ninguna opción:</p>
+    <p>Principalmente se ejecuta el programa sin ninguna opciÃ³n:</p>
 
     <pre>   CDManager</pre>
 
@@ -197,7 +198,7 @@
 
     <hr noshade="noshade" size="2">
     <address>
-      <a href="mailto:g17m0@lycos.com">Markus Schwab (g17m0@lycos.com)</a><br>
+      <a href="mailto:@EMAIL@">Markus Schwab (@EMAIL@)</a><br>
     </address>
   </body>
 </html>

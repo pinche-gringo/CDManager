@@ -9,6 +9,8 @@ fs = import('fs')
 
 version = meson.project_version()
 release = '.'.join([version.split('.')[0], version.split('.')[1]])  # 1.2.00 -> 1.2
+# Contact address; also used in the documentation (.github/workflows/pages.yml)
+email = 'pelotudo.gringo@gmail.com'
 
 prefix = get_option('prefix')
 datadir = get_option('datadir')
@@ -132,7 +134,7 @@ conf = configuration_data()
 conf.set_quoted('PACKAGE', meson.project_name())
 conf.set_quoted('PACKAGE_NAME', meson.project_name())
 conf.set_quoted('PACKAGE_VERSION', version)
-conf.set_quoted('PACKAGE_BUGREPORT', 'g17m0@users.sourceforge.net')
+conf.set_quoted('PACKAGE_BUGREPORT', email)
 conf.set_quoted('VERSION', version)
 conf.set_quoted('PRG_RELEASE', release)
 conf.set_quoted('LOCALEDIR', prefix / localedir)

@@ -673,10 +673,9 @@ int CDWriter::perform(int argc, const char** argv) {
 //-----------------------------------------------------------------------------
 const char* CDWriter::description() const {
     static const std::string version(
-        std::format("{} V" VERSION " - {} " __DATE__ " - " __TIME__ "\n\n{}", name(), _("Compiled on"),
-                    _("Copyright (C) 2005 - 2007, 2009, 2011 Markus Schwab; e-mail: g17m0@users.sourceforge.net"
-                      "\nDistributed under the terms of the GNU General "
-                      "Public License")));
+        std::format("{} V" VERSION " - {} " __DATE__ " - " __TIME__ "\n\n{}; e-mail: " PACKAGE_BUGREPORT "\n{}", name(),
+                    _("Compiled on"), _("Copyright (C) 2005 - 2026 Markus Schwab"),
+                    _("Distributed under the terms of the GNU General Public License")));
     return version.c_str();
 }
 
@@ -710,6 +709,7 @@ int CDWriter::createFile(const std::string& filename, const char* lang, std::ofs
 ///   - @TIMESTAMPE@ with the current date/time
 ///   - @DATE@ with current date
 ///   - @YEAR@ with the current year
+///   - @EMAIL@ with the contact address
 /// \param file: File to read from
 /// \param lang: ID of language
 /// \param target: Variable receiving the input
@@ -747,6 +747,9 @@ bool CDWriter::readHeaderFile(const char* file, const char* lang, std::string& t
 
     while ((i = target.find("@YEAR@")) != std::string::npos)
         target.replace(i, 6, YGP::ADate::today().toString("%Y"));
+
+    while ((i = target.find("@EMAIL@")) != std::string::npos)
+        target.replace(i, 7, PACKAGE_BUGREPORT);
     return true;
 }
 

@@ -4,5 +4,5 @@ if nls
                  languages: linguas,
                  args: ['--keyword=_', '--keyword=N_',
                         '--copyright-holder=Markus Schwab',
-                        '--msgid-bugs-address=g17m0@lycos.com'])
+                        '--msgid-bugs-address=' + email])
 endif

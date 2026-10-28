@@ -1,6 +1,6 @@
 <!-- -*-HTML-*- -->
 <!--
-   Copyright (C) 2004 - 2006, 2010 Markus Schwab (g17m0@users.sourceforge.net)
+   Copyright (C) 2004 - 2026 Markus Schwab (@EMAIL@)
 
    This file is part of CDManager.
 
@@ -23,6 +23,7 @@
 
 <html>
   <head>
+    <meta charset="utf-8">
     <title>CDManager - Utility zum Verwalten von Platten und Filmen</title>
     <meta name="description" content="Dokumentation des CD-Manager">
     <meta name="keywords" content="Dokumentation, Doku, CD, film,
@@ -30,7 +31,7 @@
 
     <meta name="DC.Creator" content="Markus Schwab">
     <meta name="DC.Date" content="2004-12-21">
-    <meta name="DC.Rights" content="Copyright (C) 2004 - 2006, 2010; distributed under the GNU Free Documentation License">
+    <meta name="DC.Rights" content="Copyright (C) 2004 - 2026; distributed under the GNU Free Documentation License">
   </head>
 
   <body>
@@ -68,14 +69,14 @@
 
       <p>Der Vertrieb dieses Programms erfolgt in der Hoffnung,
         n&uuml;tzlich zu sein, aber OHNE JEGLICHE GEW&Auml;HRLEISTUNG - sogar
-        ohne die implizite Gewährleistung der MARKTREIFE oder der
+        ohne die implizite GewÃ¤hrleistung der MARKTREIFE oder der
         EIGNUNG F&Uuml;R EINEN BESTIMMTEN ZWECK.  Details finden Sie in der
         GNU General Public License.</p></em></blockquote>
 
     <h2><a name="Mainwindow"></a>Das Hauptfenster</h2>
     <p>Das Hauptfenster enth&auml;lt ein Notebook mit (bis zu) drei
       Reitern; eines f&uuml;r die Platten, eines f&uuml;r die Filme
-      und das dritte für die Schauspieler.</p>
+      und das dritte fÃ¼r die Schauspieler.</p>
 
     <h3>Platten-Reiter</h3>
     <p>Diese Seite enth&auml;lt zwei Listen; die linke zeigt die gespeicherten
@@ -212,7 +213,7 @@
 
     <hr noshade="noshade" size="2">
     <address>
-      <a href="mailto:g17m0@lycos.com">Markus Schwab (g17m0@users.sourceforge.net)</a><br>
+      <a href="mailto:@EMAIL@">Markus Schwab (@EMAIL@)</a><br>
     </address>
   </body>
 </html>

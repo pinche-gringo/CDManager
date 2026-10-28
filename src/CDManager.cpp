@@ -278,9 +278,9 @@ void CDManager::editPreferences() { Settings::create(*this, opt); }
 /// Shows the about box for the program
 //-----------------------------------------------------------------------------
 void CDManager::showAboutbox() {
-    const Glib::ustring ver(Glib::ustring::compose(_("Copyright (C) 2004 - 2011 Markus Schwab"
-                                                     "\ne-mail: <g17m0@lusers.sourceforge.net>\n\nCompiled on %1 at %2"),
-                                                   __DATE__, __TIME__));
+    const Glib::ustring ver(Glib::ustring::compose(_("Copyright (C) 2004 - 2026 Markus Schwab"
+                                                     "\ne-mail: <%3>\n\nCompiled on %1 at %2"),
+                                                   __DATE__, __TIME__, PACKAGE_BUGREPORT));
 
     XGP::XAbout* about(XGP::XAbout::create(ver, PACKAGE " V" VERSION));
     about->setIconProgram(picProgram, sizeof(picProgram));

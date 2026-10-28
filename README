@@ -1,8 +1,8 @@
                        CDManager
 
 Utility to manage CDs/DVDs (audio and video)
-Copyright (C) 2004 - 2019 Markus Schwab <g17m0@users.sourceforge.net>
----------------------------------------------------------------------
+Copyright (C) 2004 - 2026 Markus Schwab <pelotudo.gringo@gmail.com>
+-------------------------------------------------------------------
 
 The package is distributed under the GNU General Public License; in the hope
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
@@ -19,6 +19,18 @@ program is likely its ability to store films in different languages
 simultanously (e.g. the film "Lock, Stock & two smoking barrels" with its
 german name "Bube, Dame, König, Gras" and its spanish name "Juegos, Trampas
 & dos armas").
+
+
+Documentation
+-------------
+
+  The documentation is available online at
+
+    https://pinche-gringo.github.io/CDManager/         (english)
+    https://pinche-gringo.github.io/CDManager/de.html  (german)
+    https://pinche-gringo.github.io/CDManager/es.html  (spanish)
+
+  It is also installed with the program (see the doc/ directory).
 
 
 How to build the CDManager

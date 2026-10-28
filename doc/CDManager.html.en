@@ -35,6 +35,7 @@
   </head>
 
   <body>
+    <p align="right"><a href="@DOC_DE@" hreflang="de" lang="de">Deutsch</a> | <a href="@DOC_ES@" hreflang="es" lang="es">Espa&ntilde;ol</a></p>
     <h1 align="center">General information about the CD-Manager</h1>
     <table width="100%">
       <tr><td align="center" width="33%"><a href="#Intro">Introduction</a></td>

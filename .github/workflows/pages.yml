@@ -34,7 +34,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # @EMAIL@ in the documentation is substituted with email in meson.build
+      # @EMAIL@ in the documentation is substituted with email in meson.build,
+      # the links to the other languages (@DOC_<LANG>@) with their page names
       - name: Create pages
         run: |
           EMAIL=$(sed -n "s/^ *email *= *'\([^']*\)'.*/\1/p" meson.build | head -n 1)
@@ -48,7 +49,9 @@ jobs:
               en) target=index.html ;;
               *)  target="$lang.html" ;;
             esac
-            sed "s/@EMAIL@/$EMAIL/g" "doc/CDManager.html.$lang" > "site/$target"
+            sed -e "s/@EMAIL@/$EMAIL/g" -e 's/@DOC_EN@/index.html/g' \
+                -e 's/@DOC_DE@/de.html/g' -e 's/@DOC_ES@/es.html/g' \
+                "doc/CDManager.html.$lang" > "site/$target"
           done
           touch site/.nojekyll
           ls -l site

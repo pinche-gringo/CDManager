@@ -356,7 +356,7 @@ void CDManager::loadDatabase() {
     // Check if page is valid (at init the current page can be -1)
     if (const auto iPage(static_cast<unsigned int>(nb.get_current_page())); iPage < pages.size()) {
         status.pop();
-        status.push(_("Reading database ..."));
+        status.push(Glib::ustring::compose(_("Reading database (%1) ..."), std::string(Storage::backendName())));
 
         NBPage* page(pages[iPage].get());
         contract_assert(page);
@@ -434,7 +434,11 @@ bool CDManager::login(const Glib::ustring& user, const Glib::ustring& pwd) {
     TRACE9("CDManager::login (const Glib::ustring&, const Glib::ustring&) - " << user << '/' << pwd);
 
     try {
-        Storage::login(DBNAME, user.c_str(), pwd.c_str());
+        Storage::login(opt.getBackend(), ConnectParams{.database = opt.getDatabase(),
+                                                       .host = opt.getHost(),
+                                                       .port = opt.getPort(),
+                                                       .user = user,
+                                                       .password = pwd});
     }
     catch (std::exception& err) {
         showError(Glib::ustring::compose(_("Can't connect to database!\n\nReason: %1"), err.what()), _("Login error"));
@@ -481,7 +485,13 @@ void CDManager::savePreferences() {
         TRACE5("CDManager::savePreferences () - " << opt.pINIFile);
         std::ofstream inifile(opt.pINIFile);
         if (inifile) {
-            inifile << "[Database]\nUser=" << opt.getUser() << "\nPassword=" << opt.getPassword() << "\n\n";
+            inifile << "[Database]\nUser=" << opt.getUser() << "\nPassword=" << opt.getPassword()
+                    << "\nDatabase=" << opt.getDatabase() << "\nBackend=" << opt.getBackend() << '\n';
+            if (opt.getHost().size())
+                inifile << "Host=" << opt.getHost() << '\n';
+            if (opt.getPort())
+                inifile << "Port=" << opt.getPort() << '\n';
+            inifile << '\n';
 
             YGP::INIFile::write(inifile, "Export", opt);
 

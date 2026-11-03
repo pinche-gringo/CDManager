@@ -7,9 +7,13 @@ The following packages are needed
   - Meson (>= 1.4) and Ninja. Available at https://mesonbuild.com/
   - Boost (asio)
   - Gtkmm-4.0 (which itself needs GTK-4). Available at http://www.gtkmm.org/
-  - The developer files of one of the supported databases:
-    - MySQL (libmysqlclient). Available via http://www.mysql.com/
+  - The developer files of at least one of the supported databases:
+    - MySQL (libmysqlclient) or MariaDB (Connector/C). Available via
+      http://www.mysql.com/ or https://mariadb.org/
     - PostgreSQL (libpq). Available via https://www.postgresql.org/
+    Every database found is built as module (installed in
+    <libdir>/CDManager); the program uses the one of the database server
+    it finds at runtime.
   - My YGP library; also availabe as a Sourceforge project
     (http://libymp.sourceforge.net/)
   - GNU gettext (for the translations)
@@ -40,7 +44,10 @@ Common options
   -Dactors=false                # To don't store actor-information
   -Dfilms=false                 # To not handle a certain type of media
   -Drecords=false
-  -Ddatabase=<db>               # mysql, postgresql or auto (default)
+  -Dmysql=disabled              # Don't build the backend for MySQL/MariaDB
+  -Dpostgresql=disabled         # Don't build the backend for PostgreSQL
+                                # (enabled: Fail if the database isn't found;
+                                # default auto: Build it, if found)
   -Dchecks=<level>              # Adds Checks and enforces the C++26 contracts
   -Dtrace=<level>               # Sets the tracelevel
   -Dtests=disabled              # Don't build the unit tests (they need Boost.Test)
@@ -56,7 +63,10 @@ Common targets
   meson test -C build                         # Runs the unit tests
   meson compile -C build CDManager-pot        # Updates po/CDManager.pot
   meson compile -C build CDManager-update-po  # Merges the .pot into the .po-files
+  meson devenv -C build ./src/CDManager       # Runs the program uninstalled
   meson compile -C build createDB             # Creates the database
+                                              # (createDB-mysql, if built
+                                              # for both databases)
   meson compile -C build populateDB           # Fills the database with sample data
   meson dist -C build                         # Creates a source archive
   ninja -C build uninstall                    # Uninstalls (after you found out

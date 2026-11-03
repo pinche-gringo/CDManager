@@ -27,7 +27,7 @@ class DBMySQL : public Database {
     DBMySQL() = default;
     ~DBMySQL() override;
 
-    void connect(const char* db, const char* user, const char* pwd) override;
+    void connect(const ConnectParams& params) override;
     void close() override;
     [[nodiscard]] bool connected() const override;
 

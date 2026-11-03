@@ -29,7 +29,7 @@ namespace {
 /// Database recording the executed queries and returning prepared results
 class FakeDatabase : public Database {
   public:
-    void connect(const char*, const char*, const char*) override { isConnected = true; }
+    void connect(const ConnectParams&) override { isConnected = true; }
     void close() override { isConnected = false; }
     [[nodiscard]] bool connected() const override { return isConnected; }
 

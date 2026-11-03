@@ -1,7 +1,7 @@
 # Helper targets to set up the database; e.g.: meson compile -C build createDB
 sql_dir = meson.current_source_dir()
 
-if db_backend == 'postgresql'
+if 'postgresql' in db_backends
     run_target('createDB',
                command: ['sh', '-c', 'echo Creating database ... && createdb -E UTF8 cdmedia && psql -d cdmedia -f "$0"',
                          sql_dir / 'createDB-pg.sql'])
@@ -11,10 +11,13 @@ if db_backend == 'postgresql'
     run_target('syncSequences',
                command: ['sh', '-c', 'echo Adapting sequences ... && psql -U cdmgr -d cdmedia -f "$0"',
                          sql_dir / 'syncSequences-pg.sql'])
-else
-    run_target('createDB',
+endif
+if 'mysql' in db_backends
+    # With both backends the targets of PostgreSQL keep the plain names
+    suffix = 'postgresql' in db_backends ? '-mysql' : ''
+    run_target('createDB' + suffix,
                command: ['sh', '-c', 'echo Creating database ... && mysql -u root -p -f < "$0"', sql_dir / 'createDB.sql'])
-    run_target('populateDB',
+    run_target('populateDB' + suffix,
                command: ['sh', '-c', 'echo Populating database ... && mysql -u cdmgr -p < "$0"', sql_dir / 'populateDB.sql'])
 endif
 

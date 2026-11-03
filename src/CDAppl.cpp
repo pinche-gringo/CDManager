@@ -24,8 +24,10 @@
 
 #include <cdmgr-cfg.h>
 
+#include <charconv>
 #include <format>
 #include <print>
+#include <string_view>
 
 #include <glibmm/convert.h>
 
@@ -37,11 +39,13 @@
 #    include "Film.h"
 #endif
 #include "CDManager.h"
+#include "DBFactory.h"
 
 #include "CDAppl.h"
 
-const YGP::IVIOApplication::longOptions CDAppl::lo[] = {{IVIOAPPL_HELP_OPTION}, {"user", 'u'},    {"password", 'p'},
-                                                        {"file", 'f'},          {"version", 'V'}, {nullptr, '\0'}};
+const YGP::IVIOApplication::longOptions CDAppl::lo[] = {
+    {IVIOAPPL_HELP_OPTION}, {"user", 'u'},    {"password", 'p'}, {"database", 'd'}, {"host", 'H'},
+    {"port", 'P'},          {"backend", 'b'}, {"file", 'f'},     {"version", 'V'},  {nullptr, '\0'}};
 
 //-----------------------------------------------------------------------------
 /// Displays the help
@@ -49,12 +53,20 @@ const YGP::IVIOApplication::longOptions CDAppl::lo[] = {{IVIOAPPL_HELP_OPTION}, 
 void CDAppl::showHelp() const {
     std::cout << _("Utility to manage CDs\n\nUsage: ") << PACKAGE << _(" [OPTIONS]\n\n") << "  -u, --user ....... "
               << _("[USER] User for database login\n") << "  -p, --password ... " << _("[PWD] Password for database login\n")
-              << "  -f, --file ....... " << _("[FILE] Use file as INI file\n") << "  -V, --version .... "
-              << _("Output version information and exit\n") << "  -h, -?, --help ... " << _("Displays this help and exit\n\n")
+              << "  -d, --database ... " << _("[NAME] Name of the database (default: CDMedia)\n") << "  -H, --host ....... "
+              << _("[HOST] Host or socket (path) of the database server (default: local host)\n") << "  -P, --port ....... "
+              << _("[PORT] Port of the database server (default: the one of the backend)\n") << "  -b, --backend .... "
+              << _("[DB] Database backend: auto (default), mysql or postgresql\n") << "  -f, --file ....... "
+              << _("[FILE] Use file as INI file\n") << "  -V, --version .... " << _("Output version information and exit\n")
+              << "  -h, -?, --help ... " << _("Displays this help and exit\n\n")
               << _("The INI file can have the following entries:\n\n")
               << ("  [Database]\n"
                   "  User=user\n"
-                  "  Password=pwd\n\n"
+                  "  Password=pwd\n"
+                  "  Database=CDMedia\n"
+                  "  Host=localhost\n"
+                  "  Port=5432\n"
+                  "  Backend=auto\n\n"
                   "  [Export]\n"
                   "  FilmHead=Films.head\n"
                   "  FilmFoot=Films.foot\n"
@@ -71,8 +83,7 @@ void CDAppl::showHelp() const {
 //-----------------------------------------------------------------------------
 /// Checks the validity of the passed option
 /// \param option: Actual option
-/// \returns \c bool: Status; false: Invalid option/option-value Require :
-///     option not '\0´'
+/// \returns \c bool: Status; false: Invalid option/option-value Require: option not '\0'
 //-----------------------------------------------------------------------------
 bool CDAppl::handleOption(const char option) {
     contract_assert(option != '\0');
@@ -90,6 +101,34 @@ bool CDAppl::handleOption(const char option) {
             options.password = getOptionValue();
         else
             std::cerr << PACKAGE << _("-warning: No password specified! Ignoring option `p'\n");
+        break;
+
+    case 'd':
+        if (checkOptionValue())
+            options.database = getOptionValue();
+        else
+            std::cerr << PACKAGE << _("-warning: No database specified! Ignoring option `d'\n");
+        break;
+
+    case 'H':
+        if (checkOptionValue())
+            options.host = getOptionValue();
+        else
+            std::cerr << PACKAGE << _("-warning: No host specified! Ignoring option `H'\n");
+        break;
+
+    case 'P': {
+        const char* value(checkOptionValue() ? getOptionValue() : nullptr);
+        if (!value || !parsePort(value, options.port))
+            std::cerr << PACKAGE << _("-warning: No valid port specified! Ignoring option `P'\n");
+        break;
+    }
+
+    case 'b':
+        if (checkOptionValue() && DBFactory::isValid(checkOptionValue()))
+            options.backend = getOptionValue();
+        else
+            std::cerr << PACKAGE << _("-warning: No valid backend (auto, mysql or postgresql) specified! Ignoring option `b'\n");
         break;
 
     case 'f': {
@@ -114,6 +153,21 @@ bool CDAppl::handleOption(const char option) {
 }
 
 //-----------------------------------------------------------------------------
+/// Converts the passed text to a port number
+/// \param value Text to convert
+/// \param port Set to the port, if the value is valid
+/// \returns bool True, if the value is a valid port
+//-----------------------------------------------------------------------------
+bool CDAppl::parsePort(std::string_view value, unsigned int& port) {
+    unsigned int number(0);
+    const auto [end, error](std::from_chars(value.data(), value.data() + value.size(), number));
+    if ((error != std::errc()) || (end != value.data() + value.size()) || !number || (number > MAX_PORT))
+        return false;
+    port = number;
+    return true;
+}
+
+//-----------------------------------------------------------------------------
 /// Reads the options of the INI-file
 /// \param pFile: Pointer to filename
 /// \param Requieres : pFile not NULL
@@ -125,6 +179,10 @@ void CDAppl::readINIFile(const char* pFile) {
         INISECTION(Database);
         INIATTR2(Database, std::string, options.user, User);
         INIATTR2(Database, std::string, options.password, Password);
+        INIATTR2(Database, std::string, options.database, Database);
+        INIATTR2(Database, std::string, options.host, Host);
+        INIATTR2(Database, unsigned int, options.port, Port);
+        INIATTR2(Database, std::string, options.backend, Backend);
 
         // Export-otions
         INIOBJ(options, Export);
@@ -152,6 +210,16 @@ void CDAppl::readINIFile(const char* pFile) {
 /// \returns \c int: Status
 //-----------------------------------------------------------------------------
 int CDAppl::perform(int, const char**) {
+    // Check the values of the INI file (the command line ones are already checked)
+    if (!DBFactory::isValid(options.backend)) {
+        std::cerr << PACKAGE << _("-warning: Invalid database backend! Detecting it automatically ...\n");
+        options.backend = DBFactory::AUTO;
+    }
+    if (options.port > MAX_PORT) {
+        std::cerr << PACKAGE << _("-warning: Invalid port! Using the default ...\n");
+        options.port = 0;
+    }
+
     try {
         if (!options.password.empty())
             options.password = Glib::locale_to_utf8(options.password);

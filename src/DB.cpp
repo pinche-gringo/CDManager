@@ -33,27 +33,7 @@
 
 #include "DB.h"
 
-#if defined HAVE_LIBPQ
-#    include "DBPostgres.h"
-#elif defined HAVE_LIBMYSQL
-#    include "DBMySQL.h"
-#else
-#    error No supported database detected!
-#endif
-
 using namespace std::string_view_literals;
-
-//-----------------------------------------------------------------------------
-/// Creates the database-object for the database configured at compile-time
-/// \returns Database* Newly created object; free it with delete
-//-----------------------------------------------------------------------------
-Database* Database::create() {
-#if defined HAVE_LIBPQ
-    return new DBPostgres;
-#else
-    return new DBMySQL;
-#endif
-}
 
 //-----------------------------------------------------------------------------
 /// Executes the passed query; its result can be accessed afterwards

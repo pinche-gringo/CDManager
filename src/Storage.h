@@ -31,9 +31,11 @@
  */
 class Storage {
   public:
-    static void login(const char* db, const char* user, const char* pwd);
+    static void login(const std::string& backend, const ConnectParams& params);
     static void logout();
     [[nodiscard]] static bool connected();
+    /// Returns the name of the backend of the database (to show to the user)
+    [[nodiscard]] static std::string_view backendName() { return backend; }
 
     //{ \name Handling of special words
     static void loadSpecialWords();
@@ -83,6 +85,7 @@ class Storage {
     static Database::Values celebrityValues(const HCelebrity celeb);
 
     static std::unique_ptr<Database> database;
+    static std::string_view backend;
 };
 
 #endif

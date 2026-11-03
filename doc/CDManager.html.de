@@ -155,6 +155,14 @@
       kann man die Benutzer-ID und (optional) ein Pa&szlig;wort
       eingegeben. Diese Information wird zum Verbinden mit der
       Datenbank verwendet.</p>
+    <p>Die Datenbank selbst wird mit den Kommandozeilen-Optionen
+      <tt>--database</tt>, <tt>--host</tt> (ein Rechnername oder der
+      Pfad des Sockets), <tt>--port</tt> und <tt>--backend</tt>
+      (<tt>mysql</tt> oder <tt>postgresql</tt>) oder den entsprechenden
+      Eintr&auml;gen <tt>Database</tt>, <tt>Host</tt>, <tt>Port</tt> und
+      <tt>Backend</tt> im Abschnitt <tt>[Database]</tt> der INI-Datei
+      festgelegt. Ohne Backend (oder mit <tt>auto</tt>) wird jedes
+      installierte probiert, bis ein Server die Verbindung annimmt.</p>
 
     <h3>Import von Musik</h3>
     <p>Dieser Dialog wird mittels <tt>Importiere Kommentare von

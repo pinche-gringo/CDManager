@@ -80,7 +80,7 @@ test:
       optional: true
   before_script: *install_ygp
   script:
-    - meson setup build -Ddatabase=postgresql -Dchecks=0
+    - meson setup build -Dmysql=enabled -Dpostgresql=enabled -Dchecks=0
     - meson compile -C build
     - meson test -C build --print-errorlogs
   artifacts:
@@ -106,7 +106,7 @@ dist:
         echo "Tag $CI_COMMIT_TAG doesn't match the project version $VERSION in meson.build"
         exit 1
       fi
-    - meson setup build -Ddatabase=postgresql
+    - meson setup build
     - meson dist -C build --no-tests --formats xztar
     - TARBALL="${PACKAGE_NAME}-${VERSION}.tar.xz"
     - |
@@ -193,6 +193,12 @@ release:
           link_type: package
         - name: $RPM_CDMANAGER
           url: '${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${PACKAGE_NAME}/${VERSION}/${RPM_CDMANAGER}'
+          link_type: package
+        - name: $RPM_CDMANAGER_POSTGRESQL
+          url: '${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${PACKAGE_NAME}/${VERSION}/${RPM_CDMANAGER_POSTGRESQL}'
+          link_type: package
+        - name: $RPM_CDMANAGER_MYSQL
+          url: '${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${PACKAGE_NAME}/${VERSION}/${RPM_CDMANAGER_MYSQL}'
           link_type: package
         - name: $SRPM
           url: '${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${PACKAGE_NAME}/${VERSION}/${SRPM}'

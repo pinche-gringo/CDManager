@@ -1,3 +1,10 @@
+Overview of changes in version 1.2.2:
+
+  - The database backends are modules; the backend is detected at runtime
+  - The database (name, host or socket, port and backend) can be set on the
+    command line and in the INI-file
+
+
 Overview of changes in version 1.2.0:
 
   - Compiles with GTK+-4

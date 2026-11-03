@@ -39,6 +39,10 @@ class Options : public YGP::Entity {
 
     [[nodiscard]] const std::string& getUser() const { return user; }
     [[nodiscard]] const std::string& getPassword() const { return password; }
+    [[nodiscard]] const std::string& getDatabase() const { return database; }
+    [[nodiscard]] const std::string& getHost() const { return host; }
+    [[nodiscard]] unsigned int getPort() const { return port; }
+    [[nodiscard]] const std::string& getBackend() const { return backend; }
 
     void setMHeader(const std::string& value) { mHeader = value; }
     void setMFooter(const std::string& value) { mFooter = value; }
@@ -60,6 +64,10 @@ class Options : public YGP::Entity {
 
     std::string user;
     std::string password;
+    std::string database{"CDMedia"};
+    std::string host;            ///< Host or socket of the database server; empty: local host
+    unsigned int port{0};        ///< Port of the database server; 0: default of the backend
+    std::string backend{"auto"}; ///< Database backend (see DBFactory)
 };
 
 #endif

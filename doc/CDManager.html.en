@@ -142,6 +142,14 @@
       the <tt>CDs</tt> menu. It is a small window allowing to enter an
       user-id an (optionally) a password. This information is used to
       connect to the database.</p>
+    <p>The database itself is specified with the command line options
+      <tt>--database</tt>, <tt>--host</tt> (a host name or the path of
+      the socket), <tt>--port</tt> and <tt>--backend</tt> (<tt>mysql</tt>
+      or <tt>postgresql</tt>) or the according entries <tt>Database</tt>,
+      <tt>Host</tt>, <tt>Port</tt> and <tt>Backend</tt> in the section
+      <tt>[Database]</tt> of the INI file. Without a backend
+      (or with <tt>auto</tt>) every installed one is tried, until a
+      server accepts the connection.</p>
 
     <h3>Import of music</h3>
     <p>This dialog is displayed by selecting <tt>Import from file-info

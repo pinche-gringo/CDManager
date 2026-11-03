@@ -17,6 +17,7 @@ datadir = get_option('datadir')
 pkgdatadir = datadir / meson.project_name()
 docdir = datadir / 'doc' / meson.project_name()
 localedir = get_option('localedir')
+pkglibdir = get_option('libdir') / meson.project_name()
 
 #
 # C++26 features used throughout the sources: reflection and contracts
@@ -60,52 +61,66 @@ if not cxx.has_header('sys/shm.h')
 endif
 
 #
-# Database backend: MySQL (libmysqlclient) or PostgreSQL (libpq)
+# Database backends: MySQL (libmysqlclient) and PostgreSQL (libpq); each one
+# found is built as module loaded at runtime (see src/DBFactory.h)
 #
-db_backend = get_option('database')
-db_dep = disabler()
-if db_backend in ['auto', 'mysql']
-    db_dep = dependency('mysqlclient', required: false)
-    if not db_dep.found()
-        db_dep = dependency('libmariadb', required: false)
+mysql_dep = dependency('', required: false)
+if not get_option('mysql').disabled()
+    mysql_dep = dependency('mysqlclient', required: false)
+    if not mysql_dep.found()
+        mysql_dep = dependency('libmariadb', required: false)
     endif
-    if not db_dep.found()
+    if not mysql_dep.found()
         # Fall back to the classical installation locations
         mysql_lib = cxx.find_library('mysqlclient', required: false,
                                      dirs: ['/usr/lib64/mysql', '/usr/lib/mysql', '/usr/local/lib/mysql',
                                             '/usr/local/mysql/lib', '/opt/mysql/lib'])
         foreach incdir : ['/usr/include/mysql', '/usr/local/include/mysql', '/usr/local/mysql/include/mysql',
                           '/opt/mysql/include/mysql']
-            if mysql_lib.found() and not db_dep.found() and fs.exists(incdir / 'mysql.h')
-                db_dep = declare_dependency(dependencies: mysql_lib, compile_args: '-I' + incdir)
+            if mysql_lib.found() and not mysql_dep.found() and fs.exists(incdir / 'mysql.h')
+                mysql_dep = declare_dependency(dependencies: mysql_lib, compile_args: '-I' + incdir)
             endif
         endforeach
     endif
-    if db_dep.found()
-        db_backend = 'mysql'
-    elif db_backend == 'mysql'
-        error('MySQL requested, but its library/headers weren\'t found')
+    if not (mysql_dep.found() and cxx.has_header('errmsg.h', dependencies: mysql_dep))
+        if get_option('mysql').enabled()
+            error('MySQL requested, but its library/headers weren\'t found')
+        endif
+        mysql_dep = dependency('', required: false)
     endif
 endif
-if db_backend in ['auto', 'postgresql']
-    db_dep = dependency('libpq', required: false)
-    if not db_dep.found()
+
+pq_dep = dependency('', required: false)
+if not get_option('postgresql').disabled()
+    pq_dep = dependency('libpq', required: false)
+    if not pq_dep.found()
         pg_config = find_program('pg_config', required: false)
         if pg_config.found()
             pq_incdir = run_command(pg_config, '--includedir', check: true).stdout().strip()
             pq_libdir = run_command(pg_config, '--libdir', check: true).stdout().strip()
-            db_dep = declare_dependency(dependencies: cxx.find_library('pq', dirs: pq_libdir),
+            pq_dep = declare_dependency(dependencies: cxx.find_library('pq', dirs: pq_libdir),
                                         compile_args: '-I' + pq_incdir)
         endif
     endif
-    if db_dep.found() and cxx.has_function('PQconnectdb', prefix: '#include <libpq-fe.h>', dependencies: db_dep)
-        db_backend = 'postgresql'
-    elif db_backend == 'postgresql'
-        error('PostgreSQL requested, but libpq wasn\'t found')
-    else
-        error('No supported database found! Install the development files of either MySQL (libmysqlclient) or PostgreSQL (libpq)')
+    if not (pq_dep.found() and cxx.has_function('PQpingParams', prefix: '#include <libpq-fe.h>', dependencies: pq_dep))
+        if get_option('postgresql').enabled()
+            error('PostgreSQL requested, but libpq wasn\'t found')
+        endif
+        pq_dep = dependency('', required: false)
     endif
 endif
+
+db_backends = {}
+if mysql_dep.found()
+    db_backends += {'mysql': [mysql_dep, 'DBMySQL.cpp']}
+endif
+if pq_dep.found()
+    db_backends += {'postgresql': [pq_dep, 'DBPostgres.cpp']}
+endif
+if db_backends.keys().length() == 0
+    error('No supported database found! Install the development files of MySQL (libmysqlclient) and/or PostgreSQL (libpq)')
+endif
+dl_dep = dependency('dl')
 
 #
 # Features
@@ -145,7 +160,7 @@ conf.set('ENABLE_NLS', nls ? 1 : false)
 conf.set('HAVE_GETTEXT', nls ? 1 : false)
 conf.set('HAVE_ICONV', cxx.has_function('iconv_open', prefix: '#include <iconv.h>') ? 1 : false)
 conf.set('HAVE_LC_MESSAGES', cxx.has_header_symbol('locale.h', 'LC_MESSAGES') ? 1 : false)
-conf.set_quoted(db_backend == 'mysql' ? 'HAVE_LIBMYSQL' : 'HAVE_LIBPQ', '1')
+conf.set_quoted('PKGLIBDIR', prefix / pkglibdir)
 conf.set('WITH_ACTORS', with_actors.to_int())
 conf.set('WITH_FILMS', with_films.to_int())
 conf.set('WITH_RECORDS', with_records.to_int())
@@ -160,7 +175,7 @@ subdir('doc')
 subdir('SQL')
 subdir('tests')
 
-summary({'Database backend': db_backend,
+summary({'Database backends': ' '.join(db_backends.keys()),
          'Films': with_films,
          'Records': with_records,
          'Actors': with_actors,

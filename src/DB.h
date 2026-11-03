@@ -23,6 +23,26 @@
 #include <utility>
 #include <vector>
 
+/**Parameters to connect to a database. Empty/zero values select the default
+   of the respective backend.
+ */
+struct ConnectParams {
+    std::string database; ///< Name of the database
+    std::string host;     ///< Name of the host or (if starting with a slash) path of the socket
+    unsigned int port{0}; ///< Port of the server
+    std::string user;     ///< User to login with
+    std::string password; ///< Password of the user
+};
+
+/**Error thrown by Database::connect(), if no (suitable) database server
+   answered; e.g. because none is running or a different one is listening on
+   the port.
+ */
+class DBUnreachable : public std::runtime_error {
+  public:
+    using std::runtime_error::runtime_error;
+};
+
 /**Base class for the access to the database.
 
    It does the database independent work: It stores the result of a query,
@@ -33,6 +53,9 @@
    the used database, like connecting, executing a query and escaping values.
 
    All errors are reported as std::exception (usually std::runtime_error).
+
+   The derived classes are built as loadable modules (see DBFactory), each
+   defining cdmgr_createDatabase().
  */
 class Database {
   public:
@@ -61,10 +84,12 @@ class Database {
         std::vector<std::pair<std::string, std::string>> entries;
     };
 
-    static Database* create();
     virtual ~Database() = default;
 
-    virtual void connect(const char* db, const char* user, const char* pwd) = 0;
+    /// Connects to the database
+    /// \throw DBUnreachable If no suitable server answers
+    /// \throw std::exception In case of another error (like invalid credentials)
+    virtual void connect(const ConnectParams& params) = 0;
     virtual void close() = 0;
     [[nodiscard]] virtual bool connected() const = 0;
 
@@ -111,5 +136,9 @@ class Database {
     std::vector<Row> rows;
     unsigned int current{0};
 };
+
+/// Creates the database object of a backend; each backend module exports it
+/// \returns Database* Newly created object; free it with delete
+extern "C" [[gnu::visibility("default")]] Database* cdmgr_createDatabase();
 
 #endif

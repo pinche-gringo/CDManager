@@ -16,6 +16,8 @@
 // You should have received a copy of the GNU General Public License
 // along with CDManager.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <string_view>
+
 #include <YGP/IVIOAppl.h>
 
 #include "Options.h"
@@ -38,6 +40,8 @@ class CDAppl : public YGP::IVIOApplication {
     [[nodiscard]] const char* name() const override { return PACKAGE_NAME; }
     [[nodiscard]] const char* description() const override;
 
+    static bool parsePort(std::string_view value, unsigned int& port);
+
     // Help-handling
     void showHelp() const override;
 
@@ -50,6 +54,7 @@ class CDAppl : public YGP::IVIOApplication {
     Options options;
 
     static const longOptions lo[];
+    static constexpr unsigned int MAX_PORT{65535};
 };
 
 #endif

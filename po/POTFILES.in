@@ -21,6 +21,7 @@ src/PRecords.cpp
 src/PActors.cpp
 src/PFilms.cpp
 src/Storage.cpp
+src/DBFactory.cpp
 src/StorageFilm.cpp
 src/StorageRecord.cpp
 src/ActorList.cpp

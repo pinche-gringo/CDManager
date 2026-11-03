@@ -26,12 +26,24 @@
 
 #include <cstring>
 #include <memory>
+#include <string>
 
+#include <errmsg.h>
 #include <mysql.h>
 
 #include <YGP/Trace.h>
 
 #include "DBMySQL.h"
+
+/// Connection attempts give up after this time (in seconds); so a server not
+/// speaking the MySQL protocol (which waits for the client) is detected
+constexpr unsigned int CONNECT_TIMEOUT(10);
+
+//-----------------------------------------------------------------------------
+/// Creates the database object; exported for DBFactory
+/// \returns Database* Newly created object; free it with delete
+//-----------------------------------------------------------------------------
+Database* cdmgr_createDatabase() { return new DBMySQL; }
 
 //-----------------------------------------------------------------------------
 /// Destructor
@@ -39,23 +51,42 @@
 DBMySQL::~DBMySQL() { close(); }
 
 //-----------------------------------------------------------------------------
-/// Connects to the database on the local host
-/// \param db Name of database
-/// \param user User to use for the DB
-/// \param pwd Password of user
-/// \throw std::exception In case of an error
+/// Connects to the database; without host on the local host (via the default
+/// socket)
+/// \param params Parameters of the connection
+/// \throw DBUnreachable If no MySQL server answers
+/// \throw std::exception In case of another error
 //-----------------------------------------------------------------------------
-void DBMySQL::connect(const char* db, const char* user, const char* pwd) {
-    TRACE9("DBMySQL::connect (const char* (3x) - " << db << " from " << user);
+void DBMySQL::connect(const ConnectParams& params) {
+    TRACE9("DBMySQL::connect (const ConnectParams&) - " << params.database << " from " << params.user << '@' << params.host << ':'
+                                                        << params.port);
     contract_assert(!mysql);
 
     mysql = mysql_init(nullptr);
     if (!mysql)
         throw std::runtime_error("Out of memory initialising MySQL");
-    if (!mysql_real_connect(mysql, nullptr, user, pwd, db, 0, nullptr, 0)) {
-        std::runtime_error error(mysql_error(mysql));
+    mysql_options(mysql, MYSQL_OPT_CONNECT_TIMEOUT, &CONNECT_TIMEOUT);
+
+    const bool socket(params.host.starts_with('/'));
+    const char* host((params.host.empty() || socket) ? nullptr : params.host.c_str());
+    if (!mysql_real_connect(mysql, host, params.user.c_str(), params.password.c_str(), params.database.c_str(), params.port,
+                            socket ? params.host.c_str() : nullptr, 0)) {
+        const unsigned int code(mysql_errno(mysql));
+        const std::string msg(mysql_error(mysql));
         close();
-        throw error;
+        switch (code) {
+        case CR_CONNECTION_ERROR:
+        case CR_CONN_HOST_ERROR:
+        case CR_UNKNOWN_HOST:
+        case CR_SERVER_GONE_ERROR:
+        case CR_SERVER_HANDSHAKE_ERR:
+        case CR_SERVER_LOST:
+        case CR_MALFORMED_PACKET:
+            throw DBUnreachable(msg);
+
+        default:
+            throw std::runtime_error(msg);
+        }
     }
 }
 

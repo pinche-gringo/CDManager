@@ -1,5 +1,5 @@
-option('database', type: 'combo', choices: ['auto', 'mysql', 'postgresql'], value: 'auto',
-       description: 'Database backend to use (auto: tries MySQL first, then PostgreSQL)')
+option('mysql', type: 'feature', value: 'auto', description: 'Database backend for MySQL/MariaDB')
+option('postgresql', type: 'feature', value: 'auto', description: 'Database backend for PostgreSQL')
 
 option('actors', type: 'boolean', value: true, description: 'Handling of actors (requires films)')
 option('films', type: 'boolean', value: true, description: 'Handling of films')

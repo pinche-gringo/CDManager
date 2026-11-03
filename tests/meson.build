@@ -14,8 +14,9 @@ test_deps = [libcdmgr_dep, boost_test_dep]
 tests = {
     'Words': [files('TestWords.cpp'), []],
     'Genres': [files('TestGenres.cpp'), []],
-    'Database': [files('TestDB.cpp', '../src/DB.cpp',
-                       db_backend == 'mysql' ? '../src/DBMySQL.cpp' : '../src/DBPostgres.cpp'), [db_dep]],
+    'Database': [files('TestDB.cpp'), []],
+    'DBFactory': [files('TestDBFactory.cpp', '../src/DBFactory.cpp'), [dl_dep],
+                  ['-DBUILT_BACKENDS="@0@"'.format(' '.join(db_backends.keys()))]],
 }
 # The entity- and writer-tests use films and records
 if with_films and with_records
@@ -28,7 +29,12 @@ if with_films
     tests += {'IMDbParser': [files('TestIMDbParser.cpp', '../src/IMDbParser.cpp'), [boost_dep]]}
 endif
 
+# The tests load the database modules from the build directory
+test_env = environment()
+test_env.set('CDMGR_MODULEDIR', meson.project_build_root() / 'src')
+
 foreach name, test : tests
-    test(name, executable('Test' + name, test[0], cpp_args: test_args, include_directories: test_inc,
-                          dependencies: test_deps + test[1]))
+    test(name, executable('Test' + name, test[0], cpp_args: test_args + test.get(2, []), include_directories: test_inc,
+                          dependencies: test_deps + test[1]),
+         env: test_env, depends: db_modules)
 endforeach

@@ -24,13 +24,14 @@
 
 #include <cdmgr-cfg.h>
 
-#include <array>
 #include <cctype>
 #include <cstdlib>
+#include <filesystem>
 #include <format>
 #include <memory>
 #include <ranges>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <libpq-fe.h>
@@ -41,8 +42,22 @@
 
 constexpr Oid BYTEAOID(17); ///< Type-ID of bytea (from pg_type.h)
 
+/// Connection attempts give up after this time (in seconds)
+constexpr const char* CONNECT_TIMEOUT("10");
+/// Timeout for checking if a server answers after a failed connection; it
+/// answers fast, if it just did
+constexpr const char* PING_TIMEOUT("2");
+/// Start of the name of the socket of a PostgreSQL server (followed by the port)
+constexpr std::string_view SOCKET_PREFIX(".s.PGSQL.");
+
 /// Frees a PGresult, when going out of scope
 using PResult = std::unique_ptr<PGresult, void (*)(PGresult*)>;
+
+//-----------------------------------------------------------------------------
+/// Creates the database object; exported for DBFactory
+/// \returns Database* Newly created object; free it with delete
+//-----------------------------------------------------------------------------
+Database* cdmgr_createDatabase() { return new DBPostgres; }
 
 //-----------------------------------------------------------------------------
 /// Destructor
@@ -50,31 +65,58 @@ using PResult = std::unique_ptr<PGresult, void (*)(PGresult*)>;
 DBPostgres::~DBPostgres() { close(); }
 
 //-----------------------------------------------------------------------------
-/// Connects to the database. The server is specified by the usual libpq
-/// environment variables (like PGHOST, PGPORT); default is the local host.
-/// \param db Name of database
-/// \param user User to use for the DB
-/// \param pwd Password of user
-/// \throw std::exception In case of an error
+/// Connects to the database; without host on the local host (via TCP/IP).
+/// The host can also be the directory containing the socket or the socket
+/// itself (like /run/postgresql/.s.PGSQL.5432).
+/// \param params Parameters of the connection
+/// \throw DBUnreachable If no PostgreSQL server answers
+/// \throw std::exception In case of another error
 //-----------------------------------------------------------------------------
-void DBPostgres::connect(const char* db, const char* user, const char* pwd) {
-    TRACE9("DBPostgres::connect (const char* (3x) - " << db << " from " << user);
+void DBPostgres::connect(const ConnectParams& params) {
+    TRACE9("DBPostgres::connect (const ConnectParams&) - " << params.database << " from " << params.user << '@' << params.host
+                                                           << ':' << params.port);
     contract_assert(!conn);
 
     // PostgreSQL folds unquoted names to lower case (CREATE DATABASE CDMedia creates cdmedia),
     // but compares the name passed when connecting exactly; so connect to the folded name
-    const std::string dbName(std::string_view(db) | std::views::transform([](unsigned char c) { return std::tolower(c); })
-                             | std::ranges::to<std::string>());
+    const std::string dbName(params.database | std::views::transform([](unsigned char c) { return std::tolower(c); }) |
+                             std::ranges::to<std::string>());
 
-    const std::array<const char*, 6> keys{"hostaddr", "dbname", "user", "password", "client_encoding", nullptr};
-    const std::array<const char*, 6> values{"127.0.0.1", dbName.c_str(), user, pwd, "UTF8", nullptr};
+    std::string host(params.host);
+    std::string port(params.port ? std::to_string(params.port) : std::string());
+    if (host.starts_with('/')) {
+        // libpq expects the directory of the socket; its name contains the port
+        const std::filesystem::path socket(host);
+        const std::string name(socket.filename());
+        if (name.starts_with(SOCKET_PREFIX)) {
+            host = socket.parent_path();
+            if (port.empty())
+                port = name.substr(SOCKET_PREFIX.size());
+        }
+    }
+
+    std::vector<const char*> keys{"connect_timeout", "dbname", "user", "password", "client_encoding"};
+    std::vector<const char*> values{CONNECT_TIMEOUT, dbName.c_str(), params.user.c_str(), params.password.c_str(), "UTF8"};
+    keys.push_back(host.empty() ? "hostaddr" : "host");
+    values.push_back(host.empty() ? "127.0.0.1" : host.c_str());
+    if (port.size()) {
+        keys.push_back("port");
+        values.push_back(port.c_str());
+    }
+    keys.push_back(nullptr);
+    values.push_back(nullptr);
+
     conn = PQconnectdbParams(keys.data(), values.data(), 0);
     if (!conn)
         throw std::runtime_error("Out of memory initialising PostgreSQL");
     if (PQstatus(conn) != CONNECTION_OK) {
-        std::runtime_error error(PQerrorMessage(conn));
+        const std::string msg(PQerrorMessage(conn));
         close();
-        throw error;
+        // Ping only reports a server, if it answered as PostgreSQL (even if rejecting the login)
+        values.front() = PING_TIMEOUT;
+        if (PQpingParams(keys.data(), values.data(), 0) == PQPING_NO_RESPONSE)
+            throw DBUnreachable(msg);
+        throw std::runtime_error(msg);
     }
 }
 

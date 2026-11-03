@@ -28,6 +28,7 @@
 #mesondefine LOCALEDIR
 #mesondefine DOCUDIR
 #mesondefine DATADIR
+#mesondefine PKGLIBDIR
 
 // Translations
 #mesondefine CATALOGS
@@ -35,10 +36,6 @@
 #mesondefine HAVE_GETTEXT
 #mesondefine HAVE_ICONV
 #mesondefine HAVE_LC_MESSAGES
-
-// Database backend
-#mesondefine HAVE_LIBMYSQL
-#mesondefine HAVE_LIBPQ
 
 // Features
 #mesondefine WITH_ACTORS

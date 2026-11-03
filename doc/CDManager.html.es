@@ -140,6 +140,14 @@
       el men&uacute; <tt>CDs</tt>. La permite poner un usario y
       (opcional) su contrase&ntilde;a. Ese informaci&oacute;n
       est&aacute; usado para conectarse a la base de datos.</p>
+    <p>La base de datos se especifica con las opciones
+      <tt>--database</tt>, <tt>--host</tt> (el nombre del servidor o la
+      ruta del socket), <tt>--port</tt> y <tt>--backend</tt>
+      (<tt>mysql</tt> o <tt>postgresql</tt>) o con las entradas
+      <tt>Database</tt>, <tt>Host</tt>, <tt>Port</tt> y <tt>Backend</tt>
+      en la secci&oacute;n <tt>[Database]</tt> del archivo INI. Sin
+      backend (o con <tt>auto</tt>) se prueba cada uno instalado, hasta
+      que un servidor acepta la conexi&oacute;n.</p>
 
     <h3>Importar m&uacute;sica</h3>
     <p>Elegiendo <tt>Importar informaciones de archivos de audio

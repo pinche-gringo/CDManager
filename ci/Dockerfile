@@ -6,6 +6,6 @@ FROM fedora:45
 
 RUN dnf install -y --setopt=install_weak_deps=False \
         gcc gcc-c++ meson ninja-build git gettext gettext-devel rpm-build \
-        boost-devel gtkmm4.0-devel libsoup3-devel libpq-devel \
+        boost-devel gtkmm4.0-devel libsoup3-devel libpq-devel mariadb-connector-c-devel \
         curl \
     && dnf clean all

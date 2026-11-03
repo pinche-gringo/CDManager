@@ -29,22 +29,24 @@
 #include <YGP/Trace.h>
 
 #include "DB.h"
+#include "DBFactory.h"
 #include "Words.h"
 
 #include "Storage.h"
 
 std::unique_ptr<Database> Storage::database;
+std::string_view Storage::backend;
 
 //-----------------------------------------------------------------------------
-/// Login to the database with the passed user/password pair
-/// \param db Name of database
-/// \param user User to use for the DB
-/// \param pwd Password of user
+/// Login to the database
+/// \param backend Name of the backend to use; empty or "auto" to detect it
+/// \param params Parameters of the connection
+/// \throw std::exception In case of an error
 //-----------------------------------------------------------------------------
-void Storage::login(const char* db, const char* user, const char* pwd) {
-    std::unique_ptr<Database> newDB(Database::create());
-    newDB->connect(db, user, pwd);
-    database = std::move(newDB);
+void Storage::login(const std::string& backend, const ConnectParams& params) {
+    const DBFactory::Backend* used(nullptr);
+    database = DBFactory::connect(backend, params, used);
+    Storage::backend = used->displayName;
 }
 
 //-----------------------------------------------------------------------------
@@ -54,6 +56,7 @@ void Storage::logout() {
     if (database) {
         database->close();
         database.reset();
+        backend = {};
     }
 }
 

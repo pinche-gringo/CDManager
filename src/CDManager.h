@@ -94,8 +94,6 @@ class CDManager : public XGP::XApplication {
     static constexpr unsigned int WIDTH{800};
     static constexpr unsigned int HEIGHT{600};
 
-    static constexpr const char* DBNAME{"CDMedia"};
-
     Genres recGenres;
     Genres filmGenres;
 

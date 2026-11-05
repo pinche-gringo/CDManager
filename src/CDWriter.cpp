@@ -197,7 +197,7 @@ void CDWriter::writeHeader(const char* lang, const char* format, std::ostream& s
     static constexpr std::array<const char*, formats.size()> docs {"",      "",      "-Name", "-Year", "-Genre", "-Media",
                                                                    "-Lang", nullptr, nullptr, nullptr, nullptr,  nullptr};
     static const auto titles = std::to_array<std::string>({_("Interpret"), _("Director"), _("Name"), _("Year"), _("Genre"),
-                                                           _("Media"), _("Language(s)"), " | ", "</td><td>",
+                                                           _("Size"), _("Language(s)"), " | ", "</td><td>",
                                                            "<div class=\"header\">", "</div>", "&nbsp;"});
     static_assert(std::tuple_size_v<decltype(titles)> == formats.size());
 
@@ -508,7 +508,7 @@ int CDWriter::perform(int argc, const char** argv) {
         {.title = "[g]|[n]|[d]|[y]|[m]|[l]", .file = "Films-Genre.html", .filedown = "Films-Genredown.html",
          .format = "%g|%n|%d|%y|%t|%l", .sorted = N_("Genre"), .cmpFilm = &Film::compByGenre, .lead = "Films", .type = 0},
         {.title = "[m]|[n]|[d]|[y]|[g]|[l]", .file = "Films-Media.html", .filedown = "Films-Mediadown.html",
-         .format = "%t|%n|%d|%y|%g|%l", .sorted = N_("Media"), .cmpFilm = &Film::compByMedia, .lead = "Films", .type = 0}
+         .format = "%t|%n|%d|%y|%g|%l", .sorted = N_("Size"), .cmpFilm = &Film::compBySize, .lead = "Films", .type = 0}
 #    if WITH_RECORDS == 1
         ,
 #    endif

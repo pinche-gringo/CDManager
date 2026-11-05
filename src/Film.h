@@ -18,6 +18,7 @@
 
 #include <map>
 #include <string>
+#include <string_view>
 
 #include <memory>
 
@@ -27,7 +28,6 @@
 #include <YGP/AYear.h>
 #include <YGP/Entity.h>
 
-#include "CDType.h"
 #include "EntityAttributes.h"
 #include "Language.h"
 
@@ -49,7 +49,8 @@ class Film : public YGP::Entity {
     [[nodiscard]] const Glib::ustring& getName(const std::string& lang);
     [[nodiscard]] const YGP::AYear& getYear() const { return year; }
     [[nodiscard]] unsigned int getGenre() const { return genre; }
-    [[nodiscard]] int getType() const { return type; }
+    /// Returns the size of the film in MB (0 if unknown)
+    [[nodiscard]] unsigned int getSize() const { return size; }
     [[nodiscard]] const std::string& getLanguage() const { return lang; }
     [[nodiscard]] const std::string& getTitles() const { return titles; }
     [[nodiscard]] const Glib::ustring& getDescription() const { return summary; }
@@ -62,11 +63,8 @@ class Film : public YGP::Entity {
     void setYear(const YGP::AYear& value) { year = value; }
     void setYear(const std::string& value) { year = value; }
     void setGenre(unsigned int value) { genre = value; }
-    void setType(int value) {
-        CDType::getInstance()[value];
-        type = value;
-    }
-    void setType(const std::string& value) { type = CDType::getInstance()[value]; }
+    void setSize(unsigned int value) { size = value; }
+    void setSize(std::string_view value) { size = parseSize(value); }
     void setLanguage(const std::string& value) { lang = value; }
     void setTitles(const std::string& value) { titles = value; }
     void setDescription(const Glib::ustring& value) { summary = value; }
@@ -76,7 +74,10 @@ class Film : public YGP::Entity {
     [[nodiscard]] static bool compByName(const HFilm& a, const HFilm& b) pre(a) pre(b);
     [[nodiscard]] static bool compByYear(const HFilm& a, const HFilm& b) pre(a) pre(b);
     [[nodiscard]] static bool compByGenre(const HFilm& a, const HFilm& b) pre(a) pre(b);
-    [[nodiscard]] static bool compByMedia(const HFilm& a, const HFilm& b) pre(a) pre(b);
+    [[nodiscard]] static bool compBySize(const HFilm& a, const HFilm& b) pre(a) pre(b);
+
+    [[nodiscard]] static std::string formatSize(unsigned int size);
+    [[nodiscard]] static unsigned int parseSize(std::string_view value);
 
     static std::string currLang;
 
@@ -85,7 +86,7 @@ class Film : public YGP::Entity {
     [[=Attrib{"Name"}]] std::map<std::string, Glib::ustring> name;
     [[=Attrib{"Made"}]] YGP::AYear year;
     [[=Attrib{"Genre"}]] unsigned int genre{};
-    [[=Attrib{"Media"}]] int type{};
+    [[=Attrib{"Size"}]] unsigned int size{}; ///< Size of the film in MB
     [[=Attrib{"Lang"}]] std::string lang;
     [[=Attrib{"Subtitles"}]] std::string titles;
     [[=Attrib{"Description"}]] Glib::ustring summary;

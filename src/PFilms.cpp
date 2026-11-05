@@ -684,7 +684,7 @@ void PFilms::undoFilm(const Undo& last) {
             break;
 
         case 3:
-            film->setType(last.getValue());
+            film->setSize(std::string_view(last.getValue().raw()));
             break;
 
         case 4:

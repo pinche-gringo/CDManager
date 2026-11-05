@@ -79,7 +79,7 @@ unsigned int StorageFilm::loadFilms(std::map<unsigned int, std::vector<HFilm>>& 
                 if (const unsigned int year(db().getResultColumnAsUInt(3)); year)
                     film->setYear(year);
                 film->setGenre(db().getResultColumnAsUInt(4));
-                film->setType(db().getResultColumnAsUInt(5));
+                film->setSize(db().getResultColumnAsUInt(5));
                 film->setLanguage(db().getResultColumnAsString(6));
                 film->setTitles(db().getResultColumnAsString(7));
                 film->setDescription(db().getResultColumnAsString(8));
@@ -107,7 +107,7 @@ void StorageFilm::saveFilm(const HFilm& film, unsigned int idDirector) {
     values("name", db().quote(film->getName("")))("summary",
                                                   db().quote(film->getDescription()))("image", db().quoteBlob(film->getImage()))(
         "genre", film->getGenre())("languages", db().quote(film->getLanguage()))("subtitles", db().quote(film->getTitles()))(
-        "type", film->getType())("director", idDirector)("year", film->getYear().isDefined() ? static_cast<int>(film->getYear()) : 0);
+        "type", film->getSize())("director", idDirector)("year", film->getYear().isDefined() ? static_cast<int>(film->getYear()) : 0);
 
     if (film->getId())
         db().update("Films", values, std::format("id={}", film->getId()));

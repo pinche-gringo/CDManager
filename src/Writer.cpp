@@ -28,7 +28,6 @@
 
 #include <YGP/Trace.h>
 
-#include "CDType.h"
 
 #include "Writer.h"
 
@@ -57,7 +56,7 @@ std::string FilmWriter::getSubstitute(const char ctrl, bool) const {
             return YGP::TableWriter::changeHTMLSpecialChars(hDirector->getName());
 
         case 't':
-            return YGP::TableWriter::changeHTMLSpecialChars(CDType::getInstance()[hFilm->getType()]);
+            return YGP::TableWriter::changeHTMLSpecialChars(Film::formatSize(hFilm->getSize()));
 
         case 'l': {
             std::string output(addLanguageLinks(hFilm->getLanguage()));

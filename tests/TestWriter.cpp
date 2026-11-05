@@ -40,13 +40,13 @@ HCelebrity makeCelebrity(const char* name) {
     return celeb;
 }
 
-HFilm makeFilm(const char* name, int year, unsigned int genre, int type, const char* lang, const char* titles) {
+HFilm makeFilm(const char* name, int year, unsigned int genre, unsigned int size, const char* lang, const char* titles) {
     auto film(std::make_shared<Film>());
     film->setName(name);
     if (year)
         film->setYear(year);
     film->setGenre(genre);
-    film->setType(type);
+    film->setSize(size);
     film->setLanguage(lang);
     film->setTitles(titles);
     return film;
@@ -71,14 +71,14 @@ BOOST_FIXTURE_TEST_SUITE(Films, AllGenres)
 BOOST_AUTO_TEST_CASE(WriteFilm) {
     const std::string format("%n|%y|%g|%d|%t|%l"); // The writer keeps a reference to the format
     FilmWriter writer(format, films);
-    auto film(makeFilm("Alien", 1979, 2, 1, "en", ""));
+    auto film(makeFilm("Alien", 1979, 2, 1432, "en", ""));
     film->setDescription("In space no one can hear you scream");
 
     std::ostringstream out;
     writer.writeFilm(film, makeCelebrity("Ridley Scott"), out);
     BOOST_TEST(out.str()
                == "<tr class=\"odd\" title=\"In space no one can hear you scream\"><td>Alien</td><td>1979</td>"
-                  "<td>Drama</td><td>Ridley Scott</td><td>1 DVD</td><td><img src=\"images/en.png\" alt=\"en \"></td></tr>\n");
+                  "<td>Drama</td><td>Ridley Scott</td><td>1.4 GB</td><td><img src=\"images/en.png\" alt=\"en \"></td></tr>\n");
 }
 
 BOOST_AUTO_TEST_CASE(SpecialCharacters) {

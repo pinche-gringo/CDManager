@@ -3,6 +3,8 @@ Overview of changes in version 1.3.0:
   - The database backends are modules; the backend is detected at runtime
   - The database (name, host or socket, port and backend) can be set on the
     command line and in the INI-file
+  - Films store their size (shown like "700 MB" or "1.4 GB") instead of a
+    pre-defined type of media
 
 
 Overview of changes in version 1.2.1:

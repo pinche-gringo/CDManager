@@ -31,7 +31,7 @@
 
 #include <glibmm/main.h>
 
-#include <gtkmm/cellrenderercombo.h>
+#include <gtkmm/cellrenderertext.h>
 #include <gtkmm/gestureclick.h>
 #include <gtkmm/window.h>
 
@@ -42,7 +42,6 @@
 #include <XGP/MessageDlg.h>
 #include <XGP/XValue.h>
 
-#include "CDType.h"
 #include "Genres.h"
 #include "LangDlg.h"
 
@@ -65,29 +64,23 @@ auto splitLanguages(std::string_view values) {
 /// Default constructor
 /// \param genres: Genres which should be displayed in the 3rd column
 //-----------------------------------------------------------------------------
-FilmList::FilmList(const Genres& genres) : OwnerObjectList(genres), mTypes(Gtk::ListStore::create(colTypes)) {
+FilmList::FilmList(const Genres& genres) : OwnerObjectList(genres) {
     TRACE9("FilmList::FilmList (const Genres&)");
     mOwnerObjects = Gtk::TreeStore::create(colFilms);
     init(colFilms);
 
-    // Add column "Type"
-    auto* renderer(Gtk::make_managed<Gtk::CellRendererCombo>());
-    renderer->property_text_column() = 0;
-    renderer->property_model() = mTypes;
+    // Add column "Size"
+    auto* renderer(Gtk::make_managed<Gtk::CellRendererText>());
     renderer->property_editable() = true;
-    Gtk::TreeViewColumn* column(Gtk::make_managed<Gtk::TreeViewColumn>(_("Type"), *renderer));
+    renderer->property_xalign() = 1.0;
+    Gtk::TreeViewColumn* column(Gtk::make_managed<Gtk::TreeViewColumn>(_("Size"), *renderer));
     append_column(*column);
-    column->add_attribute(renderer->property_text(), colFilms.type);
+    column->add_attribute(renderer->property_text(), colFilms.size);
     column->add_attribute(renderer->property_visible(), colFilms.chgAll);
     column->set_resizable();
 
     renderer->signal_edited().connect(
         [this](const Glib::ustring& path, const Glib::ustring& value) { valueChanged(path, value, 0); });
-
-    for (const auto& [_, type] : std::as_const(CDType::getInstance())) {
-        Gtk::TreeModel::Row newType(*mTypes->append());
-        newType[colTypes.type] = type;
-    }
 
     // Add column "Languages"
     column = Gtk::make_managed<Gtk::TreeViewColumn>(_("Language(s)"));
@@ -219,16 +212,21 @@ void FilmList::valueChanged(const Glib::ustring& path, const Glib::ustring& valu
         if (row.parent()) {
             HFilm film(getFilmAt(row));
             Glib::ustring oldValue;
+            bool changed {};
             switch (column) {
             case 0: {
-                CDType& type(CDType::getInstance());
-                if (!type.exists(value)) {
-                    Glib::ustring e(_("Unknown type of media!"));
-                    throw(YGP::InvalidValue(e));
+                unsigned int size {};
+                try {
+                    size = Film::parseSize(value.raw());
                 }
-                film->setType(value);
-                oldValue = row[colFilms.type];
-                row[colFilms.type] = value;
+                catch (std::exception&) {
+                    throw YGP::InvalidValue(Glib::ustring(_("Invalid size! Enter it like \"700 MB\" or \"1.4 GB\".")));
+                }
+                // Store the exact old size (in MB), so undo can restore it
+                oldValue = std::to_string(film->getSize());
+                changed = (size != film->getSize());
+                film->setSize(size);
+                row[colFilms.size] = Film::formatSize(size);
                 break;
             }
 
@@ -236,19 +234,21 @@ void FilmList::valueChanged(const Glib::ustring& path, const Glib::ustring& valu
                 oldValue = film->getLanguage();
                 setLanguage(row, value);
                 film->setLanguage(value);
+                changed = (value != oldValue);
                 break;
 
             case 2:
                 oldValue = film->getTitles();
                 setTitles(row, value);
                 film->setTitles(value);
+                changed = (value != oldValue);
                 break;
 
             default:
                 contract_assert(false);
             } // end-switch
 
-            if (value != oldValue)
+            if (changed)
                 signalObjectChanged.emit(iRow, column + 3, oldValue);
         } // endif object edited
     } // end-try
@@ -404,7 +404,7 @@ void FilmList::update(Gtk::TreeModel::Row& row) {
         row[colFilms.year] = film->getYear().toString();
         changeGenre(row, film->getGenre());
 
-        row[colFilms.type] = CDType::getInstance()[film->getType()];
+        row[colFilms.size] = Film::formatSize(film->getSize());
 
         setLanguage(row, film->getLanguage());
         setTitles(row, film->getTitles());

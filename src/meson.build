@@ -1,7 +1,7 @@
 #
 # Shared library with the entities (libCDMgr)
 #
-lib_sources = files('Celebrity.cpp', 'CDType.cpp', 'Words.cpp', 'Genres.cpp', 'DB.cpp')
+lib_sources = files('Celebrity.cpp', 'Words.cpp', 'Genres.cpp', 'DB.cpp')
 if with_films
     lib_sources += files('Film.cpp')
 endif

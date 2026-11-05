@@ -8,7 +8,6 @@ src/FilmList.cpp
 src/RecordList.cpp
 src/SongList.cpp
 src/OOList.cpp
-src/CDType.cpp
 src/LangDlg.cpp
 src/Language.cpp
 src/Writer.cpp

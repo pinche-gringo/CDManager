@@ -46,13 +46,13 @@ HCelebrity makeCelebrity(const char* name, unsigned long id = 0) {
     return celeb;
 }
 
-HFilm makeFilm(const char* name, int year = 0, unsigned int genre = 0, int type = 0) {
+HFilm makeFilm(const char* name, int year = 0, unsigned int genre = 0, unsigned int size = 0) {
     auto film(std::make_shared<Film>());
     film->setName(name);
     if (year)
         film->setYear(year);
     film->setGenre(genre);
-    film->setType(type);
+    film->setSize(size);
     return film;
 }
 
@@ -297,13 +297,13 @@ BOOST_AUTO_TEST_CASE(OtherAttributes) {
     film.setName("Downfall");
     film.setYear(2004);
     film.setGenre(6);
-    film.setType(1);
+    film.setSize(1400);
     film.setLanguage("de");
     film.setTitles("en,es");
     film.setDescription("Traudl Junge, the final secretary for Adolf Hitler, ...");
 
     for (const auto& [attrib, value] : std::vector<std::pair<const char*, const char*>> {
-             {"Made", "2004"}, {"Genre", "6"}, {"Media", "1"}, {"Lang", "de"}, {"Subtitles", "en,es"}}) {
+             {"Made", "2004"}, {"Genre", "6"}, {"Size", "1400"}, {"Lang", "de"}, {"Subtitles", "en,es"}}) {
         BOOST_TEST_CONTEXT(attrib) {
             BOOST_REQUIRE(film.findAttribute(attrib));
             BOOST_TEST(film.findAttribute(attrib)->getValue() == value);
@@ -335,16 +335,47 @@ BOOST_AUTO_TEST_CASE(CopyAndAssign) {
     BOOST_TEST(other.getName("") == "Downfall");
 }
 
-BOOST_AUTO_TEST_CASE(Media) {
+BOOST_AUTO_TEST_CASE(Size) {
     Film film;
-    film.setType(2);
-    BOOST_TEST(film.getType() == 2);
-    film.setType(std::string("1 CD"));
-    BOOST_TEST(film.getType() == 3);
+    BOOST_TEST(film.getSize() == 0U);
+    film.setSize(700);
+    BOOST_TEST(film.getSize() == 700U);
+    film.setSize(std::string_view("1.4 GB"));
+    BOOST_TEST(film.getSize() == 1400U);
 
-    BOOST_CHECK_THROW(film.setType(99), std::out_of_range);
-    BOOST_CHECK_THROW(film.setType(std::string("Betamax")), std::out_of_range);
-    BOOST_TEST(film.getType() == 3);
+    BOOST_CHECK_THROW(film.setSize(std::string_view("Betamax")), std::invalid_argument);
+    BOOST_CHECK_THROW(film.setSize(std::string_view("2 PB")), std::invalid_argument);
+    BOOST_TEST(film.getSize() == 1400U);
+}
+
+BOOST_AUTO_TEST_CASE(FormatSize) {
+    BOOST_TEST(Film::formatSize(0) == "");
+    BOOST_TEST(Film::formatSize(147) == "147 MB");
+    BOOST_TEST(Film::formatSize(999) == "999 MB");
+    BOOST_TEST(Film::formatSize(1000) == "1.0 GB");
+    BOOST_TEST(Film::formatSize(1432) == "1.4 GB");
+    BOOST_TEST(Film::formatSize(2450) == "2.5 GB");
+    BOOST_TEST(Film::formatSize(40296) == "40.3 GB");
+    BOOST_TEST(Film::formatSize(1500000) == "1.5 TB");
+}
+
+BOOST_AUTO_TEST_CASE(ParseSize) {
+    for (const auto& [text, size] : std::vector<std::pair<const char*, unsigned int>> {
+             {"", 0},          {"  ", 0},        {"700", 700},     {"700 MB", 700}, {"700mb", 700}, {" 700 M ", 700},
+             {"1.4 GB", 1400}, {"1,4 GB", 1400}, {"2.45g", 2450},  {"2 TB", 2000000}, {"0.5", 1}}) {
+        BOOST_TEST_CONTEXT(text) {
+            BOOST_TEST(Film::parseSize(text) == size);
+        }
+    }
+    // Formatted values can be parsed again
+    BOOST_TEST(Film::parseSize(Film::formatSize(1432)) == 1400U);
+
+    for (const char* text : {"GB", "1.4 XB", "-5", "abc", "1.4 GB extra"}) {
+        BOOST_TEST_CONTEXT(text) {
+            BOOST_CHECK_THROW(static_cast<void>(Film::parseSize(text)), std::invalid_argument);
+        }
+    }
+    BOOST_CHECK_THROW(static_cast<void>(Film::parseSize("5000 TB")), std::out_of_range);
 }
 
 BOOST_FIXTURE_TEST_CASE(SortByName, EntityWords) {
@@ -382,10 +413,10 @@ BOOST_FIXTURE_TEST_CASE(SortByGenre, EntityWords) {
                boost::test_tools::per_element());
 }
 
-BOOST_FIXTURE_TEST_CASE(SortByMedia, EntityWords) {
-    const std::vector<HFilm> films {makeFilm("Zardoz", 1974, 0, 1), makeFilm("The Thing", 1982, 0, 2),
-                                    makeFilm("Alien", 1979, 0, 1), makeFilm("Brazil", 1985, 0, 0)};
-    BOOST_TEST(sortedNames(films, Film::compByMedia)
+BOOST_FIXTURE_TEST_CASE(SortBySize, EntityWords) {
+    const std::vector<HFilm> films {makeFilm("Zardoz", 1974, 0, 700), makeFilm("The Thing", 1982, 0, 2400),
+                                    makeFilm("Alien", 1979, 0, 700), makeFilm("Brazil", 1985, 0, 0)};
+    BOOST_TEST(sortedNames(films, Film::compBySize)
                    == (std::vector<std::string> {"Brazil", "Alien", "Zardoz", "The Thing"}),
                boost::test_tools::per_element());
 }

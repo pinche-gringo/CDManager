@@ -26,21 +26,12 @@
 
 class Genres;
 
-/**Class describing the columns in the CDType-model
- */
-class TypeColumns : public Gtk::TreeModel::ColumnRecord {
-  public:
-    TypeColumns() { add(type); }
-
-    Gtk::TreeModelColumn<Glib::ustring> type;
-};
-
 /**Class for the columns in the film list
  */
 class FilmColumns : public OwnerObjectColumns {
   public:
     FilmColumns() : OwnerObjectColumns() {
-        add(type);
+        add(size);
         add(lang1);
         add(lang2);
         add(lang3);
@@ -60,7 +51,7 @@ class FilmColumns : public OwnerObjectColumns {
         add(titles);
     }
 
-    Gtk::TreeModelColumn<Glib::ustring> type;
+    Gtk::TreeModelColumn<Glib::ustring> size;
     Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf>> lang1;
     Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf>> lang2;
     Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf>> lang3;
@@ -118,10 +109,7 @@ class FilmList : public OwnerObjectList {
     void setTitles(Gtk::TreeModel::Row& row, const std::string& titles);
 
   private:
-    TypeColumns colTypes;
     FilmColumns colFilms;
-
-    Glib::RefPtr<Gtk::ListStore> mTypes;
 };
 
 #endif

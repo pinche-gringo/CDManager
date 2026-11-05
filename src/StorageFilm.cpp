@@ -26,6 +26,9 @@
 
 #include <format>
 #include <ranges>
+#include <stdexcept>
+
+#include <glibmm/ustring.h>
 
 #include <YGP/StatusObj.h>
 #include <YGP/Trace.h>
@@ -103,6 +106,11 @@ unsigned int StorageFilm::loadFilms(std::map<unsigned int, std::vector<HFilm>>& 
 /// \param idDirector: ID of director
 //-----------------------------------------------------------------------------
 void StorageFilm::saveFilm(const HFilm& film, unsigned int idDirector) {
+    if (const auto length(film->getDescription().size()); length > MAX_SUMMARY)
+        throw std::length_error(
+            Glib::ustring::compose(_("The description of the film `%1' is too long: It has %2 characters, but at most %3 are allowed!"),
+                                   film->getName(""), length, MAX_SUMMARY));
+
     Database::Values values;
     values("name", db().quote(film->getName("")))("summary",
                                                   db().quote(film->getDescription()))("image", db().quoteBlob(film->getImage()))(

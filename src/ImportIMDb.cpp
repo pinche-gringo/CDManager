@@ -103,6 +103,10 @@ ImportFromIMDb::ImportFromIMDb()
     lblActors->set_wrap();
     lblActors->set_max_width_chars(60);
 
+    // Summary and poster are only editable after the data of a film is loaded
+    enableData(false);
+    set_focus(*txtID);
+
     show();
 }
 
@@ -211,11 +215,33 @@ void ImportFromIMDb::addIcon(const std::string& bufImage, IMDbProgress* progress
     TRACE1("ImportFromIMDb::addIcon (const std::string&, IMDbProgress*) - " << bufImage.length());
 
     FilmDataEditor::setIcon(bufImage);
+    confirmData(progress);
+}
 
+//-----------------------------------------------------------------------------
+/// Finishes loading: Removes the progress bar and lets the user edit and
+/// confirm the loaded data
+/// \param progress Progress bar used for displaying the status; will be removed
+//-----------------------------------------------------------------------------
+void ImportFromIMDb::confirmData(IMDbProgress* progress) {
     status = CONFIRM;
+    ok->set_label(_("_OK"));
     ok->set_sensitive();
+    enableData();
     progress->hide();
     Glib::signal_idle().connect_once([client = client, progress] { removeProgressBar(client, progress); });
+}
+
+//-----------------------------------------------------------------------------
+/// Returns to entering the film to search for
+//-----------------------------------------------------------------------------
+void ImportFromIMDb::restartQuery() {
+    status = QUERY;
+    ok->set_label(_("_Next"));
+    enableData(false);
+    txtID->set_sensitive();
+    inputChanged();
+    set_focus(*txtID);
 }
 
 //-----------------------------------------------------------------------------
@@ -239,14 +265,10 @@ void ImportFromIMDb::showData(const IMDbProgress::IMDbEntry& entry, IMDbProgress
     TRACE9("ImportFromIMDb::showData (3x const Glib::ustring&, IMDbProgress*) - " << entry.title);
     contract_assert(client);
 
-    if (entry.image.size()) {
+    const bool loadPoster(!entry.image.empty());
+    if (loadPoster) {
         Glib::signal_idle().connect_once([progress] { stopLoading(progress); });
         Glib::signal_idle().connect_once(sigc::bind(sigc::mem_fun(*this, &ImportFromIMDb::loadIcon), entry.image, progress));
-    }
-    else {
-        status = CONFIRM;
-        progress->hide();
-        Glib::signal_idle().connect_once([client = client, progress] { removeProgressBar(client, progress); });
     }
 
     lblDirector->set_text(entry.director);
@@ -258,9 +280,9 @@ void ImportFromIMDb::showData(const IMDbProgress::IMDbEntry& entry, IMDbProgress
     lblActors->set_text(actors);
     setSummary(entry.summary);
 
-    // While the poster is loading OK stays disabled; addIcon() or showError() enable it
-    ok->set_label(_("_OK"));
-    ok->set_sensitive(status == CONFIRM);
+    // While the poster is loading OK and the data stay disabled; addIcon() or showError() enable them
+    if (!loadPoster)
+        confirmData(progress);
 }
 
 //-----------------------------------------------------------------------------
@@ -272,19 +294,12 @@ void ImportFromIMDb::showError(const Glib::ustring& msg, IMDbProgress* progress)
     TRACE9("ImportFromIMDb::showError (const Glib::ustring&, IMDbProgress*) - " << msg);
     Gtk::MessageDialog dlg(*this, msg, false, Gtk::MessageType::ERROR);
     XGP::runModal(dlg);
-    Glib::signal_idle().connect_once([client = client, progress] { removeProgressBar(client, progress); });
-
-    if (status == IMGLOAD) {
+    if (status == IMGLOAD)
         // Only the poster failed; the film data is still usable, so continue without it
-        status = CONFIRM;
-        progress->hide();
-        ok->set_label(_("_OK"));
-        ok->set_sensitive();
-    }
+        confirmData(progress);
     else {
-        status = QUERY;
-        inputChanged();
-        txtID->set_sensitive();
+        Glib::signal_idle().connect_once([client = client, progress] { removeProgressBar(client, progress); });
+        restartQuery();
     }
 }
 
@@ -415,7 +430,6 @@ void ImportFromIMDb::searchFor(const Glib::ustring& film) {
     setSummary(empty);
     image->clear();
 
-    status = QUERY;
-    ok->set_label(_("_Next"));
+    restartQuery();
     okEvent();
 }

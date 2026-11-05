@@ -89,6 +89,8 @@ class ImportFromIMDb : public FilmDataEditor {
         pre(scrl != nullptr) pre(list != nullptr) pre(progress != nullptr);
 
     void inputChanged();
+    void confirmData(IMDbProgress* progress) pre(progress != nullptr);
+    void restartQuery();
     void showError(const Glib::ustring& msg, IMDbProgress* progress);
     void showSearchResults(const IMDbProgress::IMDbMatchData& results, IMDbProgress* progress) pre(progress != nullptr);
     void showData(const IMDbProgress::IMDbEntry& entry, IMDbProgress* progress) pre(progress != nullptr);

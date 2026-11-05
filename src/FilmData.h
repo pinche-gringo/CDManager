@@ -21,6 +21,7 @@
 #include <XGP/XDialog.h>
 
 namespace Gtk {
+class Button;
 class Label;
 class Image;
 class TextView;
@@ -54,7 +55,9 @@ class FilmDataEditor : public XGP::XDialog {
   protected:
     Gtk::TextView* txtSummary{}; ///< Field displaying the summary of the plot
     Gtk::Image* image{};         ///< Image showing the poster of the film
+    Gtk::Button* btnIcon{};      ///< Button (showing the poster) to load an icon
 
+    void enableData(bool enable = true);
     void loadIcon();
     void addIcon(const std::string& file);
 

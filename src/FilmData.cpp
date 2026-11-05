@@ -51,7 +51,7 @@ constexpr unsigned int HEIGHT = 128;
 //-----------------------------------------------------------------------------
 FilmDataEditor::FilmDataEditor()
     : XGP::XDialog(XGP::XDialog::OKCANCEL), txtSummary(Gtk::make_managed<Gtk::TextView>()),
-      image(Gtk::make_managed<Gtk::Image>()) {
+      image(Gtk::make_managed<Gtk::Image>()), btnIcon(Gtk::make_managed<Gtk::Button>()) {
 
     txtSummary->set_wrap_mode(Gtk::WrapMode::WORD);
     txtSummary->set_size_request(350, 150);
@@ -60,27 +60,35 @@ FilmDataEditor::FilmDataEditor()
     auto* hbox(Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 5));
     auto* vbox(Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 5));
 
-    auto* img(Gtk::make_managed<Gtk::Button>());
-    img->set_size_request(WIDTH, HEIGHT);
-    img->set_valign(Gtk::Align::START);
+    btnIcon->set_size_request(WIDTH, HEIGHT);
+    btnIcon->set_valign(Gtk::Align::START);
     image->set_from_icon_name("image-missing");
     image->set_pixel_size(HEIGHT);
     image->set_size_request(WIDTH, HEIGHT);
-    img->set_child(*image);
+    btnIcon->set_child(*image);
 
-    img->signal_clicked().connect(sigc::mem_fun(*this, &FilmDataEditor::loadIcon));
+    btnIcon->signal_clicked().connect(sigc::mem_fun(*this, &FilmDataEditor::loadIcon));
 
     auto* lbl(Gtk::make_managed<Gtk::Label>(_("Plot summary:")));
     lbl->set_halign(Gtk::Align::START);
     vbox->append(*lbl);
     vbox->append(*txtSummary);
     hbox->append(*vbox);
-    hbox->append(*img);
+    hbox->append(*btnIcon);
     hbox->set_margin(5);
 
     get_content_area()->append(*hbox);
 
     show();
+}
+
+//-----------------------------------------------------------------------------
+/// Enables or disables editing the summary and the icon
+/// \param enable True, if the fields should be editable
+//-----------------------------------------------------------------------------
+void FilmDataEditor::enableData(bool enable) {
+    txtSummary->set_sensitive(enable);
+    btnIcon->set_sensitive(enable);
 }
 
 //-----------------------------------------------------------------------------

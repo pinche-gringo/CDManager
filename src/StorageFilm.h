@@ -35,6 +35,9 @@ class StatusObject;
  */
 class StorageFilm : public Storage {
   public:
+    /// Maximal number of characters of the description (see column Films.summary)
+    static constexpr unsigned int MAX_SUMMARY = 1024;
+
     static void loadDirectors(std::vector<HDirector>& target, YGP::StatusObject& stat) {
         loadCelebrities(target, "Directors", stat);
     }

@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CDManager 1.2\n"
 "Report-Msgid-Bugs-To: pelotudo.gringo@gmail.com\n"
-"POT-Creation-Date: 2026-10-28 20:20+0100\n"
-"PO-Revision-Date: 2026-10-28 20:22+0100\n"
+"POT-Creation-Date: 2026-11-05 18:47+0100\n"
+"PO-Revision-Date: 2026-11-05 19:00+0100\n"
 "Last-Translator: Markus Schwab <pelotudo.gringo@gmail.com>\n"
 "Language-Team: German <pelotudo.gringo@gmail.com>\n"
 "Language: de\n"
@@ -146,14 +146,14 @@ msgid "Database login"
 msgstr "Datenbank-Anmeldung"
 
 #: src/CDManager.cpp:359
-msgid "Reading database ..."
-msgstr "Lese von der Datenbank ..."
+msgid "Reading database (%1) ..."
+msgstr "Lese von der Datenbank (%1) ..."
 
 #: src/CDManager.cpp:409
 msgid "The data has been modified! Save those changes?"
 msgstr "Die Daten wurden geändert! Sollen diese Änderungen gespeichert werden?"
 
-#: src/CDManager.cpp:440
+#: src/CDManager.cpp:444
 msgid ""
 "Can't connect to database!\n"
 "\n"
@@ -163,11 +163,11 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManager.cpp:440
+#: src/CDManager.cpp:444
 msgid "Login error"
 msgstr "Fehler bei der Anmeldung"
 
-#: src/CDManager.cpp:449
+#: src/CDManager.cpp:453
 msgid ""
 "Can't query needed information!\n"
 "\n"
@@ -177,11 +177,11 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManager.cpp:471
+#: src/CDManager.cpp:475
 msgid "Disconnected!"
 msgstr "Abgemeldet!"
 
-#: src/CDManager.cpp:493 src/CDWriter.cpp:696
+#: src/CDManager.cpp:503 src/CDWriter.cpp:696
 msgid ""
 "Can't create file `%1'!\n"
 "\n"
@@ -191,7 +191,7 @@ msgstr ""
 "\n"
 "Ursache: %2."
 
-#: src/CDManager.cpp:511
+#: src/CDManager.cpp:521
 msgid ""
 "Can't store special names!\n"
 "\n"
@@ -201,33 +201,34 @@ msgstr ""
 "\n"
 "Ursache: %1"
 
-#: src/CDManager.cpp:563
+#: src/CDManager.cpp:573
 msgid "Exporting (language %1) ..."
 msgstr "Exportiere (Sprache %1) ..."
 
-#: src/CDManager.cpp:602
+#: src/CDManager.cpp:612
 msgid "Export Warning!"
 msgstr "Warnung beim Exportieren!"
 
-#: src/FilmList.cpp:78
-msgid "Type"
-msgstr "Typ"
+#: src/FilmList.cpp:76 src/CDWriter.cpp:200 src/CDWriter.cpp:511
+msgid "Size"
+msgstr "Größe"
 
-#: src/FilmList.cpp:93 src/CDWriter.cpp:200
+#: src/FilmList.cpp:86 src/CDWriter.cpp:200
 msgid "Language(s)"
 msgstr "Sprache(n)"
 
-#: src/FilmList.cpp:105
+#: src/FilmList.cpp:98
 msgid "Subtitles(s)"
 msgstr "Untertitel"
 
-#: src/FilmList.cpp:191
+#: src/FilmList.cpp:184
 msgid "Director/Film"
 msgstr "Regisseur/Film"
 
-#: src/FilmList.cpp:226
-msgid "Unknown type of media!"
-msgstr "Unbekannter Medientyp!"
+#: src/FilmList.cpp:223
+msgid "Invalid size! Enter it like \"700 MB\" or \"1.4 GB\"."
+msgstr ""
+"Ungültige Größe! Geben Sie sie z.B. als \"700 MB\" oder \"1.4 GB\" ein."
 
 #: src/FilmList.cpp:257 src/SongList.cpp:184 src/OOList.cpp:218
 #: src/ActorList.cpp:180
@@ -275,30 +276,6 @@ msgstr "Jahr"
 #: src/OOList.cpp:159 src/OOList.cpp:198 src/ActorList.cpp:161
 msgid "Entry `%1' already exists!"
 msgstr "Der Eintrag '%1' exisiert bereits!"
-
-#: src/CDType.cpp:37
-msgid "Unspecified"
-msgstr "Unbekannt"
-
-#: src/CDType.cpp:38
-msgid "1 DVD"
-msgstr ""
-
-#: src/CDType.cpp:39
-msgid "2 DVDs"
-msgstr ""
-
-#: src/CDType.cpp:40
-msgid "1 CD"
-msgstr ""
-
-#: src/CDType.cpp:41
-msgid "2 CDs"
-msgstr ""
-
-#: src/CDType.cpp:42
-msgid "3 CDs"
-msgstr ""
 
 #: src/LangDlg.cpp:101
 msgid "None"
@@ -360,7 +337,7 @@ msgstr "Serbisch"
 msgid "Swedish"
 msgstr "Schwedisch"
 
-#: src/CDAppl.cpp:50
+#: src/CDAppl.cpp:54
 msgid ""
 "Utility to manage CDs\n"
 "\n"
@@ -370,29 +347,48 @@ msgstr ""
 "\n"
 "Aufruf: "
 
-#: src/CDAppl.cpp:50
+#: src/CDAppl.cpp:54
 msgid ""
 " [OPTIONS]\n"
 "\n"
 msgstr "[OPTIONEN]\n"
 
-#: src/CDAppl.cpp:51
+#: src/CDAppl.cpp:55
 msgid "[USER] User for database login\n"
 msgstr "[USER] Datenbankbenutzer\n"
 
-#: src/CDAppl.cpp:51
+#: src/CDAppl.cpp:55
 msgid "[PWD] Password for database login\n"
 msgstr "[PWORT] Paßwort des Datenbankbenutzers\n"
 
-#: src/CDAppl.cpp:52
+#: src/CDAppl.cpp:56
+msgid "[NAME] Name of the database (default: CDMedia)\n"
+msgstr "[NAME] Name der Datenbank (Standard: CDMedia)\n"
+
+#: src/CDAppl.cpp:57
+msgid ""
+"[HOST] Host or socket (path) of the database server (default: local host)\n"
+msgstr ""
+"[HOST] Host oder Socket (Pfad) des Datenbankservers (Standard: lokaler "
+"Rechner)\n"
+
+#: src/CDAppl.cpp:58
+msgid "[PORT] Port of the database server (default: the one of the backend)\n"
+msgstr "[PORT] Port des Datenbankservers (Standard: der des Backends)\n"
+
+#: src/CDAppl.cpp:59
+msgid "[DB] Database backend: auto (default), mysql or postgresql\n"
+msgstr "[DB] Datenbank-Backend: auto (Standard), mysql oder postgresql\n"
+
+#: src/CDAppl.cpp:60
 msgid "[FILE] Use file as INI file\n"
 msgstr "[DATEI] Verwende Datei als Initialisierungsdatei\n"
 
-#: src/CDAppl.cpp:53 src/CDWriter.cpp:117
+#: src/CDAppl.cpp:60 src/CDWriter.cpp:117
 msgid "Output version information and exit\n"
 msgstr "Versionsinformation anzeigen und beenden\n"
 
-#: src/CDAppl.cpp:53 src/CDWriter.cpp:118
+#: src/CDAppl.cpp:61 src/CDWriter.cpp:118
 msgid ""
 "Displays this help and exit\n"
 "\n"
@@ -400,7 +396,7 @@ msgstr ""
 "Diese Hilfe anzeigen und beenden\n"
 "\n"
 
-#: src/CDAppl.cpp:54
+#: src/CDAppl.cpp:62
 msgid ""
 "The INI file can have the following entries:\n"
 "\n"
@@ -408,36 +404,67 @@ msgstr ""
 "Die Initialisierungsdatei kann die folgenden Einträge enthalten:\n"
 "\n"
 
-#: src/CDAppl.cpp:85
+#: src/CDAppl.cpp:96
 msgid "-warning: No user specified! Ignoring option `u'\n"
 msgstr "-Warnung: Kein User angegeben! Die Option 'u' wird ignoriert ...\n"
 
-#: src/CDAppl.cpp:92
+#: src/CDAppl.cpp:103
 msgid "-warning: No password specified! Ignoring option `p'\n"
 msgstr "-Warnung: Kein Paßwort angegeben! Die Option 'p' wird ignoriert ...\n"
 
-#: src/CDAppl.cpp:100
+#: src/CDAppl.cpp:110
+msgid "-warning: No database specified! Ignoring option `d'\n"
+msgstr ""
+"-Warnung: Keine Datenbank angegeben! Die Option 'd' wird ignoriert ...\n"
+
+#: src/CDAppl.cpp:117
+msgid "-warning: No host specified! Ignoring option `H'\n"
+msgstr "-Warnung: Kein Host angegeben! Die Option 'H' wird ignoriert ...\n"
+
+#: src/CDAppl.cpp:123
+msgid "-warning: No valid port specified! Ignoring option `P'\n"
+msgstr ""
+"-Warnung: Kein gültiger Port angegeben! Die Option 'P' wird ignoriert ...\n"
+
+#: src/CDAppl.cpp:131
+msgid ""
+"-warning: No valid backend (auto, mysql or postgresql) specified! Ignoring "
+"option `b'\n"
+msgstr ""
+"-Warnung: Kein gültiges Backend (auto, mysql oder postgresql) angegeben! Die "
+"Option 'b' wird ignoriert ...\n"
+
+#: src/CDAppl.cpp:139
 msgid "-warning: No file specified! Ignoring option `f'\n"
 msgstr "-Warnung: Keine Datei angegeben! Die Option 'f' wird ignoriert\n"
 
-#: src/CDAppl.cpp:161
+#: src/CDAppl.cpp:215
+msgid "-warning: Invalid database backend! Detecting it automatically ...\n"
+msgstr ""
+"-Warnung: Ungültiges Datenbank-Backend! Es wird automatisch ermittelt ...\n"
+
+#: src/CDAppl.cpp:219
+msgid "-warning: Invalid port! Using the default ...\n"
+msgstr "-Warnung: Ungültiger Port! Der Standard wird verwendet ...\n"
+
+#: src/CDAppl.cpp:229
 msgid "-warning: Can't convert password to UTF-8! Ignoring ...\n"
 msgstr "-Warnung: Ignoriere das ungültige Paßwort (nicht UTF-8 konform)!\n"
 
-#: src/CDAppl.cpp:170
+#: src/CDAppl.cpp:238
 msgid "-warning: Can't convert username to UTF-8! Ignoring ...\n"
 msgstr ""
 "-Warnung: Ignoriere den ungültigen Benutzernamen (nicht UTF-8 konform)!\n"
 
-#: src/CDAppl.cpp:184 src/CDWriter.cpp:677
+#: src/CDAppl.cpp:252 src/CDWriter.cpp:677
 msgid "Compiled on"
 msgstr "Übersetzt am"
 
-#: src/CDAppl.cpp:185
+#: src/CDAppl.cpp:253
 msgid "Copyright (C) 2004 - 2026 Markus Schwab"
 msgstr "Copyright © 2004 - 2026 Markus Schwab"
 
-#: src/CDAppl.cpp:187 src/CDWriter.cpp:678
+#: src/CDAppl.cpp:255 src/CDWriter.cpp:678
 msgid "Distributed under the terms of the GNU General Public License"
 msgstr "Vertrieben unter den Bedingungen der GNU General Public License"
 
@@ -555,10 +582,6 @@ msgstr "Regisseur"
 msgid "Name"
 msgstr ""
 
-#: src/CDWriter.cpp:200 src/CDWriter.cpp:511
-msgid "Media"
-msgstr "Medium"
-
 #: src/CDWriter.cpp:235
 msgid ""
 "-error: Need language id and memory-key as parameters\n"
@@ -599,7 +622,7 @@ msgstr ""
 "\n"
 "Ursache: %2"
 
-#: src/CDWriter.cpp:418 src/RelateFilm.cpp:203 src/ImportIMDb.cpp:330
+#: src/CDWriter.cpp:418 src/RelateFilm.cpp:203 src/ImportIMDb.cpp:345
 msgid "Film"
 msgstr ""
 
@@ -855,13 +878,33 @@ msgstr ""
 "Die Daten von IMDb werden nicht übernommen, da die Regisseure\n"
 "unterschiedlich sind (%s gefunden; sollte %3 sein)!"
 
-#: src/Storage.cpp:159
+#: src/Storage.cpp:162
 msgid "Warning loading celebrity `%1': %2"
 msgstr "Warnung beim Laden von Person/Gruppe '%1' : %2"
 
-#: src/StorageFilm.cpp:91
+#: src/DBFactory.cpp:134
+msgid "Unknown database backend `%1'!"
+msgstr "Unbekanntes Datenbank-Backend '%1'!"
+
+#: src/DBFactory.cpp:178
+msgid "No database server found!"
+msgstr "Kein Datenbankserver gefunden!"
+
+#: src/DBFactory.cpp:179
+msgid "No database backend is installed!"
+msgstr "Es ist kein Datenbank-Backend installiert!"
+
+#: src/StorageFilm.cpp:94
 msgid "Warning loading film `%1': %2"
 msgstr "Warnung beim Laden von Film '%1' : %2"
+
+#: src/StorageFilm.cpp:111
+msgid ""
+"The description of the film `%1' is too long: It has %2 characters, but at "
+"most %3 are allowed!"
+msgstr ""
+"Die Beschreibung des Films '%1' ist zu lang: Sie hat %2 Zeichen, erlaubt "
+"sind aber höchstens %3!"
 
 #: src/StorageRecord.cpp:67
 msgid "Warning loading record `%1': %2"
@@ -916,7 +959,7 @@ msgstr "Importieren von IMDb.com"
 msgid "Film (_Name, number or URL):"
 msgstr "_Name, Nummer oder URL des Films:"
 
-#: src/ImportIMDb.cpp:89 src/ImportIMDb.cpp:419
+#: src/ImportIMDb.cpp:89 src/ImportIMDb.cpp:240
 msgid "_Next"
 msgstr "_Weiter"
 
@@ -936,11 +979,11 @@ msgstr ""
 msgid "Actors:"
 msgstr "Schauspieler:"
 
-#: src/ImportIMDb.cpp:262 src/ImportIMDb.cpp:281
+#: src/ImportIMDb.cpp:228
 msgid "_OK"
 msgstr ""
 
-#: src/ImportIMDb.cpp:307
+#: src/ImportIMDb.cpp:322
 msgid "Titles"
 msgstr "Titel"
 
@@ -1026,14 +1069,26 @@ msgstr "Ungültiges Geburtsdatum!"
 msgid "Invalid death date!"
 msgstr "Ungültiges Sterbedatum!"
 
-#: src/FilmData.cpp:73
+#: src/FilmData.cpp:72
 msgid "Plot summary:"
 msgstr "Zusammenfassung:"
 
-#: src/FilmData.cpp:156
+#: src/FilmData.cpp:164
 msgid "Load icon"
 msgstr "Bildsymbol laden"
 
-#: src/FilmData.cpp:182
+#: src/FilmData.cpp:190
 msgid "Error loading icon from file '%1'!"
 msgstr "Fehler beim Laden des Bildsymbols aus der Datei \"%1\"!"
+
+#~ msgid "Type"
+#~ msgstr "Typ"
+
+#~ msgid "Unknown type of media!"
+#~ msgstr "Unbekannter Medientyp!"
+
+#~ msgid "Unspecified"
+#~ msgstr "Unbekannt"
+
+#~ msgid "Media"
+#~ msgstr "Medium"
